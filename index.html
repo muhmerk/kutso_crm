@@ -218,9 +218,16 @@ async function supaYukleIsPlanSessiz() {
         }))
       }))
     }));
+    /* gerceklesmeler yıllarını güncelle */
+    if(window.IP_PLAN.gerceklesmeler) {
+      stratejiler.forEach(s => {
+        const y = s.yil || new Date().getFullYear();
+        if(!(y in window.IP_PLAN.gerceklesmeler)) window.IP_PLAN.gerceklesmeler[y] = '';
+      });
+    }
     if(window.ipSyncData) window.ipSyncData();
-    if(window.ipRenderPlan) window.ipRenderPlan(); /* Mevcut yılı korur */
     if(window.ipRenderTabs) window.ipRenderTabs();
+    if(window.ipRenderPlan) window.ipRenderPlan();
     if(window.dashboardGuncelle) window.dashboardGuncelle();
   } catch(e) { console.warn('İş planı sessiz yükleme hatası:', e); }
 }
@@ -11722,6 +11729,12 @@ window.updateTopbarUser=function(user){
     }
   },200);
 };
+
+  /* Global erişim için expose et */
+  window.ipRenderPlan   = ipRenderPlan;
+  window.ipRenderTabs   = ipRenderTabs;
+  window.ipSyncData     = ipSyncData;
+  window.ipStratejiTasi = window.ipStratejiTasi || function(){};
 
 })();
 
