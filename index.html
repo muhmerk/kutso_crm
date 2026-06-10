@@ -191,6 +191,32 @@ async function supaYukleSikayetler() {
   } catch(e){ console.warn('Şikayet yükleme hatası:', e); }
 }
 
+/* İş planını sessizce yükle — aktif yılı değiştirmez */
+async function supaYukleIsPlanSessiz() {
+  try {
+    const [{ data: stratejiler }, { data: hedefler }, { data: projeler }] = await Promise.all([
+      _supa.from('ip_stratejiler').select('*').order('sira'),
+      _supa.from('ip_hedefler').select('*').order('sira'),
+      _supa.from('ip_projeler').select('*')
+    ]);
+    if (!stratejiler || !window.IP_PLAN) return;
+    window.IP_PLAN.stratejiler = stratejiler.map(s => ({
+      id: s.id, yil: s.yil, ad: s.ad, aciklama: s.aciklama || '',
+      hedefler: (hedefler || []).filter(h => h.strateji_id === s.id).map(h => ({
+        id: h.id, ad: h.ad,
+        projeler: (projeler || []).filter(p => p.hedef_id === h.id).map(p => ({
+          id: p.id, ad: p.ad, pct: p.pct || 0, durum: p.durum || 'planlandi',
+          sorumluPersonel: p.sorumlu_personel || '', baslamaAy: p.baslama_ay || null,
+          bitisAy: p.bitis_ay || null, butce: p.butce || 0, yillar: p.notlar || {}
+        }))
+      }))
+    }));
+    if(window.ipSyncData) window.ipSyncData();
+    if(window.ipRenderPlan) window.ipRenderPlan(); /* Mevcut yılı korur */
+    if(window.dashboardGuncelle) window.dashboardGuncelle();
+  } catch(e) { console.warn('İş planı sessiz yükleme hatası:', e); }
+}
+
 async function supaYukleIsPlan() {
   try {
     const [{ data: stratejiler }, { data: hedefler }, { data: projeler }] = await Promise.all([
@@ -436,9 +462,15 @@ function supaRealtimeBaslat() {
 
   /* İş Planı */
   _supa.channel('db-isplan')
-    .on('postgres_changes', { event:'*', schema:'public', table:'ip_stratejiler' }, async ()=>{ await supaYukleIsPlan(); if(window.ipRenderPlan) window.ipRenderPlan(); })
-    .on('postgres_changes', { event:'*', schema:'public', table:'ip_hedefler' }, async ()=>{ await supaYukleIsPlan(); if(window.ipRenderPlan) window.ipRenderPlan(); })
-    .on('postgres_changes', { event:'*', schema:'public', table:'ip_projeler' }, async ()=>{ await supaYukleIsPlan(); if(window.ipRenderPlan) window.ipRenderPlan(); })
+    .on('postgres_changes', { event:'*', schema:'public', table:'ip_stratejiler' }, async ()=>{
+      await supaYukleIsPlanSessiz();
+    })
+    .on('postgres_changes', { event:'*', schema:'public', table:'ip_hedefler' }, async ()=>{
+      await supaYukleIsPlanSessiz();
+    })
+    .on('postgres_changes', { event:'*', schema:'public', table:'ip_projeler' }, async ()=>{
+      await supaYukleIsPlanSessiz();
+    })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: İş Planı dinleniyor'); });
 
   /* Görevler */
