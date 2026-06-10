@@ -11536,16 +11536,13 @@ function projeFormHtml(p){
       <div><label class="yk-lbl">Bitiş (ay)</label><input id="ip-f-bit" class="yk-inp" type="number" min="1" max="12" value="${p?.bitisAy||12}"></div>
       <div><label class="yk-lbl">Durum</label><select id="ip-f-dur" class="yk-inp">${durumOpts}</select></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div><label class="yk-lbl">Tamamlanma %</label>
-        <div style="display:flex;align-items:center;gap:8px">
-          <input id="ip-f-pct" type="range" min="0" max="100" value="${p?.pct||0}" oninput="document.getElementById('ip-f-pct-val').textContent=this.value+'%'" style="flex:1;accent-color:var(--blue)">
-          <span id="ip-f-pct-val" style="font-size:13px;font-weight:600;color:var(--blue);min-width:36px">${p?.pct||0}%</span>
-        </div>
-      </div>
-      <div><label class="yk-lbl">${aktifYil||'Bu Yıl'} Gerçekleşmesi</label>
-        <input id="ip-f-gercek" class="yk-inp" value="${(p?.yillar&&aktifYil&&p.yillar[aktifYil])||''}" placeholder="Bu yıl ne yapıldı?..."></div>
-    </div>`;
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div><label class="yk-lbl">Başlangıç (ay)</label><input id="ip-f-bas" class="yk-inp" type="number" min="1" max="12" value="${p?.baslangicAy||1}"></div>
+      <div><label class="yk-lbl">Bitiş (ay)</label><input id="ip-f-bit" class="yk-inp" type="number" min="1" max="12" value="${p?.bitisAy||12}"></div>
+      <div><label class="yk-lbl">Durum</label><select id="ip-f-dur" class="yk-inp">${durumOpts}</select></div>
+    </div>
+    <div><label class="yk-lbl">${aktifYil||'Bu Yıl'} Gerçekleşmesi</label>
+      <textarea id="ip-f-gercek" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Bu yıl ne yapıldı?...">${(p?.yillar&&aktifYil&&p.yillar[aktifYil])||''}</textarea></div>`;
 }
 
 function projeFormOku(p, mevcut){
@@ -11570,7 +11567,7 @@ function projeFormOku(p, mevcut){
   p.baslangicAy  = parseInt(document.getElementById('ip-f-bas')?.value)||1;
   p.bitisAy      = parseInt(document.getElementById('ip-f-bit')?.value)||12;
   p.durum        = document.getElementById('ip-f-dur')?.value||'devam';
-  p.pct          = parseInt(document.getElementById('ip-f-pct')?.value)||0;
+  /* pct artık gösterge takibinden otomatik hesaplanıyor, manuel girilmiyor */
   if(aktifYil){
     if(!p.yillar) p.yillar={};
     const g=document.getElementById('ip-f-gercek')?.value.trim();
@@ -11775,7 +11772,7 @@ window.ipProjeDuzenle = function(projId){
     ipYetkiMi()?'Proje Düzenle':'Proje Güncelle',
     proje.ad,
     govde,
-    ()=>{
+    async ()=>{
       projeFormOku(proje,proje);
       _supa.from('ip_projeler').update({
         ad:proje.ad||'', pct:proje.pct||0,
@@ -11790,6 +11787,24 @@ window.ipProjeDuzenle = function(projId){
         butce: proje.butce||0,
         notlar:proje.yillar||{}
       }).eq('id',projId).then(({error})=>{if(error) console.error('Proje güncelleme hatası:',error.message);});
+
+      /* Gösterge hedeflerini takip tablosuna kaydet/güncelle */
+      const gosler = Array.isArray(proje.gosterge) ? proje.gosterge : (proje.gosterge ? [proje.gosterge] : []);
+      const yil = aktifYil||new Date().getFullYear();
+      for(let i=0; i<gosler.length; i++){
+        const hedefVal = proje.gostergeHedefler?.[i]||0;
+        const { data: mevcut } = await _supa.from('ip_proje_gosterge_takip')
+          .select('id').eq('proje_id',projId).eq('gosterge_no',i).eq('yil',yil).maybeSingle();
+        if(mevcut?.id){
+          await _supa.from('ip_proje_gosterge_takip').update({gosterge_ad:gosler[i], hedef:hedefVal}).eq('id',mevcut.id);
+        } else {
+          await _supa.from('ip_proje_gosterge_takip').insert([{
+            proje_id:projId, gosterge_no:i, gosterge_ad:gosler[i],
+            hedef:hedefVal, q1:0, q2:0, q3:0, q4:0, yil
+          }]);
+        }
+      }
+
       ipSyncData();
       ipModalKapat(); ipRenderPlan();
       if(window.dashboardGuncelle) window.dashboardGuncelle();
