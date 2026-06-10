@@ -11363,9 +11363,7 @@ window.ipProjeDetay = async function(projId){
             const t = (takiplar||[]).find(x=>x.gosterge_no===i) || {id:null,hedef:0,q1:0,q2:0,q3:0,q4:0};
             const gercek = parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
             const pct = parseFloat(t.hedef||0) > 0 ? Math.min(100,Math.round(gercek/parseFloat(t.hedef)*100)) : 0;
-            const hedefInput = canEdit
-              ? `<input type="number" min="0" value="${t.hedef||0}" style="width:56px;text-align:center;border:0.5px solid var(--border);border-radius:5px;padding:3px;font-size:12px;font-family:var(--font);background:var(--surface)" onchange="ipGostergeHedefGuncelle('${projId}',${i},this.value,${yil})">`
-              : `<span>${t.hedef||0}</span>`;
+            const hedefInput = `<span style="font-weight:600">${t.hedef||0}</span>`;
             const qInput = (q,val) => canEdit
               ? `<input type="number" min="0" value="${val||0}" style="width:56px;text-align:center;border:0.5px solid var(--border);border-radius:5px;padding:3px;font-size:12px;font-family:var(--font);background:var(--surface)" onchange="ipGostergeTakipGuncelle('${projId}',${i},'${q}',this.value,${yil})">`
               : `<span>${val||0}</span>`;
@@ -11405,7 +11403,11 @@ window.ipProjeDetay = async function(projId){
       <div><label class="yk-lbl">Meclis Üyesi</label><p style="margin:0;font-size:13px">${proje.meclis||'—'}</p></div>
       <div><label class="yk-lbl">Meslek Komitesi</label><p style="margin:0;font-size:13px">${proje.komite||'—'}</p></div>
     </div>
-    <div><label class="yk-lbl">Bütçe</label><p style="margin:0;font-size:15px;font-weight:600">₺${(proje.butce||0).toLocaleString('tr-TR')}</p></div>`,
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div><label class="yk-lbl">Başlangıç Ayı</label><p style="margin:0;font-size:13px">${proje.baslangicAy||1}. Ay</p></div>
+      <div><label class="yk-lbl">Bitiş Ayı</label><p style="margin:0;font-size:13px">${proje.bitisAy||12}. Ay</p></div>
+      <div><label class="yk-lbl">Bütçe</label><p style="margin:0;font-size:13px;font-weight:600">₺${(proje.butce||0).toLocaleString('tr-TR')}</p></div>
+    </div>`,
     null, true
   );
 
@@ -11776,11 +11778,20 @@ window.ipProjeEkle = function(strId,hId){
   );
 };
 
-window.ipProjeDuzenle = function(projId){
+window.ipProjeDuzenle = async function(projId){
   let proje=null,strId='',hId='';
   for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler){const f=h.projeler.find(p=>p.id===projId);if(f){proje=f;strId=str.id;hId=h.id;break;}}
   if(!proje) return;
   if(!ipProjeYetkiVar(proje)&&!ipYetkiMi()){alert('Bu projeyi düzenleme yetkiniz yok.');return;}
+
+  /* Mevcut hedef değerlerini DB'den çek */
+  const yil = aktifYil||new Date().getFullYear();
+  const { data: takiplar } = await _supa.from('ip_proje_gosterge_takip')
+    .select('*').eq('proje_id',projId).eq('yil',yil).order('gosterge_no');
+  if(takiplar && takiplar.length > 0) {
+    proje.gostergeHedefler = takiplar.map(t=>parseFloat(t.hedef||0));
+  }
+
   const govde = projeFormHtml(proje);
   ipModalAc(
     ipYetkiMi()?'Proje Düzenle':'Proje Güncelle',
