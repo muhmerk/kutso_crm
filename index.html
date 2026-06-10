@@ -228,7 +228,10 @@ async function supaYukleIsPlan() {
         }
         if(window.ipSyncData) window.ipSyncData();
         if(window.ipRenderTabs) window.ipRenderTabs();
-        if(window.ipRenderPlan) window.ipRenderPlan();
+        /* İlk yılı otomatik seç */
+        const yillar = Object.keys(window.IP_PLAN.gerceklesmeler).map(Number).sort();
+        if(yillar.length > 0 && window.ipYilSec) window.ipYilSec(yillar[yillar.length-1]);
+        else if(window.ipRenderPlan) window.ipRenderPlan();
         if(window.dashboardGuncelle) window.dashboardGuncelle();
         console.log('✓ İş planı yüklendi:', stratejiler.length, 'strateji');
       } else {
