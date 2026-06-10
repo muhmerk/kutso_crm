@@ -203,9 +203,9 @@ async function supaYukleIsPlanSessiz() {
     window.IP_PLAN.stratejiler = stratejiler.map(s => ({
       id: s.id, yil: s.yil, ad: s.ad, aciklama: s.aciklama || '',
       hedefler: (hedefler || []).filter(h => h.strateji_id === s.id).map(h => ({
-        id: h.id, ad: h.ad,
+        id: h.id, ad: h.ad, etiket: h.etiket||null,
         projeler: (projeler || []).filter(p => p.hedef_id === h.id).map(p => ({
-          id: p.id, ad: p.ad, pct: p.pct || 0, durum: p.durum || 'planlandi',
+          id: p.id, ad: p.ad, etiket: p.etiket||null, pct: p.pct || 0, durum: p.durum || 'planlandi',
           sorumluPersonel: p.sorumlu_personel || '',
           sorumluYK: p.sorumlu_yk || '',
           meclis: p.meclis_uyesi || '',
@@ -243,9 +243,9 @@ async function supaYukleIsPlan() {
     const mappedStratejiler = stratejiler.map(s => ({
       id: s.id, yil: s.yil, ad: s.ad, aciklama: s.aciklama || '',
       hedefler: (hedefler || []).filter(h => h.strateji_id === s.id).map(h => ({
-        id: h.id, ad: h.ad,
+        id: h.id, ad: h.ad, etiket: h.etiket||null,
         projeler: (projeler || []).filter(p => p.hedef_id === h.id).map(p => ({
-          id: p.id, ad: p.ad, pct: p.pct || 0,
+          id: p.id, ad: p.ad, etiket: p.etiket||null, pct: p.pct || 0,
           durum: p.durum || 'planlandi',
           sorumluPersonel: p.sorumlu_personel || '',
           sorumluYK: p.sorumlu_yk || '',
@@ -11243,7 +11243,7 @@ function renderHedef(strId, h, hi, yetki){
   return `<div class="ip-node" style="margin-bottom:6px">
     <div class="ip-node-hd" onclick="ipToggle('${h.id}')" style="background:var(--surface2)">
       <div style="width:24px;height:24px;border-radius:6px;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <span style="font-size:10px;font-weight:700;color:var(--purple)">H${hi+1}</span>
+        <span style="font-size:10px;font-weight:700;color:var(--purple)">${h.etiket||('H'+(hi+1))}</span>
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:500">${h.ad}</div>
@@ -11275,7 +11275,7 @@ function renderProje(strId, hId, p, pi, yetki){
   return `<div style="border:0.5px solid var(--border);border-radius:8px;margin-bottom:7px;overflow:hidden">
     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);cursor:pointer" onclick="ipProjeDetay('${p.id}')">
       <div style="width:20px;height:20px;border-radius:5px;background:var(--amber-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <span style="font-size:9px;font-weight:700;color:var(--amber)">P${pi+1}</span>
+        <span style="font-size:9px;font-weight:700;color:var(--amber)">${p.etiket||('P'+(pi+1))}</span>
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ad}</div>
@@ -11516,6 +11516,7 @@ function projeFormHtml(p){
   const durumOpts=['planlandi','devam','tamamlandi','acil'].map(d=>`<option value="${d}" ${p?.durum===d?'selected':''}>${{planlandi:'Planlandı',devam:'Devam',tamamlandi:'Tamamlandı',acil:'Acil'}[d]}</option>`).join('');
   return `
     <div><label class="yk-lbl">Proje / İş Paketi Adı *</label><input id="ip-f-pad" class="yk-inp" value="${p?.ad||''}" placeholder="Proje adı..."></div>
+    <div><label class="yk-lbl">Etiket <span style="font-weight:400;color:var(--text2)">(isteğe bağlı, örn: P1, A.1)</span></label><input id="ip-f-petk" class="yk-inp" value="${p?.etiket||''}" placeholder="Boş bırakılırsa otomatik numaralanır"></div>
     <div><label class="yk-lbl">Performans Göstergeleri</label>
       <div style="display:grid;grid-template-columns:1fr 80px;gap:6px;margin-bottom:4px">
         <span style="font-size:11px;color:var(--text2)">Gösterge</span>
@@ -11568,6 +11569,7 @@ function projeFormHtml(p){
 
 function projeFormOku(p, mevcut){
   p.ad           = document.getElementById('ip-f-pad')?.value.trim()||'Yeni Proje';
+  p.etiket       = document.getElementById('ip-f-petk')?.value.trim()||null;
   /* Çoklu performans göstergeleri + hedefler */
   const gosItems   = document.querySelectorAll('.ip-gos-item');
   const hedefItems = document.querySelectorAll('.ip-gos-hedef');
@@ -11683,12 +11685,16 @@ window.ipHedefDuzenle = function(strId, hId){
   if(!h) return;
   ipModalAc('Hedef Düzenle','',`
     <div><label class="yk-lbl">Hedef Adı *</label>
-      <input id="ip-f-had" class="yk-inp" value="${h.ad||''}"></div>`,
+      <input id="ip-f-had" class="yk-inp" value="${h.ad||''}"></div>
+    <div><label class="yk-lbl">Etiket <span style="font-weight:400;color:var(--text2)">(isteğe bağlı, örn: H1, A, 1.1)</span></label>
+      <input id="ip-f-hetk" class="yk-inp" value="${h.etiket||''}" placeholder="Boş bırakılırsa otomatik numaralanır"></div>`,
     ()=>{
       const ad = document.getElementById('ip-f-had')?.value.trim();
+      const etiket = document.getElementById('ip-f-hetk')?.value.trim()||null;
       if(!ad){alert('Hedef adı zorunludur.');return;}
       h.ad = ad;
-      _supa.from('ip_hedefler').update({ad}).eq('id',hId)
+      h.etiket = etiket;
+      _supa.from('ip_hedefler').update({ad, etiket}).eq('id',hId)
         .then(({error})=>{ if(error) console.error('Hedef düzenleme hatası:',error.message); });
       ipModalKapat(); ipRenderPlan();
     }
@@ -11727,14 +11733,16 @@ window.ipStratejiEkle = function(){
 
 window.ipHedefEkle = function(strId){
   ipModalAc('Yeni Hedef Ekle','',`
-    <div><label class="yk-lbl">Hedef Adı *</label><input id="ip-f-had" class="yk-inp" placeholder="Hedef ifadesi..."></div>`,
+    <div><label class="yk-lbl">Hedef Adı *</label><input id="ip-f-had" class="yk-inp" placeholder="Hedef ifadesi..."></div>
+    <div><label class="yk-lbl">Etiket <span style="font-weight:400;color:var(--text2)">(isteğe bağlı, örn: H1, A, 1.1)</span></label><input id="ip-f-hetk" class="yk-inp" placeholder="Boş bırakılırsa otomatik numaralanır"></div>`,
     ()=>{
       const str=IP_PLAN.stratejiler.find(s=>s.id===strId);
       const ad=document.getElementById('ip-f-had')?.value.trim();
+      const etiket=document.getElementById('ip-f-hetk')?.value.trim()||null;
       if(!str||!ad){alert('Hedef adı zorunludur.');return;}
       const id='h'+Date.now();
-      str.hedefler.push({id, ad, projeler:[]});
-      _supa.from('ip_hedefler').insert([{id, strateji_id:strId, ad}])
+      str.hedefler.push({id, ad, etiket, projeler:[]});
+      _supa.from('ip_hedefler').insert([{id, strateji_id:strId, ad, etiket}])
         .then(({error})=>{if(error) console.error('Hedef kaydetme hatası:',error.message);});
       acikNodelar.add(strId);
       ipModalKapat();ipRenderPlan();
@@ -11753,7 +11761,7 @@ window.ipProjeEkle = function(strId,hId){
       h.projeler.push(p);
       acikNodelar.add(strId); acikNodelar.add(hId);
       _supa.from('ip_projeler').insert([{
-        id:p.id, hedef_id:hId, ad:p.ad||'', pct:p.pct||0,
+        id:p.id, hedef_id:hId, ad:p.ad||'', etiket:p.etiket||null, pct:p.pct||0,
         durum:p.durum||'planlandi', sorumlu_personel:p.sorumluPersonel||null,
         gosterge: Array.isArray(p.gosterge) ? p.gosterge.join('\n') : (p.gosterge||null),
         faaliyetler: Array.isArray(p.faaliyetler) ? p.faaliyetler.join('\n') : (p.faaliyetler||null),
@@ -11805,7 +11813,7 @@ window.ipProjeDuzenle = async function(projId){
     async ()=>{
       projeFormOku(proje,proje);
       _supa.from('ip_projeler').update({
-        ad:proje.ad||'', pct:proje.pct||0,
+        ad:proje.ad||'', etiket:proje.etiket||null, pct:proje.pct||0,
         durum:proje.durum||'planlandi', sorumlu_personel:proje.sorumluPersonel||null,
         gosterge: Array.isArray(proje.gosterge) ? proje.gosterge.join('\n') : (proje.gosterge||null),
         faaliyetler: Array.isArray(proje.faaliyetler) ? proje.faaliyetler.join('\n') : (proje.faaliyetler||null),
