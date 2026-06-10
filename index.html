@@ -11302,21 +11302,73 @@ window.ipToggle = function(id){
 };
 
 /* ═══════════ PROJE DETAY ═══════════ */
-window.ipProjeDetay = function(projId){
+window.ipProjeDetay = async function(projId){
   let proje=null;
   for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler) { const f=h.projeler.find(p=>p.id===projId); if(f){proje=f;break;} }
   if(!proje) return;
   const badgeCls={tamamlandi:'b-green',devam:'b-amber',planlandi:'b-blue',acil:'b-red'};
+  const canEdit = currentUser && (proje.sorumluPersonel === (currentUser.adSoyad||'') || ipYetkiMi());
+  const yil = aktifYil || new Date().getFullYear();
+
+  /* Takip verilerini Supabase'den çek */
+  const { data: takiplar } = await _supa.from('ip_proje_gosterge_takip')
+    .select('*').eq('proje_id', projId).eq('yil', yil).order('gosterge_no');
+
+  const gosler = Array.isArray(proje.gosterge) ? proje.gosterge : (proje.gosterge ? [proje.gosterge] : []);
+
+  /* Otomatik % hesapla */
+  let toplamHedef = 0, toplamGercek = 0;
+  (takiplar||[]).forEach(t => {
+    toplamHedef += parseFloat(t.hedef||0);
+    toplamGercek += parseFloat(t.q1||0) + parseFloat(t.q2||0) + parseFloat(t.q3||0) + parseFloat(t.q4||0);
+  });
+  const otoPct = toplamHedef > 0 ? Math.min(100, Math.round(toplamGercek/toplamHedef*100)) : proje.pct;
+
+  const takipTablosu = gosler.length > 0 ? `
+    <div><label class="yk-lbl">${yil} Çeyreklik Takip</label>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--surface2)">
+            <th style="padding:7px 10px;text-align:left;border:0.5px solid var(--border);font-weight:500">Gösterge</th>
+            <th style="padding:7px 10px;text-align:center;border:0.5px solid var(--border);font-weight:500">Hedef</th>
+            <th style="padding:7px 10px;text-align:center;border:0.5px solid var(--border);font-weight:500;color:var(--blue)">Q1</th>
+            <th style="padding:7px 10px;text-align:center;border:0.5px solid var(--border);font-weight:500;color:var(--teal)">Q2</th>
+            <th style="padding:7px 10px;text-align:center;border:0.5px solid var(--border);font-weight:500;color:var(--amber)">Q3</th>
+            <th style="padding:7px 10px;text-align:center;border:0.5px solid var(--border);font-weight:500;color:var(--red)">Q4</th>
+            <th style="padding:7px 10px;text-align:center;border:0.5px solid var(--border);font-weight:500">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${gosler.map((g,i) => {
+            const t = (takiplar||[]).find(x=>x.gosterge_no===i) || {id:null,hedef:0,q1:0,q2:0,q3:0,q4:0};
+            const gercek = parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
+            const pct = parseFloat(t.hedef||0) > 0 ? Math.min(100,Math.round(gercek/parseFloat(t.hedef)*100)) : 0;
+            const qInput = (q,val) => canEdit
+              ? `<input type="number" min="0" value="${val||0}" style="width:56px;text-align:center;border:0.5px solid var(--border);border-radius:5px;padding:3px;font-size:12px;font-family:var(--font);background:var(--surface)" onchange="ipGostergeTakipGuncelle('${projId}',${i},'${q}',this.value,${yil})">`
+              : `<span>${val||0}</span>`;
+            return `<tr>
+              <td style="padding:7px 10px;border:0.5px solid var(--border)">${g}</td>
+              <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center;font-weight:500">${t.hedef||0}</td>
+              <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">${qInput('q1',t.q1)}</td>
+              <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">${qInput('q2',t.q2)}</td>
+              <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">${qInput('q3',t.q3)}</td>
+              <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">${qInput('q4',t.q4)}</td>
+              <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">
+                <span style="font-weight:600;color:${pct>=70?'var(--teal)':pct>=40?'var(--amber)':'var(--red)'}">%${pct}</span>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      ${canEdit?'<div style="font-size:11px;color:var(--text2);margin-top:6px"><i class="ti ti-info-circle" style="font-size:11px"></i> Değerleri değiştirince otomatik kaydedilir</div>':''}
+    </div>` : '';
+
   ipModalAc(proje.ad,'Proje Detayı',`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Durum</label><p style="margin:0;font-size:13px"><span class="badge ${badgeCls[proje.durum]||'b-gray'}">${proje.durum}</span></p></div>
-      <div><label class="yk-lbl">Tamamlanma</label><p style="margin:0;font-size:14px;font-weight:600">%${proje.pct}</p></div>
+      <div><label class="yk-lbl">Tamamlanma</label><p style="margin:0;font-size:14px;font-weight:600">%${otoPct} ${otoPct!==proje.pct?'<span style="font-size:10px;color:var(--text2)">(otomatik)</span>':''}</p></div>
     </div>
-    <div><label class="yk-lbl">Performans Göstergeleri</label>
-      ${Array.isArray(proje.gosterge)
-        ? `<div style="display:flex;flex-direction:column;gap:5px">${proje.gosterge.map(g=>`<div style="padding:7px 12px;background:var(--surface2);border-radius:7px;font-size:13px">• ${g}</div>`).join('')}</div>`
-        : `<div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px">${proje.gosterge||'—'}</div>`}
-    </div>
+    ${takipTablosu}
     <div><label class="yk-lbl">Faaliyetler</label><div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.6">${
       Array.isArray(proje.faaliyetler)
         ? `<ul style="margin:0;padding-left:16px">${proje.faaliyetler.map(f=>`<li>${f}</li>`).join('')}</ul>`
@@ -11330,10 +11382,38 @@ window.ipProjeDetay = function(projId){
       <div><label class="yk-lbl">Meclis Üyesi</label><p style="margin:0;font-size:13px">${proje.meclis||'—'}</p></div>
       <div><label class="yk-lbl">Meslek Komitesi</label><p style="margin:0;font-size:13px">${proje.komite||'—'}</p></div>
     </div>
-    <div><label class="yk-lbl">Bütçe</label><p style="margin:0;font-size:15px;font-weight:600">₺${(proje.butce||0).toLocaleString('tr-TR')}</p></div>
-    ${aktifYil&&proje.yillar?`<div><label class="yk-lbl">${aktifYil} Gerçekleşmesi</label><div style="padding:8px 12px;background:var(--blue-bg);border-radius:8px;font-size:13px;color:var(--blue)">${proje.yillar[aktifYil]||'Henüz girilmedi'}</div></div>`:''}`,
-    null, true /* sadece kapat, kaydet yok */
+    <div><label class="yk-lbl">Bütçe</label><p style="margin:0;font-size:15px;font-weight:600">₺${(proje.butce||0).toLocaleString('tr-TR')}</p></div>`,
+    null, true
   );
+
+  /* Eğer otomatik pct değiştiyse güncelle */
+  if(toplamHedef > 0 && otoPct !== proje.pct) {
+    proje.pct = otoPct;
+    _supa.from('ip_projeler').update({pct:otoPct}).eq('id',projId)
+      .then(()=>{ if(window.ipRenderPlan) window.ipRenderPlan(); });
+  }
+};
+
+/* Çeyreklik takip değeri güncelle */
+window.ipGostergeTakipGuncelle = async function(projId, gosNo, quarter, value, yil){
+  const val = parseFloat(value)||0;
+  /* Mevcut satırı bul veya oluştur */
+  const { data: mevcut } = await _supa.from('ip_proje_gosterge_takip')
+    .select('id').eq('proje_id',projId).eq('gosterge_no',gosNo).eq('yil',yil).maybeSingle();
+  if(mevcut?.id) {
+    await _supa.from('ip_proje_gosterge_takip').update({[quarter]:val, updated_at:'now()'}).eq('id',mevcut.id);
+  }
+  /* Projenin % ilerlemesini yeniden hesapla */
+  const { data: takiplar } = await _supa.from('ip_proje_gosterge_takip').select('*').eq('proje_id',projId).eq('yil',yil);
+  let toplamH=0, toplamG=0;
+  (takiplar||[]).forEach(t=>{ toplamH+=parseFloat(t.hedef||0); toplamG+=parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0); });
+  if(toplamH>0){
+    const yeniPct = Math.min(100,Math.round(toplamG/toplamH*100));
+    await _supa.from('ip_projeler').update({pct:yeniPct}).eq('id',projId);
+    /* Lokal güncelle */
+    for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler){ const p=h.projeler.find(x=>x.id===projId); if(p){p.pct=yeniPct;break;} }
+    if(window.ipRenderPlan) window.ipRenderPlan();
+  }
 };
 
 /* ═══════════ EKLE / DÜZENLE ═══════════ */
@@ -11343,12 +11423,19 @@ function projeFormHtml(p){
   return `
     <div><label class="yk-lbl">Proje / İş Paketi Adı *</label><input id="ip-f-pad" class="yk-inp" value="${p?.ad||''}" placeholder="Proje adı..."></div>
     <div><label class="yk-lbl">Performans Göstergeleri</label>
+      <div style="display:grid;grid-template-columns:1fr 80px;gap:6px;margin-bottom:4px">
+        <span style="font-size:11px;color:var(--text2)">Gösterge</span>
+        <span style="font-size:11px;color:var(--text2);text-align:center">Hedef</span>
+      </div>
       <div id="ip-gos-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
-        ${(p?.gosterge ? (Array.isArray(p.gosterge) ? p.gosterge : [p.gosterge]) : ['']).map((g,i)=>`
-          <div style="display:flex;gap:6px;align-items:center">
+        ${(p?.gosterge ? (Array.isArray(p.gosterge) ? p.gosterge : [p.gosterge]) : ['']).map((g,i)=>{
+          const hedefVal = p?.gostergeHedefler?.[i] || '';
+          return `<div style="display:grid;grid-template-columns:1fr 80px auto;gap:6px;align-items:center">
             <input class="yk-inp ip-gos-item" value="${g}" placeholder="Ölçülebilir hedef değeri..." style="flex:1">
-            ${i>0?`<button type="button" onclick="ipGosSil(this)" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0">×</button>`:'<span style="width:22px"></span>'}
-          </div>`).join('')}
+            <input class="yk-inp ip-gos-hedef" type="number" min="0" value="${hedefVal}" placeholder="Hedef" style="text-align:center">
+            ${i>0?`<button type="button" onclick="ipGosSil(this)" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px">×</button>`:'<span style="width:22px"></span>'}
+          </div>`;
+        }).join('')}
       </div>
       <button type="button" onclick="ipGosEkle()" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px">
         <i class="ti ti-plus" style="font-size:12px"></i> Gösterge ekle
@@ -11395,11 +11482,13 @@ function projeFormHtml(p){
 
 function projeFormOku(p, mevcut){
   p.ad           = document.getElementById('ip-f-pad')?.value.trim()||'Yeni Proje';
-  /* Çoklu performans göstergeleri */
-  const gosItems = document.querySelectorAll('.ip-gos-item');
-  const gosler = [];
-  gosItems.forEach(el=>{ const v=el.value.trim(); if(v) gosler.push(v); });
+  /* Çoklu performans göstergeleri + hedefler */
+  const gosItems   = document.querySelectorAll('.ip-gos-item');
+  const hedefItems = document.querySelectorAll('.ip-gos-hedef');
+  const gosler = []; const hedefler = [];
+  gosItems.forEach((el,i)=>{ const v=el.value.trim(); if(v){ gosler.push(v); hedefler.push(parseFloat(hedefItems[i]?.value)||0); } });
   p.gosterge = gosler.length===1 ? gosler[0] : gosler.length>1 ? gosler : '';
+  p.gostergeHedefler = hedefler;
   /* Çoklu faaliyetler */
   const faalItems = document.querySelectorAll('.ip-faal-item');
   const faallar = [];
@@ -11426,9 +11515,10 @@ window.ipGosEkle = function(){
   const list = document.getElementById('ip-gos-list');
   if(!list) return;
   const div = document.createElement('div');
-  div.style.cssText='display:flex;gap:6px;align-items:center';
+  div.style.cssText='display:grid;grid-template-columns:1fr 80px auto;gap:6px;align-items:center';
   div.innerHTML=`<input class="yk-inp ip-gos-item" placeholder="Ölçülebilir hedef değeri..." style="flex:1">
-    <button type="button" onclick="ipGosSil(this)" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0">×</button>`;
+    <input class="yk-inp ip-gos-hedef" type="number" min="0" placeholder="Hedef" style="text-align:center">
+    <button type="button" onclick="ipGosSil(this)" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px">×</button>`;
   list.appendChild(div);
   div.querySelector('input')?.focus();
 };
@@ -11588,7 +11678,18 @@ window.ipProjeEkle = function(strId,hId){
         bitis_ay: p.bitisAy||12,
         butce: p.butce||0,
         notlar:p.yillar||{}
-      }]).then(({error})=>{if(error) console.error('Proje kaydetme hatası:',error.message);});
+      }]).then(async ({error})=>{
+        if(error){ console.error('Proje kaydetme hatası:',error.message); return; }
+        /* Gösterge takip satırlarını ekle */
+        const gosler = Array.isArray(p.gosterge) ? p.gosterge : (p.gosterge ? [p.gosterge] : []);
+        for(let i=0; i<gosler.length; i++){
+          await _supa.from('ip_proje_gosterge_takip').insert([{
+            proje_id: p.id, gosterge_no: i, gosterge_ad: gosler[i],
+            hedef: p.gostergeHedefler?.[i]||0, q1:0, q2:0, q3:0, q4:0,
+            yil: aktifYil||new Date().getFullYear()
+          }]);
+        }
+      });
       ipSyncData();
       ipModalKapat(); ipRenderPlan();
       if(window.dashboardGuncelle) window.dashboardGuncelle();
