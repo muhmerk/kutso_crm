@@ -3881,38 +3881,33 @@ function toggleTpl(header) {
 
   /* Firma seç */
   window.crmSelect = async function(id, tab) {
-    /* Önce yerel listeden bul */
-    let f = FIRMS.find(x=>x.id===id || String(x.id)===String(id) || x.no===id);
-    if(!f){
-      const daKaynak = window._ETK_UYELER || [];
-      const daBulgu = daKaynak.find(x=>x.id===id || String(x.id)===String(id) || x.no===id);
-      if(daBulgu){
-        f = {
-          id: daBulgu.id, no: daBulgu.no, firma: daBulgu.firma,
-          yetkili: daBulgu.yetkili||'—', tel: daBulgu.tel||'—',
-          email: daBulgu.email||'—', vergi: daBulgu.vergi||'—',
-          kayit: daBulgu.kayit||'—', sektor: daBulgu.sektor||'—',
-          ilce: daBulgu.ilce||'—', durum: daBulgu.durum||'aktif',
-          mersis: daBulgu.mersis||'—', tags: [],
-        };
-      }
+    /* Önce DA/DS/DT'de ara (Supabase'den yüklenmiş) */
+    const tumUyeler = [...(window.DA||[]), ...(window.DS||[]), ...(window.DT||[])];
+    let f = tumUyeler.find(x => x.id === id || x.no === id || String(x.id) === String(id));
+
+    /* Yerel FIRMS'te ara */
+    if(!f) {
+      const localFirms = window._FIRMS_LOCAL || [];
+      f = localFirms.find(x => x.id === id || String(x.id) === String(id));
     }
 
-    /* Yerel bulunamazsa Supabase'den çek */
+    /* Hiçbirinde bulunamazsa Supabase'den direkt çek */
     if(!f) {
       try {
-        let q = _supa.from('uyeler').select('*');
-        if(typeof id === 'number') q = q.eq('id', id);
-        else q = q.or(`uye_oda_sicil_no.eq.${id},uye_oid.eq.${id}`);
-        const { data } = await q.maybeSingle();
+        const { data } = await _supa.from('uyeler').select('*')
+          .or(`uye_oda_sicil_no.eq.${id},uye_oid.eq.${id}`)
+          .maybeSingle();
         if(data) {
           f = {
             id: data.uye_oda_sicil_no || data.id,
             no: data.uye_oda_sicil_no || '',
             firma: data.unvan || '',
-            yetkili: '—', tel: '—', email: data.eposta_adres||'—',
-            vergi: data.vergi_no||'—', kayit: data.oda_tescil_tarihi||'—',
-            sektor: data.meslek_grubu_adi||'—', ilce: '—',
+            yetkili: '—', tel: '—',
+            email: data.eposta_adres||'—',
+            vergi: data.vergi_no||'—',
+            kayit: data.oda_tescil_tarihi||'—',
+            sektor: data.meslek_grubu_adi||'—',
+            ilce: '—',
             durum: data.uyelik_durum||'faal',
             mersis: data.mersis_no||'—',
             ticaretSicilNo: data.ticaret_sicil_no||'—',
@@ -3935,7 +3930,7 @@ function toggleTpl(header) {
       } catch(e) { console.warn('CRM select hata:', e); }
     }
 
-    if (!f) { alert('Firma bulunamadı.'); return; }
+    if (!f) { console.warn('Firma bulunamadı:', id); return; }
     currentFirm = f;
 
     /* Arama kapat */
@@ -5884,8 +5879,66 @@ window.etkPrsYilKarToggle=function(){
   const DA = [];
   const DS = [];
   const DT = [];
-  window._ETK_UYELER = DA; /* eğitim modülü için paylaş */
-  window.DA = DA; /* şikayet firma arama için */
+  window._ETK_UYELER = DA;
+  window.DA = DA;
+
+  /* Supabase'den üyeleri yükle */
+  async function supaUyeleriYukle() {
+    try {
+      const { data, error } = await _supa.from('uyeler').select('*').order('uye_oda_sicil_no');
+      if(error || !data) return;
+      DA.length = 0; DS.length = 0; DT.length = 0;
+      data.forEach(u => {
+        const obj = {
+          id: u.uye_oda_sicil_no || u.id,
+          no: u.uye_oda_sicil_no || '',
+          firma: u.unvan || '',
+          yetkili: '—',
+          sektor: u.meslek_grubu_adi || '—',
+          meslek: u.meslek_grubu_adi || '—',
+          nace: u.nace_kod || '—',
+          ilce: '—',
+          calisan: u.calisan_sayisi || '—',
+          ihracat: false,
+          tel: '—',
+          email: u.eposta_adres || '—',
+          vergi: u.vergi_no || '—',
+          mersis: u.mersis_no || '—',
+          bolge: '—',
+          aidat: 0,
+          odendi: u.borc_durumu === 'Borçsuz',
+          durum: u.uyelik_durum || 'faal',
+          kayit: u.oda_tescil_tarihi || '—',
+          borc: parseFloat(u.borc_tutari||0),
+          gecikme: 0,
+          sorumlu: '—',
+          terkTarihi: '—',
+          terkNeden: '—',
+          sonAidat: '—',
+          /* TOBB ek alanlar */
+          ticaretSicilNo: u.ticaret_sicil_no || '—',
+          firmaTipi: u.firma_tipi || '—',
+          dereceTanimi: u.derece_tanimi || '—',
+          sermaye: u.firma_sermaye || 0,
+          kepAdresi: u.kep_adresi || '—',
+          web: u.web_adresi || '',
+          borcDurumu: u.borc_durumu || '—',
+          anaFaaliyet: u.ana_faaliyet_aciklamasi || '—',
+          _uye_oid: u.uye_oid,
+          _fromSupabase: true
+        };
+        const d = u.uyelik_durum;
+        if(d === 'terk') DT.push(obj);
+        else if(d === 'askida') DS.push(obj);
+        else DA.push(obj);
+      });
+      window._ETK_UYELER = DA;
+      window.DA = DA;
+      if(window.umRenderAll) window.umRenderAll();
+      console.log('✓ Üyeler Supabase\'den yüklendi — Aktif:', DA.length, 'Askıda:', DS.length, 'Terk:', DT.length);
+    } catch(e) { console.warn('Üye yükleme hatası:', e); }
+  }
+  supaUyeleriYukle();
 
   const ST = {
     aktif:  {page:1,pp:20,sort:'no',dir:1,sel:null},
@@ -5971,6 +6024,7 @@ window.etkPrsYilKarToggle=function(){
   window.umRender = function(tab){ ST[tab].page=1; umDraw(tab); };
   window.umSort   = function(tab,key){ if(ST[tab].sort===key) ST[tab].dir*=-1; else{ST[tab].sort=key;ST[tab].dir=1;} ST[tab].page=1; umDraw(tab); };
   window.umDraw   = umDraw;
+  window.umRenderAll = function(){ ['aktif','askida','terk'].forEach(t=>{ try{ umDraw(t); }catch(e){} }); };
 
   function umDraw(tab){
     const data = filterData(tab);
