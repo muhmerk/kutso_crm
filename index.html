@@ -11314,6 +11314,8 @@ window.ipProjeDetay = async function(projId){
   let { data: takiplar } = await _supa.from('ip_proje_gosterge_takip')
     .select('*').eq('proje_id', projId).eq('yil', yil).order('gosterge_no');
 
+  const gosler = Array.isArray(proje.gosterge) ? proje.gosterge : (proje.gosterge ? [proje.gosterge] : []);
+
   /* Göstergeler için satır yoksa oluştur */
   if(gosler.length > 0) {
     for(let i=0; i<gosler.length; i++){
@@ -11331,8 +11333,6 @@ window.ipProjeDetay = async function(projId){
       .select('*').eq('proje_id', projId).eq('yil', yil).order('gosterge_no');
     takiplar = yeniTakiplar;
   }
-
-  const gosler = Array.isArray(proje.gosterge) ? proje.gosterge : (proje.gosterge ? [proje.gosterge] : []);
 
   /* Otomatik % hesapla */
   let toplamHedef = 0, toplamGercek = 0;
@@ -11532,11 +11532,6 @@ function projeFormHtml(p){
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Bütçe (₺)</label><input id="ip-f-but" class="yk-inp" type="number" value="${p?.butce||0}" min="0"></div>
-      <div><label class="yk-lbl">Başlangıç (ay)</label><input id="ip-f-bas" class="yk-inp" type="number" min="1" max="12" value="${p?.baslangicAy||1}"></div>
-      <div><label class="yk-lbl">Bitiş (ay)</label><input id="ip-f-bit" class="yk-inp" type="number" min="1" max="12" value="${p?.bitisAy||12}"></div>
-      <div><label class="yk-lbl">Durum</label><select id="ip-f-dur" class="yk-inp">${durumOpts}</select></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Başlangıç (ay)</label><input id="ip-f-bas" class="yk-inp" type="number" min="1" max="12" value="${p?.baslangicAy||1}"></div>
       <div><label class="yk-lbl">Bitiş (ay)</label><input id="ip-f-bit" class="yk-inp" type="number" min="1" max="12" value="${p?.bitisAy||12}"></div>
       <div><label class="yk-lbl">Durum</label><select id="ip-f-dur" class="yk-inp">${durumOpts}</select></div>
