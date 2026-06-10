@@ -11311,8 +11311,26 @@ window.ipProjeDetay = async function(projId){
   const yil = aktifYil || new Date().getFullYear();
 
   /* Takip verilerini Supabase'den çek */
-  const { data: takiplar } = await _supa.from('ip_proje_gosterge_takip')
+  let { data: takiplar } = await _supa.from('ip_proje_gosterge_takip')
     .select('*').eq('proje_id', projId).eq('yil', yil).order('gosterge_no');
+
+  /* Göstergeler için satır yoksa oluştur */
+  if(gosler.length > 0) {
+    for(let i=0; i<gosler.length; i++){
+      const mevcut = (takiplar||[]).find(t=>t.gosterge_no===i);
+      if(!mevcut){
+        const hedefVal = Array.isArray(proje.gostergeHedefler) ? (proje.gostergeHedefler[i]||0) : 0;
+        await _supa.from('ip_proje_gosterge_takip').insert([{
+          proje_id: projId, gosterge_no: i, gosterge_ad: gosler[i],
+          hedef: hedefVal, q1:0, q2:0, q3:0, q4:0, yil
+        }]);
+      }
+    }
+    /* Yeniden çek */
+    const { data: yeniTakiplar } = await _supa.from('ip_proje_gosterge_takip')
+      .select('*').eq('proje_id', projId).eq('yil', yil).order('gosterge_no');
+    takiplar = yeniTakiplar;
+  }
 
   const gosler = Array.isArray(proje.gosterge) ? proje.gosterge : (proje.gosterge ? [proje.gosterge] : []);
 
@@ -11389,11 +11407,16 @@ window.ipProjeDetay = async function(projId){
     null, true
   );
 
-  /* Eğer otomatik pct değiştiyse güncelle */
+  /* Eğer takip satırları varsa pct güncelleme yap, yoksa 0 bırak */
   if(toplamHedef > 0 && otoPct !== proje.pct) {
     proje.pct = otoPct;
     _supa.from('ip_projeler').update({pct:otoPct}).eq('id',projId)
       .then(()=>{ if(window.ipRenderPlan) window.ipRenderPlan(); });
+  } else if(toplamHedef === 0 && proje.pct !== 0) {
+    /* Hedef girilmemişse pct 0 yap */
+    proje.pct = 0;
+    _supa.from('ip_projeler').update({pct:0}).eq('id',projId);
+    if(window.ipRenderPlan) window.ipRenderPlan();
   }
 };
 
