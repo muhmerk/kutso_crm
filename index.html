@@ -11343,18 +11343,21 @@ window.ipProjeDetay = async function(projId){
             const t = (takiplar||[]).find(x=>x.gosterge_no===i) || {id:null,hedef:0,q1:0,q2:0,q3:0,q4:0};
             const gercek = parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
             const pct = parseFloat(t.hedef||0) > 0 ? Math.min(100,Math.round(gercek/parseFloat(t.hedef)*100)) : 0;
+            const hedefInput = canEdit
+              ? `<input type="number" min="0" value="${t.hedef||0}" style="width:56px;text-align:center;border:0.5px solid var(--border);border-radius:5px;padding:3px;font-size:12px;font-family:var(--font);background:var(--surface)" onchange="ipGostergeHedefGuncelle('${projId}',${i},this.value,${yil})">`
+              : `<span>${t.hedef||0}</span>`;
             const qInput = (q,val) => canEdit
               ? `<input type="number" min="0" value="${val||0}" style="width:56px;text-align:center;border:0.5px solid var(--border);border-radius:5px;padding:3px;font-size:12px;font-family:var(--font);background:var(--surface)" onchange="ipGostergeTakipGuncelle('${projId}',${i},'${q}',this.value,${yil})">`
               : `<span>${val||0}</span>`;
-            return `<tr>
+            return `<tr data-gos="${projId}-${i}">
               <td style="padding:7px 10px;border:0.5px solid var(--border)">${g}</td>
-              <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center;font-weight:500">${t.hedef||0}</td>
+              <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center;font-weight:500">${hedefInput}</td>
               <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">${qInput('q1',t.q1)}</td>
               <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">${qInput('q2',t.q2)}</td>
               <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">${qInput('q3',t.q3)}</td>
               <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">${qInput('q4',t.q4)}</td>
               <td style="padding:7px 10px;border:0.5px solid var(--border);text-align:center">
-                <span style="font-weight:600;color:${pct>=70?'var(--teal)':pct>=40?'var(--amber)':'var(--red)'}">%${pct}</span>
+                <span class="gos-pct" style="font-weight:600;color:${pct>=70?'var(--teal)':pct>=40?'var(--amber)':'var(--red)'}">%${pct}</span>
               </td>
             </tr>`;
           }).join('')}
@@ -11366,7 +11369,7 @@ window.ipProjeDetay = async function(projId){
   ipModalAc(proje.ad,'Proje Detayı',`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Durum</label><p style="margin:0;font-size:13px"><span class="badge ${badgeCls[proje.durum]||'b-gray'}">${proje.durum}</span></p></div>
-      <div><label class="yk-lbl">Tamamlanma</label><p style="margin:0;font-size:14px;font-weight:600">%${otoPct} ${otoPct!==proje.pct?'<span style="font-size:10px;color:var(--text2)">(otomatik)</span>':''}</p></div>
+      <div><label class="yk-lbl">Tamamlanma</label><p style="margin:0;font-size:14px;font-weight:600"><span class="ip-detay-pct">%${otoPct}</span> ${otoPct!==proje.pct?'<span style="font-size:10px;color:var(--text2)">(otomatik)</span>':''}</p></div>
     </div>
     ${takipTablosu}
     <div><label class="yk-lbl">Faaliyetler</label><div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.6">${
@@ -11399,21 +11402,63 @@ window.ipGostergeTakipGuncelle = async function(projId, gosNo, quarter, value, y
   const val = parseFloat(value)||0;
   /* Mevcut satırı bul veya oluştur */
   const { data: mevcut } = await _supa.from('ip_proje_gosterge_takip')
-    .select('id').eq('proje_id',projId).eq('gosterge_no',gosNo).eq('yil',yil).maybeSingle();
+    .select('*').eq('proje_id',projId).eq('gosterge_no',gosNo).eq('yil',yil).maybeSingle();
+  
   if(mevcut?.id) {
-    await _supa.from('ip_proje_gosterge_takip').update({[quarter]:val, updated_at:'now()'}).eq('id',mevcut.id);
+    await _supa.from('ip_proje_gosterge_takip').update({[quarter]:val}).eq('id',mevcut.id);
+  } else {
+    /* Satır yoksa oluştur */
+    const gosler = [];
+    for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler){
+      const p=h.projeler.find(x=>x.id===projId);
+      if(p){ const g=Array.isArray(p.gosterge)?p.gosterge:(p.gosterge?[p.gosterge]:[]); gosler.push(...g); break; }
+    }
+    await _supa.from('ip_proje_gosterge_takip').insert([{
+      proje_id:projId, gosterge_no:gosNo,
+      gosterge_ad: gosler[gosNo]||'', hedef:0,
+      [quarter]:val, yil
+    }]);
   }
+
   /* Projenin % ilerlemesini yeniden hesapla */
   const { data: takiplar } = await _supa.from('ip_proje_gosterge_takip').select('*').eq('proje_id',projId).eq('yil',yil);
   let toplamH=0, toplamG=0;
-  (takiplar||[]).forEach(t=>{ toplamH+=parseFloat(t.hedef||0); toplamG+=parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0); });
+  (takiplar||[]).forEach(t=>{
+    toplamH += parseFloat(t.hedef||0);
+    toplamG += parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
+  });
   if(toplamH>0){
     const yeniPct = Math.min(100,Math.round(toplamG/toplamH*100));
     await _supa.from('ip_projeler').update({pct:yeniPct}).eq('id',projId);
-    /* Lokal güncelle */
-    for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler){ const p=h.projeler.find(x=>x.id===projId); if(p){p.pct=yeniPct;break;} }
+    for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler){
+      const p=h.projeler.find(x=>x.id===projId);
+      if(p){ p.pct=yeniPct; break; }
+    }
     if(window.ipRenderPlan) window.ipRenderPlan();
+    /* Tablodaki % sütununu güncelle */
+    const { data: yeniTakiplar } = await _supa.from('ip_proje_gosterge_takip').select('*').eq('proje_id',projId).eq('yil',yil);
+    (yeniTakiplar||[]).forEach(t=>{
+      const gercek = parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
+      const p2 = parseFloat(t.hedef||0)>0 ? Math.min(100,Math.round(gercek/parseFloat(t.hedef)*100)) : 0;
+      const row = document.querySelector(`tr[data-gos="${projId}-${t.gosterge_no}"]`);
+      if(row) { const pctCell = row.querySelector('.gos-pct'); if(pctCell) pctCell.textContent='%'+p2; }
+    });
+    /* Tamamlanma % güncelle */
+    const pctEl = document.querySelector('.ip-detay-pct');
+    if(pctEl) pctEl.textContent='%'+yeniPct;
   }
+};
+
+/* Hedef değeri güncelle */
+window.ipGostergeHedefGuncelle = async function(projId, gosNo, value, yil){
+  const val = parseFloat(value)||0;
+  const { data: mevcut } = await _supa.from('ip_proje_gosterge_takip')
+    .select('id').eq('proje_id',projId).eq('gosterge_no',gosNo).eq('yil',yil).maybeSingle();
+  if(mevcut?.id) {
+    await _supa.from('ip_proje_gosterge_takip').update({hedef:val}).eq('id',mevcut.id);
+  }
+  /* % yeniden hesapla */
+  window.ipGostergeTakipGuncelle(projId, gosNo, 'q1', 0, yil);
 };
 
 /* ═══════════ EKLE / DÜZENLE ═══════════ */
