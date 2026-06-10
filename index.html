@@ -217,9 +217,18 @@ async function supaYukleIsPlan() {
     const trySet = () => {
       if(window.IP_PLAN) {
         window.IP_PLAN.stratejiler = mappedStratejiler;
+        /* Yıl sekmelerini güncelle */
+        if(window.IP_PLAN.gerceklesmeler) {
+          mappedStratejiler.forEach(s => {
+            const y = s.yil || new Date().getFullYear();
+            if(!(y in window.IP_PLAN.gerceklesmeler)) {
+              window.IP_PLAN.gerceklesmeler[y] = '';
+            }
+          });
+        }
         if(window.ipSyncData) window.ipSyncData();
-        if(window.ipRenderPlan) window.ipRenderPlan();
         if(window.ipRenderTabs) window.ipRenderTabs();
+        if(window.ipRenderPlan) window.ipRenderPlan();
         if(window.dashboardGuncelle) window.dashboardGuncelle();
         console.log('✓ İş planı yüklendi:', stratejiler.length, 'strateji');
       } else {
