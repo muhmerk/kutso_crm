@@ -11334,13 +11334,15 @@ window.ipProjeDetay = async function(projId){
     takiplar = yeniTakiplar;
   }
 
-  /* Otomatik % hesapla */
-  let toplamHedef = 0, toplamGercek = 0;
+  /* Otomatik % hesapla — her göstergenin kendi %'sinin ortalaması */
+  let toplamHedef = 0, pctler = [];
   (takiplar||[]).forEach(t => {
-    toplamHedef += parseFloat(t.hedef||0);
-    toplamGercek += parseFloat(t.q1||0) + parseFloat(t.q2||0) + parseFloat(t.q3||0) + parseFloat(t.q4||0);
+    const h = parseFloat(t.hedef||0);
+    const g = parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
+    toplamHedef += h;
+    if(h > 0) pctler.push(Math.min(100, Math.round(g/h*100)));
   });
-  const otoPct = toplamHedef > 0 ? Math.min(100, Math.round(toplamGercek/toplamHedef*100)) : proje.pct;
+  const otoPct = pctler.length > 0 ? Math.round(pctler.reduce((a,b)=>a+b,0)/pctler.length) : proje.pct;
 
   const takipTablosu = gosler.length > 0 ? `
     <div><label class="yk-lbl">${yil} Çeyreklik Takip</label>
@@ -11443,15 +11445,16 @@ window.ipGostergeTakipGuncelle = async function(projId, gosNo, quarter, value, y
     }]);
   }
 
-  /* Projenin % ilerlemesini yeniden hesapla */
+  /* Projenin % ilerlemesini yeniden hesapla — ortalama */
   const { data: takiplar } = await _supa.from('ip_proje_gosterge_takip').select('*').eq('proje_id',projId).eq('yil',yil);
-  let toplamH=0, toplamG=0;
+  const pctler = [];
   (takiplar||[]).forEach(t=>{
-    toplamH += parseFloat(t.hedef||0);
-    toplamG += parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
+    const h=parseFloat(t.hedef||0);
+    const g=parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
+    if(h>0) pctler.push(Math.min(100,Math.round(g/h*100)));
   });
-  if(toplamH>0){
-    const yeniPct = Math.min(100,Math.round(toplamG/toplamH*100));
+  if(pctler.length>0){
+    const yeniPct = Math.round(pctler.reduce((a,b)=>a+b,0)/pctler.length);
     await _supa.from('ip_projeler').update({pct:yeniPct}).eq('id',projId);
     for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler){
       const p=h.projeler.find(x=>x.id===projId);
@@ -11481,7 +11484,23 @@ window.ipGostergeHedefGuncelle = async function(projId, gosNo, value, yil){
     await _supa.from('ip_proje_gosterge_takip').update({hedef:val}).eq('id',mevcut.id);
   }
   /* % yeniden hesapla */
-  window.ipGostergeTakipGuncelle(projId, gosNo, 'q1', 0, yil);
+  const { data: takiplar } = await _supa.from('ip_proje_gosterge_takip').select('*').eq('proje_id',projId).eq('yil',yil);
+  const pctler = [];
+  (takiplar||[]).forEach(t=>{
+    const h=parseFloat(t.hedef||0);
+    const g=parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
+    if(h>0) pctler.push(Math.min(100,Math.round(g/h*100)));
+  });
+  if(pctler.length>0){
+    const yeniPct = Math.round(pctler.reduce((a,b)=>a+b,0)/pctler.length);
+    await _supa.from('ip_projeler').update({pct:yeniPct}).eq('id',projId);
+    for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler){
+      const p=h.projeler.find(x=>x.id===projId); if(p){p.pct=yeniPct;break;}
+    }
+    if(window.ipRenderPlan) window.ipRenderPlan();
+    const pctEl = document.querySelector('.ip-detay-pct');
+    if(pctEl) pctEl.textContent='%'+yeniPct;
+  }
 };
 
 /* ═══════════ EKLE / DÜZENLE ═══════════ */
