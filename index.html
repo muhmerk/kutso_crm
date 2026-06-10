@@ -220,6 +220,7 @@ async function supaYukleIsPlanSessiz() {
     }));
     if(window.ipSyncData) window.ipSyncData();
     if(window.ipRenderPlan) window.ipRenderPlan(); /* Mevcut yılı korur */
+    if(window.ipRenderTabs) window.ipRenderTabs();
     if(window.dashboardGuncelle) window.dashboardGuncelle();
   } catch(e) { console.warn('İş planı sessiz yükleme hatası:', e); }
 }
@@ -11213,6 +11214,8 @@ function renderStrateji(str, si, yetki){
       <div class="pb" style="width:80px;flex-shrink:0"><div class="pf" style="width:${ort}%;background:${ort>=70?'var(--teal)':ort>=40?'var(--amber)':'var(--red)'}"></div></div>
       <span style="font-size:12px;font-weight:600;color:${ort>=70?'var(--teal)':ort>=40?'var(--amber)':'var(--red)'};margin-left:6px;flex-shrink:0">%${ort}</span>
       ${yetki?`<div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" title="Yukarı taşı" onclick="event.stopPropagation();ipStratejiTasi('${str.id}',-1)"><i class="ti ti-arrow-up"></i></button>
+        <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" title="Aşağı taşı" onclick="event.stopPropagation();ipStratejiTasi('${str.id}',1)"><i class="ti ti-arrow-down"></i></button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();ipStratejiDuzenle('${str.id}')"><i class="ti ti-edit"></i></button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();ipHedefEkle('${str.id}')"><i class="ti ti-plus"></i> Hedef</button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px;color:var(--red)" onclick="event.stopPropagation();ipStratejiSil('${str.id}')"><i class="ti ti-trash"></i></button>
@@ -11426,6 +11429,25 @@ window.ipStratejiDuzenle = function(strId){
       ipModalKapat(); ipRenderPlan();
     }
   );
+};
+
+window.ipStratejiTasi = function(strId, yon){
+  if(!ipYetkiMi()) return;
+  const yilStr = IP_PLAN.stratejiler.filter(s => !s.yil || s.yil === aktifYil);
+  const idx = yilStr.findIndex(s=>s.id===strId);
+  const yeniIdx = idx + yon;
+  if(yeniIdx < 0 || yeniIdx >= yilStr.length) return;
+  /* Genel listede takas */
+  const globalIdx1 = IP_PLAN.stratejiler.findIndex(s=>s.id===strId);
+  const globalIdx2 = IP_PLAN.stratejiler.findIndex(s=>s.id===yilStr[yeniIdx].id);
+  [IP_PLAN.stratejiler[globalIdx1], IP_PLAN.stratejiler[globalIdx2]] =
+  [IP_PLAN.stratejiler[globalIdx2], IP_PLAN.stratejiler[globalIdx1]];
+  /* Supabase'de sira güncelle */
+  IP_PLAN.stratejiler.forEach((s,i)=>{
+    _supa.from('ip_stratejiler').update({sira:i}).eq('id',s.id)
+      .then(({error})=>{ if(error) console.error('Sıralama hatası:',error.message); });
+  });
+  ipRenderPlan();
 };
 
 window.ipStratejiSil = function(strId){
