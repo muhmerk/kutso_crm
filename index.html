@@ -11307,7 +11307,11 @@ window.ipProjeDetay = async function(projId){
   for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler) { const f=h.projeler.find(p=>p.id===projId); if(f){proje=f;break;} }
   if(!proje) return;
   const badgeCls={tamamlandi:'b-green',devam:'b-amber',planlandi:'b-blue',acil:'b-red'};
-  const canEdit = currentUser && (proje.sorumluPersonel === (currentUser.adSoyad||'') || ipYetkiMi());
+  const canEdit = currentUser && (
+    ipYetkiMi() ||
+    proje.sorumluPersonel === (currentUser.adSoyad||'') ||
+    (window.PERSONEL||[]).some(p => p.kullanici === currentUser.kullanici && proje.sorumluPersonel === p.ad+' '+p.soyad)
+  );
   const yil = aktifYil || new Date().getFullYear();
 
   /* Takip verilerini Supabase'den çek */
