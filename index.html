@@ -3866,7 +3866,7 @@ function toggleTpl(header) {
         const init = f.firma.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
         const dColor = f.durum==='faal'||f.durum==='aktif' ? '#1D9E75' : f.durum==='askida' ? '#EF9F27' : '#E24B4A';
         const dLabel = f.durum==='faal'||f.durum==='aktif' ? 'Faal' : f.durum==='askida' ? 'Askıda' : f.durum==='terk' ? 'Terk' : 'Pasif';
-        return `<div class="crm-result-item" onclick="crmSelect(${JSON.stringify(f.id)})">
+        return `<div class="crm-result-item" onclick="crmSelect(${JSON.stringify(f.no||f.id)})">
           <div style="width:34px;height:34px;border-radius:50%;background:${av.bg};color:${av.c};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">${init}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.firma}</div>
@@ -3882,10 +3882,10 @@ function toggleTpl(header) {
   /* Firma seç */
   window.crmSelect = async function(id, tab) {
     /* Önce yerel listeden bul */
-    let f = FIRMS.find(x=>x.id===id);
+    let f = FIRMS.find(x=>x.id===id || String(x.id)===String(id) || x.no===id);
     if(!f){
       const daKaynak = window._ETK_UYELER || [];
-      const daBulgu = daKaynak.find(x=>x.id===id);
+      const daBulgu = daKaynak.find(x=>x.id===id || String(x.id)===String(id) || x.no===id);
       if(daBulgu){
         f = {
           id: daBulgu.id, no: daBulgu.no, firma: daBulgu.firma,
@@ -3897,7 +3897,45 @@ function toggleTpl(header) {
         };
       }
     }
-    if (!f) return;
+
+    /* Yerel bulunamazsa Supabase'den çek */
+    if(!f) {
+      try {
+        let q = _supa.from('uyeler').select('*');
+        if(typeof id === 'number') q = q.eq('id', id);
+        else q = q.or(`uye_oda_sicil_no.eq.${id},uye_oid.eq.${id}`);
+        const { data } = await q.maybeSingle();
+        if(data) {
+          f = {
+            id: data.uye_oda_sicil_no || data.id,
+            no: data.uye_oda_sicil_no || '',
+            firma: data.unvan || '',
+            yetkili: '—', tel: '—', email: data.eposta_adres||'—',
+            vergi: data.vergi_no||'—', kayit: data.oda_tescil_tarihi||'—',
+            sektor: data.meslek_grubu_adi||'—', ilce: '—',
+            durum: data.uyelik_durum||'faal',
+            mersis: data.mersis_no||'—',
+            ticaretSicilNo: data.ticaret_sicil_no||'—',
+            firmaTipi: data.firma_tipi||'—',
+            dereceTanimi: data.derece_tanimi||'—',
+            sermaye: data.firma_sermaye||0,
+            kepAdresi: data.kep_adresi||'—',
+            web: data.web_adresi||'',
+            borcTutari: data.borc_tutari||'0',
+            borcDurumu: data.borc_durumu||'—',
+            calisan: data.calisan_sayisi||'—',
+            nace: data.nace_kod||'—',
+            meslek: data.meslek_grubu_adi||'—',
+            anaFaaliyet: data.ana_faaliyet_aciklamasi||'—',
+            tags: [],
+            _uye_oid: data.uye_oid,
+            _fromSupabase: true
+          };
+        }
+      } catch(e) { console.warn('CRM select hata:', e); }
+    }
+
+    if (!f) { alert('Firma bulunamadı.'); return; }
     currentFirm = f;
 
     /* Arama kapat */
@@ -4174,11 +4212,16 @@ function toggleTpl(header) {
     try {
       /* Supabase'den üye bul */
       let uyeData = null;
-      if(f.no) {
+
+      /* Eğer zaten Supabase'den geldiyse direkt kullan */
+      if(f._fromSupabase && f._uye_oid) {
+        const { data } = await _supa.from('uyeler').select('*').eq('uye_oid', f._uye_oid).maybeSingle();
+        uyeData = data;
+      } else if(f.no) {
         const { data } = await _supa.from('uyeler').select('*').eq('uye_oda_sicil_no', String(f.no)).maybeSingle();
         uyeData = data;
       }
-      if(!uyeData && f.mersis) {
+      if(!uyeData && f.mersis && f.mersis !== '—') {
         const { data } = await _supa.from('uyeler').select('*').eq('mersis_no', String(f.mersis)).maybeSingle();
         uyeData = data;
       }
