@@ -11271,15 +11271,16 @@ function renderProje(strId, hId, p, pi, yetki){
   const durmLbl  = {tamamlandi:'Tamamlandı',devam:'Devam',planlandi:'Planlandı',acil:'Acil'};
   const renk = durmRenk[p.durum]||'var(--blue)';
   const yilNot = p.yillar?.[aktifYil]||'';
+  const yilNotKisa = yilNot.length > 100 ? yilNot.slice(0,100)+'…' : yilNot;
   return `<div style="border:0.5px solid var(--border);border-radius:8px;margin-bottom:7px;overflow:hidden">
     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);cursor:pointer" onclick="ipProjeDetay('${p.id}')">
       <div style="width:20px;height:20px;border-radius:5px;background:var(--amber-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <span style="font-size:9px;font-weight:700;color:var(--amber)">P${pi+1}</span>
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:500">${p.ad}</div>
-        <div style="font-size:11px;color:var(--text2)">${p.sorumluPersonel} · Bütçe: ₺${(p.butce||0).toLocaleString('tr-TR')}</div>
-        ${yilNot?`<div style="font-size:11px;color:var(--blue);margin-top:2px"><i class="ti ti-calendar" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>${yilNot}</div>`:''}
+        <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ad}</div>
+        <div style="font-size:11px;color:var(--text2)">${p.sorumluPersonel||'—'} · Bütçe: ₺${(p.butce||0).toLocaleString('tr-TR')}</div>
+        ${yilNotKisa?`<div style="font-size:11px;color:var(--blue);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px"><i class="ti ti-calendar" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>${yilNotKisa}</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
         <span class="badge ${badgeCls[p.durum]||'b-gray'}" style="font-size:10px">${durmLbl[p.durum]||p.durum}</span>
