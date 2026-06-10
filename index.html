@@ -206,8 +206,15 @@ async function supaYukleIsPlanSessiz() {
         id: h.id, ad: h.ad,
         projeler: (projeler || []).filter(p => p.hedef_id === h.id).map(p => ({
           id: p.id, ad: p.ad, pct: p.pct || 0, durum: p.durum || 'planlandi',
-          sorumluPersonel: p.sorumlu_personel || '', baslamaAy: p.baslama_ay || null,
-          bitisAy: p.bitis_ay || null, butce: p.butce || 0, yillar: p.notlar || {}
+          sorumluPersonel: p.sorumlu_personel || '',
+          sorumluYK: p.sorumlu_yk || '',
+          meclis: p.meclis_uyesi || '',
+          komite: p.meslek_komitesi || '',
+          gosterge: p.gosterge || '',
+          faaliyetler: p.faaliyetler || '',
+          baslangicAy: p.baslama_ay || 1,
+          bitisAy: p.bitis_ay || 12,
+          butce: p.butce || 0, yillar: p.notlar || {}
         }))
       }))
     }));
@@ -233,8 +240,13 @@ async function supaYukleIsPlan() {
           id: p.id, ad: p.ad, pct: p.pct || 0,
           durum: p.durum || 'planlandi',
           sorumluPersonel: p.sorumlu_personel || '',
-          baslamaAy: p.baslama_ay || null,
-          bitisAy: p.bitis_ay || null,
+          sorumluYK: p.sorumlu_yk || '',
+          meclis: p.meclis_uyesi || '',
+          komite: p.meslek_komitesi || '',
+          gosterge: p.gosterge || '',
+          faaliyetler: p.faaliyetler || '',
+          baslangicAy: p.baslama_ay || 1,
+          bitisAy: p.bitis_ay || 12,
           butce: p.butce || 0,
           yillar: p.notlar || {}
         }))
@@ -11506,6 +11518,14 @@ window.ipProjeEkle = function(strId,hId){
       _supa.from('ip_projeler').insert([{
         id:p.id, hedef_id:hId, ad:p.ad||'', pct:p.pct||0,
         durum:p.durum||'planlandi', sorumlu_personel:p.sorumluPersonel||null,
+        gosterge: Array.isArray(p.gosterge) ? p.gosterge.join('\n') : (p.gosterge||null),
+        faaliyetler: p.faaliyetler||null,
+        sorumlu_yk: p.sorumluYK||null,
+        meclis_uyesi: p.meclis||null,
+        meslek_komitesi: p.komite||null,
+        baslama_ay: p.baslangicAy||1,
+        bitis_ay: p.bitisAy||12,
+        butce: p.butce||0,
         notlar:p.yillar||{}
       }]).then(({error})=>{if(error) console.error('Proje kaydetme hatası:',error.message);});
       ipSyncData();
@@ -11530,6 +11550,14 @@ window.ipProjeDuzenle = function(projId){
       _supa.from('ip_projeler').update({
         ad:proje.ad||'', pct:proje.pct||0,
         durum:proje.durum||'planlandi', sorumlu_personel:proje.sorumluPersonel||null,
+        gosterge: Array.isArray(proje.gosterge) ? proje.gosterge.join('\n') : (proje.gosterge||null),
+        faaliyetler: proje.faaliyetler||null,
+        sorumlu_yk: proje.sorumluYK||null,
+        meclis_uyesi: proje.meclis||null,
+        meslek_komitesi: proje.komite||null,
+        baslama_ay: proje.baslangicAy||1,
+        bitis_ay: proje.bitisAy||12,
+        butce: proje.butce||0,
         notlar:proje.yillar||{}
       }).eq('id',projId).then(({error})=>{if(error) console.error('Proje güncelleme hatası:',error.message);});
       ipSyncData();
