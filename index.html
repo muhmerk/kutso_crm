@@ -9806,8 +9806,10 @@ window.memPrsKaydet=function(){
 window.memPrsAnketSil=function(id){
   if(!confirm('Bu anketi silmek istiyor musunuz?')) return;
   for(const y in MEM_PRS_DB){ const idx=MEM_PRS_DB[y].findIndex(a=>a.id===id); if(idx>-1){MEM_PRS_DB[y].splice(idx,1);break;} }
-  _supa.from('mem_prs_anketler').delete().eq('id',id)
-    .then(({error})=>{ if(error) console.error('Personel memnuniyet anketi silme hatası:',error.message); });
+  if(id && !id.startsWith('mp')) {
+    _supa.from('mem_prs_anketler').delete().eq('id',id)
+      .then(({error})=>{ if(error) console.error('Personel memnuniyet anketi silme hatası:',error.message); });
+  }
   memPrsSayfaGuncelle();
 };
 
@@ -10748,8 +10750,11 @@ window.memAnketSil = function(id){
     const idx=MEM_ANKET_DB[yil].findIndex(a=>a.id===id);
     if(idx>-1){ MEM_ANKET_DB[yil].splice(idx,1); break; }
   }
-  _supa.from('mem_anketler').delete().eq('id',id)
-    .then(({error})=>{ if(error) console.error('Memnuniyet anketi silme hatası:',error.message); });
+  /* Sadece UUID formatındaki ID'leri DB'den sil */
+  if(id && !id.startsWith('ma')) {
+    _supa.from('mem_anketler').delete().eq('id',id)
+      .then(({error})=>{ if(error) console.error('Memnuniyet anketi silme hatası:',error.message); });
+  }
   window.memSayfaGuncelle();
 };
 
@@ -11372,6 +11377,8 @@ window.ipStratejiDuzenle = function(strId){
       if(!ad){alert('Strateji adı zorunludur.');return;}
       str.ad = ad;
       str.aciklama = document.getElementById('ip-f-sack')?.value.trim()||'';
+      _supa.from('ip_stratejiler').update({ad:str.ad, aciklama:str.aciklama}).eq('id',strId)
+        .then(({error})=>{ if(error) console.error('Strateji düzenleme hatası:',error.message); });
       ipModalKapat(); ipRenderPlan();
     }
   );
@@ -11381,6 +11388,9 @@ window.ipStratejiSil = function(strId){
   if(!ipYetkiMi()||!confirm('Bu stratejiyi ve tüm hedef/projelerini silmek istiyor musunuz?')) return;
   IP_PLAN.stratejiler = IP_PLAN.stratejiler.filter(s=>s.id!==strId);
   acikNodelar.delete(strId);
+  /* Supabase'den sil — cascade ile hedef ve projeler de silinir */
+  _supa.from('ip_stratejiler').delete().eq('id',strId)
+    .then(({error})=>{ if(error) console.error('Strateji silme hatası:',error.message); });
   ipSyncData(); ipRenderPlan();
   if(window.dashboardGuncelle) window.dashboardGuncelle();
 };
@@ -11397,6 +11407,8 @@ window.ipHedefDuzenle = function(strId, hId){
       const ad = document.getElementById('ip-f-had')?.value.trim();
       if(!ad){alert('Hedef adı zorunludur.');return;}
       h.ad = ad;
+      _supa.from('ip_hedefler').update({ad}).eq('id',hId)
+        .then(({error})=>{ if(error) console.error('Hedef düzenleme hatası:',error.message); });
       ipModalKapat(); ipRenderPlan();
     }
   );
@@ -11407,6 +11419,9 @@ window.ipHedefSil = function(strId, hId){
   const str = IP_PLAN.stratejiler.find(s=>s.id===strId);
   if(str){ str.hedefler = str.hedefler.filter(h=>h.id!==hId); }
   acikNodelar.delete(hId);
+  /* Supabase'den sil — cascade ile projeler de silinir */
+  _supa.from('ip_hedefler').delete().eq('id',hId)
+    .then(({error})=>{ if(error) console.error('Hedef silme hatası:',error.message); });
   ipSyncData(); ipRenderPlan();
   if(window.dashboardGuncelle) window.dashboardGuncelle();
 };
