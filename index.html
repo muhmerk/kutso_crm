@@ -210,8 +210,8 @@ async function supaYukleIsPlanSessiz() {
           sorumluYK: p.sorumlu_yk || '',
           meclis: p.meclis_uyesi || '',
           komite: p.meslek_komitesi || '',
-          gosterge: p.gosterge || '',
-          faaliyetler: p.faaliyetler || '',
+          gosterge: p.gosterge ? (p.gosterge.includes("\n") ? p.gosterge.split("\n").filter(Boolean) : p.gosterge) : '',
+          faaliyetler: p.faaliyetler ? (p.faaliyetler.includes("\n") ? p.faaliyetler.split("\n").filter(Boolean) : p.faaliyetler) : '',
           baslangicAy: p.baslama_ay || 1,
           bitisAy: p.bitis_ay || 12,
           butce: p.butce || 0, yillar: p.notlar || {}
@@ -251,8 +251,8 @@ async function supaYukleIsPlan() {
           sorumluYK: p.sorumlu_yk || '',
           meclis: p.meclis_uyesi || '',
           komite: p.meslek_komitesi || '',
-          gosterge: p.gosterge || '',
-          faaliyetler: p.faaliyetler || '',
+          gosterge: p.gosterge ? (p.gosterge.includes("\n") ? p.gosterge.split("\n").filter(Boolean) : p.gosterge) : '',
+          faaliyetler: p.faaliyetler ? (p.faaliyetler.includes("\n") ? p.faaliyetler.split("\n").filter(Boolean) : p.faaliyetler) : '',
           baslangicAy: p.baslama_ay || 1,
           bitisAy: p.bitis_ay || 12,
           butce: p.butce || 0,
@@ -11317,7 +11317,11 @@ window.ipProjeDetay = function(projId){
         ? `<div style="display:flex;flex-direction:column;gap:5px">${proje.gosterge.map(g=>`<div style="padding:7px 12px;background:var(--surface2);border-radius:7px;font-size:13px">• ${g}</div>`).join('')}</div>`
         : `<div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px">${proje.gosterge||'—'}</div>`}
     </div>
-    <div><label class="yk-lbl">Faaliyetler</label><div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.6">${proje.faaliyetler||'—'}</div></div>
+    <div><label class="yk-lbl">Faaliyetler</label><div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.6">${
+      Array.isArray(proje.faaliyetler)
+        ? `<ul style="margin:0;padding-left:16px">${proje.faaliyetler.map(f=>`<li>${f}</li>`).join('')}</ul>`
+        : (proje.faaliyetler||'—')
+    }</div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Sorumlu Personel</label><p style="margin:0;font-size:13px">${proje.sorumluPersonel||'—'}</p></div>
       <div><label class="yk-lbl">Sorumlu YK Üyesi</label><p style="margin:0;font-size:13px">${proje.sorumluYK||'—'}</p></div>
@@ -11350,7 +11354,18 @@ function projeFormHtml(p){
         <i class="ti ti-plus" style="font-size:12px"></i> Gösterge ekle
       </button>
     </div>
-    <div><label class="yk-lbl">Faaliyetler</label><textarea id="ip-f-faal" class="yk-inp" style="min-height:72px;resize:vertical" placeholder="Yapılacak işler, adımlar...">${p?.faaliyetler||''}</textarea></div>
+    <div><label class="yk-lbl">Faaliyetler</label>
+      <div id="ip-faal-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
+        ${(p?.faaliyetler ? (Array.isArray(p.faaliyetler) ? p.faaliyetler : p.faaliyetler.split('\n').filter(Boolean)) : ['']).map((f,i)=>`
+          <div style="display:flex;gap:6px;align-items:flex-start">
+            <textarea class="yk-inp ip-faal-item" style="flex:1;min-height:48px;resize:vertical" placeholder="Faaliyet...">${f}</textarea>
+            ${i>0?`<button type="button" onclick="ipFaalSil(this)" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;margin-top:4px">×</button>`:'<span style="width:22px"></span>'}
+          </div>`).join('')}
+      </div>
+      <button type="button" onclick="ipFaalEkle()" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px">
+        <i class="ti ti-plus" style="font-size:12px"></i> Faaliyet ekle
+      </button>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Sorumlu Personel</label>
         <select id="ip-f-prs" class="yk-inp"><option value="">Seçin...</option>${personelOpts}</select></div>
@@ -11385,7 +11400,11 @@ function projeFormOku(p, mevcut){
   const gosler = [];
   gosItems.forEach(el=>{ const v=el.value.trim(); if(v) gosler.push(v); });
   p.gosterge = gosler.length===1 ? gosler[0] : gosler.length>1 ? gosler : '';
-  p.faaliyetler  = document.getElementById('ip-f-faal')?.value.trim()||'';
+  /* Çoklu faaliyetler */
+  const faalItems = document.querySelectorAll('.ip-faal-item');
+  const faallar = [];
+  faalItems.forEach(el=>{ const v=el.value.trim(); if(v) faallar.push(v); });
+  p.faaliyetler  = faallar.length===1 ? faallar[0] : faallar.length>1 ? faallar : '';
   p.sorumluPersonel = document.getElementById('ip-f-prs')?.value||'';
   p.sorumluYK    = document.getElementById('ip-f-yk')?.value.trim()||'';
   p.meclis       = document.getElementById('ip-f-mec')?.value.trim()||'';
@@ -11414,6 +11433,19 @@ window.ipGosEkle = function(){
   div.querySelector('input')?.focus();
 };
 window.ipGosSil = function(btn){
+  btn.closest('div')?.remove();
+};
+window.ipFaalEkle = function(){
+  const list = document.getElementById('ip-faal-list');
+  if(!list) return;
+  const div = document.createElement('div');
+  div.style.cssText='display:flex;gap:6px;align-items:flex-start';
+  div.innerHTML=`<textarea class="yk-inp ip-faal-item" style="flex:1;min-height:48px;resize:vertical" placeholder="Faaliyet..."></textarea>
+    <button type="button" onclick="ipFaalSil(this)" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;margin-top:4px">×</button>`;
+  list.appendChild(div);
+  div.querySelector('textarea')?.focus();
+};
+window.ipFaalSil = function(btn){
   btn.closest('div')?.remove();
 };
 
@@ -11548,7 +11580,7 @@ window.ipProjeEkle = function(strId,hId){
         id:p.id, hedef_id:hId, ad:p.ad||'', pct:p.pct||0,
         durum:p.durum||'planlandi', sorumlu_personel:p.sorumluPersonel||null,
         gosterge: Array.isArray(p.gosterge) ? p.gosterge.join('\n') : (p.gosterge||null),
-        faaliyetler: p.faaliyetler||null,
+        faaliyetler: Array.isArray(p.faaliyetler) ? p.faaliyetler.join('\n') : (p.faaliyetler||null),
         sorumlu_yk: p.sorumluYK||null,
         meclis_uyesi: p.meclis||null,
         meslek_komitesi: p.komite||null,
@@ -11580,7 +11612,7 @@ window.ipProjeDuzenle = function(projId){
         ad:proje.ad||'', pct:proje.pct||0,
         durum:proje.durum||'planlandi', sorumlu_personel:proje.sorumluPersonel||null,
         gosterge: Array.isArray(proje.gosterge) ? proje.gosterge.join('\n') : (proje.gosterge||null),
-        faaliyetler: proje.faaliyetler||null,
+        faaliyetler: Array.isArray(proje.faaliyetler) ? proje.faaliyetler.join('\n') : (proje.faaliyetler||null),
         sorumlu_yk: proje.sorumluYK||null,
         meclis_uyesi: proje.meclis||null,
         meslek_komitesi: proje.komite||null,
