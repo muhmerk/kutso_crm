@@ -214,7 +214,11 @@ async function supaYukleIsPlanSessiz() {
           faaliyetler: p.faaliyetler ? (p.faaliyetler.includes("\n") ? p.faaliyetler.split("\n").filter(Boolean) : p.faaliyetler) : '',
           baslangicAy: p.baslama_ay || 1,
           bitisAy: p.bitis_ay || 12,
-          butce: p.butce || 0, yillar: p.notlar || {}
+          butce: p.butce || 0, yillar: p.notlar || {},
+          riskler: p.riskler ? p.riskler.split('\n').filter(Boolean) : [],
+          onlemeAksiyonu: p.onleme_aksiyonu ? p.onleme_aksiyonu.split('\n').filter(Boolean) : [],
+          isBirligiKuruluslar: p.is_birligi_kuruluslar ? p.is_birligi_kuruluslar.split('\n').filter(Boolean) : [],
+          gerceklesmelerList: Array.isArray(p.gerceklesmeler) ? p.gerceklesmeler : []
         }))
       }))
     }));
@@ -256,7 +260,11 @@ async function supaYukleIsPlan() {
           baslangicAy: p.baslama_ay || 1,
           bitisAy: p.bitis_ay || 12,
           butce: p.butce || 0,
-          yillar: p.notlar || {}
+          yillar: p.notlar || {},
+          riskler: p.riskler ? p.riskler.split('\n').filter(Boolean) : [],
+          onlemeAksiyonu: p.onleme_aksiyonu ? p.onleme_aksiyonu.split('\n').filter(Boolean) : [],
+          isBirligiKuruluslar: p.is_birligi_kuruluslar ? p.is_birligi_kuruluslar.split('\n').filter(Boolean) : [],
+          gerceklesmelerList: Array.isArray(p.gerceklesmeler) ? p.gerceklesmeler : []
         }))
       }))
     }));
@@ -4553,7 +4561,7 @@ function toggleTpl(header) {
       sel.innerHTML = (window.PERSONEL||[]).map(p=>`<option value="${p.ad} ${p.soyad}">${p.ad} ${p.soyad}</option>`).join('');
     }
     /* Tüm alanları temizle */
-    ['etk-f-ad','etk-f-no','etk-f-egitimci','etk-f-egitimci-unvan','etk-f-egitimci-kurum','etk-f-yer'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    ['etk-f-ad','etk-f-no','etk-f-egitimci','etk-f-egitimci-unvan','etk-f-egitimci-kurum','etk-f-yer'].forEach(elId=>{ const el=document.getElementById(elId); if(el) el.value=''; });
     const tarihEl = document.getElementById('etk-f-tarih');
     if(tarihEl) tarihEl.value = new Date().toISOString().slice(0,10);
     const konEl = document.getElementById('etk-f-kontenjan'); if(konEl) konEl.value='';
@@ -4636,8 +4644,8 @@ function toggleTpl(header) {
     const resEl = document.getElementById('etk-uye-results');
     if(resEl) resEl.style.display = 'none';
     /* Dışarıdan form temizle */
-    ['etk-dis-ad','etk-dis-firma','etk-dis-tel','etk-dis-eposta'].forEach(id=>{
-      const el=document.getElementById(id); if(el) el.value='';
+    ['etk-dis-ad','etk-dis-firma','etk-dis-tel','etk-dis-eposta'].forEach(elId=>{
+      const el=document.getElementById(elId); if(el) el.value='';
     });
     /* Modal tablarını sıfırla — doğrudan ETK modal içindeki tab butonunu bul */
     const modal = document.getElementById('etk-modal');
@@ -5081,7 +5089,7 @@ function toggleTpl(header) {
       etkinlik_id: activeEtkId,
       dis: true, dis_ad: ad, firma, yetkili: ad, dis_eposta: eposta
     }]).then(({error})=>{ if(error) console.error('Dış katılımcı kaydetme hatası:',error.message); });
-    ['etk-dis-ad','etk-dis-firma','etk-dis-tel','etk-dis-eposta'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    ['etk-dis-ad','etk-dis-firma','etk-dis-tel','etk-dis-eposta'].forEach(elId=>{ const el=document.getElementById(elId); if(el) el.value=''; });
     renderKatilimciList(etk);
     renderMemBasliklar(etk);
     renderMemUyeList(etk);
@@ -6729,7 +6737,7 @@ window.etkPrsYeniEkle=function(){
   const sel=document.getElementById('etk-prs-f-sorumlu');
   if(sel&&window.PERSONEL) sel.innerHTML=(window.PERSONEL||[]).map(p=>`<option value="${p.ad} ${p.soyad}">${p.ad} ${p.soyad}</option>`).join('');
   /* Tüm alanları temizle */
-  ['etk-prs-f-ad','etk-prs-f-no','etk-prs-f-egitimci','etk-prs-f-egitimci-unvan','etk-prs-f-egitimci-kurum','etk-prs-f-yer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['etk-prs-f-ad','etk-prs-f-no','etk-prs-f-egitimci','etk-prs-f-egitimci-unvan','etk-prs-f-egitimci-kurum','etk-prs-f-yer'].forEach(elId=>{const el=document.getElementById(elId);if(el)el.value='';});
   const tEl=document.getElementById('etk-prs-f-tarih'); if(tEl) tEl.value=new Date().toISOString().slice(0,10);
   const bEl=document.getElementById('etk-prs-f-saat-bas'); if(bEl) bEl.value='09:00';
   const bEl2=document.getElementById('etk-prs-f-saat-bit'); if(bEl2) bEl2.value='17:00';
@@ -11412,7 +11420,19 @@ window.ipProjeDetay = async function(projId){
       <div><label class="yk-lbl">Başlangıç Ayı</label><p style="margin:0;font-size:13px">${proje.baslangicAy||1}. Ay</p></div>
       <div><label class="yk-lbl">Bitiş Ayı</label><p style="margin:0;font-size:13px">${proje.bitisAy||12}. Ay</p></div>
       <div><label class="yk-lbl">Bütçe</label><p style="margin:0;font-size:13px;font-weight:600">₺${(proje.butce||0).toLocaleString('tr-TR')}</p></div>
-    </div>`,
+    </div>
+    ${proje.riskler?.length>0?'<div><label class="yk-lbl">Riskler</label><div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.6"><ul style="margin:0;padding-left:16px">'+
+      (Array.isArray(proje.riskler)?proje.riskler:[proje.riskler]).map(r=>'<li>'+r+'</li>').join('')+
+      '</ul></div></div>':''}
+    ${proje.onlemeAksiyonu?.length>0?'<div><label class="yk-lbl">Önleme Aksiyonu</label><div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.6"><ul style="margin:0;padding-left:16px">'+
+      (Array.isArray(proje.onlemeAksiyonu)?proje.onlemeAksiyonu:[proje.onlemeAksiyonu]).map(o=>'<li>'+o+'</li>').join('')+
+      '</ul></div></div>':''}
+    ${proje.isBirligiKuruluslar?.length>0?'<div><label class="yk-lbl">İş Birliği Yapılacak Kuruluşlar</label><div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.6">'+
+      (Array.isArray(proje.isBirligiKuruluslar)?proje.isBirligiKuruluslar:[proje.isBirligiKuruluslar]).join(' · ')+
+      '</div></div>':''}
+    ${proje.gerceklesmelerList?.length>0?'<div><label class="yk-lbl">'+yil+' Gerçekleşmeleri</label><div style="padding:8px 12px;background:var(--blue-bg);border-radius:8px;font-size:13px;line-height:1.6;color:var(--blue)"><ul style="margin:0;padding-left:16px">'+
+      proje.gerceklesmelerList.map(g=>'<li>'+g+'</li>').join('')+
+      '</ul></div></div>':''}`,
     null, true
   );
 
@@ -11544,7 +11564,7 @@ function projeFormHtml(p){
             ${i>0?`<button type="button" onclick="ipFaalSil(this)" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;margin-top:4px">×</button>`:'<span style="width:22px"></span>'}
           </div>`).join('')}
       </div>
-      <button type="button" onclick="ipFaalEkle()" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px">
+      <button type="button" onclick="ipListEkle('ip-faal-list','ip-faal-item','Faaliyet...')" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px">
         <i class="ti ti-plus" style="font-size:12px"></i> Faaliyet ekle
       </button>
     </div>
@@ -11557,14 +11577,52 @@ function projeFormHtml(p){
       <div><label class="yk-lbl">Meclis Üyesi</label><input id="ip-f-mec" class="yk-inp" value="${p?.meclis||''}" placeholder="İlgili meclis üyesi..."></div>
       <div><label class="yk-lbl">Meslek Komitesi</label><input id="ip-f-kom" class="yk-inp" value="${p?.komite||''}" placeholder="İlgili komite adı..."></div>
     </div>
+    <div><label class="yk-lbl">Riskler</label>
+      <div id="ip-risk-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
+        ${(p?.riskler ? (Array.isArray(p.riskler)?p.riskler:p.riskler.split('\n').filter(Boolean)) : ['']).map((r,i)=>`
+          <div style="display:flex;gap:6px;align-items:flex-start">
+            <textarea class="yk-inp ip-risk-item" style="flex:1;min-height:44px;resize:vertical" placeholder="Risk tanımı...">${r}</textarea>
+            ${i>0?`<button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;margin-top:4px">×</button>`:'<span style="width:22px"></span>'}
+          </div>`).join('')}
+      </div>
+      <button type="button" onclick="ipListEkle('ip-risk-list','ip-risk-item','Risk tanımı...')" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px"><i class="ti ti-plus" style="font-size:12px"></i> Risk ekle</button>
+    </div>
+    <div><label class="yk-lbl">Önleme Aksiyonu</label>
+      <div id="ip-onleme-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
+        ${(p?.onlemeAksiyonu ? (Array.isArray(p.onlemeAksiyonu)?p.onlemeAksiyonu:p.onlemeAksiyonu.split('\n').filter(Boolean)) : ['']).map((o,i)=>`
+          <div style="display:flex;gap:6px;align-items:flex-start">
+            <textarea class="yk-inp ip-onleme-item" style="flex:1;min-height:44px;resize:vertical" placeholder="Önleme aksiyonu...">${o}</textarea>
+            ${i>0?`<button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;margin-top:4px">×</button>`:'<span style="width:22px"></span>'}
+          </div>`).join('')}
+      </div>
+      <button type="button" onclick="ipListEkle('ip-onleme-list','ip-onleme-item','Önleme aksiyonu...')" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px"><i class="ti ti-plus" style="font-size:12px"></i> Aksiyon ekle</button>
+    </div>
+    <div><label class="yk-lbl">İş Birliği Yapılacak Kuruluşlar</label>
+      <div id="ip-isbir-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
+        ${(p?.isBirligiKuruluslar ? (Array.isArray(p.isBirligiKuruluslar)?p.isBirligiKuruluslar:p.isBirligiKuruluslar.split('\n').filter(Boolean)) : ['']).map((k,i)=>`
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="yk-inp ip-isbir-item" style="flex:1" placeholder="Kuruluş adı..." value="${k}">
+            ${i>0?`<button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0">×</button>`:'<span style="width:22px"></span>'}
+          </div>`).join('')}
+      </div>
+      <button type="button" onclick="ipListEkleInput('ip-isbir-list','ip-isbir-item','Kuruluş adı...')" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px"><i class="ti ti-plus" style="font-size:12px"></i> Kuruluş ekle</button>
+    </div>
+    <div><label class="yk-lbl">${aktifYil||'Bu Yıl'} Gerçekleşmeleri</label>
+      <div id="ip-gercek-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
+        ${(p?.gerceklesmelerList && p.gerceklesmelerList.length>0 ? p.gerceklesmelerList : ['']).map((g,i)=>`
+          <div style="display:flex;gap:6px;align-items:flex-start">
+            <textarea class="yk-inp ip-gercek-item" style="flex:1;min-height:44px;resize:vertical" placeholder="Gerçekleşme açıklayın...">${g}</textarea>
+            ${i>0?`<button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;margin-top:4px">×</button>`:'<span style="width:22px"></span>'}
+          </div>`).join('')}
+      </div>
+      <button type="button" onclick="ipListEkle('ip-gercek-list','ip-gercek-item','Gerçekleşme açıklayın...')" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px"><i class="ti ti-plus" style="font-size:12px"></i> Gerçekleşme ekle</button>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Bütçe (₺)</label><input id="ip-f-but" class="yk-inp" type="number" value="${p?.butce||0}" min="0"></div>
       <div><label class="yk-lbl">Başlangıç (ay)</label><input id="ip-f-bas" class="yk-inp" type="number" min="1" max="12" value="${p?.baslangicAy||1}"></div>
       <div><label class="yk-lbl">Bitiş (ay)</label><input id="ip-f-bit" class="yk-inp" type="number" min="1" max="12" value="${p?.bitisAy||12}"></div>
       <div><label class="yk-lbl">Durum</label><select id="ip-f-dur" class="yk-inp">${durumOpts}</select></div>
-    </div>
-    <div><label class="yk-lbl">${aktifYil||'Bu Yıl'} Gerçekleşmesi</label>
-      <textarea id="ip-f-gercek" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Bu yıl ne yapıldı?...">${(p?.yillar&&aktifYil&&p.yillar[aktifYil])||''}</textarea></div>`;
+    </div>`;
 }
 
 function projeFormOku(p, mevcut){
@@ -11586,6 +11644,22 @@ function projeFormOku(p, mevcut){
   p.sorumluYK    = document.getElementById('ip-f-yk')?.value.trim()||'';
   p.meclis       = document.getElementById('ip-f-mec')?.value.trim()||'';
   p.komite       = document.getElementById('ip-f-kom')?.value.trim()||'';
+  /* Riskler */
+  const riskItems = document.querySelectorAll('.ip-risk-item');
+  const risklar = []; riskItems.forEach(el=>{ const v=el.value.trim(); if(v) risklar.push(v); });
+  p.riskler = risklar.length>0 ? risklar : [];
+  /* Önleme aksiyonu */
+  const onlemeItems = document.querySelectorAll('.ip-onleme-item');
+  const onlemeler = []; onlemeItems.forEach(el=>{ const v=el.value.trim(); if(v) onlemeler.push(v); });
+  p.onlemeAksiyonu = onlemeler.length>0 ? onlemeler : [];
+  /* İş birliği kuruluşlar */
+  const isbirItems = document.querySelectorAll('.ip-isbir-item');
+  const isbirler = []; isbirItems.forEach(el=>{ const v=el.value.trim(); if(v) isbirler.push(v); });
+  p.isBirligiKuruluslar = isbirler.length>0 ? isbirler : [];
+  /* Gerçekleşmeler */
+  const gercekItems = document.querySelectorAll('.ip-gercek-item');
+  const gercekler = []; gercekItems.forEach(el=>{ const v=el.value.trim(); if(v) gercekler.push(v); });
+  p.gerceklesmelerList = gercekler;
   p.butce        = parseInt(document.getElementById('ip-f-but')?.value)||0;
   p.baslangicAy  = parseInt(document.getElementById('ip-f-bas')?.value)||1;
   p.bitisAy      = parseInt(document.getElementById('ip-f-bit')?.value)||12;
@@ -11613,15 +11687,25 @@ window.ipGosEkle = function(){
 window.ipGosSil = function(btn){
   btn.closest('div')?.remove();
 };
-window.ipFaalEkle = function(){
-  const list = document.getElementById('ip-faal-list');
+window.ipListEkle = function(listId, itemClass, placeholder){
+  const list = document.getElementById(listId);
   if(!list) return;
   const div = document.createElement('div');
   div.style.cssText='display:flex;gap:6px;align-items:flex-start';
-  div.innerHTML=`<textarea class="yk-inp ip-faal-item" style="flex:1;min-height:48px;resize:vertical" placeholder="Faaliyet..."></textarea>
-    <button type="button" onclick="ipFaalSil(this)" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;margin-top:4px">×</button>`;
+  div.innerHTML=`<textarea class="yk-inp ${itemClass}" style="flex:1;min-height:44px;resize:vertical" placeholder="${placeholder}"></textarea>
+    <button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;margin-top:4px">×</button>`;
   list.appendChild(div);
   div.querySelector('textarea')?.focus();
+};
+window.ipListEkleInput = function(listId, itemClass, placeholder){
+  const list = document.getElementById(listId);
+  if(!list) return;
+  const div = document.createElement('div');
+  div.style.cssText='display:flex;gap:6px;align-items:center';
+  div.innerHTML=`<input class="yk-inp ${itemClass}" style="flex:1" placeholder="${placeholder}">
+    <button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0">×</button>`;
+  list.appendChild(div);
+  div.querySelector('input')?.focus();
 };
 window.ipFaalSil = function(btn){
   btn.closest('div')?.remove();
@@ -11768,6 +11852,10 @@ window.ipProjeEkle = function(strId,hId){
         sorumlu_yk: p.sorumluYK||null,
         meclis_uyesi: p.meclis||null,
         meslek_komitesi: p.komite||null,
+        riskler: p.riskler?.length>0 ? p.riskler.join('\n') : null,
+        onleme_aksiyonu: p.onlemeAksiyonu?.length>0 ? p.onlemeAksiyonu.join('\n') : null,
+        is_birligi_kuruluslar: p.isBirligiKuruluslar?.length>0 ? p.isBirligiKuruluslar.join('\n') : null,
+        gerceklesmeler: p.gerceklesmelerList||[],
         baslama_ay: p.baslangicAy||1,
         bitis_ay: p.bitisAy||12,
         butce: p.butce||0,
@@ -11820,6 +11908,10 @@ window.ipProjeDuzenle = async function(projId){
         sorumlu_yk: proje.sorumluYK||null,
         meclis_uyesi: proje.meclis||null,
         meslek_komitesi: proje.komite||null,
+        riskler: proje.riskler?.length>0 ? proje.riskler.join('\n') : null,
+        onleme_aksiyonu: proje.onlemeAksiyonu?.length>0 ? proje.onlemeAksiyonu.join('\n') : null,
+        is_birligi_kuruluslar: proje.isBirligiKuruluslar?.length>0 ? proje.isBirligiKuruluslar.join('\n') : null,
+        gerceklesmeler: proje.gerceklesmelerList||[],
         baslama_ay: proje.baslangicAy||1,
         bitis_ay: proje.bitisAy||12,
         butce: proje.butce||0,
@@ -12005,8 +12097,8 @@ window.prsEgitimEkleModal = function(){
   const subEl = document.getElementById('prs-egitim-modal-sub');
   if(subEl && p) subEl.textContent = p.ad + ' ' + p.soyad;
   /* Formu temizle */
-  ['prs-eg-ad','prs-eg-sure','prs-eg-kurum','prs-eg-konu','prs-eg-cert-no'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
+  ['prs-eg-ad','prs-eg-sure','prs-eg-kurum','prs-eg-konu','prs-eg-cert-no'].forEach(elId=>{
+    const el=document.getElementById(elId); if(el) el.value='';
   });
   /* Tarih: bugün */
   const tarihEl = document.getElementById('prs-eg-tarih');
@@ -12354,8 +12446,8 @@ window.sikModalKapat = function(){
 };
 
 window.sikayetEkleModal = function(){
-  ['sik-f-firma','sik-f-konu','sik-f-detay','sik-f-not'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
+  ['sik-f-firma','sik-f-konu','sik-f-detay','sik-f-not'].forEach(elId=>{
+    const el=document.getElementById(elId); if(el) el.value='';
   });
   const fidEl = document.getElementById('sik-f-firma-id'); if(fidEl) fidEl.value='';
   /* Varsayılan tarih: bugün */
@@ -13165,7 +13257,7 @@ window.prsSilModal = function(id){
 window.sifreDegistirModal = function(){
   /* Alanları temizle */
   ['sd-mevcut-kul','sd-mevcut-sifre','sd-yeni-kul','sd-yeni-sifre','sd-yeni-sifre2'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.value='';
+    var el=document.getElementById(elId); if(el) el.value='';
   });
   var msg=document.getElementById('sd-mesaj');
   if(msg){ msg.style.display='none'; msg.textContent=''; }
@@ -13236,7 +13328,7 @@ window.sifreDegistirKaydet = async function(){
     if(typeof updateTopbarUser==='function') updateTopbarUser(currentUser);
     show('✓ Değişiklikler kaydedildi! Yeni bilgilerinizle giriş yapabilirsiniz.',true);
     ['sd-mevcut-kul','sd-mevcut-sifre','sd-yeni-kul','sd-yeni-sifre','sd-yeni-sifre2'].forEach(function(id){
-      var el=document.getElementById(id); if(el) el.value='';
+      var el=document.getElementById(elId); if(el) el.value='';
     });
   } catch(e) {
     show('Hata: '+e.message, false);
