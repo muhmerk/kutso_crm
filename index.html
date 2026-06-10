@@ -2095,8 +2095,16 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
             <div style="display:flex;flex-direction:column;gap:11px" id="crm-profile-fields"></div>
           </div>
           <div class="card" style="padding:16px">
+            <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Resmi Bilgiler</div>
+            <div style="display:flex;flex-direction:column;gap:11px" id="crm-resmi-fields"></div>
+          </div>
+          <div class="card" style="padding:16px">
             <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Etiketler</div>
             <div id="crm-tags" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+          </div>
+          <div class="card" style="padding:16px">
+            <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Hızlı İşlemler</div>
+            <div style="display:flex;flex-direction:column;gap:7px" id="crm-hizli-islemler"></div>
           </div>
         </div>
 
@@ -2104,18 +2112,32 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         <div style="display:flex;flex-direction:column;gap:14px">
 
           <!-- Tab bar -->
-          <div style="display:flex;gap:0;border-bottom:0.5px solid var(--border)">
+          <div style="display:flex;gap:0;border-bottom:0.5px solid var(--border);overflow-x:auto">
             <button class="crm-tab crm-tab-on" onclick="crmTab('iletisim',this)"><i class="ti ti-messages" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>İletişim</button>
-            <button class="crm-tab" onclick="crmTab('degisiklik',this)"><i class="ti ti-history" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Değişiklikler</button>
             <button class="crm-tab" onclick="crmTab('gorevler',this)"><i class="ti ti-checklist" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Görevler</button>
-            <button class="crm-tab" onclick="crmTab('memnuniyet',this)"><i class="ti ti-mood-smile" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Memnuniyet</button>
             <button class="crm-tab" onclick="crmTab('sikayet',this)"><i class="ti ti-alert-circle" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Şikayet</button>
+            <button class="crm-tab" onclick="crmTab('memnuniyet',this)"><i class="ti ti-mood-smile" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Memnuniyet</button>
             <button class="crm-tab" onclick="crmTab('etkinlik',this)"><i class="ti ti-school" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Etkinlikler</button>
+            <button class="crm-tab" onclick="crmTab('aidat',this)"><i class="ti ti-coin" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Aidat/Borç</button>
+            <button class="crm-tab" onclick="crmTab('belgeler',this)"><i class="ti ti-file-certificate" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Belgeler</button>
+            <button class="crm-tab" onclick="crmTab('degisiklik',this)"><i class="ti ti-history" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Değişiklikler</button>
           </div>
 
           <!-- İletişim Geçmişi -->
           <div id="crm-pane-iletisim" class="crm-pane crm-pane-on">
             <div class="timeline" id="crm-timeline"></div>
+          </div>
+
+          <!-- Aidat / Borç -->
+          <div id="crm-pane-aidat" class="crm-pane">
+            <div id="crm-aidat-loading" style="text-align:center;padding:32px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>
+            <div id="crm-aidat-content" style="display:none"></div>
+          </div>
+
+          <!-- Belgeler & Hizmetler -->
+          <div id="crm-pane-belgeler" class="crm-pane">
+            <div id="crm-belgeler-loading" style="text-align:center;padding:32px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>
+            <div id="crm-belgeler-content" style="display:none"></div>
           </div>
 
           <!-- Değişiklik Kayıtları -->
@@ -2131,11 +2153,15 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <!-- Görevler -->
           <div id="crm-pane-gorevler" class="crm-pane">
             <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-              <button class="btn btn-p btn-sm"><i class="ti ti-plus"></i> Görev Ekle</button>
+              <button class="btn btn-p btn-sm" onclick="crmGorevEkle()"><i class="ti ti-plus"></i> Görev Ekle</button>
             </div>
-            <div class="um-table-wrap">
+            <div id="crm-gorev-bos" style="display:none;text-align:center;padding:32px;color:var(--text2)">
+              <i class="ti ti-checklist" style="font-size:28px;display:block;margin-bottom:8px;opacity:.4"></i>
+              Bu firmaya ait görev bulunmuyor
+            </div>
+            <div class="um-table-wrap" id="crm-gorev-tablo">
               <table style="width:100%">
-                <thead><tr><th>Görev</th><th>Atanan</th><th>Tarih</th><th>Öncelik</th><th>Durum</th></tr></thead>
+                <thead><tr><th>Görev</th><th>Atanan</th><th>Son Tarih</th><th>Öncelik</th><th>Durum</th><th></th></tr></thead>
                 <tbody id="crm-gorev-body"></tbody>
               </table>
             </div>
@@ -2171,7 +2197,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <!-- Şikayet -->
           <div id="crm-pane-sikayet" class="crm-pane">
             <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-              <button class="btn btn-p btn-sm"><i class="ti ti-plus"></i> Şikayet Ekle</button>
+              <button class="btn btn-p btn-sm" onclick="crmSikayetEkle()"><i class="ti ti-plus"></i> Şikayet Ekle</button>
             </div>
             <div id="crm-sik-empty" style="display:none;text-align:center;padding:32px 16px;color:var(--text2)">
               <i class="ti ti-circle-check" style="font-size:28px;display:block;margin-bottom:8px;color:var(--teal)"></i>
@@ -3780,56 +3806,94 @@ function toggleTpl(header) {
     alert('✓ Not kaydedildi.');
   };
 
-  /* Arama */
+  /* Arama — önce yerel, sonra Supabase */
+  let _crmSearchTimer = null;
   window.crmSearch = function(q) {
     const box = document.getElementById('crm-results');
     if (!q || q.length < 1) { box.style.display='none'; return; }
+    clearTimeout(_crmSearchTimer);
+
+    /* Önce yerel veride ara */
     const ql = q.toLowerCase();
-    /* Tüm üye modülü firmalarını kullan (DA = 4218 üye) */
     const kaynak = window._ETK_UYELER || FIRMS;
-    const hits = kaynak.filter(f =>
+    const localHits = kaynak.filter(f =>
       f.firma.toLowerCase().includes(ql) ||
       String(f.no).includes(ql) ||
-      (f.yetkili||'').toLowerCase().includes(ql)
-    ).slice(0,8);
+      (f.yetkili||'').toLowerCase().includes(ql) ||
+      (f.vergi||'').includes(ql) ||
+      (f.mersis||'').includes(ql)
+    ).slice(0, 6);
 
+    if (localHits.length > 0) crmSearchRender(localHits, box);
+    box.style.display = 'block';
+
+    /* 300ms sonra Supabase'den de ara */
+    _crmSearchTimer = setTimeout(async () => {
+      try {
+        const { data } = await _supa.from('uyeler')
+          .select('uye_oid,unvan,uye_oda_sicil_no,vergi_no,mersis_no,uyelik_durum,meslek_grubu_adi,vergi_dairesi_adi')
+          .or(`unvan.ilike.%${q}%,uye_oda_sicil_no.eq.${q},vergi_no.eq.${q},mersis_no.eq.${q}`)
+          .limit(8);
+
+        if((data||[]).length > 0) {
+          /* Supabase sonuçlarını yerel formatla birleştir */
+          const supaHits = (data||[]).map(u=>({
+            id: u.uye_oda_sicil_no || u.uye_oid,
+            no: u.uye_oda_sicil_no||'',
+            firma: u.unvan||'',
+            yetkili: '—',
+            sektor: u.meslek_grubu_adi||'—',
+            durum: u.uyelik_durum||'aktif',
+            vergi: u.vergi_no||'',
+            mersis: u.mersis_no||'',
+            _fromTobb: true, _uye_oid: u.uye_oid
+          }));
+          /* Yerel ile birleştir, duplike çıkar */
+          const tum = [...localHits];
+          supaHits.forEach(s=>{ if(!tum.find(l=>String(l.no)===String(s.no))) tum.push(s); });
+          crmSearchRender(tum.slice(0,8), box);
+        }
+      } catch(e) { /* sessizce devam et */ }
+    }, 300);
+  };
+
+  function crmSearchRender(hits, box) {
     if (hits.length === 0) {
       box.innerHTML = `<div style="padding:14px 16px;color:var(--text2);font-size:13px;text-align:center"><i class="ti ti-mood-empty" style="font-size:20px;display:block;margin-bottom:6px"></i>Kayıt bulunamadı</div>`;
     } else {
       box.innerHTML = hits.map(f => {
-        const av = AVCOL[f.id % AVCOL.length];
-        const init = f.firma.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        const dBadge = f.durum==='aktif' ? '#1D9E75' : f.durum==='askida' ? '#EF9F27' : '#E24B4A';
-        const dLabel = f.durum==='aktif' ? 'Aktif' : f.durum==='askida' ? 'Askıda' : 'Pasif';
-        return `<div class="crm-result-item" onclick="crmSelect(${f.id})">
+        const av = AVCOL[(f.id||0) % AVCOL.length] || AVCOL[0];
+        const init = f.firma.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+        const dColor = f.durum==='faal'||f.durum==='aktif' ? '#1D9E75' : f.durum==='askida' ? '#EF9F27' : '#E24B4A';
+        const dLabel = f.durum==='faal'||f.durum==='aktif' ? 'Faal' : f.durum==='askida' ? 'Askıda' : f.durum==='terk' ? 'Terk' : 'Pasif';
+        return `<div class="crm-result-item" onclick="crmSelect(${JSON.stringify(f.id)})">
           <div style="width:34px;height:34px;border-radius:50%;background:${av.bg};color:${av.c};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">${init}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.firma}</div>
-            <div style="font-size:11px;color:var(--text2)">${f.yetkili} · Üye No: ${f.no} · ${f.sektor}</div>
+            <div style="font-size:11px;color:var(--text2)">Üye No: ${f.no} ${f.sektor && f.sektor!=='—'?'· '+f.sektor:''} ${f.vergi?'· VN:'+f.vergi:''}</div>
           </div>
-          <span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:99px;background:${dBadge}20;color:${dBadge};flex-shrink:0">${dLabel}</span>
+          <span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:99px;background:${dColor}20;color:${dColor};flex-shrink:0">${dLabel}</span>
         </div>`;
       }).join('');
     }
     box.style.display = 'block';
-  };
+  }
 
   /* Firma seç */
-  window.crmSelect = function(id) {
-    /* Önce FIRMS'te, yoksa DA (tüm üyeler) içinde ara */
+  window.crmSelect = async function(id, tab) {
+    /* Önce yerel listeden bul */
     let f = FIRMS.find(x=>x.id===id);
     if(!f){
       const daKaynak = window._ETK_UYELER || [];
       const daBulgu = daKaynak.find(x=>x.id===id);
       if(daBulgu){
-        /* DA objelerini FIRMS formatına dönüştür */
         f = {
           id: daBulgu.id, no: daBulgu.no, firma: daBulgu.firma,
           yetkili: daBulgu.yetkili||'—', tel: daBulgu.tel||'—',
           email: daBulgu.email||'—', vergi: daBulgu.vergi||'—',
           kayit: daBulgu.kayit||'—', sektor: daBulgu.sektor||'—',
           ilce: daBulgu.ilce||'—', durum: daBulgu.durum||'aktif',
-          tags: daBulgu.odendi ? ['Aktif'] : ['Aidat Borçlu'],
+          mersis: daBulgu.mersis||'—', tags: [],
         };
       }
     }
@@ -3849,21 +3913,24 @@ function toggleTpl(header) {
 
     /* Üst bar */
     document.getElementById('crm-firm-name').textContent = f.firma;
-    document.getElementById('crm-firm-sub').textContent  = `Üye No: ${f.no} · ${f.sektor} · ${f.ilce}`;
+    document.getElementById('crm-firm-sub').textContent = `Üye No: ${f.no}`;
 
     const dColor = f.durum==='aktif'?'#1D9E75':f.durum==='askida'?'#EF9F27':'#E24B4A';
-    const dLabel = f.durum==='aktif'?'Aktif':f.durum==='askida'?'Askıda':'Pasif';
+    const dLabel = f.durum==='aktif'?'Faal':f.durum==='askida'?'Askıda':'Terk';
     const dBg    = f.durum==='aktif'?'#E1F5EE':f.durum==='askida'?'#FEF3DE':'#FDEAEA';
     document.getElementById('crm-firm-status').innerHTML =
       `<span style="font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px;background:${dBg};color:${dColor}">${dLabel}</span>`;
 
-    /* Profil alanları */
+    /* Profil alanları — temel */
     const fields = [
-      { icon:'ti-user',             label:'Yetkili', val: f.yetkili },
-      { icon:'ti-phone',            label:'Telefon', val: `<a href="tel:${f.tel}" style="color:#185FA5">${f.tel}</a>` },
-      { icon:'ti-mail',             label:'E-posta', val: `<a href="mailto:${f.email}" style="color:#185FA5">${f.email}</a>` },
-      { icon:'ti-file-certificate', label:'Vergi No',val: `<span style="font-family:var(--mono);font-size:12px">${f.vergi}</span>` },
-      { icon:'ti-calendar',         label:'Kayıt',   val: f.kayit },
+      { icon:'ti-user',         label:'Yetkili',     val: f.yetkili||'—' },
+      { icon:'ti-phone',        label:'Telefon',     val: f.tel ? `<a href="tel:${f.tel}" style="color:var(--blue)">${f.tel}</a>` : '—' },
+      { icon:'ti-mail',         label:'E-posta',     val: f.email ? `<a href="mailto:${f.email}" style="color:var(--blue)">${f.email}</a>` : '—' },
+      { icon:'ti-map-pin',      label:'İlçe',        val: f.ilce||'—' },
+      { icon:'ti-building-store',label:'Sektör',     val: f.sektor||'—' },
+      { icon:'ti-category',     label:'Meslek Grubu',val: f.meslek||'—' },
+      { icon:'ti-barcode',      label:'NACE',        val: f.nace ? `<code style="font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:4px">${f.nace}</code>` : '—' },
+      { icon:'ti-users',        label:'Çalışan',     val: f.calisan||'—' },
     ];
     document.getElementById('crm-profile-fields').innerHTML = fields.map(fld =>
       `<div style="display:flex;align-items:flex-start;gap:9px">
@@ -3877,101 +3944,75 @@ function toggleTpl(header) {
       </div>`
     ).join('');
 
-    /* Etiketler */
-    const tagColors = { 'Stratejik Üye':'b-blue','İhracatçı':'b-purple','Aktif':'b-green','Aidat Borçlu':'b-amber','Pasif':'b-gray','Kooperatif':'b-teal','Yeni Üye':'b-blue' };
-    document.getElementById('crm-tags').innerHTML = (f.tags||[]).map(t =>
-      `<span class="badge ${tagColors[t]||'b-gray'}">${t}</span>`
-    ).join('');
-
-    /* İletişim geçmişi — Supabase'den yükle */
-    crmTimelineRender(f.id);
-
-    /* Değişiklik logları */
-    const ch = CHANGES[f.id] || CHANGES.default;
-    document.getElementById('crm-degisiklik-list').innerHTML = ch.map(c =>
-      `<div class="crm-change-row">
-        <div class="crm-change-icon" style="background:${c.bg}"><i class="ti ${c.icon}" style="color:${c.ic}"></i></div>
-        <div class="crm-change-body">
-          <div class="crm-change-title">${c.baslik}</div>
-          <div class="crm-change-detail">${c.detay}</div>
-          <div class="crm-change-meta">${c.tarih} · ${c.kisi}</div>
+    /* Resmi bilgiler */
+    const resmiFields = [
+      { icon:'ti-file-certificate', label:'Vergi No',       val: f.vergi ? `<span style="font-family:var(--mono);font-size:11px">${f.vergi}</span>` : '—' },
+      { icon:'ti-id',               label:'MERSİS No',      val: f.mersis ? `<span style="font-family:var(--mono);font-size:11px">${f.mersis}</span>` : '—' },
+      { icon:'ti-license',          label:'Ticaret Sicil',  val: f.ticaretSicilNo ? `<span style="font-family:var(--mono);font-size:11px">${f.ticaretSicilNo}</span>` : '—' },
+      { icon:'ti-calendar',         label:'Tescil Tarihi',  val: f.kayit||'—' },
+      { icon:'ti-building-factory', label:'Firma Tipi',     val: f.firmaTipi||'—' },
+      { icon:'ti-award',            label:'Derece',         val: f.dereceTanimi||'—' },
+      { icon:'ti-coin',             label:'Sermaye',        val: f.sermaye ? '₺'+Number(f.sermaye).toLocaleString('tr-TR') : '—' },
+      { icon:'ti-mail-forward',     label:'KEP Adresi',     val: f.kepAdresi||'—' },
+      { icon:'ti-world',            label:'Web',            val: f.web ? `<a href="${f.web}" target="_blank" style="color:var(--blue)">${f.web}</a>` : '—' },
+    ];
+    document.getElementById('crm-resmi-fields').innerHTML = resmiFields.map(fld =>
+      `<div style="display:flex;align-items:flex-start;gap:9px">
+        <div style="width:26px;height:26px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ${fld.icon}" style="font-size:13px;color:var(--text2)"></i>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2);margin-bottom:1px">${fld.label}</div>
+          <div style="font-size:12px;font-weight:500">${fld.val}</div>
         </div>
       </div>`
     ).join('');
 
-    /* Görevler */
-    const gv = GOREVLER[f.id] || GOREVLER.default;
-    const onBadge = {Yüksek:'b-red',Normal:'b-amber',Düşük:'b-green'};
-    const duBadge = {Açık:'b-amber',Planlandı:'b-blue',Tamamlandı:'b-green'};
-    document.getElementById('crm-gorev-body').innerHTML = gv.map(g =>
-      `<tr>
-        <td>${g.gorev}</td>
-        <td style="font-size:12px;color:var(--text2)">${g.atanan}</td>
-        <td style="font-size:12px;color:var(--text2)">${g.tarih}</td>
-        <td><span class="badge ${onBadge[g.oncelik]||'b-gray'}">${g.oncelik}</span></td>
-        <td><span class="badge ${duBadge[g.durum]||'b-gray'}">${g.durum}</span></td>
-      </tr>`
+    /* Etiketler */
+    const tagColors = {'Stratejik Üye':'b-blue','İhracatçı':'b-purple','Faal':'b-green','Aidat Borçlu':'b-amber','Terk':'b-red','Askıda':'b-amber','Yeni Üye':'b-blue'};
+    const tags = f.tags && f.tags.length > 0 ? f.tags : [dLabel];
+    document.getElementById('crm-tags').innerHTML = tags.map(t =>
+      `<span class="badge ${tagColors[t]||'b-gray'}">${t}</span>`
     ).join('');
 
-    /* Memnuniyet, Şikayet ve Etkinlik */
-    renderMem(f.id);
-    renderSik(f.id);
-    renderEtk(f.id);
+    /* Hızlı işlemler */
+    document.getElementById('crm-hizli-islemler').innerHTML = `
+      <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmNotEkleModal()"><i class="ti ti-message" style="margin-right:6px"></i> İletişim Notu Ekle</button>
+      <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmGorevEkle()"><i class="ti ti-checklist" style="margin-right:6px"></i> Görev Oluştur</button>
+      <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmSikayetEkle()"><i class="ti ti-alert-circle" style="margin-right:6px"></i> Şikayet Kaydet</button>
+      <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmTab('aidat',document.querySelector('.crm-tab[onclick*=aidat]'))"><i class="ti ti-coin" style="margin-right:6px"></i> Aidat Durumu Gör</button>
+    `;
 
     /* Göster */
     document.getElementById('crm-detail').style.display = 'block';
-
-    /* İlk tab'ı aktif yap */
     crmTab('iletisim', document.querySelector('.crm-tab'));
+
+    /* Verileri Supabase'den yükle */
+    crmTimelineRender(f.id);
+    crmGorevlerYukle(f.id);
+    renderSik(f.id);
+    renderMem(f.id);
+    renderEtk(f.id);
+
+    /* TOBB verilerini Supabase'den yükle */
+    crmTOBBVerileriniYukle(f);
   };
 
-  /* Demo memnuniyet verileri */
-  const MEMNUNIYET = window.CRM_MEMNUNIYET = {
-    1: {
-      puan: 4.5,
-      dagılım: [0, 0, 0, 1, 4],  // 1→5 adet
-      yorumlar: [
-        { puan:5, konu:'Akreditasyon hizmetleri', yorum:'Süreç çok hızlı ve profesyoneldi, teşekkürler.', tarih:'02 May 2025', yetkili:'Hasan Kaya' },
-        { puan:5, konu:'Bilgilendirme', yorum:'TOBB destekleri hakkında detaylı bilgi verildi.', tarih:'18 Mar 2025', yetkili:'Hasan Kaya' },
-        { puan:4, konu:'Eğitim & Etkinlik', yorum:'Seminerin içeriği faydalıydı, süre biraz kısa kaldı.', tarih:'16 Nis 2025', yetkili:'Hasan Kaya' },
-        { puan:5, konu:'Genel', yorum:'Oda personeli her zaman yardımsever ve ilgili.', tarih:'10 Oca 2025', yetkili:'Hasan Kaya' },
-        { puan:4, konu:'Aidat & Finans', yorum:'Online ödeme seçeneği olsa daha pratik olurdu.', tarih:'05 Şub 2025', yetkili:'Hasan Kaya' },
-      ]
-    },
-    2: {
-      puan: 2.7,
-      dagılım: [1, 1, 1, 0, 0],
-      yorumlar: [
-        { puan:2, konu:'Bilgilendirme', yorum:'Akreditasyon süreci hakkında yeterli bilgi verilmedi.', tarih:'28 Nis 2025', yetkili:'Murat Çelik' },
-        { puan:3, konu:'Hizmet Kalitesi', yorum:'Beklentilerin altında kaldı.', tarih:'10 Mar 2025', yetkili:'Murat Çelik' },
-        { puan:3, konu:'Aidat & Finans', yorum:'Makbuz gecikmesi yaşandı.', tarih:'15 Oca 2025', yetkili:'Murat Çelik' },
-      ]
-    },
-    4: {
-      puan: 4.0,
-      dagılım: [0, 0, 1, 1, 1],
-      yorumlar: [
-        { puan:5, konu:'Genel', yorum:'Her konuda yardımcı olunuyor, memnunuz.', tarih:'22 Nis 2025', yetkili:'Fatma Güneş' },
-        { puan:4, konu:'Eğitim & Etkinlik', yorum:'Tarım sektörüne özel etkinlikler artırılabilir.', tarih:'01 Mar 2025', yetkili:'Fatma Güneş' },
-        { puan:3, konu:'Bilgilendirme', yorum:'Bültenler daha sık gönderilebilir.', tarih:'12 Şub 2025', yetkili:'Fatma Güneş' },
-      ]
-    },
-  };
-
-  /* Demo şikayet verileri */
-  const SIKAYETLER = window.CRM_SIKAYETLER = {
-    2: [],
-    1: [],
-    3: [],
-    5: [],
-  };
-
-  /* memnuniyet render */
+  /* memnuniyet render — MEM_ANKET_DB'den */
   function renderMem(firmaId) {
-    const mem = MEMNUNIYET[firmaId];
     const emptyEl   = document.getElementById('crm-mem-empty');
     const contentEl = document.getElementById('crm-mem-content');
-    if (!mem) {
+    if(!emptyEl || !contentEl) return;
+
+    /* MEM_ANKET_DB'den bu firmanın anketlerini bul */
+    const tumAnketler = [];
+    Object.values(window.MEM_ANKET_DB||{}).forEach(yilAnketler=>{
+      (yilAnketler||[]).forEach(a=>{
+        if(a.firmaId === String(firmaId) || a.firma === currentFirm?.firma) tumAnketler.push(a);
+      });
+    });
+
+    if (!tumAnketler.length) {
       emptyEl.style.display = 'block';
       contentEl.style.display = 'none';
       return;
@@ -3979,14 +4020,18 @@ function toggleTpl(header) {
     emptyEl.style.display = 'none';
     contentEl.style.display = 'block';
 
-    document.getElementById('crm-mem-score').textContent = mem.puan.toFixed(1);
-    const stars = Math.round(mem.puan);
-    document.getElementById('crm-mem-stars').textContent = '★'.repeat(stars) + '☆'.repeat(5-stars);
-    document.getElementById('crm-mem-count').textContent = mem.yorumlar.length + ' değerlendirme';
+    const ortPuan = tumAnketler.reduce((s,a)=>s+parseFloat(a.ortPuan||0),0)/tumAnketler.length;
+    const dagılım = [0,0,0,0,0];
+    tumAnketler.forEach(a=>{ const p=Math.round(parseFloat(a.ortPuan||0)); if(p>=1&&p<=5) dagılım[p-1]++; });
 
-    const total = mem.dagılım.reduce((a,b)=>a+b,0)||1;
+    document.getElementById('crm-mem-score').textContent = ortPuan.toFixed(1);
+    const stars = Math.round(ortPuan);
+    document.getElementById('crm-mem-stars').textContent = '★'.repeat(stars) + '☆'.repeat(5-stars);
+    document.getElementById('crm-mem-count').textContent = tumAnketler.length + ' değerlendirme';
+
+    const total = dagılım.reduce((a,b)=>a+b,0)||1;
     document.getElementById('crm-mem-bars').innerHTML = [5,4,3,2,1].map(s => {
-      const cnt = mem.dagılım[s-1];
+      const cnt = dagılım[s-1];
       const pct = Math.round((cnt/total)*100);
       const barColor = s>=4?'#1D9E75':s===3?'#EF9F27':'#E24B4A';
       return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -3999,28 +4044,36 @@ function toggleTpl(header) {
       </div>`;
     }).join('');
 
-    document.getElementById('crm-mem-list').innerHTML = mem.yorumlar.map(y => {
-      const stars = '★'.repeat(y.puan) + '☆'.repeat(5-y.puan);
-      const sc = y.puan>=4?'#1D9E75':y.puan===3?'#EF9F27':'#E24B4A';
-      return `<div style="padding:12px 16px;border-bottom:0.5px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
-          <div>
-            <span style="font-size:13px;font-weight:500;color:${sc}">${stars}</span>
-            <span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:99px;margin-left:7px;color:var(--text2)">${y.konu}</span>
+    document.getElementById('crm-mem-list').innerHTML = tumAnketler
+      .sort((a,b)=>(b.tarihIso||b.tarih||'').localeCompare(a.tarihIso||a.tarih||''))
+      .map(a => {
+        const puan = parseFloat(a.ortPuan||0);
+        const yildiz = '★'.repeat(Math.round(puan)) + '☆'.repeat(5-Math.round(puan));
+        const sc = puan>=4?'#1D9E75':puan>=3?'#EF9F27':'#E24B4A';
+        const yorum = a.yorum || '';
+        return `<div style="padding:12px 16px;border-bottom:0.5px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
+            <div>
+              <span style="font-size:13px;font-weight:500;color:${sc}">${yildiz}</span>
+              <span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:99px;margin-left:7px;color:var(--text2)">${a.yil||''}</span>
+            </div>
+            <span style="font-size:11px;color:var(--text2)">${a.tarih||''}</span>
           </div>
-          <span style="font-size:11px;color:var(--text2)">${y.tarih}</span>
-        </div>
-        <div style="font-size:12px;color:var(--text);line-height:1.6">${y.yorum}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">${y.yetkili}</div>
-      </div>`;
+          ${yorum?`<div style="font-size:12px;color:var(--text);line-height:1.6">${yorum}</div>`:''}
+          <div style="font-size:10px;color:var(--text3);margin-top:4px">${a.yetkili||a.firma||''}</div>
+        </div>`;
     }).join('');
   }
 
-  /* şikayet render */
+  /* şikayet render — Supabase'den */
   function renderSik(firmaId) {
-    const list = SIKAYETLER[firmaId] || [];
     const emptyEl = document.getElementById('crm-sik-empty');
     const listEl  = document.getElementById('crm-sik-list');
+    if(!emptyEl || !listEl) return;
+
+    /* SIK_DB'den bu firmanın şikayetlerini bul */
+    const list = Object.values(window.SIK_DB||{}).filter(s => s.firmaId === String(firmaId) || s.firma === currentFirm?.firma);
+
     if (list.length === 0) {
       emptyEl.style.display = 'block';
       listEl.innerHTML = '';
@@ -4028,30 +4081,29 @@ function toggleTpl(header) {
     }
     emptyEl.style.display = 'none';
 
-    const duBadge = { kritik:'b-red', incelemede:'b-blue', cozuldu:'b-green', beklemede:'b-amber' };
-    const duLabel = { kritik:'Kritik', incelemede:'İncelemede', cozuldu:'Çözüldü', beklemede:'Beklemede' };
-    const dotColor= { kritik:'#E24B4A', incelemede:'#185FA5', cozuldu:'#1D9E75', beklemede:'#EF9F27' };
+    const duBadge  = { Kritik:'b-red', İncelemede:'b-blue', Çözüldü:'b-green', Beklemede:'b-amber', Tamamlandı:'b-purple' };
+    const dotColor = { Kritik:'#E24B4A', İncelemede:'#185FA5', Çözüldü:'#1D9E75', Beklemede:'#EF9F27', Tamamlandı:'#534AB7' };
 
-    listEl.innerHTML = list.map(s => `
+    listEl.innerHTML = list.sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).map(s => `
       <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
           <div>
-            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:3px">${s.no}</div>
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:3px">${s.no||s.id}</div>
             <div style="font-size:13px;font-weight:500">
-              <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${dotColor[s.durum]};margin-right:5px;vertical-align:middle"></span>${s.konu}
+              <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${dotColor[s.durum]||'#888'};margin-right:5px;vertical-align:middle"></span>${s.konu}
             </div>
           </div>
-          <span class="badge ${duBadge[s.durum]||'b-gray'}">${duLabel[s.durum]||s.durum}</span>
+          <span class="badge ${duBadge[s.durum]||'b-gray'}">${s.durum||'—'}</span>
         </div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px">${s.detay}</div>
-        ${s.cevap ? `<div style="background:var(--surface2);border-left:3px solid var(--teal);border-radius:0 6px 6px 0;padding:8px 12px;font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5"><span style="font-size:10px;font-weight:500;color:var(--teal);display:block;margin-bottom:3px">ODA YANITI</span>${s.cevap}</div>` : ''}
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px">${s.detay||'—'}</div>
+        ${(s.notlar||[]).length > 0 ? `<div style="background:var(--surface2);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:8px 12px;font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5"><span style="font-size:10px;font-weight:500;color:var(--blue);display:block;margin-bottom:3px">SON NOT</span>${s.notlar[s.notlar.length-1].metin||'—'}</div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="display:flex;gap:12px;font-size:11px;color:var(--text2)">
-            <span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.tarih}</span>
-            <span><i class="ti ti-tag" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.kategori}</span>
-            <span><i class="ti ti-user" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.sorumlu}</span>
+            <span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.tarih||'—'}</span>
+            <span><i class="ti ti-tag" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.kategori||'—'}</span>
+            <span><i class="ti ti-user" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.girenAd||s.girenKullanici||'—'}</span>
           </div>
-          ${s.durum!=='cozuldu' ? '<button class="btn btn-sm" style="font-size:11px;padding:4px 9px">Yanıt Yaz</button>' : ''}
+          <button class="btn btn-sm" style="font-size:11px;padding:4px 9px" onclick="sikSurecAc('${s.id}')">Süreç</button>
         </div>
       </div>`).join('');
   }
@@ -4062,15 +4114,17 @@ function toggleTpl(header) {
     const listEl  = document.getElementById('crm-etk-list');
     if (!emptyEl || !listEl) return;
 
-    /* ETK_DATA henüz yüklenmediyse bekle */
     if (!window.ETK_DATA) {
       emptyEl.style.display = 'block'; listEl.innerHTML = ''; return;
     }
 
-    /* Bu firmayı içeren tüm etkinlikleri bul */
+    /* Firma ID veya firma adı ile eşleştir */
     const katilan = [];
     ETK_DATA.etkinlikler.forEach(etk => {
-      const k = etk.katilimcilar.find(c => c.firmaId === firmaId);
+      const k = etk.katilimcilar.find(c =>
+        String(c.firmaId) === String(firmaId) ||
+        (currentFirm && c.firma && c.firma === currentFirm.firma)
+      );
       if (k) katilan.push({ etk, katilimci: k });
     });
 
@@ -4081,27 +4135,30 @@ function toggleTpl(header) {
     }
     emptyEl.style.display = 'none';
 
-    listEl.innerHTML = katilan.map(({etk, katilimci}) => {
-      const mem = katilimci.memnuniyet;
-      const memColor = mem>=80?'#1D9E75':mem>=60?'#EF9F27':'#E24B4A';
-      const memBg    = mem>=80?'var(--green-bg)':mem>=60?'var(--amber-bg)':'var(--red-bg)';
-      return `<div style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:9px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-          <div>
-            <span class="badge ${etk.tur==='Fuar'?'b-amber':'b-purple'}" style="margin-bottom:5px;display:inline-block">${etk.tur}</span>
-            <div style="font-size:13px;font-weight:500">${etk.ad}</div>
+    listEl.innerHTML = katilan
+      .sort((a,b)=>(b.etk.tarihIso||'').localeCompare(a.etk.tarihIso||''))
+      .map(({etk, katilimci}) => {
+        const mem = katilimci.memnuniyet;
+        const memColor = mem>=80?'#1D9E75':mem>=60?'#EF9F27':'#E24B4A';
+        return `<div style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:9px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <span class="badge ${etk.tur==='Fuar'?'b-amber':'b-purple'}" style="margin-bottom:5px;display:inline-block">${etk.tur}</span>
+              <div style="font-size:13px;font-weight:500">${etk.ad}</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px">${katilimci.yetkili||katilimci.ad||'—'} katıldı</div>
+            </div>
+            ${mem ? `<div style="text-align:right;flex-shrink:0;margin-left:12px">
+              <div style="font-size:20px;font-weight:500;color:${memColor}">%${mem}</div>
+              <div style="font-size:10px;color:var(--text2)">memnuniyet</div>
+            </div>` : '<span style="font-size:11px;color:var(--text2);flex-shrink:0">Puan girilmedi</span>'}
           </div>
-          ${mem ? `<div style="text-align:right;flex-shrink:0;margin-left:12px">
-            <div style="font-size:20px;font-weight:500;color:${memColor}">%${mem}</div>
-            <div style="font-size:10px;color:var(--text2)">memnuniyet</div>
-          </div>` : '<span style="font-size:11px;color:var(--text2);flex-shrink:0">Puan girilmedi</span>'}
-        </div>
-        <div style="display:flex;gap:12px;font-size:11px;color:var(--text2)">
-          <span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${etk.tarih}</span>
-          <span><i class="ti ti-map-pin" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${etk.yer}</span>
-        </div>
-        ${mem ? `<div style="margin-top:8px"><div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;width:${mem}%;background:${memColor};border-radius:3px"></div></div></div>` : ''}
-      </div>`;
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--text2)">
+            <span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${etk.tarih}</span>
+            <span><i class="ti ti-map-pin" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${etk.yer}</span>
+            <span><i class="ti ti-users" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${etk.katilimcilar.length} katılımcı</span>
+          </div>
+          ${mem ? `<div style="margin-top:8px"><div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;width:${mem}%;background:${memColor};border-radius:3px"></div></div></div>` : ''}
+        </div>`;
     }).join('');
   }
 
@@ -4112,7 +4169,414 @@ function toggleTpl(header) {
     currentFirm = null;
   };
 
-  /* Tab geçişi */
+  /* ── CRM TOBB VERİLERİ ── */
+  window.crmTOBBVerileriniYukle = async function(f) {
+    try {
+      /* Supabase'den üye bul */
+      let uyeData = null;
+      if(f.no) {
+        const { data } = await _supa.from('uyeler').select('*').eq('uye_oda_sicil_no', String(f.no)).maybeSingle();
+        uyeData = data;
+      }
+      if(!uyeData && f.mersis) {
+        const { data } = await _supa.from('uyeler').select('*').eq('mersis_no', String(f.mersis)).maybeSingle();
+        uyeData = data;
+      }
+
+      if(uyeData) {
+        /* Profil'i TOBB verileriyle zenginleştir */
+        currentFirm.uye_oid = uyeData.uye_oid;
+        currentFirm.kepAdresi = uyeData.kep_adresi;
+        currentFirm.web = uyeData.web_adresi;
+        currentFirm.ticaretSicilNo = uyeData.ticaret_sicil_no;
+        currentFirm.firmaTipi = uyeData.firma_tipi;
+        currentFirm.dereceTanimi = uyeData.derece_tanimi;
+        currentFirm.sermaye = uyeData.firma_sermaye;
+        currentFirm.borcTutari = uyeData.borc_tutari;
+        currentFirm.borcDurumu = uyeData.borc_durumu;
+
+        /* Resmi bilgiler kartını güncelle */
+        const resmiEl = document.getElementById('crm-resmi-fields');
+        if(resmiEl) {
+          const resmiFields = [
+            { icon:'ti-file-certificate', label:'Vergi No',      val: uyeData.vergi_no ? `<span style="font-family:var(--mono);font-size:11px">${uyeData.vergi_no}</span>` : '—' },
+            { icon:'ti-id',              label:'MERSİS No',      val: uyeData.mersis_no ? `<span style="font-family:var(--mono);font-size:11px">${uyeData.mersis_no}</span>` : '—' },
+            { icon:'ti-license',         label:'Ticaret Sicil',  val: uyeData.ticaret_sicil_no ? `<span style="font-family:var(--mono);font-size:11px">${uyeData.ticaret_sicil_no}</span>` : '—' },
+            { icon:'ti-calendar',        label:'Tescil Tarihi',  val: uyeData.oda_tescil_tarihi||'—' },
+            { icon:'ti-building-factory',label:'Firma Tipi',     val: uyeData.firma_tipi||'—' },
+            { icon:'ti-award',           label:'Derece',         val: uyeData.derece_tanimi||'—' },
+            { icon:'ti-coin',            label:'Sermaye',        val: uyeData.firma_sermaye ? '₺'+Number(uyeData.firma_sermaye).toLocaleString('tr-TR') : '—' },
+            { icon:'ti-mail-forward',    label:'KEP',            val: uyeData.kep_adresi||'—' },
+            { icon:'ti-world',           label:'Web',            val: uyeData.web_adresi ? `<a href="${uyeData.web_adresi}" target="_blank" style="color:var(--blue)">${uyeData.web_adresi}</a>` : '—' },
+          ];
+          resmiEl.innerHTML = resmiFields.map(fld =>
+            `<div style="display:flex;align-items:flex-start;gap:9px">
+              <div style="width:26px;height:26px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <i class="ti ${fld.icon}" style="font-size:13px;color:var(--text2)"></i>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--text2);margin-bottom:1px">${fld.label}</div>
+                <div style="font-size:12px;font-weight:500">${fld.val}</div>
+              </div>
+            </div>`
+          ).join('');
+        }
+
+        /* Aidat/Borç durumu badge güncelle */
+        if(uyeData.borc_tutari && parseFloat(uyeData.borc_tutari) > 0) {
+          const statusEl = document.getElementById('crm-firm-status');
+          if(statusEl) statusEl.innerHTML += `<span style="font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px;background:#FEF3DE;color:#633806;margin-left:6px">₺${Number(uyeData.borc_tutari).toLocaleString('tr-TR')} Borç</span>`;
+        }
+
+        /* Aidat ve belgeler yükle */
+        crmAidatYukle(uyeData.uye_oid);
+        crmBelgelerYukle(uyeData.uye_oid);
+        crmDegisiklikYukle(uyeData.uye_oid);
+      } else {
+        /* TOBB verisi yok — aidat ve belgeler paneline bilgi ver */
+        ['crm-aidat-loading','crm-belgeler-loading'].forEach(elId=>{
+          const el = document.getElementById(elId);
+          if(el) el.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text2);font-size:13px">
+            <i class="ti ti-cloud-off" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>
+            TOBB senkronizasyonu sonrası veriler burada görünecek
+          </div>`;
+        });
+        const degEl = document.getElementById('crm-degisiklik-list');
+        if(degEl) degEl.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text2);font-size:13px">TOBB entegrasyonu sonrası değişiklik logları buraya gelecek</div>`;
+      }
+    } catch(e) { console.warn('CRM TOBB verisi yükleme hatası:', e); }
+  };
+
+  /* ── AİDAT/BORÇ YÜKLEMESİ ── */
+  window.crmAidatYukle = async function(uyeOid) {
+    const loadEl = document.getElementById('crm-aidat-loading');
+    const contEl = document.getElementById('crm-aidat-content');
+    if(!loadEl || !contEl) return;
+    try {
+      const { data: tahakkuklar } = await _supa.from('tahakkuklar').select('*')
+        .eq('uye_oid', uyeOid).order('vade_tarihi', {ascending:false});
+      const { data: tahsilatlar } = await _supa.from('tahsilatlar').select('*')
+        .eq('uye_oid', uyeOid).order('tahsilat_tarihi', {ascending:false}).limit(10);
+
+      const toplamBorc = (tahakkuklar||[]).reduce((s,t)=>s+parseFloat(t.kalan_tutar||0),0);
+      const vadesiGecen = (tahakkuklar||[]).filter(t=>t.vade_tarihi && t.vade_tarihi < new Date().toISOString().slice(0,10) && parseFloat(t.kalan_tutar||0)>0);
+
+      contEl.innerHTML = `
+        <!-- Özet kartlar -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+          <div style="background:${toplamBorc>0?'#FEF3DE':'#E1F5EE'};border-radius:10px;padding:14px">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Toplam Borç</div>
+            <div style="font-size:20px;font-weight:600;color:${toplamBorc>0?'#633806':'#1D9E75'}">₺${toplamBorc.toLocaleString('tr-TR',{minimumFractionDigits:2})}</div>
+          </div>
+          <div style="background:${vadesiGecen.length>0?'#FDEAEA':'#E1F5EE'};border-radius:10px;padding:14px">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Vadesi Geçen</div>
+            <div style="font-size:20px;font-weight:600;color:${vadesiGecen.length>0?'#E24B4A':'#1D9E75'}">${vadesiGecen.length} tahakkuk</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:14px">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Son Ödeme</div>
+            <div style="font-size:14px;font-weight:600">${(tahsilatlar||[]).length>0?(tahsilatlar[0].tahsilat_tarihi||'—'):'Kayıt yok'}</div>
+          </div>
+        </div>
+
+        <!-- Tahakkuklar tablosu -->
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Tahakkuklar</div>
+        ${(tahakkuklar||[]).length > 0 ? `
+        <div class="um-table-wrap" style="margin-bottom:16px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Tür</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Yıl</th>
+              <th style="padding:8px;text-align:right;border:0.5px solid var(--border)">Tutar</th>
+              <th style="padding:8px;text-align:right;border:0.5px solid var(--border)">Kalan</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Vade</th>
+              <th style="padding:8px;text-align:center;border:0.5px solid var(--border)">Durum</th>
+            </tr></thead>
+            <tbody>${(tahakkuklar||[]).map(t=>{
+              const vadeli = t.vade_tarihi && t.vade_tarihi < new Date().toISOString().slice(0,10) && parseFloat(t.kalan_tutar||0)>0;
+              return `<tr style="${vadeli?'background:#FDEAEA20':''}">
+                <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.tahakkuk_tanimi||t.tahakkuk_turu||'—'}</td>
+                <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.yil||'—'}</td>
+                <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:right">₺${Number(t.tutar||0).toLocaleString('tr-TR')}</td>
+                <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:right;font-weight:600;color:${parseFloat(t.kalan_tutar||0)>0?'#E24B4A':'#1D9E75'}">₺${Number(t.kalan_tutar||0).toLocaleString('tr-TR')}</td>
+                <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.vade_tarihi||'—'}</td>
+                <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">
+                  <span class="badge ${vadeli?'b-red':parseFloat(t.kalan_tutar||0)===0?'b-green':'b-amber'}">${vadeli?'Vadesi Geçti':parseFloat(t.kalan_tutar||0)===0?'Ödendi':'Bekliyor'}</span>
+                </td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>
+        </div>` : '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">Tahakkuk kaydı bulunmuyor</div>'}
+
+        <!-- Son tahsilatlar -->
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Son Ödemeler</div>
+        ${(tahsilatlar||[]).length > 0 ? `
+        <div class="um-table-wrap">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Tarih</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Tür</th>
+              <th style="padding:8px;text-align:right;border:0.5px solid var(--border)">Tutar</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Tahsil Eden</th>
+            </tr></thead>
+            <tbody>${(tahsilatlar||[]).map(t=>`<tr>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.tahsilat_tarihi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.tahsilat_turu||t.odeme_sekli||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:right;font-weight:600;color:#1D9E75">₺${Number(t.tutar||0).toLocaleString('tr-TR')}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.tahsil_eden||'—'}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>` : '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">Ödeme kaydı bulunmuyor</div>'}
+      `;
+      loadEl.style.display = 'none';
+      contEl.style.display = 'block';
+    } catch(e) {
+      loadEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2)">Aidat verileri yüklenemedi</div>';
+    }
+  };
+
+  /* ── BELGELER & HİZMETLER ── */
+  window.crmBelgelerYukle = async function(uyeOid) {
+    const loadEl = document.getElementById('crm-belgeler-loading');
+    const contEl = document.getElementById('crm-belgeler-content');
+    if(!loadEl || !contEl) return;
+    try {
+      const [{ data: belgeler }, { data: hizmetler }] = await Promise.all([
+        _supa.from('uye_belgeler').select('*').eq('uye_oid', uyeOid).order('belge_tarihi', {ascending:false}),
+        _supa.from('uye_hizmetler').select('*').eq('uye_oid', uyeOid).order('hizmet_tarihi', {ascending:false})
+      ]);
+
+      contEl.innerHTML = `
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Verilen Belgeler</div>
+        ${(belgeler||[]).length > 0 ? `
+        <div class="um-table-wrap" style="margin-bottom:16px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Belge Adı</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">No</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Tarih</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Kanal</th>
+            </tr></thead>
+            <tbody>${(belgeler||[]).map(b=>`<tr>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${b.belge_adi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);font-family:var(--mono);font-size:11px">${b.belge_no||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${b.belge_tarihi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${b.basvuru_kanali||'—'}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>` : '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">Belge kaydı bulunmuyor</div>'}
+
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Verilen Hizmetler</div>
+        ${(hizmetler||[]).length > 0 ? `
+        <div class="um-table-wrap">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Hizmet</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Tarih</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Açıklama</th>
+            </tr></thead>
+            <tbody>${(hizmetler||[]).map(h=>`<tr>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${h.hizmet_adi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${h.hizmet_tarihi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${h.aciklama||'—'}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>` : '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">Hizmet kaydı bulunmuyor</div>'}
+      `;
+      loadEl.style.display = 'none';
+      contEl.style.display = 'block';
+    } catch(e) {
+      loadEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2)">Belgeler yüklenemedi</div>';
+    }
+  };
+
+  /* ── DEĞİŞİKLİK LOGLARI ── */
+  window.crmDegisiklikYukle = async function(uyeOid) {
+    const listEl = document.getElementById('crm-degisiklik-list');
+    if(!listEl) return;
+    try {
+      const [{ data: durumlar }, { data: dereceler }, { data: cezalar }] = await Promise.all([
+        _supa.from('uye_durum_gecmisi').select('*').eq('uye_oid', uyeOid).order('karar_tarihi', {ascending:false}).limit(20),
+        _supa.from('uye_dereceler').select('*').eq('uye_oid', uyeOid).order('karar_tarihi', {ascending:false}),
+        _supa.from('uye_cezalar').select('*').eq('uye_oid', uyeOid).order('karar_tarihi', {ascending:false})
+      ]);
+      const kayitlar = [
+        ...(durumlar||[]).map(d=>({tarih:d.karar_tarihi||'', tip:'Durum Değişikliği', ikon:'ti-refresh', renkBg:'#E8F5FD', renkIc:'#185FA5', baslik:`Durum: ${d.durum||'—'}`, detay:d.durum_degisim_nedeni||d.aciklama||''})),
+        ...(dereceler||[]).map(d=>({tarih:d.karar_tarihi||'', tip:'Derece Değişikliği', ikon:'ti-award', renkBg:'#F0E8FD', renkIc:'#534AB7', baslik:`Derece: ${d.derece_tanimi||d.derece||'—'}`, detay:d.aciklama||''})),
+        ...(cezalar||[]).map(c=>({tarih:c.karar_tarihi||'', tip:'Ceza', ikon:'ti-gavel', renkBg:'#FDEAEA', renkIc:'#E24B4A', baslik:`Ceza: ${c.ceza_aciklama||c.ceza_kodu||'—'}`, detay:c.aciklama||''}))
+      ].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
+
+      if(kayitlar.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text2);font-size:13px">Değişiklik kaydı bulunmuyor</div>';
+        return;
+      }
+      listEl.innerHTML = kayitlar.map(k=>`
+        <div class="crm-change-row">
+          <div class="crm-change-icon" style="background:${k.renkBg}"><i class="ti ${k.ikon}" style="color:${k.renkIc}"></i></div>
+          <div class="crm-change-body">
+            <div class="crm-change-title">${k.baslik}</div>
+            ${k.detay?`<div class="crm-change-detail">${k.detay}</div>`:''}
+            <div class="crm-change-meta">${k.tarih||'—'} · ${k.tip}</div>
+          </div>
+        </div>`).join('');
+    } catch(e) {
+      listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2)">Değişiklik logları yüklenemedi</div>';
+    }
+  };
+
+  /* ── GÖREVLER YÜKLEMESİ (Supabase'den) ── */
+  window.crmGorevlerYukle = async function(firmaId) {
+    const bodyEl = document.getElementById('crm-gorev-body');
+    const bosEl  = document.getElementById('crm-gorev-bos');
+    const tabloEl = document.getElementById('crm-gorev-tablo');
+    if(!bodyEl) return;
+    try {
+      const { data } = await _supa.from('gorevler').select('*')
+        .or(`atanan.eq.${currentFirm?.no},kaynak.eq.CRM`)
+        .order('created_at', {ascending:false});
+
+      /* Firma ile ilgili görevleri filtrele */
+      const gorevler = (data||[]).filter(g =>
+        g.kaynak === 'CRM' && g.atama_tarihi && currentFirm
+      );
+
+      if(gorevler.length === 0) {
+        if(bosEl) bosEl.style.display = 'block';
+        if(tabloEl) tabloEl.style.display = 'none';
+        return;
+      }
+      if(bosEl) bosEl.style.display = 'none';
+      if(tabloEl) tabloEl.style.display = 'block';
+
+      const onBadge = {yuksek:'b-red',normal:'b-amber',dusuk:'b-green'};
+      const duBadge = {planlandi:'b-blue',devam:'b-amber',tamamlandi:'b-green',iptal:'b-gray'};
+      const duLabel = {planlandi:'Planlandı',devam:'Devam',tamamlandi:'Tamamlandı',iptal:'İptal'};
+      const onLabel = {yuksek:'Yüksek',normal:'Normal',dusuk:'Düşük'};
+
+      bodyEl.innerHTML = gorevler.map(g=>`
+        <tr>
+          <td style="padding:8px 10px">${g.baslik||'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;color:var(--text2)">${g.atanan_ad||g.atanan||'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;color:var(--text2)">${g.son_tarih||'—'}</td>
+          <td style="padding:8px 10px"><span class="badge ${onBadge[g.oncelik]||'b-gray'}">${onLabel[g.oncelik]||g.oncelik||'—'}</span></td>
+          <td style="padding:8px 10px"><span class="badge ${duBadge[g.durum]||'b-gray'}">${duLabel[g.durum]||g.durum||'—'}</span></td>
+          <td style="padding:8px 10px"><button class="btn btn-sm" style="font-size:11px" onclick="crmGorevDurumDegistir('${g.id}','${g.durum}')">Güncelle</button></td>
+        </tr>`).join('');
+    } catch(e) { console.warn('CRM görev yükleme hatası:', e); }
+  };
+
+  /* ── GÖREV EKLE (CRM'den) ── */
+  window.crmGorevEkle = function() {
+    if(!currentFirm){ alert('Önce bir firma seçin.'); return; }
+    const personelOpts = (window.PERSONEL||[]).map(p=>`<option value="${p.kullanici}">${p.ad} ${p.soyad}</option>`).join('');
+    ipModalAc('Görev Ekle', currentFirm.firma, `
+      <div><label class="yk-lbl">Görev Başlığı *</label><input id="crm-gv-baslik" class="yk-inp" placeholder="Görevi kısaca açıklayın..."></div>
+      <div><label class="yk-lbl">Açıklama</label><textarea id="crm-gv-aciklama" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Detaylı açıklama..."></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Atanacak Kişi *</label><select id="crm-gv-atanan" class="yk-inp"><option value="">Seçin...</option>${personelOpts}</select></div>
+        <div><label class="yk-lbl">Son Tarih</label><input id="crm-gv-tarih" class="yk-inp" type="date"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Öncelik</label>
+          <select id="crm-gv-oncelik" class="yk-inp">
+            <option value="normal">Normal</option>
+            <option value="yuksek">Yüksek</option>
+            <option value="dusuk">Düşük</option>
+          </select>
+        </div>
+        <div><label class="yk-lbl">Kaynak</label><input class="yk-inp" value="CRM - ${currentFirm.firma}" disabled style="opacity:.7"></div>
+      </div>`,
+      async () => {
+        const baslik = document.getElementById('crm-gv-baslik')?.value.trim();
+        const atanan = document.getElementById('crm-gv-atanan')?.value;
+        if(!baslik || !atanan){ alert('Başlık ve atanacak kişi zorunludur.'); return; }
+        const atananPrs = (window.PERSONEL||[]).find(p=>p.kullanici===atanan);
+        const yeniGorev = {
+          id: genUUID(),
+          baslik, aciklama: document.getElementById('crm-gv-aciklama')?.value.trim()||'',
+          atanan, atanan_ad: atananPrs ? atananPrs.ad+' '+atananPrs.soyad : atanan,
+          atayan: currentUser?.kullanici||'',
+          son_tarih: document.getElementById('crm-gv-tarih')?.value||'',
+          atama_tarihi: new Date().toISOString().slice(0,10),
+          kaynak: 'CRM',
+          oncelik: document.getElementById('crm-gv-oncelik')?.value||'normal',
+          durum: 'planlandi', not_: `Firma: ${currentFirm.firma} (No: ${currentFirm.no})`
+        };
+        const { error } = await _supa.from('gorevler').insert([yeniGorev]);
+        if(error){ alert('Görev kaydedilemedi: '+error.message); return; }
+        if(window.GOREV_DB) window.GOREV_DB.push(yeniGorev);
+        ipModalKapat();
+        crmGorevlerYukle(currentFirm.id);
+        alert('✓ Görev oluşturuldu!');
+      }
+    );
+  };
+
+  /* ── GÖREV DURUM DEĞİŞTİR ── */
+  window.crmGorevDurumDegistir = function(gorevId, mevcutDurum) {
+    const durumlar = {planlandi:'Planlandı',devam:'Devam',tamamlandi:'Tamamlandı',iptal:'İptal'};
+    ipModalAc('Görev Durumu Güncelle', '', `
+      <div><label class="yk-lbl">Durum</label>
+        <select id="crm-gv-yeni-durum" class="yk-inp">
+          ${Object.entries(durumlar).map(([k,v])=>`<option value="${k}" ${k===mevcutDurum?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div><label class="yk-lbl">Not</label><textarea id="crm-gv-durum-not" class="yk-inp" style="min-height:48px" placeholder="İsteğe bağlı not..."></textarea></div>`,
+      async () => {
+        const yeniDurum = document.getElementById('crm-gv-yeni-durum')?.value;
+        const { error } = await _supa.from('gorevler').update({durum:yeniDurum}).eq('id',gorevId);
+        if(error){ alert('Güncellenemedi: '+error.message); return; }
+        if(window.GOREV_DB) { const g=window.GOREV_DB.find(x=>x.id===gorevId); if(g) g.durum=yeniDurum; }
+        ipModalKapat();
+        crmGorevlerYukle(currentFirm?.id);
+      }
+    );
+  };
+
+  /* ── ŞİKAYET EKLE (CRM'den) ── */
+  window.crmSikayetEkle = function() {
+    if(!currentFirm){ alert('Önce bir firma seçin.'); return; }
+    const kategoriler = ['Hizmet Kalitesi','Aidat/Finans','Bilgilendirme','Etkinlik','Personel','Diğer'];
+    ipModalAc('Şikayet Ekle', currentFirm.firma, `
+      <div><label class="yk-lbl">Şikayet Konusu *</label><input id="crm-sik-konu" class="yk-inp" placeholder="Kısa konu başlığı..."></div>
+      <div><label class="yk-lbl">Detay *</label><textarea id="crm-sik-detay" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Şikayeti detaylıca açıklayın..."></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Kategori</label>
+          <select id="crm-sik-kat" class="yk-inp">${kategoriler.map(k=>`<option>${k}</option>`).join('')}</select>
+        </div>
+        <div><label class="yk-lbl">Öncelik</label>
+          <select id="crm-sik-oncelik" class="yk-inp">
+            <option value="İncelemede">İncelemede</option>
+            <option value="Kritik">Kritik</option>
+            <option value="Beklemede">Beklemede</option>
+          </select>
+        </div>
+      </div>`,
+      async () => {
+        const konu = document.getElementById('crm-sik-konu')?.value.trim();
+        const detay = document.getElementById('crm-sik-detay')?.value.trim();
+        if(!konu || !detay){ alert('Konu ve detay zorunludur.'); return; }
+        const tarih = new Date().toLocaleDateString('tr-TR');
+        const yil = new Date().getFullYear();
+        const sikayet_no = 'SK'+Date.now().toString().slice(-6);
+        const id = genUUID();
+        const { error } = await _supa.from('sikayetler').insert([{
+          id, sikayet_no, konu, aciklama: detay,
+          kategori: document.getElementById('crm-sik-kat')?.value||'Diğer',
+          oncelik: document.getElementById('crm-sik-oncelik')?.value||'İncelemede',
+          durum: document.getElementById('crm-sik-oncelik')?.value||'İncelemede',
+          tarih, yil, firma_adi: currentFirm.firma,
+          uye_id: String(currentFirm.id),
+          sorumlu_kul: currentUser?.kullanici||''
+        }]);
+        if(error){ alert('Şikayet kaydedilemedi: '+error.message); return; }
+        ipModalKapat();
+        renderSik(currentFirm.id);
+        if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
+        alert('✓ Şikayet kaydedildi!');
+      }
+    );
+  };
+
   window.crmRenderMem = function(firmaId){ renderMem(firmaId); };
   window.crmRenderSik = function(firmaId){ renderSik(firmaId); };
   window.crmGetCurrentFirmId = function(){ return currentFirm ? currentFirm.id : null; };
@@ -4123,6 +4587,15 @@ function toggleTpl(header) {
     if (btn) btn.classList.add('crm-tab-on');
     const el = document.getElementById('crm-pane-'+pane);
     if (el) el.classList.add('crm-pane-on');
+    /* Lazy load for aidat and belgeler */
+    if(pane === 'aidat' && currentFirm?.uye_oid) {
+      const contEl = document.getElementById('crm-aidat-content');
+      if(contEl && contEl.style.display === 'none') crmAidatYukle(currentFirm.uye_oid);
+    }
+    if(pane === 'belgeler' && currentFirm?.uye_oid) {
+      const contEl = document.getElementById('crm-belgeler-content');
+      if(contEl && contEl.style.display === 'none') crmBelgelerYukle(currentFirm.uye_oid);
+    }
   };
 
   /* Dışarı tıklayınca sonuçları kapat */
@@ -5511,7 +5984,7 @@ window.etkPrsYilKarToggle=function(){
     const init = u.yetkili.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
 
     const statusBadge = u.durum==='askida'
-      ? badge('b-amber',`${dot('#EF9F27')}Askıda — ₺${u.borc?.toLocaleString()} borç`)
+      ? badge('b-amber',`${dot('#EF9F27')}Askıda`)
       : u.durum==='terk'
       ? badge('b-red',`${dot('#E24B4A')}Terk`)
       : u.odendi ? badge('b-green',`${dot('#1D9E75')}Aidat Ödendi`)
@@ -5530,47 +6003,203 @@ window.etkPrsYilKarToggle=function(){
         <button class="um-panel-close" onclick="umClosePanel('${tab}')"><i class="ti ti-x" style="font-size:16px"></i></button>
       </div>
 
-      <div class="um-psec">
-        <div class="um-psec-title">Yetkili & İletişim</div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-user"></i></div><div><div class="um-field-lbl">Yetkili Kişi</div><div class="um-field-val">${u.yetkili}</div></div></div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-phone"></i></div><div><div class="um-field-lbl">Telefon</div><div class="um-field-val"><a href="tel:${u.tel}">${u.tel}</a></div></div></div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-mail"></i></div><div><div class="um-field-lbl">E-posta</div><div class="um-field-val"><a href="mailto:${u.email}">${u.email}</a></div></div></div>
+      <div class="um-tab-bar" style="padding:0 16px">
+        <button class="um-tab um-on" onclick="umDetayTab(this,'genel')"><i class="ti ti-info-circle" style="font-size:13px"></i> Genel</button>
+        <button class="um-tab" onclick="umDetayTab(this,'ortaklar')"><i class="ti ti-users" style="font-size:13px"></i> Ortaklar</button>
+        <button class="um-tab" onclick="umDetayTab(this,'temsilciler')"><i class="ti ti-user-check" style="font-size:13px"></i> Temsilciler</button>
+        <button class="um-tab" onclick="umDetayTab(this,'adresler')"><i class="ti ti-map-pin" style="font-size:13px"></i> Adresler</button>
+        <button class="um-tab" onclick="umDetayTab(this,'tarihce')"><i class="ti ti-history" style="font-size:13px"></i> Tarihçe</button>
       </div>
 
-      <div class="um-psec">
-        <div class="um-psec-title">Firma Bilgileri</div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-building-store"></i></div><div><div class="um-field-lbl">Sektör</div><div class="um-field-val">${u.sektor}</div></div></div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-category"></i></div><div><div class="um-field-lbl">Meslek Grubu</div><div class="um-field-val">${u.meslek}</div></div></div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-barcode"></i></div><div><div class="um-field-lbl">NACE Kodu</div><div class="um-field-val"><code style="font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px">${u.nace}</code></div></div></div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-users"></i></div><div><div class="um-field-lbl">Çalışan Sayısı</div><div class="um-field-val">${u.calisan}</div></div></div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-world"></i></div><div><div class="um-field-lbl">İhracat</div><div class="um-field-val">${u.ihracat?'<span style="color:#1D9E75">✓ İhracat yapıyor</span>':'<span style="color:var(--text2)">İhracat yapmıyor</span>'}</div></div></div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-map-pin"></i></div><div><div class="um-field-lbl">İlçe / Bölge</div><div class="um-field-val">${u.ilce} · ${u.bolge}</div></div></div>
-      </div>
-
-      <div class="um-psec">
-        <div class="um-psec-title">Resmi Bilgiler</div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-file-certificate"></i></div><div><div class="um-field-lbl">Vergi No</div><div class="um-field-val" style="font-family:var(--mono);font-size:12px">${u.vergi}</div></div></div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-id"></i></div><div><div class="um-field-lbl">MERSİS No</div><div class="um-field-val" style="font-family:var(--mono);font-size:12px">${u.mersis}</div></div></div>
-        <div class="um-field"><div class="um-field-icon"><i class="ti ti-calendar"></i></div><div><div class="um-field-lbl">Kayıt Tarihi</div><div class="um-field-val">${u.kayit}</div></div></div>
-        ${u.terkTarihi?`<div class="um-field"><div class="um-field-icon"><i class="ti ti-calendar-x"></i></div><div><div class="um-field-lbl">Terk Tarihi</div><div class="um-field-val">${u.terkTarihi}</div></div></div>`:''}
-        ${u.terkNeden?`<div class="um-field"><div class="um-field-icon"><i class="ti ti-info-circle"></i></div><div><div class="um-field-lbl">Terk Nedeni</div><div class="um-field-val">${u.terkNeden}</div></div></div>`:''}
-        ${u.borc?`<div class="um-field"><div class="um-field-icon"><i class="ti ti-coin"></i></div><div><div class="um-field-lbl">Borç / Gecikme</div><div class="um-field-val" style="color:#E24B4A">₺${u.borc.toLocaleString()} · ${u.gecikme} gün</div></div></div>`:''}
-      </div>
-
-      <div class="um-psec">
-        <div class="um-psec-title">İşlemler</div>
-        <div style="display:flex;gap:7px;flex-wrap:wrap">
-          <button class="btn btn-sm"><i class="ti ti-message"></i> Mesaj</button>
-          <button class="btn btn-sm"><i class="ti ti-phone"></i> Ara</button>
-          <button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button>
-          ${tab==='askida'?'<button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Hatırlatma Gönder</button>':''}
-          ${tab==='terk'?'<button class="btn btn-p btn-sm"><i class="ti ti-user-check"></i> Geri Kazan</button>':''}
-          ${tab==='aktif'?'<button class="btn btn-sm"><i class="ti ti-user-circle"></i> CRM Kaydı</button>':''}
+      <div id="um-detay-genel" class="um-pane um-on" style="padding:0 16px 16px">
+        <div class="um-psec">
+          <div class="um-psec-title">Temel Bilgiler</div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-building"></i></div><div><div class="um-field-lbl">Ünvan</div><div class="um-field-val">${u.firma}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-hash"></i></div><div><div class="um-field-lbl">Oda Sicil No</div><div class="um-field-val" style="font-family:var(--mono);font-size:12px">${u.no}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-id"></i></div><div><div class="um-field-lbl">MERSİS No</div><div class="um-field-val" style="font-family:var(--mono);font-size:12px">${u.mersis||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-file-certificate"></i></div><div><div class="um-field-lbl">Vergi No</div><div class="um-field-val" style="font-family:var(--mono);font-size:12px">${u.vergi||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-license"></i></div><div><div class="um-field-lbl">Ticaret Sicil No</div><div class="um-field-val" style="font-family:var(--mono);font-size:12px">${u.ticaretSicilNo||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-calendar"></i></div><div><div class="um-field-lbl">Oda Tescil Tarihi</div><div class="um-field-val">${u.kayit||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-building-factory"></i></div><div><div class="um-field-lbl">Firma Tipi</div><div class="um-field-val">${u.firmaTipi||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-sitemap"></i></div><div><div class="um-field-lbl">Merkez / Şube</div><div class="um-field-val">${u.merkezSube==='1'?'Merkez':u.merkezSube==='2'?'Şube':'—'}</div></div></div>
         </div>
+        <div class="um-psec">
+          <div class="um-psec-title">Faaliyet Bilgileri</div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-category"></i></div><div><div class="um-field-lbl">Meslek Grubu</div><div class="um-field-val">${u.meslek||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-barcode"></i></div><div><div class="um-field-lbl">NACE Kodu</div><div class="um-field-val"><code style="font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px">${u.nace||'—'}</code></div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-building-store"></i></div><div><div class="um-field-lbl">Ana Faaliyet</div><div class="um-field-val">${u.anaFaaliyet||u.sektor||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-users"></i></div><div><div class="um-field-lbl">Çalışan Sayısı</div><div class="um-field-val">${u.calisan||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-coin"></i></div><div><div class="um-field-lbl">Sermaye</div><div class="um-field-val">${u.sermaye?'₺'+Number(u.sermaye).toLocaleString('tr-TR'):'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-award"></i></div><div><div class="um-field-lbl">Derece</div><div class="um-field-val">${u.dereceTanimi||'—'}</div></div></div>
+        </div>
+        <div class="um-psec">
+          <div class="um-psec-title">İletişim</div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-user"></i></div><div><div class="um-field-lbl">Yetkili</div><div class="um-field-val">${u.yetkili||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-phone"></i></div><div><div class="um-field-lbl">Telefon</div><div class="um-field-val"><a href="tel:${u.tel}">${u.tel||'—'}</a></div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-mail"></i></div><div><div class="um-field-lbl">E-posta</div><div class="um-field-val"><a href="mailto:${u.email}">${u.email||'—'}</a></div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-mail-forward"></i></div><div><div class="um-field-lbl">KEP Adresi</div><div class="um-field-val">${u.kepAdresi||'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-world"></i></div><div><div class="um-field-lbl">Web</div><div class="um-field-val">${u.web?`<a href="${u.web}" target="_blank">${u.web}</a>`:'—'}</div></div></div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-map-pin"></i></div><div><div class="um-field-lbl">Adres</div><div class="um-field-val">${u.adres||'—'}</div></div></div>
+        </div>
+        <div class="um-psec">
+          <div class="um-psec-title">Aidat & Borç Durumu</div>
+          <div class="um-field"><div class="um-field-icon"><i class="ti ti-credit-card"></i></div><div><div class="um-field-lbl">Borç Durumu</div><div class="um-field-val">${u.borcDurumu||'—'}</div></div></div>
+          ${u.borc?`<div class="um-field"><div class="um-field-icon"><i class="ti ti-alert-triangle"></i></div><div><div class="um-field-lbl">Borç Tutarı</div><div class="um-field-val" style="color:#E24B4A;font-weight:600">₺${Number(u.borc).toLocaleString('tr-TR')}</div></div></div>`:''}
+          ${u.vadesiGecmisBorc?`<div class="um-field"><div class="um-field-icon"><i class="ti ti-calendar-x"></i></div><div><div class="um-field-lbl">Vadesi Geçmiş</div><div class="um-field-val" style="color:#E24B4A">₺${Number(u.vadesiGecmisBorc).toLocaleString('tr-TR')}</div></div></div>`:''}
+        </div>
+        <div class="um-psec">
+          <div class="um-psec-title">İşlemler</div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="umDetayTOBBYukle('${u.no}','${tab}')"><i class="ti ti-cloud-download"></i> TOBB'dan Güncelle</button>
+            <button class="btn btn-sm" onclick="crmSelect(${id},'${tab}')"><i class="ti ti-user-circle"></i> CRM Kaydı</button>
+            ${tab==='askida'?'<button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Hatırlatma</button>':''}
+            ${tab==='terk'?'<button class="btn btn-p btn-sm"><i class="ti ti-user-check"></i> Geri Kazan</button>':''}
+          </div>
+        </div>
+      </div>
+
+      <div id="um-detay-ortaklar" class="um-pane" style="padding:0 16px 16px">
+        <div id="um-ortaklar-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
+      </div>
+
+      <div id="um-detay-temsilciler" class="um-pane" style="padding:0 16px 16px">
+        <div id="um-temsilciler-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
+      </div>
+
+      <div id="um-detay-adresler" class="um-pane" style="padding:0 16px 16px">
+        <div id="um-adresler-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
+      </div>
+
+      <div id="um-detay-tarihce" class="um-pane" style="padding:0 16px 16px">
+        <div id="um-tarihce-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
       </div>`;
 
     panel.classList.add('um-vis');
     layout.classList.add('um-split');
+
+    /* TOBB verilerini Supabase'den yükle */
+    umSupabaseDetayYukle(u.no, u.mersis);
+  };
+
+  window.umDetayTab = function(btn, tabName) {
+    document.querySelectorAll('.um-tab').forEach(t=>t.classList.remove('um-on'));
+    btn.classList.add('um-on');
+    document.querySelectorAll('.um-pane').forEach(p=>p.classList.remove('um-on'));
+    const pane = document.getElementById('um-detay-'+tabName);
+    if(pane) pane.classList.add('um-on');
+  };
+
+  window.umSupabaseDetayYukle = async function(sicilNo, mersisNo) {
+    try {
+      /* Supabase'den üye detaylarını çek */
+      let query = _supa.from('uyeler').select('*');
+      if(sicilNo) query = query.eq('uye_oda_sicil_no', sicilNo);
+      else if(mersisNo) query = query.eq('mersis_no', mersisNo);
+      const { data: uyeData } = await query.maybeSingle();
+
+      if(!uyeData) {
+        /* Supabase'de yok — demo mesajı */
+        ['ortaklar','temsilciler','adresler','tarihce'].forEach(t=>{
+          const el = document.getElementById('um-'+t+'-icerik');
+          if(el) el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">
+            <i class="ti ti-cloud-off" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>
+            TOBB API entegrasyonu yapıldıktan sonra veriler burada görünecek.<br>
+            <span style="font-size:11px">Üye bilgilerini çekmek için "TOBB'dan Güncelle" butonuna basın.</span>
+          </div>`;
+        });
+        return;
+      }
+
+      const uye_oid = uyeData.uye_oid;
+
+      /* Paralel olarak tüm alt verileri çek */
+      const [ortaklar, temsilciler, adresler, durumlar, dereceler, faaliyetler, telefonlar, cezalar] = await Promise.all([
+        _supa.from('uye_ortaklar').select('*').eq('uye_oid', uye_oid),
+        _supa.from('uye_temsilciler').select('*').eq('uye_oid', uye_oid),
+        _supa.from('uye_adresler').select('*').eq('uye_oid', uye_oid),
+        _supa.from('uye_durum_gecmisi').select('*').eq('uye_oid', uye_oid).order('karar_tarihi', {ascending:false}),
+        _supa.from('uye_dereceler').select('*').eq('uye_oid', uye_oid),
+        _supa.from('uye_faaliyetler').select('*').eq('uye_oid', uye_oid),
+        _supa.from('uye_telefonlar').select('*').eq('uye_oid', uye_oid),
+        _supa.from('uye_cezalar').select('*').eq('uye_oid', uye_oid)
+      ]);
+
+      /* Ortaklar */
+      const ortEl = document.getElementById('um-ortaklar-icerik');
+      if(ortEl) ortEl.innerHTML = (ortaklar.data||[]).length > 0
+        ? `<table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Ad / Ünvan</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Ortaklık Tipi</th>
+              <th style="padding:8px;text-align:center;border:0.5px solid var(--border)">Pay Değeri</th>
+              <th style="padding:8px;text-align:center;border:0.5px solid var(--border)">Hisse</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Başlangıç</th>
+            </tr></thead>
+            <tbody>${(ortaklar.data||[]).map(o=>`<tr>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${o.adi_soyad_unvan||'—'}<br><span style="font-size:10px;color:var(--text2)">${o.kimlik_no||o.vergi_no||''}</span></td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${o.ortaklik_tipi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">${o.pay_degeri||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">${o.hisse_adedi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${o.ortaklik_baslangic_tarihi||'—'}</td>
+            </tr>`).join('')}</tbody>
+          </table>`
+        : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Ortak kaydı bulunamadı</div>';
+
+      /* Temsilciler */
+      const temEl = document.getElementById('um-temsilciler-icerik');
+      if(temEl) temEl.innerHTML = (temsilciler.data||[]).length > 0
+        ? `<table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Ad / Ünvan</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Görev</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Yetki Türü</th>
+              <th style="padding:8px;text-align:center;border:0.5px solid var(--border)">Durum</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Yetki Tarihi</th>
+            </tr></thead>
+            <tbody>${(temsilciler.data||[]).map(t=>`<tr>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.adi_soyad_unvan||'—'}<br><span style="font-size:10px;color:var(--text2)">${t.kimlik_no||''}</span></td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.gorev_adi||t.gorev||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.yetki_turu||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center"><span class="badge ${t.aktif_pasif==='1'?'b-green':'b-gray'}">${t.aktif_pasif==='1'?'Aktif':'Pasif'}</span></td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.yetki_baslangic_tarihi||'—'}</td>
+            </tr>`).join('')}</tbody>
+          </table>`
+        : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Temsilci kaydı bulunamadı</div>';
+
+      /* Adresler */
+      const adrEl = document.getElementById('um-adresler-icerik');
+      if(adrEl) adrEl.innerHTML = (adresler.data||[]).length > 0
+        ? (adresler.data||[]).map(a=>`<div class="um-psec">
+            <div class="um-psec-title">${a.adres_tip||'Adres'} ${a.yazisma_adresi==='1'?'<span class="badge b-blue" style="font-size:10px">Yazışma</span>':''}</div>
+            <div class="um-field"><div class="um-field-icon"><i class="ti ti-map-pin"></i></div><div><div class="um-field-lbl">Tam Adres</div><div class="um-field-val">${a.butunlesik_adres||a.serbest_metin||[a.cadde,a.sokak,a.mahalle,a.ilce,a.il].filter(Boolean).join(', ')||'—'}</div></div></div>
+            <div class="um-field"><div class="um-field-icon"><i class="ti ti-hash"></i></div><div><div class="um-field-lbl">Posta Kodu</div><div class="um-field-val">${a.posta_kodu||'—'}</div></div></div>
+            <div class="um-field"><div class="um-field-icon"><i class="ti ti-calendar"></i></div><div><div class="um-field-lbl">Geçerlilik</div><div class="um-field-val">${a.baslangic_tarihi||'—'} → ${a.bitis_tarihi||'Aktif'}</div></div></div>
+          </div>`).join('')
+        : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Adres kaydı bulunamadı</div>';
+
+      /* Tarihçe */
+      const tarEl = document.getElementById('um-tarihce-icerik');
+      if(tarEl) {
+        const tumTarihce = [
+          ...(durumlar.data||[]).map(d=>({tip:'Durum', tarih:d.karar_tarihi, bilgi:`${d.durum||''} ${d.durum_degisim_nedeni?'('+d.durum_degisim_nedeni+')':''}`, aciklama:d.aciklama||'', renk:'var(--blue)'})),
+          ...(dereceler.data||[]).map(d=>({tip:'Derece', tarih:d.karar_tarihi, bilgi:d.derece_tanimi||d.derece||'', aciklama:d.aciklama||'', renk:'var(--teal)'})),
+          ...(cezalar.data||[]).map(c=>({tip:'Ceza', tarih:c.karar_tarihi, bilgi:c.ceza_aciklama||c.ceza_kodu||'', aciklama:c.aciklama||'', renk:'var(--red)'}))
+        ].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
+        tarEl.innerHTML = tumTarihce.length > 0
+          ? `<div class="timeline">${tumTarihce.map(t=>`<div class="tl-item">
+              <div class="tl-dot" style="background:${t.renk}"></div>
+              <div><div class="tl-title">${t.tip}: ${t.bilgi}</div>
+              ${t.aciklama?`<div style="font-size:11px;color:var(--text2)">${t.aciklama}</div>`:''}
+              <div class="tl-sub">${t.tarih||'—'}</div></div>
+            </div>`).join('')}</div>`
+          : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Tarihçe kaydı bulunamadı</div>';
+      }
+
+    } catch(e) { console.warn('Üye detay yükleme hatası:', e); }
+  };
+
+  window.umDetayTOBBYukle = function(sicilNo, tab) {
+    alert('TOBB API entegrasyonu için önce TOBB web servis erişim bilgilerinizi (kullanıcı adı, şifre, oda numarası) sisteme tanımlamanız gerekmektedir. Bu özellik yakında aktif edilecektir.');
   };
 
   window.umClosePanel = function(tab){
