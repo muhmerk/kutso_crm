@@ -3831,8 +3831,8 @@ function toggleTpl(header) {
     _crmSearchTimer = setTimeout(async () => {
       try {
         const { data } = await _supa.from('uyeler')
-          .select('uye_oid,unvan,uye_oda_sicil_no,vergi_no,mersis_no,uyelik_durum,meslek_grubu_adi,vergi_dairesi_adi')
-          .or(`unvan.ilike.%${q}%,uye_oda_sicil_no.eq.${q},vergi_no.eq.${q},mersis_no.eq.${q}`)
+          .select('uye_oid,unvan,tabela_unvani,uye_oda_sicil_no,vergi_no,mersis_no,uyelik_durum,meslek_grubu_adi')
+          .or(`unvan.ilike.%${q}%,tabela_unvani.ilike.%${q}%,uye_oda_sicil_no.eq.${q},vergi_no.eq.${q}`)
           .limit(8);
 
         if((data||[]).length > 0) {
