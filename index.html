@@ -12886,12 +12886,16 @@ function projeFormOku(p, mevcut){
   /* Evraklar — data attribute'lardan oku */
   const modalBody = document.getElementById('ip-modal-body') || document;
   const evraklar = [];
-  modalBody.querySelectorAll('.ip-evrak-satir').forEach(satir => {
-    const ad  = satir.dataset.ad  || satir.querySelector('.ip-evrak-ad-val')?.value  || '';
-    const url = satir.dataset.url || satir.querySelector('.ip-evrak-url-val')?.value || '';
-    const boyut = satir.dataset.boyut || satir.querySelector('.ip-evrak-boyut-val')?.value || '';
+  const satirlar = modalBody.querySelectorAll('.ip-evrak-satir');
+  console.log('Evrak satır sayısı:', satirlar.length);
+  satirlar.forEach((satir,i) => {
+    const ad  = satir.dataset.ad  || '';
+    const url = satir.dataset.url || '';
+    const boyut = satir.dataset.boyut || '';
+    console.log(`Evrak ${i}:`, {ad, url, boyut});
     if(ad && url) evraklar.push({ad, url, boyut});
   });
+  console.log('Kaydedilecek evraklar:', evraklar);
   p.evraklar = evraklar;
   /* Üst hedef katkısı */
   p.hedefKatkisi = document.getElementById('ip-f-katki')?.value.trim()||'';
