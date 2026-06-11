@@ -1133,8 +1133,9 @@ tr:hover td { background: var(--surface2); }
 .tl-item { position: relative; padding-left: 16px; margin-bottom: 16px; }
 .tl-item:last-child { margin-bottom: 0; }
 .tl-dot {
-  position: absolute; left: -14px; top: 5px;
-  width: 8px; height: 8px; border-radius: 50%;
+  width: 28px; height: 28px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
 }
 .tl-title { font-size: 13px; font-weight: 500; }
 .tl-sub   { font-size: 12px; color: var(--text2); margin-top: 3px; }
@@ -3723,21 +3724,25 @@ function toggleTpl(header) {
   ];
 
   /* Demo iletişim geçmişi */
-  /* İletişim notlarını Supabase'den yükle */
-  const TIMELINE_CACHE = {};
   async function crmTimelineYukle(firmaId) {
     const cacheKey = String(firmaId);
     if(TIMELINE_CACHE[cacheKey]) return TIMELINE_CACHE[cacheKey];
     const { data } = await _supa.from('crm_iletisim').select('*')
       .eq('uye_id', String(firmaId))
       .order('created_at', {ascending:false});
-    const tipRenk = { 'telefon':'#1D9E75', 'eposta':'#534AB7', 'ziyaret':'#EF9F27', 'toplanti':'#185FA5', 'diger':'#888' };
-    const tipIcon = { 'telefon':'ti-phone', 'eposta':'ti-mail', 'ziyaret':'ti-map-pin', 'toplanti':'ti-users', 'diger':'ti-notes' };
-    const tipLabel = { 'telefon':'Telefon', 'eposta':'E-posta', 'ziyaret':'Ziyaret', 'toplanti':'Toplantı', 'diger':'Not' };
+    const tipRenk  = { telefon:'#1D9E75', eposta:'#534AB7', ziyaret:'#EF9F27', toplanti:'#185FA5', diger:'#888' };
+    const tipIcon  = { telefon:'ti-phone', eposta:'ti-mail', ziyaret:'ti-map-pin', toplanti:'ti-users', diger:'ti-notes' };
+    const tipLabel = { telefon:'Telefon', eposta:'E-posta', ziyaret:'Ziyaret', toplanti:'Toplantı', diger:'Not' };
     const items = (data||[]).map(d=>({
-      tip: d.tip||'diger', renk: tipRenk[d.tip]||'#888',
+      id: d.id,
+      tip: d.tip||'diger',
+      renk: tipRenk[d.tip]||'#888',
       icon: tipIcon[d.tip]||'ti-notes',
-      baslik: (tipLabel[d.tip]||'Not')+': '+( d.ozet||''), detay: '', tarih: d.tarih||'', kisi: d.giren||''
+      label: tipLabel[d.tip]||'Not',
+      baslik: d.ozet||'',
+      tarih: d.tarih||'',
+      kisi: d.giren||'',
+      giren_kul: d.giren_kul||''
     }));
     TIMELINE_CACHE[cacheKey] = items;
     return items;
@@ -3746,7 +3751,6 @@ function toggleTpl(header) {
   function crmTimelineRender(firmaId) {
     const el = document.getElementById('crm-timeline');
     if(!el) return;
-    /* Cache temizle */
     delete TIMELINE_CACHE[String(firmaId)];
     el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>';
     crmTimelineYukle(firmaId).then(items=>{
@@ -3754,14 +3758,74 @@ function toggleTpl(header) {
         el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-messages" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>Henüz iletişim kaydı yok</div>';
         return;
       }
-      el.innerHTML = items.map(item=>`<div class="tl-item">
-        <div class="tl-dot" style="background:${item.renk}"></div>
-        <div><div class="tl-title">${item.baslik}</div>
-        ${item.detay?`<div style="font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5">${item.detay}</div>`:''}
-        <div class="tl-sub">${item.tarih} · ${item.kisi}</div></div>
-      </div>`).join('');
+      const benimKullanici = currentUser?.kullanici||'';
+      el.innerHTML = items.map(item=>`
+        <div class="tl-item" style="position:relative">
+          <div class="tl-dot" style="background:${item.renk}"><i class="ti ${item.icon}" style="font-size:11px;color:#fff"></i></div>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div class="tl-title"><span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;background:${item.renk}20;color:${item.renk};margin-right:6px">${item.label}</span>${item.baslik}</div>
+                <div class="tl-sub">${item.tarih} · ${item.kisi}</div>
+              </div>
+              ${item.giren_kul===benimKullanici || ['admin','feyyaz','umran','orhan','haver'].includes(benimKullanici) ? `
+              <div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px">
+                <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" onclick="crmNotDuzenle('${item.id}','${item.firmaId||firmaId}')"><i class="ti ti-edit"></i></button>
+                <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" onclick="crmNotSil('${item.id}','${firmaId}')"><i class="ti ti-trash"></i></button>
+              </div>` : ''}
+            </div>
+          </div>
+        </div>`).join('');
     });
   }
+
+  window.crmNotSil = async function(notId, firmaId) {
+    if(!confirm('Bu notu silmek istiyor musunuz?')) return;
+    const { error } = await _supa.from('crm_iletisim').delete().eq('id', notId);
+    if(error){ alert('Silinemedi: '+error.message); return; }
+    crmTimelineRender(firmaId);
+  };
+
+  window.crmNotDuzenle = function(notId, firmaId) {
+    const ovId = 'crm-not-overlay';
+    let ov = document.getElementById(ovId);
+    if(!ov){ ov=document.createElement('div'); ov.id=ovId; document.body.appendChild(ov); }
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:flex;align-items:center;justify-content:center';
+    ov.innerHTML=`<div style="background:var(--surface);border-radius:14px;width:460px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+      <div style="font-size:14px;font-weight:600;margin-bottom:14px">Notu Düzenle</div>
+      <label class="yk-lbl">İletişim Tipi</label>
+      <select id="crm-not-tip" class="yk-inp" style="margin-bottom:10px">
+        <option value="telefon">📞 Telefon görüşmesi</option>
+        <option value="eposta">✉️ E-posta</option>
+        <option value="ziyaret">📍 Ziyaret</option>
+        <option value="toplanti">👥 Toplantı</option>
+        <option value="diger">📝 Diğer</option>
+      </select>
+      <label class="yk-lbl">Not / Özet *</label>
+      <textarea id="crm-not-ozet" class="yk-inp" style="min-height:80px;resize:vertical;margin-bottom:14px"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-sm" onclick="document.getElementById('${ovId}').remove()">İptal</button>
+        <button class="btn btn-p btn-sm" onclick="crmNotGuncelle('${notId}','${firmaId}')"><i class="ti ti-check"></i> Güncelle</button>
+      </div>
+    </div>`;
+    /* Mevcut değerleri çek */
+    _supa.from('crm_iletisim').select('*').eq('id',notId).maybeSingle().then(({data})=>{
+      if(data){
+        document.getElementById('crm-not-tip').value = data.tip||'diger';
+        document.getElementById('crm-not-ozet').value = data.ozet||'';
+      }
+    });
+  };
+
+  window.crmNotGuncelle = async function(notId, firmaId) {
+    const tip  = document.getElementById('crm-not-tip')?.value||'diger';
+    const ozet = document.getElementById('crm-not-ozet')?.value.trim()||'';
+    if(!ozet){ alert('Not alanı zorunludur.'); return; }
+    const { error } = await _supa.from('crm_iletisim').update({tip, ozet}).eq('id', notId);
+    if(error){ alert('Güncellenemedi: '+error.message); return; }
+    document.getElementById('crm-not-overlay')?.remove();
+    crmTimelineRender(firmaId);
+  };
 
   const TIMELINE = { default: [] };
   const CHANGES  = { default: [{ icon:'ti-user-plus', bg:'#E8F1FB', ic:'#0C447C', baslik:'Üye kaydı oluşturuldu', detay:'TOBB Üye Bilgi Sistemi üzerinden senkronize edildi.', tarih:'Kayıt tarihi', kisi:'Sistem' }] };
@@ -4058,122 +4122,118 @@ function toggleTpl(header) {
     crmTOBBVerileriniYukle(f);
   };
 
-  /* memnuniyet render — MEM_ANKET_DB'den */
-  function renderMem(firmaId) {
+  /* memnuniyet render — doğrudan Supabase'den */
+  async function renderMem(firmaId) {
     const emptyEl   = document.getElementById('crm-mem-empty');
     const contentEl = document.getElementById('crm-mem-content');
     if(!emptyEl || !contentEl) return;
-
-    /* MEM_ANKET_DB'den bu firmanın anketlerini bul — ad veya ID ile */
-    const tumAnketler = [];
-    Object.values(window.MEM_ANKET_DB||{}).forEach(yilAnketler=>{
-      (yilAnketler||[]).forEach(a=>{
-        if(
-          String(a.firmaId) === String(firmaId) ||
-          (currentFirm && a.firma && a.firma === currentFirm.firma) ||
-          (currentFirm && String(a.firmaId) === String(currentFirm.no))
-        ) tumAnketler.push(a);
-      });
-    });
-
-    if (!tumAnketler.length) {
-      emptyEl.style.display = 'block';
-      contentEl.style.display = 'none';
-      return;
-    }
     emptyEl.style.display = 'none';
-    contentEl.style.display = 'block';
+    contentEl.style.display = 'none';
+    document.getElementById('crm-mem-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>';
 
-    const ortPuan = tumAnketler.reduce((s,a)=>s+parseFloat(a.ortPuan||0),0)/tumAnketler.length;
-    const dagılım = [0,0,0,0,0];
-    tumAnketler.forEach(a=>{ const p=Math.round(parseFloat(a.ortPuan||0)); if(p>=1&&p<=5) dagılım[p-1]++; });
+    try {
+      const { data } = await _supa.from('mem_anketler').select('*')
+        .eq('firma', currentFirm?.firma)
+        .order('created_at', {ascending:false});
 
-    document.getElementById('crm-mem-score').textContent = ortPuan.toFixed(1);
-    const stars = Math.round(ortPuan);
-    document.getElementById('crm-mem-stars').textContent = '★'.repeat(stars) + '☆'.repeat(5-stars);
-    document.getElementById('crm-mem-count').textContent = tumAnketler.length + ' değerlendirme';
+      const tumAnketler = data||[];
+      if (!tumAnketler.length) {
+        emptyEl.style.display = 'block';
+        document.getElementById('crm-mem-list').innerHTML = '';
+        document.getElementById('crm-mem-count').textContent = '0 değerlendirme';
+        return;
+      }
+      contentEl.style.display = 'block';
 
-    const total = dagılım.reduce((a,b)=>a+b,0)||1;
-    document.getElementById('crm-mem-bars').innerHTML = [5,4,3,2,1].map(s => {
-      const cnt = dagılım[s-1];
-      const pct = Math.round((cnt/total)*100);
-      const barColor = s>=4?'#1D9E75':s===3?'#EF9F27':'#E24B4A';
-      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-size:11px;color:var(--text2);width:8px;text-align:right">${s}</span>
-        <span style="font-size:11px;color:#EF9F27">★</span>
-        <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px"></div>
-        </div>
-        <span style="font-size:11px;color:var(--text2);width:20px">${cnt}</span>
-      </div>`;
-    }).join('');
+      const ortPuan = tumAnketler.reduce((s,a)=>s+parseFloat(a.ort_puan||0),0)/tumAnketler.length;
+      const dagılım = [0,0,0,0,0];
+      tumAnketler.forEach(a=>{ const p=Math.round(parseFloat(a.ort_puan||0)); if(p>=1&&p<=5) dagılım[p-1]++; });
 
-    document.getElementById('crm-mem-list').innerHTML = tumAnketler
-      .sort((a,b)=>(b.tarihIso||b.tarih||'').localeCompare(a.tarihIso||a.tarih||''))
-      .map(a => {
-        const puan = parseFloat(a.ortPuan||0);
-        const yildiz = '★'.repeat(Math.round(puan)) + '☆'.repeat(5-Math.round(puan));
-        const sc = puan>=4?'#1D9E75':puan>=3?'#EF9F27':'#E24B4A';
-        const yorum = a.yorum || '';
+      document.getElementById('crm-mem-score').textContent = ortPuan.toFixed(1);
+      document.getElementById('crm-mem-stars').textContent = '★'.repeat(Math.round(ortPuan))+'☆'.repeat(5-Math.round(ortPuan));
+      document.getElementById('crm-mem-count').textContent = tumAnketler.length+' değerlendirme';
+
+      const total = dagılım.reduce((a,b)=>a+b,0)||1;
+      document.getElementById('crm-mem-bars').innerHTML = [5,4,3,2,1].map(s=>{
+        const cnt=dagılım[s-1], pct=Math.round((cnt/total)*100);
+        const barColor=s>=4?'#1D9E75':s===3?'#EF9F27':'#E24B4A';
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:11px;color:var(--text2);width:8px;text-align:right">${s}</span>
+          <span style="font-size:11px;color:#EF9F27">★</span>
+          <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px"></div>
+          </div>
+          <span style="font-size:11px;color:var(--text2);width:20px">${cnt}</span>
+        </div>`;
+      }).join('');
+
+      document.getElementById('crm-mem-list').innerHTML = tumAnketler.map(a=>{
+        const puan=parseFloat(a.ort_puan||0), sc=puan>=4?'#1D9E75':puan>=3?'#EF9F27':'#E24B4A';
         return `<div style="padding:12px 16px;border-bottom:0.5px solid var(--border)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
             <div>
-              <span style="font-size:13px;font-weight:500;color:${sc}">${yildiz}</span>
+              <span style="font-size:13px;font-weight:500;color:${sc}">${'★'.repeat(Math.round(puan))+'☆'.repeat(5-Math.round(puan))}</span>
               <span style="font-size:11px;background:var(--surface2);padding:1px 7px;border-radius:99px;margin-left:7px;color:var(--text2)">${a.yil||''}</span>
             </div>
             <span style="font-size:11px;color:var(--text2)">${a.tarih||''}</span>
           </div>
-          ${yorum?`<div style="font-size:12px;color:var(--text);line-height:1.6">${yorum}</div>`:''}
-          <div style="font-size:10px;color:var(--text3);margin-top:4px">${a.yetkili||a.firma||''}</div>
+          ${a.yorum?`<div style="font-size:12px;color:var(--text);line-height:1.6">${a.yorum}</div>`:''}
+          <div style="font-size:10px;color:var(--text3);margin-top:4px">${a.yetkili||''}</div>
         </div>`;
-    }).join('');
+      }).join('');
+    } catch(e) {
+      document.getElementById('crm-mem-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">Memnuniyet verileri yüklenemedi</div>';
+    }
   }
 
-  /* şikayet render — Supabase'den */
-  function renderSik(firmaId) {
+  /* şikayet render — doğrudan Supabase'den */
+  async function renderSik(firmaId) {
     const emptyEl = document.getElementById('crm-sik-empty');
     const listEl  = document.getElementById('crm-sik-list');
     if(!emptyEl || !listEl) return;
-
-    /* SIK_DB'den bu firmanın şikayetlerini bul */
-    const list = Object.values(window.SIK_DB||{}).filter(s =>
-      String(s.firmaId) === String(firmaId) ||
-      (currentFirm && s.firma && s.firma === currentFirm.firma) ||
-      (currentFirm && String(s.firmaId) === String(currentFirm.no))
-    );
-
-    if (list.length === 0) {
-      emptyEl.style.display = 'block';
-      listEl.innerHTML = '';
-      return;
-    }
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>';
     emptyEl.style.display = 'none';
 
-    const duBadge  = { Kritik:'b-red', İncelemede:'b-blue', Çözüldü:'b-green', Beklemede:'b-amber', Tamamlandı:'b-purple' };
-    const dotColor = { Kritik:'#E24B4A', İncelemede:'#185FA5', Çözüldü:'#1D9E75', Beklemede:'#EF9F27', Tamamlandı:'#534AB7' };
+    try {
+      /* Firma adı ile ara */
+      const { data } = await _supa.from('sikayetler').select('*')
+        .eq('firma_adi', currentFirm?.firma)
+        .order('created_at', {ascending:false});
 
-    listEl.innerHTML = list.sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||'')).map(s => `
-      <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-          <div>
-            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:3px">${s.no||s.id}</div>
-            <div style="font-size:13px;font-weight:500">
-              <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${dotColor[s.durum]||'#888'};margin-right:5px;vertical-align:middle"></span>${s.konu}
+      const list = data||[];
+      if (list.length === 0) {
+        emptyEl.style.display = 'block';
+        listEl.innerHTML = '';
+        return;
+      }
+
+      const duBadge  = { Kritik:'b-red', İncelemede:'b-blue', Çözüldü:'b-green', Beklemede:'b-amber', Tamamlandı:'b-purple' };
+      const dotColor = { Kritik:'#E24B4A', İncelemede:'#185FA5', Çözüldü:'#1D9E75', Beklemede:'#EF9F27', Tamamlandı:'#534AB7' };
+
+      listEl.innerHTML = list.map(s=>`
+        <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:3px">${s.sikayet_no||''}</div>
+              <div style="font-size:13px;font-weight:500">
+                <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${dotColor[s.durum]||'#888'};margin-right:5px;vertical-align:middle"></span>${s.konu}
+              </div>
             </div>
+            <span class="badge ${duBadge[s.durum]||'b-gray'}">${s.durum||'—'}</span>
           </div>
-          <span class="badge ${duBadge[s.durum]||'b-gray'}">${s.durum||'—'}</span>
-        </div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px">${s.detay||'—'}</div>
-        ${(s.notlar||[]).length > 0 ? `<div style="background:var(--surface2);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:8px 12px;font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5"><span style="font-size:10px;font-weight:500;color:var(--blue);display:block;margin-bottom:3px">SON NOT</span>${s.notlar[s.notlar.length-1].metin||'—'}</div>` : ''}
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="display:flex;gap:12px;font-size:11px;color:var(--text2)">
-            <span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.tarih||'—'}</span>
-            <span><i class="ti ti-tag" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.kategori||'—'}</span>
-            <span><i class="ti ti-user" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.girenAd||s.girenKullanici||'—'}</span>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px">${s.aciklama||'—'}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;gap:12px;font-size:11px;color:var(--text2)">
+              <span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.tarih||'—'}</span>
+              <span><i class="ti ti-tag" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.kategori||'—'}</span>
+              <span><i class="ti ti-user" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${s.sorumlu_kul||'—'}</span>
+            </div>
+            <button class="btn btn-sm" style="font-size:11px;padding:4px 9px" onclick="sikSurecAc('${s.id}')">Süreç</button>
           </div>
-          <button class="btn btn-sm" style="font-size:11px;padding:4px 9px" onclick="sikSurecAc('${s.id}')">Süreç</button>
-        </div>
-      </div>`).join('');
+        </div>`).join('');
+    } catch(e) {
+      listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">Şikayetler yüklenemedi</div>';
+    }
   }
 
   /* etkinlik geçmişi render */
@@ -4498,23 +4558,28 @@ function toggleTpl(header) {
 
   /* ── GÖREVLER YÜKLEMESİ (Supabase'den) ── */
   window.crmGorevlerYukle = async function(firmaId) {
-    const bodyEl = document.getElementById('crm-gorev-body');
-    const bosEl  = document.getElementById('crm-gorev-bos');
+    const bodyEl  = document.getElementById('crm-gorev-body');
+    const bosEl   = document.getElementById('crm-gorev-bos');
     const tabloEl = document.getElementById('crm-gorev-tablo');
     if(!bodyEl) return;
+    bodyEl.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i></td></tr>';
     try {
+      /* kaynak=CRM ve not_ içinde firma adı geçen görevleri al */
       const { data } = await _supa.from('gorevler').select('*')
-        .or(`atanan.eq.${currentFirm?.no},kaynak.eq.CRM`)
-        .order('created_at', {ascending:false});
+        .eq('kaynak','CRM')
+        .order('created_at',{ascending:false});
 
-      /* Firma ile ilgili görevleri filtrele */
-      const gorevler = (data||[]).filter(g =>
-        g.kaynak === 'CRM' && g.atama_tarihi && currentFirm
+      const gorevler = (data||[]).filter(g=>
+        g.not_ && currentFirm && (
+          g.not_.includes(currentFirm.firma) ||
+          g.not_.includes(String(currentFirm.no))
+        )
       );
 
       if(gorevler.length === 0) {
         if(bosEl) bosEl.style.display = 'block';
         if(tabloEl) tabloEl.style.display = 'none';
+        bodyEl.innerHTML = '';
         return;
       }
       if(bosEl) bosEl.style.display = 'none';
