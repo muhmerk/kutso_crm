@@ -1589,7 +1589,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 .crm-new { background:var(--green-bg); color:#27500A; padding:1px 6px; border-radius:4px; font-family:var(--mono); font-size:11px; }
 
 /* ══ ÜYE MODÜLÜ ÖZEL STİLLER ══ */
-.um-tab-bar { display:flex; gap:0; border-bottom:0.5px solid var(--border); margin-bottom:16px; }
+.um-tab-bar { display:flex; gap:0; border-bottom:0.5px solid var(--border); margin-bottom:16px; overflow-x:auto; white-space:nowrap; scrollbar-width:none; }
 .um-tab { display:flex; align-items:center; gap:7px; padding:10px 18px; font-size:13px; color:var(--text2); cursor:pointer; border:none; border-bottom:2px solid transparent; margin-bottom:-0.5px; background:none; font-family:var(--font); transition:color .12s; }
 .um-tab:hover { color:var(--text); }
 .um-tab.um-on { color:var(--blue); border-bottom-color:var(--blue); font-weight:500; }
@@ -6336,11 +6336,22 @@ window.etkPrsYilKarToggle=function(){
   };
 
   window.umDetayTab = function(btn, tabName) {
-    document.querySelectorAll('.um-tab').forEach(t=>t.classList.remove('um-on'));
+    /* Sadece bu butonun bulunduğu tab-bar içindeki tabları değiştir */
+    const tabBar = btn.closest('.um-tab-bar');
+    const panel = btn.closest('[id^="um-panel"]') || btn.closest('[id^="um-layout"]')?.parentElement;
+    if(tabBar) tabBar.querySelectorAll('.um-tab').forEach(t=>t.classList.remove('um-on'));
     btn.classList.add('um-on');
-    document.querySelectorAll('.um-pane').forEach(p=>p.classList.remove('um-on'));
-    const pane = document.getElementById('um-detay-'+tabName);
-    if(pane) pane.classList.add('um-on');
+    /* Sadece panel içindeki pane'leri değiştir */
+    const parentPanel = btn.closest('.um-panel') || document.querySelector('.um-panel.um-vis');
+    if(parentPanel) {
+      parentPanel.querySelectorAll('.um-pane').forEach(p=>p.classList.remove('um-on'));
+      const pane = parentPanel.querySelector('#um-detay-'+tabName);
+      if(pane) pane.classList.add('um-on');
+    } else {
+      document.querySelectorAll('.um-pane').forEach(p=>p.classList.remove('um-on'));
+      const pane = document.getElementById('um-detay-'+tabName);
+      if(pane) pane.classList.add('um-on');
+    }
   };
 
   window.umSupabaseDetayYukle = async function(sicilNo, mersisNo) {
