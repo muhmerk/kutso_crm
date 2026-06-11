@@ -2025,8 +2025,17 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
       <div class="um-layout" id="um-layout-askida">
         <div>
-          <div class="um-table-wrap"><table><thead><tr>
-            <th>Üye No</th><th>Firma</th><th>Sektör</th><th>Meslek Grubu</th><th>İlçe</th><th>Çalışan</th><th>Borç</th><th>Gecikme</th><th>Sorumlu</th><th></th>
+          <div class="um-table-wrap"><table id="um-tbl-askida"><thead><tr>
+            <th onclick="umSort('askida','no')">Üye No <i class="ti ti-selector" style="font-size:10px;opacity:.5"></i></th>
+            <th onclick="umSort('askida','firma')">Firma <i class="ti ti-selector" style="font-size:10px;opacity:.5"></i></th>
+            <th>Sektör</th>
+            <th>Meslek Grubu</th>
+            <th>İlçe</th>
+            <th>Çalışan</th>
+            <th onclick="umSort('askida','borc')">Borç <i class="ti ti-selector" style="font-size:10px;opacity:.5"></i></th>
+            <th>Gecikme</th>
+            <th>Sorumlu</th>
+            <th></th>
           </tr></thead><tbody id="um-body-askida"></tbody></table></div>
           <div id="um-pag-askida" class="um-pag"></div>
         </div>
@@ -2049,8 +2058,16 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
       <div class="um-layout" id="um-layout-terk">
         <div>
-          <div class="um-table-wrap"><table><thead><tr>
-            <th>Üye No</th><th>Firma</th><th>Sektör</th><th>Meslek Grubu</th><th>İlçe</th><th>Çalışan</th><th>Terk Tarihi</th><th>Neden</th><th>Son Aidat</th>
+          <div class="um-table-wrap"><table id="um-tbl-terk"><thead><tr>
+            <th onclick="umSort('terk','no')">Üye No <i class="ti ti-selector" style="font-size:10px;opacity:.5"></i></th>
+            <th onclick="umSort('terk','firma')">Firma <i class="ti ti-selector" style="font-size:10px;opacity:.5"></i></th>
+            <th>Sektör</th>
+            <th>Meslek Grubu</th>
+            <th>İlçe</th>
+            <th>Çalışan</th>
+            <th onclick="umSort('terk','terkTarihi')">Terk Tarihi <i class="ti ti-selector" style="font-size:10px;opacity:.5"></i></th>
+            <th>Neden</th>
+            <th>Son Aidat</th>
           </tr></thead><tbody id="um-body-terk"></tbody></table></div>
           <div id="um-pag-terk" class="um-pag"></div>
         </div>
@@ -6258,10 +6275,10 @@ window.etkPrsYilKarToggle=function(){
     </tr>`;
   }
 
-  window.umRender = function(tab){ ST[tab].page=1; umDraw(tab); };
-  window.umSort   = function(tab,key){ if(ST[tab].sort===key) ST[tab].dir*=-1; else{ST[tab].sort=key;ST[tab].dir=1;} ST[tab].page=1; umDraw(tab); };
+  window.umRender = function(tab){ if(ST[tab]) { ST[tab].page=1; umDraw(tab); } };
+  window.umSort   = function(tab,key){ if(!ST[tab]) return; if(ST[tab].sort===key) ST[tab].dir*=-1; else{ST[tab].sort=key;ST[tab].dir=1;} ST[tab].page=1; umDraw(tab); };
   window.umDraw   = umDraw;
-  window.umRenderAll = function(){ ['aktif','askida','terk'].forEach(t=>{ try{ umDraw(t); }catch(e){} }); };
+  window.umRenderAll = function(){ ['aktif','askida','terk'].forEach(t=>{ try{ umDraw(t); }catch(e){ console.warn('umDraw hata',t,e); } }); };
   function umDraw(tab){
     const data = filterData(tab);
     const {page,pp,sel} = ST[tab];
@@ -6308,9 +6325,9 @@ window.etkPrsYilKarToggle=function(){
   window.umChangePP = function(tab,v){ ST[tab].pp=parseInt(v); ST[tab].page=1; umDraw(tab); };
 
   window.umOpenPanel = function(tab, id){
-    const allD = tab==='aktif'?DA:tab==='askida'?DS:DT;
+    const allD = tab==='aktif'?DA : tab==='askida'?DS : tab==='terk'?DT : DV;
     const u = allD.find(x=>x.id===id || String(x.id)===String(id)); if(!u) return;
-    ST[tab].sel=id; umDraw(tab);
+    if(ST[tab]) { ST[tab].sel=id; umDraw(tab); }
     const panel  = document.getElementById('um-panel-'+tab);
     const layout = document.getElementById('um-layout-'+tab);
     const _hashCode = str => { let h=0; for(let ch of String(str||'')) h=(h<<5)-h+ch.charCodeAt(0)|0; return Math.abs(h); };
@@ -6733,19 +6750,20 @@ window.etkPrsYilKarToggle=function(){
     const pane = document.getElementById('um-'+tab);
     if(pane) pane.classList.add('um-on');
     if(tab === 'tasfiye') {
-      /* Tasfiye için basit liste göster */
       const body = document.getElementById('um-body-tasfiye');
-      if(body && DV.length > 0) {
-        body.innerHTML = DV.map(u=>`<tr class="um-row" onclick="umOpenPanel('tasfiye','${u.id}')">
-          <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${u.no}</td>
-          <td><div style="font-weight:500">${u.firma}</div></td>
-          <td>${u.sektor||'—'}</td>
-          <td style="color:#E24B4A;font-weight:500">${u.borc>0?'₺'+Number(u.borc).toLocaleString('tr-TR'):'—'}</td>
-        </tr>`).join('');
-      } else if(body) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text2)">Tasfiye kaydı bulunmuyor</td></tr>';
+      if(body) {
+        if(DV.length > 0) {
+          body.innerHTML = DV.map(u=>`<tr class="um-row" onclick="umOpenPanel('tasfiye','${u.id}')">
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${u.no}</td>
+            <td><div style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis">${u.firma}</div></td>
+            <td style="font-size:12px">${u.sektor||'—'}</td>
+            <td style="color:#E24B4A;font-weight:500">${u.borc>0?'₺'+Number(u.borc).toLocaleString('tr-TR'):'—'}</td>
+          </tr>`).join('');
+        } else {
+          body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text2)"><i class="ti ti-mood-empty" style="font-size:28px;display:block;margin-bottom:8px"></i>Tasfiye kaydı bulunmuyor</td></tr>';
+        }
       }
-    } else {
+    } else if(ST[tab]) {
       umDraw(tab);
     }
   };
