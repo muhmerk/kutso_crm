@@ -2197,9 +2197,6 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
           <!-- Şikayet -->
           <div id="crm-pane-sikayet" class="crm-pane">
-            <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-              <button class="btn btn-p btn-sm" onclick="crmSikayetEkle()"><i class="ti ti-plus"></i> Şikayet Ekle</button>
-            </div>
             <div id="crm-sik-empty" style="display:none;text-align:center;padding:32px 16px;color:var(--text2)">
               <i class="ti ti-circle-check" style="font-size:28px;display:block;margin-bottom:8px;color:var(--teal)"></i>
               Bu firmaya ait şikayet kaydı bulunmuyor
@@ -4140,7 +4137,6 @@ function toggleTpl(header) {
     document.getElementById('crm-hizli-islemler').innerHTML = `
       <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmNotEkleModal()"><i class="ti ti-message" style="margin-right:6px"></i> İletişim Notu Ekle</button>
       <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmGorevEkle()"><i class="ti ti-checklist" style="margin-right:6px"></i> Görev Oluştur</button>
-      <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmSikayetEkle()"><i class="ti ti-alert-circle" style="margin-right:6px"></i> Şikayet Kaydet</button>
       <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmTab('aidat',document.querySelector('.crm-tab[onclick*=aidat]'))"><i class="ti ti-coin" style="margin-right:6px"></i> Aidat Durumu Gör</button>
     `;
 
@@ -6236,11 +6232,16 @@ window.etkPrsYilKarToggle=function(){
         <button class="um-panel-close" onclick="umClosePanel('${tab}')"><i class="ti ti-x" style="font-size:16px"></i></button>
       </div>
 
-      <div class="um-tab-bar" style="padding:0 16px">
+      <div class="um-tab-bar" style="padding:0 16px;overflow-x:auto;white-space:nowrap">
         <button class="um-tab um-on" onclick="umDetayTab(this,'genel')"><i class="ti ti-info-circle" style="font-size:13px"></i> Genel</button>
         <button class="um-tab" onclick="umDetayTab(this,'ortaklar')"><i class="ti ti-users" style="font-size:13px"></i> Ortaklar</button>
         <button class="um-tab" onclick="umDetayTab(this,'temsilciler')"><i class="ti ti-user-check" style="font-size:13px"></i> Temsilciler</button>
         <button class="um-tab" onclick="umDetayTab(this,'adresler')"><i class="ti ti-map-pin" style="font-size:13px"></i> Adresler</button>
+        <button class="um-tab" onclick="umDetayTab(this,'aidat')"><i class="ti ti-coin" style="font-size:13px"></i> Aidat</button>
+        <button class="um-tab" onclick="umDetayTab(this,'belgeler')"><i class="ti ti-file-certificate" style="font-size:13px"></i> Belgeler</button>
+        <button class="um-tab" onclick="umDetayTab(this,'sikayet')"><i class="ti ti-alert-circle" style="font-size:13px"></i> Şikayet</button>
+        <button class="um-tab" onclick="umDetayTab(this,'memnuniyet')"><i class="ti ti-mood-smile" style="font-size:13px"></i> Memnuniyet</button>
+        <button class="um-tab" onclick="umDetayTab(this,'iletisim')"><i class="ti ti-messages" style="font-size:13px"></i> İletişim</button>
         <button class="um-tab" onclick="umDetayTab(this,'tarihce')"><i class="ti ti-history" style="font-size:13px"></i> Tarihçe</button>
       </div>
 
@@ -6303,6 +6304,26 @@ window.etkPrsYilKarToggle=function(){
         <div id="um-adresler-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
       </div>
 
+      <div id="um-detay-aidat" class="um-pane" style="padding:0 16px 16px">
+        <div id="um-aidat-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
+      </div>
+
+      <div id="um-detay-belgeler" class="um-pane" style="padding:0 16px 16px">
+        <div id="um-belgeler-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
+      </div>
+
+      <div id="um-detay-sikayet" class="um-pane" style="padding:0 16px 16px">
+        <div id="um-sikayet-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
+      </div>
+
+      <div id="um-detay-memnuniyet" class="um-pane" style="padding:0 16px 16px">
+        <div id="um-memnuniyet-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
+      </div>
+
+      <div id="um-detay-iletisim" class="um-pane" style="padding:0 16px 16px">
+        <div id="um-iletisim-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
+      </div>
+
       <div id="um-detay-tarihce" class="um-pane" style="padding:0 16px 16px">
         <div id="um-tarihce-icerik"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
       </div>`;
@@ -6324,47 +6345,48 @@ window.etkPrsYilKarToggle=function(){
 
   window.umSupabaseDetayYukle = async function(sicilNo, mersisNo) {
     try {
-      /* Supabase'den üye detaylarını çek */
       let query = _supa.from('uyeler').select('*');
       if(sicilNo) query = query.eq('uye_oda_sicil_no', sicilNo);
       else if(mersisNo) query = query.eq('mersis_no', mersisNo);
       const { data: uyeData } = await query.maybeSingle();
 
+      const bosMsg = (el, msg) => { if(el) el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">${msg}</div>`; };
+
       if(!uyeData) {
-        /* Supabase'de yok — demo mesajı */
-        ['ortaklar','temsilciler','adresler','tarihce'].forEach(t=>{
-          const el = document.getElementById('um-'+t+'-icerik');
-          if(el) el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">
-            <i class="ti ti-cloud-off" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>
-            TOBB API entegrasyonu yapıldıktan sonra veriler burada görünecek.<br>
-            <span style="font-size:11px">Üye bilgilerini çekmek için "TOBB'dan Güncelle" butonuna basın.</span>
-          </div>`;
+        ['ortaklar','temsilciler','adresler','tarihce','aidat','belgeler','sikayet','memnuniyet','iletisim'].forEach(t=>{
+          bosMsg(document.getElementById('um-'+t+'-icerik'), '<i class="ti ti-cloud-off" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>TOBB senkronizasyonu bekleniyor');
         });
         return;
       }
 
       const uye_oid = uyeData.uye_oid;
+      const firmaAdi = uyeData.unvan||'';
 
-      /* Paralel olarak tüm alt verileri çek */
-      const [ortaklar, temsilciler, adresler, durumlar, dereceler, faaliyetler, telefonlar, cezalar] = await Promise.all([
+      /* Tüm verileri paralel çek */
+      const [ortaklar, temsilciler, adresler, durumlar, dereceler, cezalar, tahakkuklar, tahsilatlar, belgeler, hizmetler, sikayetler, anketler, iletisim] = await Promise.all([
         _supa.from('uye_ortaklar').select('*').eq('uye_oid', uye_oid),
         _supa.from('uye_temsilciler').select('*').eq('uye_oid', uye_oid),
         _supa.from('uye_adresler').select('*').eq('uye_oid', uye_oid),
-        _supa.from('uye_durum_gecmisi').select('*').eq('uye_oid', uye_oid).order('karar_tarihi', {ascending:false}),
+        _supa.from('uye_durum_gecmisi').select('*').eq('uye_oid', uye_oid).order('karar_tarihi',{ascending:false}),
         _supa.from('uye_dereceler').select('*').eq('uye_oid', uye_oid),
-        _supa.from('uye_faaliyetler').select('*').eq('uye_oid', uye_oid),
-        _supa.from('uye_telefonlar').select('*').eq('uye_oid', uye_oid),
-        _supa.from('uye_cezalar').select('*').eq('uye_oid', uye_oid)
+        _supa.from('uye_cezalar').select('*').eq('uye_oid', uye_oid),
+        _supa.from('tahakkuklar').select('*').eq('uye_oid', uye_oid).order('vade_tarihi',{ascending:false}),
+        _supa.from('tahsilatlar').select('*').eq('uye_oid', uye_oid).order('tahsilat_tarihi',{ascending:false}).limit(10),
+        _supa.from('uye_belgeler').select('*').eq('uye_oid', uye_oid).order('belge_tarihi',{ascending:false}),
+        _supa.from('uye_hizmetler').select('*').eq('uye_oid', uye_oid).order('hizmet_tarihi',{ascending:false}),
+        _supa.from('sikayetler').select('*').ilike('firma_adi', `%${firmaAdi}%`).order('created_at',{ascending:false}),
+        _supa.from('mem_anketler').select('*').ilike('firma', `%${firmaAdi}%`).order('created_at',{ascending:false}),
+        _supa.from('crm_iletisim').select('*').eq('uye_id', sicilNo||'').order('created_at',{ascending:false})
       ]);
 
-      /* Ortaklar */
+      /* ── ORTAKLAR ── */
       const ortEl = document.getElementById('um-ortaklar-icerik');
       if(ortEl) ortEl.innerHTML = (ortaklar.data||[]).length > 0
         ? `<table style="width:100%;border-collapse:collapse;font-size:12px">
             <thead><tr style="background:var(--surface2)">
               <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Ad / Ünvan</th>
-              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Ortaklık Tipi</th>
-              <th style="padding:8px;text-align:center;border:0.5px solid var(--border)">Pay Değeri</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Tip</th>
+              <th style="padding:8px;text-align:center;border:0.5px solid var(--border)">Pay</th>
               <th style="padding:8px;text-align:center;border:0.5px solid var(--border)">Hisse</th>
               <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Başlangıç</th>
             </tr></thead>
@@ -6374,11 +6396,10 @@ window.etkPrsYilKarToggle=function(){
               <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">${o.pay_degeri||'—'}</td>
               <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">${o.hisse_adedi||'—'}</td>
               <td style="padding:7px 8px;border:0.5px solid var(--border)">${o.ortaklik_baslangic_tarihi||'—'}</td>
-            </tr>`).join('')}</tbody>
-          </table>`
+            </tr>`).join('')}</tbody></table>`
         : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Ortak kaydı bulunamadı</div>';
 
-      /* Temsilciler */
+      /* ── TEMSİLCİLER ── */
       const temEl = document.getElementById('um-temsilciler-icerik');
       if(temEl) temEl.innerHTML = (temsilciler.data||[]).length > 0
         ? `<table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -6387,7 +6408,7 @@ window.etkPrsYilKarToggle=function(){
               <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Görev</th>
               <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Yetki Türü</th>
               <th style="padding:8px;text-align:center;border:0.5px solid var(--border)">Durum</th>
-              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Yetki Tarihi</th>
+              <th style="padding:8px;text-align:left;border:0.5px solid var(--border)">Tarih</th>
             </tr></thead>
             <tbody>${(temsilciler.data||[]).map(t=>`<tr>
               <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.adi_soyad_unvan||'—'}<br><span style="font-size:10px;color:var(--text2)">${t.kimlik_no||''}</span></td>
@@ -6395,36 +6416,179 @@ window.etkPrsYilKarToggle=function(){
               <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.yetki_turu||'—'}</td>
               <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center"><span class="badge ${t.aktif_pasif==='1'?'b-green':'b-gray'}">${t.aktif_pasif==='1'?'Aktif':'Pasif'}</span></td>
               <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.yetki_baslangic_tarihi||'—'}</td>
-            </tr>`).join('')}</tbody>
-          </table>`
+            </tr>`).join('')}</tbody></table>`
         : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Temsilci kaydı bulunamadı</div>';
 
-      /* Adresler */
+      /* ── ADRESLER ── */
       const adrEl = document.getElementById('um-adresler-icerik');
       if(adrEl) adrEl.innerHTML = (adresler.data||[]).length > 0
         ? (adresler.data||[]).map(a=>`<div class="um-psec">
             <div class="um-psec-title">${a.adres_tip||'Adres'} ${a.yazisma_adresi==='1'?'<span class="badge b-blue" style="font-size:10px">Yazışma</span>':''}</div>
-            <div class="um-field"><div class="um-field-icon"><i class="ti ti-map-pin"></i></div><div><div class="um-field-lbl">Tam Adres</div><div class="um-field-val">${a.butunlesik_adres||a.serbest_metin||[a.cadde,a.sokak,a.mahalle,a.ilce,a.il].filter(Boolean).join(', ')||'—'}</div></div></div>
+            <div class="um-field"><div class="um-field-icon"><i class="ti ti-map-pin"></i></div><div><div class="um-field-lbl">Tam Adres</div><div class="um-field-val">${a.butunlesik_adres||[a.mahalle,a.cadde,a.sokak,a.dkno,a.ilce,a.il].filter(Boolean).join(' ')||'—'}</div></div></div>
             <div class="um-field"><div class="um-field-icon"><i class="ti ti-hash"></i></div><div><div class="um-field-lbl">Posta Kodu</div><div class="um-field-val">${a.posta_kodu||'—'}</div></div></div>
-            <div class="um-field"><div class="um-field-icon"><i class="ti ti-calendar"></i></div><div><div class="um-field-lbl">Geçerlilik</div><div class="um-field-val">${a.baslangic_tarihi||'—'} → ${a.bitis_tarihi||'Aktif'}</div></div></div>
           </div>`).join('')
         : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Adres kaydı bulunamadı</div>';
 
-      /* Tarihçe */
+      /* ── AİDAT/TAHAKKUK ── */
+      const aidatEl = document.getElementById('um-aidat-icerik');
+      if(aidatEl) {
+        const topBorc = (tahakkuklar.data||[]).reduce((s,t)=>s+parseFloat(t.kalan_tutar||0),0);
+        aidatEl.innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div style="background:${topBorc>0?'#FEF3DE':'#E1F5EE'};border-radius:10px;padding:12px">
+              <div style="font-size:11px;color:var(--text2);margin-bottom:3px">Toplam Borç</div>
+              <div style="font-size:18px;font-weight:600;color:${topBorc>0?'#633806':'#1D9E75'}">₺${topBorc.toLocaleString('tr-TR',{minimumFractionDigits:2})}</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:12px">
+              <div style="font-size:11px;color:var(--text2);margin-bottom:3px">Son Ödeme</div>
+              <div style="font-size:14px;font-weight:600">${(tahsilatlar.data||[]).length>0?tahsilatlar.data[0].tahsilat_tarihi:'—'}</div>
+            </div>
+          </div>
+          ${(tahakkuklar.data||[]).length>0?`
+          <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Tahakkuklar</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Tür</th>
+              <th style="padding:7px 8px;text-align:center;border:0.5px solid var(--border)">Yıl</th>
+              <th style="padding:7px 8px;text-align:right;border:0.5px solid var(--border)">Tutar</th>
+              <th style="padding:7px 8px;text-align:right;border:0.5px solid var(--border)">Kalan</th>
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Vade</th>
+              <th style="padding:7px 8px;text-align:center;border:0.5px solid var(--border)">Durum</th>
+            </tr></thead>
+            <tbody>${(tahakkuklar.data||[]).map(t=>{
+              const vadeli=t.vade_tarihi&&t.vade_tarihi<new Date().toISOString().slice(0,10)&&parseFloat(t.kalan_tutar||0)>0;
+              return `<tr><td style="padding:7px 8px;border:0.5px solid var(--border)">${t.tahakkuk_tanimi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">${t.yil||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:right">₺${Number(t.tutar||0).toLocaleString('tr-TR')}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:right;font-weight:600;color:${parseFloat(t.kalan_tutar||0)>0?'#E24B4A':'#1D9E75'}">₺${Number(t.kalan_tutar||0).toLocaleString('tr-TR')}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.vade_tarihi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center"><span class="badge ${vadeli?'b-red':parseFloat(t.kalan_tutar||0)===0?'b-green':'b-amber'}">${vadeli?'Vadesi Geçti':parseFloat(t.kalan_tutar||0)===0?'Ödendi':'Bekliyor'}</span></td>
+              </tr>`;
+            }).join('')}</tbody></table>`:'<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">Tahakkuk kaydı yok</div>'}
+          ${(tahsilatlar.data||[]).length>0?`
+          <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px">Son Ödemeler</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Tarih</th>
+              <th style="padding:7px 8px;text-align:right;border:0.5px solid var(--border)">Tutar</th>
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Ödeme Şekli</th>
+            </tr></thead>
+            <tbody>${(tahsilatlar.data||[]).map(t=>`<tr>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.tahsilat_tarihi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:right;font-weight:600;color:#1D9E75">₺${Number(t.tutar||0).toLocaleString('tr-TR')}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${t.odeme_sekli||t.tahsilat_turu||'—'}</td>
+            </tr>`).join('')}</tbody></table>`:''}`;
+      }
+
+      /* ── BELGELER & HİZMETLER ── */
+      const belgelerEl = document.getElementById('um-belgeler-icerik');
+      if(belgelerEl) {
+        const bList = (belgeler.data||[]).length>0 ? `
+          <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Verilen Belgeler</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Belge</th>
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">No</th>
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Tarih</th>
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Kanal</th>
+            </tr></thead>
+            <tbody>${(belgeler.data||[]).map(b=>`<tr>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${b.belge_adi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border);font-family:var(--mono);font-size:11px">${b.belge_no||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${b.belge_tarihi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${b.basvuru_kanali||'—'}</td>
+            </tr>`).join('')}</tbody></table>` : '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">Belge kaydı yok</div>';
+        const hList = (hizmetler.data||[]).length>0 ? `
+          <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Verilen Hizmetler</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Hizmet</th>
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Tarih</th>
+              <th style="padding:7px 8px;text-align:left;border:0.5px solid var(--border)">Açıklama</th>
+            </tr></thead>
+            <tbody>${(hizmetler.data||[]).map(h=>`<tr>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${h.hizmet_adi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${h.hizmet_tarihi||'—'}</td>
+              <td style="padding:7px 8px;border:0.5px solid var(--border)">${h.aciklama||'—'}</td>
+            </tr>`).join('')}</tbody></table>` : '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">Hizmet kaydı yok</div>';
+        belgelerEl.innerHTML = bList + hList;
+      }
+
+      /* ── ŞİKAYETLER ── */
+      const sikEl = document.getElementById('um-sikayet-icerik');
+      if(sikEl) {
+        const duBadge = {Kritik:'b-red',İncelemede:'b-blue',Çözüldü:'b-green',Beklemede:'b-amber',Tamamlandı:'b-purple'};
+        sikEl.innerHTML = (sikayetler.data||[]).length>0
+          ? (sikayetler.data||[]).map(s=>`<div style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:9px">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
+                <div style="font-size:13px;font-weight:500">${s.konu}</div>
+                <span class="badge ${duBadge[s.durum]||'b-gray'}">${s.durum||'—'}</span>
+              </div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:6px">${s.aciklama||''}</div>
+              <div style="font-size:11px;color:var(--text2)">${s.tarih||''} · ${s.kategori||''} · ${s.sorumlu_kul||''}</div>
+            </div>`).join('')
+          : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Şikayet kaydı bulunamadı</div>';
+      }
+
+      /* ── MEMNUNİYET ── */
+      const memEl = document.getElementById('um-memnuniyet-icerik');
+      if(memEl) {
+        const anketler2 = anketler.data||[];
+        if(anketler2.length>0) {
+          const ort = anketler2.reduce((s,a)=>s+parseFloat(a.ort_puan||0),0)/anketler2.length;
+          memEl.innerHTML = `
+            <div style="text-align:center;padding:16px;background:var(--surface2);border-radius:10px;margin-bottom:14px">
+              <div style="font-size:32px;font-weight:600;color:${ort>=4?'#1D9E75':ort>=3?'#EF9F27':'#E24B4A'}">${ort.toFixed(1)}</div>
+              <div style="font-size:16px;color:#EF9F27">${'★'.repeat(Math.round(ort))+'☆'.repeat(5-Math.round(ort))}</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:4px">${anketler2.length} değerlendirme</div>
+            </div>
+            ${anketler2.map(a=>`<div style="padding:12px;border:0.5px solid var(--border);border-radius:8px;margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-weight:500;color:${parseFloat(a.ort_puan||0)>=4?'#1D9E75':'#EF9F27'}">${'★'.repeat(Math.round(parseFloat(a.ort_puan||0)))+'☆'.repeat(5-Math.round(parseFloat(a.ort_puan||0)))}</span>
+                <span style="font-size:11px;color:var(--text2)">${a.tarih||''} · ${a.yil||''}</span>
+              </div>
+              ${a.yorum?`<div style="font-size:12px;color:var(--text)">${a.yorum}</div>`:''}
+            </div>`).join('')}`;
+        } else {
+          memEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Memnuniyet anketi bulunamadı</div>';
+        }
+      }
+
+      /* ── İLETİŞİM GEÇMİŞİ ── */
+      const iletisimEl = document.getElementById('um-iletisim-icerik');
+      if(iletisimEl) {
+        const tipRenk = {telefon:'#1D9E75',eposta:'#534AB7',ziyaret:'#EF9F27',toplanti:'#185FA5',diger:'#888'};
+        const tipLabel = {telefon:'Telefon',eposta:'E-posta',ziyaret:'Ziyaret',toplanti:'Toplantı',diger:'Not'};
+        iletisimEl.innerHTML = (iletisim.data||[]).length>0
+          ? (iletisim.data||[]).map(d=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+              <div style="width:28px;height:28px;border-radius:50%;background:${tipRenk[d.tip]||'#888'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <i class="ti ti-${d.tip==='telefon'?'phone':d.tip==='eposta'?'mail':d.tip==='ziyaret'?'map-pin':d.tip==='toplanti'?'users':'notes'}" style="font-size:12px;color:#fff"></i>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:500"><span style="font-size:10px;padding:1px 6px;border-radius:4px;background:${tipRenk[d.tip]||'#888'}20;color:${tipRenk[d.tip]||'#888'};margin-right:5px">${tipLabel[d.tip]||'Not'}</span>${d.ozet||''}</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">${d.tarih||''} · ${d.giren||''}</div>
+              </div>
+            </div>`).join('')
+          : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">İletişim kaydı bulunamadı</div>';
+      }
+
+      /* ── TARİHÇE ── */
       const tarEl = document.getElementById('um-tarihce-icerik');
       if(tarEl) {
         const tumTarihce = [
-          ...(durumlar.data||[]).map(d=>({tip:'Durum', tarih:d.karar_tarihi, bilgi:`${d.durum||''} ${d.durum_degisim_nedeni?'('+d.durum_degisim_nedeni+')':''}`, aciklama:d.aciklama||'', renk:'var(--blue)'})),
-          ...(dereceler.data||[]).map(d=>({tip:'Derece', tarih:d.karar_tarihi, bilgi:d.derece_tanimi||d.derece||'', aciklama:d.aciklama||'', renk:'var(--teal)'})),
-          ...(cezalar.data||[]).map(c=>({tip:'Ceza', tarih:c.karar_tarihi, bilgi:c.ceza_aciklama||c.ceza_kodu||'', aciklama:c.aciklama||'', renk:'var(--red)'}))
+          ...(durumlar.data||[]).map(d=>({tip:'Durum',tarih:d.karar_tarihi,bilgi:`${d.durum||''} ${d.durum_degisim_nedeni?'('+d.durum_degisim_nedeni+')':''}`,aciklama:d.aciklama||'',renk:'var(--blue)'})),
+          ...(dereceler.data||[]).map(d=>({tip:'Derece',tarih:d.karar_tarihi,bilgi:d.derece_tanimi||d.derece||'',aciklama:d.aciklama||'',renk:'var(--teal)'})),
+          ...(cezalar.data||[]).map(c=>({tip:'Ceza',tarih:c.karar_tarihi,bilgi:c.ceza_aciklama||c.ceza_kodu||'',aciklama:c.aciklama||'',renk:'var(--red)'}))
         ].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
-        tarEl.innerHTML = tumTarihce.length > 0
-          ? `<div class="timeline">${tumTarihce.map(t=>`<div class="tl-item">
-              <div class="tl-dot" style="background:${t.renk}"></div>
-              <div><div class="tl-title">${t.tip}: ${t.bilgi}</div>
-              ${t.aciklama?`<div style="font-size:11px;color:var(--text2)">${t.aciklama}</div>`:''}
-              <div class="tl-sub">${t.tarih||'—'}</div></div>
-            </div>`).join('')}</div>`
+        tarEl.innerHTML = tumTarihce.length>0
+          ? tumTarihce.map(t=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+              <div style="width:8px;height:8px;border-radius:50%;background:${t.renk};flex-shrink:0;margin-top:5px"></div>
+              <div>
+                <div style="font-size:12px;font-weight:500">${t.tip}: ${t.bilgi}</div>
+                ${t.aciklama?`<div style="font-size:11px;color:var(--text2)">${t.aciklama}</div>`:''}
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">${t.tarih||'—'}</div>
+              </div>
+            </div>`).join('')
           : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Tarihçe kaydı bulunamadı</div>';
       }
 
