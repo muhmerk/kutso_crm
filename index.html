@@ -218,7 +218,9 @@ async function supaYukleIsPlanSessiz() {
           riskler: p.riskler ? p.riskler.split('\n').filter(Boolean) : [],
           onlemeAksiyonu: p.onleme_aksiyonu ? p.onleme_aksiyonu.split('\n').filter(Boolean) : [],
           isBirligiKuruluslar: p.is_birligi_kuruluslar ? p.is_birligi_kuruluslar.split('\n').filter(Boolean) : [],
-          gerceklesmelerList: Array.isArray(p.gerceklesmeler) ? p.gerceklesmeler : []
+          gerceklesmelerList: Array.isArray(p.gerceklesmeler) ? p.gerceklesmeler : [],
+          evraklar: Array.isArray(p.evraklar) ? p.evraklar : [],
+          hedefKatkisi: p.hedef_katkisi || ''
         }))
       }))
     }));
@@ -264,7 +266,9 @@ async function supaYukleIsPlan() {
           riskler: p.riskler ? p.riskler.split('\n').filter(Boolean) : [],
           onlemeAksiyonu: p.onleme_aksiyonu ? p.onleme_aksiyonu.split('\n').filter(Boolean) : [],
           isBirligiKuruluslar: p.is_birligi_kuruluslar ? p.is_birligi_kuruluslar.split('\n').filter(Boolean) : [],
-          gerceklesmelerList: Array.isArray(p.gerceklesmeler) ? p.gerceklesmeler : []
+          gerceklesmelerList: Array.isArray(p.gerceklesmeler) ? p.gerceklesmeler : [],
+          evraklar: Array.isArray(p.evraklar) ? p.evraklar : [],
+          hedefKatkisi: p.hedef_katkisi || ''
         }))
       }))
     }));
@@ -12865,9 +12869,10 @@ function projeFormOku(p, mevcut){
   const gercekItems = document.querySelectorAll('.ip-gercek-item');
   const gercekler = []; gercekItems.forEach(el=>{ const v=el.value.trim(); if(v) gercekler.push(v); });
   p.gerceklesmelerList = gercekler;
-  /* Evraklar */
-  const evrakAdlar = document.querySelectorAll('.ip-evrak-ad');
-  const evrakUrller = document.querySelectorAll('.ip-evrak-url');
+  /* Evraklar — modal içindeki elemanlardan oku */
+  const modalBody = document.getElementById('ip-modal-body') || document;
+  const evrakAdlar = modalBody.querySelectorAll('.ip-evrak-ad');
+  const evrakUrller = modalBody.querySelectorAll('.ip-evrak-url');
   const evraklar = [];
   evrakAdlar.forEach((el,i)=>{ const ad=el.value.trim(); if(ad) evraklar.push({ad, url: evrakUrller[i]?.value.trim()||''}); });
   p.evraklar = evraklar;
@@ -12892,9 +12897,11 @@ window.ipEvrakEkle = function() {
   const div = document.createElement('div');
   div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center';
   div.innerHTML = `<input class="yk-inp ip-evrak-ad" placeholder="Evrak adı / açıklama...">
-    <input class="yk-inp ip-evrak-url" placeholder="Link veya dosya yolu (isteğe bağlı)...">
-    <button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:18px;flex-shrink:0">×</button>`;
+    <input class="yk-inp ip-evrak-url" placeholder="Link (https://...) veya açıklama...">
+    <button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:18px;flex-shrink:0;line-height:1">×</button>`;
   list.appendChild(div);
+  /* Yeni eklenen ilk input'a focus */
+  div.querySelector('.ip-evrak-ad')?.focus();
 };
 
 window.ipGosEkle = function(){
