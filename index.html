@@ -1140,7 +1140,20 @@ tr:hover td { background: var(--surface2); }
 .tl-title { font-size: 13px; font-weight: 500; }
 .tl-sub   { font-size: 12px; color: var(--text2); margin-top: 3px; }
 
-/* ─── YEAR BAR ─── */
+/* Tab bar yatay kaydırma */
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.um-tab-bar').forEach(bar=>{
+    bar.addEventListener('wheel', e=>{
+      if(e.deltaY!==0){ e.preventDefault(); bar.scrollLeft += e.deltaY; }
+    }, {passive:false});
+    /* Sürükle ile kaydır */
+    let isDragging=false, startX=0, scrollLeft=0;
+    bar.addEventListener('mousedown', e=>{ isDragging=true; startX=e.pageX-bar.offsetLeft; scrollLeft=bar.scrollLeft; bar.style.cursor='grabbing'; });
+    bar.addEventListener('mouseleave', ()=>{ isDragging=false; bar.style.cursor=''; });
+    bar.addEventListener('mouseup', ()=>{ isDragging=false; bar.style.cursor=''; });
+    bar.addEventListener('mousemove', e=>{ if(!isDragging) return; e.preventDefault(); const x=e.pageX-bar.offsetLeft; bar.scrollLeft=scrollLeft-(x-startX); });
+  });
+});
 .yr-row { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; }
 .yr-lbl { font-size: 12px; color: var(--text2); width: 38px; text-align: right; font-weight: 500; flex-shrink: 0; }
 .yr-track { flex: 1; height: 22px; background: var(--surface2); border-radius: 6px; overflow: hidden; }
@@ -6232,17 +6245,21 @@ window.etkPrsYilKarToggle=function(){
         <button class="um-panel-close" onclick="umClosePanel('${tab}')"><i class="ti ti-x" style="font-size:16px"></i></button>
       </div>
 
-      <div class="um-tab-bar" style="padding:0 16px;overflow-x:auto;white-space:nowrap">
-        <button class="um-tab um-on" onclick="umDetayTab(this,'genel')"><i class="ti ti-info-circle" style="font-size:13px"></i> Genel</button>
-        <button class="um-tab" onclick="umDetayTab(this,'ortaklar')"><i class="ti ti-users" style="font-size:13px"></i> Ortaklar</button>
-        <button class="um-tab" onclick="umDetayTab(this,'temsilciler')"><i class="ti ti-user-check" style="font-size:13px"></i> Temsilciler</button>
-        <button class="um-tab" onclick="umDetayTab(this,'adresler')"><i class="ti ti-map-pin" style="font-size:13px"></i> Adresler</button>
-        <button class="um-tab" onclick="umDetayTab(this,'aidat')"><i class="ti ti-coin" style="font-size:13px"></i> Aidat</button>
-        <button class="um-tab" onclick="umDetayTab(this,'belgeler')"><i class="ti ti-file-certificate" style="font-size:13px"></i> Belgeler</button>
-        <button class="um-tab" onclick="umDetayTab(this,'sikayet')"><i class="ti ti-alert-circle" style="font-size:13px"></i> Şikayet</button>
-        <button class="um-tab" onclick="umDetayTab(this,'memnuniyet')"><i class="ti ti-mood-smile" style="font-size:13px"></i> Memnuniyet</button>
-        <button class="um-tab" onclick="umDetayTab(this,'iletisim')"><i class="ti ti-messages" style="font-size:13px"></i> İletişim</button>
-        <button class="um-tab" onclick="umDetayTab(this,'tarihce')"><i class="ti ti-history" style="font-size:13px"></i> Tarihçe</button>
+      <div style="position:relative;border-bottom:0.5px solid var(--border)">
+        <button onclick="this.nextElementSibling.scrollLeft-=120" style="position:absolute;left:0;top:0;bottom:0;z-index:2;background:linear-gradient(to right,var(--surface) 60%,transparent);border:none;cursor:pointer;padding:0 8px;color:var(--text2);font-size:16px">‹</button>
+        <div class="um-tab-bar" id="um-panel-tabs" style="padding:0 28px;margin-bottom:0;border-bottom:none">
+          <button class="um-tab um-on" onclick="umDetayTab(this,'genel')"><i class="ti ti-info-circle" style="font-size:13px"></i> Genel</button>
+          <button class="um-tab" onclick="umDetayTab(this,'ortaklar')"><i class="ti ti-users" style="font-size:13px"></i> Ortaklar</button>
+          <button class="um-tab" onclick="umDetayTab(this,'temsilciler')"><i class="ti ti-user-check" style="font-size:13px"></i> Temsilciler</button>
+          <button class="um-tab" onclick="umDetayTab(this,'adresler')"><i class="ti ti-map-pin" style="font-size:13px"></i> Adresler</button>
+          <button class="um-tab" onclick="umDetayTab(this,'aidat')"><i class="ti ti-coin" style="font-size:13px"></i> Aidat</button>
+          <button class="um-tab" onclick="umDetayTab(this,'belgeler')"><i class="ti ti-file-certificate" style="font-size:13px"></i> Belgeler</button>
+          <button class="um-tab" onclick="umDetayTab(this,'sikayet')"><i class="ti ti-alert-circle" style="font-size:13px"></i> Şikayet</button>
+          <button class="um-tab" onclick="umDetayTab(this,'memnuniyet')"><i class="ti ti-mood-smile" style="font-size:13px"></i> Memnuniyet</button>
+          <button class="um-tab" onclick="umDetayTab(this,'iletisim')"><i class="ti ti-messages" style="font-size:13px"></i> İletişim</button>
+          <button class="um-tab" onclick="umDetayTab(this,'tarihce')"><i class="ti ti-history" style="font-size:13px"></i> Tarihçe</button>
+        </div>
+        <button onclick="this.previousElementSibling.scrollLeft+=120" style="position:absolute;right:0;top:0;bottom:0;z-index:2;background:linear-gradient(to left,var(--surface) 60%,transparent);border:none;cursor:pointer;padding:0 8px;color:var(--text2);font-size:16px">›</button>
       </div>
 
       <div id="um-detay-genel" class="um-pane um-on" style="padding:0 16px 16px">
