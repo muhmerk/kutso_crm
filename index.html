@@ -4169,8 +4169,9 @@ function toggleTpl(header) {
     document.getElementById('crm-mem-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>';
 
     try {
+      const firmaAdi = currentFirm?.firma || '';
       const { data } = await _supa.from('mem_anketler').select('*')
-        .eq('firma', currentFirm?.firma)
+        .ilike('firma', `%${firmaAdi}%`)
         .order('created_at', {ascending:false});
 
       const tumAnketler = data||[];
@@ -4232,9 +4233,10 @@ function toggleTpl(header) {
     emptyEl.style.display = 'none';
 
     try {
-      /* Firma adı ile ara */
+      /* Firma adı ile ara — ilike ile kısmi eşleşme */
+      const firmaAdi = currentFirm?.firma || '';
       const { data } = await _supa.from('sikayetler').select('*')
-        .eq('firma_adi', currentFirm?.firma)
+        .ilike('firma_adi', `%${firmaAdi}%`)
         .order('created_at', {ascending:false});
 
       const list = data||[];
@@ -4737,8 +4739,7 @@ function toggleTpl(header) {
           kategori: document.getElementById('crm-sik-kat')?.value||'Diğer',
           oncelik: durum, durum, tarih, yil,
           firma_adi: currentFirm.firma,
-          uye_id: String(currentFirm.id||currentFirm.no),
-          sorumlu_kul: currentUser?.kullanici||''
+          uye_id: String(currentFirm.no||currentFirm.id),
         }]);
         if(error){ alert('Şikayet kaydedilemedi: '+error.message); return; }
         crmModalKapat();
