@@ -12612,7 +12612,15 @@ window.ipProjeDetay = async function(projId){
       '</div></div>':''}
     ${proje.gerceklesmelerList?.length>0?'<div><label class="yk-lbl">'+yil+' Gerçekleşmeleri</label><div style="padding:8px 12px;background:var(--blue-bg);border-radius:8px;font-size:13px;line-height:1.6;color:var(--blue)"><ul style="margin:0;padding-left:16px">'+
       proje.gerceklesmelerList.map(g=>'<li>'+g+'</li>').join('')+
-      '</ul></div></div>':''}`,
+      '</ul></div></div>':''}
+    ${proje.evraklar?.length>0?'<div><label class="yk-lbl">Evraklar / Belgeler</label><div style="display:flex;flex-direction:column;gap:5px">'+
+      proje.evraklar.map(e=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--surface2);border-radius:8px;font-size:12px">
+        <i class="ti ti-file-description" style="color:var(--blue);flex-shrink:0;font-size:15px"></i>
+        <span style="font-weight:500;flex:1">${e.ad}</span>
+        ${e.url?`<a href="${e.url}" target="_blank" style="color:var(--blue);font-size:11px;text-decoration:none"><i class="ti ti-external-link"></i> Aç</a>`:''}
+      </div>`).join('')+
+      '</div></div>':''}
+    ${proje.hedefKatkisi?'<div><label class="yk-lbl">Üst Hedefe Katkısı</label><div style="padding:8px 12px;background:var(--teal-bg);border-radius:8px;font-size:13px;line-height:1.6;color:var(--teal)">'+proje.hedefKatkisi+'</div></div>':''}`,
     null, true
   );
 
@@ -12717,6 +12725,9 @@ function projeFormHtml(p){
   return `
     <div><label class="yk-lbl">Proje / İş Paketi Adı *</label><input id="ip-f-pad" class="yk-inp" value="${p?.ad||''}" placeholder="Proje adı..."></div>
     <div><label class="yk-lbl">Etiket <span style="font-weight:400;color:var(--text2)">(isteğe bağlı, örn: P1, A.1)</span></label><input id="ip-f-petk" class="yk-inp" value="${p?.etiket||''}" placeholder="Boş bırakılırsa otomatik numaralanır"></div>
+    <div><label class="yk-lbl">Üst Hedefe Katkısı <span style="font-weight:400;color:var(--text2)">(bu projenin üst hedefe nasıl katkı sağladığını açıklayın)</span></label>
+      <textarea id="ip-f-katki" class="yk-inp" style="min-height:64px;resize:vertical" placeholder="Örn: Bu proje, ihracatçı üye sayısını artırarak oda gelirlerine doğrudan katkı sağlar...">${p?.hedefKatkisi||''}</textarea>
+    </div>
     <div><label class="yk-lbl">Performans Göstergeleri</label>
       <div style="display:grid;grid-template-columns:1fr 80px;gap:6px;margin-bottom:4px">
         <span style="font-size:11px;color:var(--text2)">Gösterge</span>
@@ -12797,6 +12808,20 @@ function projeFormHtml(p){
       </div>
       <button type="button" onclick="ipListEkle('ip-gercek-list','ip-gercek-item','Gerçekleşme açıklayın...')" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px"><i class="ti ti-plus" style="font-size:12px"></i> Gerçekleşme ekle</button>
     </div>
+    <div>
+      <label class="yk-lbl">Evraklar / Belgeler <span style="font-weight:400;color:var(--text2)">(gerçekleşmeye ait belgeler, linkler)</span></label>
+      <div id="ip-evrak-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
+        ${(p?.evraklar && p.evraklar.length>0 ? p.evraklar : [{ad:'',url:''}]).map((e,i)=>`
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center">
+            <input class="yk-inp ip-evrak-ad" value="${e.ad||''}" placeholder="Evrak adı / açıklama...">
+            <input class="yk-inp ip-evrak-url" value="${e.url||''}" placeholder="Link veya dosya yolu (isteğe bağlı)...">
+            ${i>0?`<button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:18px;flex-shrink:0">×</button>`:'<span style="width:26px"></span>'}
+          </div>`).join('')}
+      </div>
+      <button type="button" onclick="ipEvrakEkle()" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);display:flex;align-items:center;gap:4px">
+        <i class="ti ti-plus" style="font-size:12px"></i> Evrak ekle
+      </button>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Bütçe (₺)</label><input id="ip-f-but" class="yk-inp" type="number" value="${p?.butce||0}" min="0"></div>
       <div><label class="yk-lbl">Başlangıç (ay)</label><input id="ip-f-bas" class="yk-inp" type="number" min="1" max="12" value="${p?.baslangicAy||1}"></div>
@@ -12840,6 +12865,14 @@ function projeFormOku(p, mevcut){
   const gercekItems = document.querySelectorAll('.ip-gercek-item');
   const gercekler = []; gercekItems.forEach(el=>{ const v=el.value.trim(); if(v) gercekler.push(v); });
   p.gerceklesmelerList = gercekler;
+  /* Evraklar */
+  const evrakAdlar = document.querySelectorAll('.ip-evrak-ad');
+  const evrakUrller = document.querySelectorAll('.ip-evrak-url');
+  const evraklar = [];
+  evrakAdlar.forEach((el,i)=>{ const ad=el.value.trim(); if(ad) evraklar.push({ad, url: evrakUrller[i]?.value.trim()||''}); });
+  p.evraklar = evraklar;
+  /* Üst hedef katkısı */
+  p.hedefKatkisi = document.getElementById('ip-f-katki')?.value.trim()||'';
   p.butce        = parseInt(document.getElementById('ip-f-but')?.value)||0;
   p.baslangicAy  = parseInt(document.getElementById('ip-f-bas')?.value)||1;
   p.bitisAy      = parseInt(document.getElementById('ip-f-bit')?.value)||12;
@@ -12853,6 +12886,17 @@ function projeFormOku(p, mevcut){
 }
 
 /* Performans göstergesi ekle/sil */
+window.ipEvrakEkle = function() {
+  const list = document.getElementById('ip-evrak-list');
+  if(!list) return;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center';
+  div.innerHTML = `<input class="yk-inp ip-evrak-ad" placeholder="Evrak adı / açıklama...">
+    <input class="yk-inp ip-evrak-url" placeholder="Link veya dosya yolu (isteğe bağlı)...">
+    <button type="button" onclick="this.closest('div').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:18px;flex-shrink:0">×</button>`;
+  list.appendChild(div);
+};
+
 window.ipGosEkle = function(){
   const list = document.getElementById('ip-gos-list');
   if(!list) return;
@@ -13039,7 +13083,9 @@ window.ipProjeEkle = function(strId,hId){
         baslama_ay: p.baslangicAy||1,
         bitis_ay: p.bitisAy||12,
         butce: p.butce||0,
-        notlar:p.yillar||{}
+        notlar: p.yillar||{},
+        evraklar: p.evraklar?.length>0 ? p.evraklar : [],
+        hedef_katkisi: p.hedefKatkisi||null
       }]).then(async ({error})=>{
         if(error){ console.error('Proje kaydetme hatası:',error.message); return; }
         /* Gösterge takip satırlarını ekle */
@@ -13095,7 +13141,9 @@ window.ipProjeDuzenle = async function(projId){
         baslama_ay: proje.baslangicAy||1,
         bitis_ay: proje.bitisAy||12,
         butce: proje.butce||0,
-        notlar:proje.yillar||{}
+        notlar: proje.yillar||{},
+        evraklar: proje.evraklar?.length>0 ? proje.evraklar : [],
+        hedef_katkisi: proje.hedefKatkisi||null
       }).eq('id',projId).then(({error})=>{if(error) console.error('Proje güncelleme hatası:',error.message);});
 
       /* Gösterge hedeflerini takip tablosuna kaydet/güncelle */
