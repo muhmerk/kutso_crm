@@ -6208,8 +6208,8 @@ window.etkPrsYilKarToggle=function(){
     ST[tab].sel=id; umDraw(tab);
     const panel  = document.getElementById('um-panel-'+tab);
     const layout = document.getElementById('um-layout-'+tab);
-    const av = AVCOL[_hashCode(u.firma) % AVCOL.length];
     const _hashCode = str => { let h=0; for(let ch of String(str||'')) h=(h<<5)-h+ch.charCodeAt(0)|0; return Math.abs(h); };
+    const av = AVCOL[_hashCode(u.firma) % AVCOL.length];
     const init = u.firma.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
 
     const statusBadge = u.durum==='askida'
