@@ -1959,25 +1959,29 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <div class="um-tab-bar">
       <button class="um-tab um-on" onclick="umSwitchTab('aktif',this)">
         <i class="ti ti-circle-check" style="font-size:15px"></i>Aktif
-        <span class="um-tc um-tc-g">4.218</span>
+        <span class="um-tc um-tc-g" id="um-tab-count-aktif">—</span>
       </button>
       <button class="um-tab" onclick="umSwitchTab('askida',this)">
         <i class="ti ti-clock-pause" style="font-size:15px"></i>Askıda
-        <span class="um-tc um-tc-a">612</span>
+        <span class="um-tc um-tc-a" id="um-tab-count-askida">—</span>
       </button>
       <button class="um-tab" onclick="umSwitchTab('terk',this)">
         <i class="ti ti-user-x" style="font-size:15px"></i>Terk
-        <span class="um-tc um-tc-r">291</span>
+        <span class="um-tc um-tc-r" id="um-tab-count-terk">—</span>
+      </button>
+      <button class="um-tab" onclick="umSwitchTab('tasfiye',this)" id="um-tab-tasfiye" style="display:none">
+        <i class="ti ti-building-off" style="font-size:15px"></i>Tasfiye
+        <span class="um-tc um-tc-r" id="um-tab-count-tasfiye">—</span>
       </button>
     </div>
 
     <!-- AKTİF -->
     <div id="um-aktif" class="um-pane um-on">
       <div class="mg">
-        <div class="mc"><div class="mc-ico" style="background:var(--blue-bg)"><i class="ti ti-users" style="color:var(--blue)"></i></div><div class="mc-lbl">Aktif üye</div><div class="mc-val">4.218</div><div class="mc-sub up"><i class="ti ti-trending-up" style="font-size:11px"></i> +124 bu yıl</div></div>
-        <div class="mc"><div class="mc-ico" style="background:var(--teal-bg)"><i class="ti ti-coin" style="color:var(--teal)"></i></div><div class="mc-lbl">Tahsilat oranı</div><div class="mc-val">%84</div><div class="mc-sub">₺2.1M / ₺2.5M</div></div>
-        <div class="mc"><div class="mc-ico" style="background:var(--amber-bg)"><i class="ti ti-world" style="color:var(--amber)"></i></div><div class="mc-lbl">İhracatçı üye</div><div class="mc-val">347</div><div class="mc-sub">%8.2 oranında</div></div>
-        <div class="mc"><div class="mc-ico" style="background:var(--purple-bg)"><i class="ti ti-calendar-plus" style="color:var(--purple)"></i></div><div class="mc-lbl">Bu ay yeni</div><div class="mc-val">18</div><div class="mc-sub up">Geçen ay: 12</div></div>
+        <div class="mc"><div class="mc-ico" style="background:var(--blue-bg)"><i class="ti ti-users" style="color:var(--blue)"></i></div><div class="mc-lbl">Faal Üye</div><div class="mc-val" id="um-metric-aktif">—</div><div class="mc-sub" id="um-metric-aktif-sub">yükleniyor...</div></div>
+        <div class="mc"><div class="mc-ico" style="background:var(--teal-bg)"><i class="ti ti-coin" style="color:var(--teal)"></i></div><div class="mc-lbl">Askıda Üye</div><div class="mc-val" id="um-metric-askida">—</div><div class="mc-sub" id="um-metric-askida-sub">yükleniyor...</div></div>
+        <div class="mc"><div class="mc-ico" style="background:var(--amber-bg)"><i class="ti ti-world" style="color:var(--amber)"></i></div><div class="mc-lbl">Terk Üye</div><div class="mc-val" id="um-metric-terk">—</div><div class="mc-sub" id="um-metric-terk-sub">yükleniyor...</div></div>
+        <div class="mc"><div class="mc-ico" style="background:var(--purple-bg)"><i class="ti ti-calendar-plus" style="color:var(--purple)"></i></div><div class="mc-lbl">Bu ay yeni</div><div class="mc-val" id="um-metric-yeni">—</div><div class="mc-sub" id="um-metric-yeni-sub">yükleniyor...</div></div>
       </div>
       <div class="um-toolbar">
         <div class="um-search-wrap"><i class="ti ti-search"></i><input class="um-search" id="um-q-aktif" placeholder="Firma adı, üye no, vergi no, yetkili..." oninput="umRender('aktif')"></div>
@@ -2054,9 +2058,20 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
     </div>
 
-  </div>
+    <!-- TASFİYE -->
+    <div id="um-tasfiye" class="um-pane">
+      <div class="mg">
+        <div class="mc"><div class="mc-ico" style="background:var(--red-bg)"><i class="ti ti-building-off" style="color:var(--red)"></i></div><div class="mc-lbl">Tasfiye üye</div><div class="mc-val" id="um-tasfiye-sayi">—</div><div class="mc-sub dn"></div></div>
+        <div class="mc"><div class="mc-ico" style="background:var(--red-bg)"><i class="ti ti-coin" style="color:var(--red)"></i></div><div class="mc-lbl">Toplam Borç</div><div class="mc-val" id="um-tasfiye-borc">—</div><div class="mc-sub dn"></div></div>
+      </div>
+      <div class="um-table-wrap">
+        <table><thead><tr>
+          <th>Üye No</th><th>Firma</th><th>Sektör</th><th>Borç</th>
+        </tr></thead><tbody id="um-body-tasfiye"></tbody></table>
+      </div>
+    </div>
 
-  <!-- ══════════ CRM ══════════ -->
+  </div>
   <div id="s-crm" class="section">
 
     <!-- ARAMA ALANI -->
@@ -6035,6 +6050,7 @@ window.etkPrsYilKarToggle=function(){
   const DA = [];
   const DS = [];
   const DT = [];
+  const DV = []; /* Tasfiye */
   window._ETK_UYELER = DA;
   window.DA = DA;
 
@@ -6068,10 +6084,9 @@ window.etkPrsYilKarToggle=function(){
           borc: parseFloat(u.borc_tutari||0),
           gecikme: 0,
           sorumlu: '—',
-          terkTarihi: '—',
+          terkTarihi: u.uyelik_bit_tarihi || '—',
           terkNeden: '—',
           sonAidat: '—',
-          /* TOBB ek alanlar */
           ticaretSicilNo: u.ticaret_sicil_no || '—',
           firmaTipi: u.firma_tipi || '—',
           dereceTanimi: u.derece_tanimi || '—',
@@ -6081,19 +6096,79 @@ window.etkPrsYilKarToggle=function(){
           borcDurumu: u.borc_durumu || '—',
           anaFaaliyet: u.ana_faaliyet_aciklamasi || '—',
           _uye_oid: u.uye_oid,
-          _fromSupabase: true
+          _fromSupabase: true,
+          _created_at: u.created_at || ''
         };
-        const d = u.uyelik_durum;
+        const d = (u.uyelik_durum||'').toLowerCase();
         if(d === 'terk') DT.push(obj);
-        else if(d === 'askida') DS.push(obj);
+        else if(d === 'askida' || d === 'askı') DS.push(obj);
+        else if(d === 'tasfiye') DV.push(obj);
         else DA.push(obj);
       });
       window._ETK_UYELER = DA;
       window.DA = DA;
+
+      /* Metrikleri güncelle */
+      umMetrikleriGuncelle(DA, DS, DT, data);
+
       if(window.umRenderAll) window.umRenderAll();
-      console.log('✓ Üyeler Supabase\'den yüklendi — Aktif:', DA.length, 'Askıda:', DS.length, 'Terk:', DT.length);
+      console.log('✓ Üyeler yüklendi — Faal:', DA.length, 'Askıda:', DS.length, 'Terk:', DT.length);
     } catch(e) { console.warn('Üye yükleme hatası:', e); }
   }
+
+  function umMetrikleriGuncelle(aktif, askida, terk, tumData) {
+    const setEl = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+    const tasfiye = DV||[];
+    const toplam = aktif.length + askida.length + terk.length + tasfiye.length;
+
+    /* Sekme sayıları */
+    setEl('um-tab-count-aktif', aktif.length.toLocaleString('tr-TR'));
+    setEl('um-tab-count-askida', askida.length.toLocaleString('tr-TR'));
+    setEl('um-tab-count-terk', terk.length.toLocaleString('tr-TR'));
+
+    /* Tasfiye sekmesini sadece veri varsa göster */
+    const tasfiyeTab = document.getElementById('um-tab-tasfiye');
+    if(tasfiyeTab) {
+      tasfiyeTab.style.display = tasfiye.length > 0 ? '' : 'none';
+      setEl('um-tab-count-tasfiye', tasfiye.length.toLocaleString('tr-TR'));
+    }
+
+    /* Metrik kartlar */
+    setEl('um-metric-aktif', aktif.length.toLocaleString('tr-TR'));
+    setEl('um-metric-aktif-sub', 'Toplam: ' + toplam.toLocaleString('tr-TR') + ' kayıt');
+
+    setEl('um-metric-askida', askida.length.toLocaleString('tr-TR'));
+    setEl('um-metric-askida-sub', askida.filter(u=>u.borc>0).length + ' borçlu üye');
+
+    setEl('um-metric-terk', terk.length.toLocaleString('tr-TR'));
+    setEl('um-metric-terk-sub', terk.filter(u=>u.borc>0).length + ' borçlu kayıt');
+
+    /* Bu ay yeni — oda_tescil_tarihi son 30 gün */
+    const now = new Date();
+    const buAy = new Date(now); buAy.setDate(buAy.getDate()-30);
+    const gecenAy = new Date(now); gecenAy.setDate(gecenAy.getDate()-60);
+
+    const parseDate = s => {
+      if(!s) return null;
+      const clean = String(s).replace(/-/g,'');
+      if(clean.length === 8) return new Date(clean.slice(0,4)+'-'+clean.slice(4,6)+'-'+clean.slice(6,8));
+      return null;
+    };
+
+    const yeni = (tumData||[]).filter(u => {
+      const d = parseDate(u.oda_tescil_tarihi);
+      return d && d >= buAy;
+    });
+    const gecenAyUye = (tumData||[]).filter(u => {
+      const d = parseDate(u.oda_tescil_tarihi);
+      return d && d >= gecenAy && d < buAy;
+    });
+
+    setEl('um-metric-yeni', yeni.length.toLocaleString('tr-TR'));
+    setEl('um-metric-yeni-sub', 'Geçen ay: ' + gecenAyUye.length);
+  }
+
+  window.umMetrikleriGuncelle = umMetrikleriGuncelle;
   supaUyeleriYukle();
 
   const ST = {
@@ -6647,11 +6722,27 @@ window.etkPrsYilKarToggle=function(){
   };
 
   window.umSwitchTab = function(tab, btn){
-    document.querySelectorAll('.um-tab').forEach(t=>t.classList.remove('um-on'));
-    document.querySelectorAll('.um-pane').forEach(p=>p.classList.remove('um-on'));
+    document.querySelectorAll('#s-uyeler .um-tab-bar .um-tab').forEach(t=>t.classList.remove('um-on'));
+    document.querySelectorAll('#s-uyeler .um-pane').forEach(p=>p.classList.remove('um-on'));
     btn.classList.add('um-on');
-    document.getElementById('um-'+tab).classList.add('um-on');
-    umDraw(tab);
+    const pane = document.getElementById('um-'+tab);
+    if(pane) pane.classList.add('um-on');
+    if(tab === 'tasfiye') {
+      /* Tasfiye için basit liste göster */
+      const body = document.getElementById('um-body-tasfiye');
+      if(body && DV.length > 0) {
+        body.innerHTML = DV.map(u=>`<tr class="um-row" onclick="umOpenPanel('tasfiye','${u.id}')">
+          <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${u.no}</td>
+          <td><div style="font-weight:500">${u.firma}</div></td>
+          <td>${u.sektor||'—'}</td>
+          <td style="color:#E24B4A;font-weight:500">${u.borc>0?'₺'+Number(u.borc).toLocaleString('tr-TR'):'—'}</td>
+        </tr>`).join('');
+      } else if(body) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text2)">Tasfiye kaydı bulunmuyor</td></tr>';
+      }
+    } else {
+      umDraw(tab);
+    }
   };
 
   /* init aktif tab on load */
