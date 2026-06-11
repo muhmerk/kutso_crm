@@ -6133,37 +6133,43 @@ window.etkPrsYilKarToggle=function(){
       setEl('um-tab-count-tasfiye', tasfiye.length.toLocaleString('tr-TR'));
     }
 
-    /* Metrik kartlar */
+    /* AKTİF metrik kartlar */
     setEl('um-metric-aktif', aktif.length.toLocaleString('tr-TR'));
     setEl('um-metric-aktif-sub', 'Toplam: ' + toplam.toLocaleString('tr-TR') + ' kayıt');
-
     setEl('um-metric-askida', askida.length.toLocaleString('tr-TR'));
     setEl('um-metric-askida-sub', askida.filter(u=>u.borc>0).length + ' borçlu üye');
-
     setEl('um-metric-terk', terk.length.toLocaleString('tr-TR'));
     setEl('um-metric-terk-sub', terk.filter(u=>u.borc>0).length + ' borçlu kayıt');
 
-    /* Bu ay yeni — oda_tescil_tarihi son 30 gün */
+    /* ASKIDA sekme metrik kartları */
+    setEl('um-askida-sayi', askida.length.toLocaleString('tr-TR'));
+    const toplamAskidaBorc = askida.reduce((s,u)=>s+parseFloat(u.borc||0),0);
+    setEl('um-askida-borc', '₺'+toplamAskidaBorc.toLocaleString('tr-TR',{minimumFractionDigits:0}));
+    setEl('um-askida-borc-sub', askida.filter(u=>u.borc>0).length + ' borçlu üye');
+
+    /* TERK sekme metrik kartları */
+    setEl('um-terk-sayi', terk.length.toLocaleString('tr-TR'));
+    const buYil = new Date().getFullYear().toString();
+    const buYilTerk = terk.filter(u=>(u.terkTarihi||'').startsWith(buYil)).length;
+    setEl('um-terk-bu-yil', buYilTerk.toLocaleString('tr-TR'));
+
+    /* TAsfiye metrik kartları */
+    setEl('um-tasfiye-sayi', tasfiye.length.toLocaleString('tr-TR'));
+    const toplamTasfiyeBorc = tasfiye.reduce((s,u)=>s+parseFloat(u.borc||0),0);
+    setEl('um-tasfiye-borc', toplamTasfiyeBorc > 0 ? '₺'+toplamTasfiyeBorc.toLocaleString('tr-TR') : '—');
+
+    /* Bu ay yeni */
     const now = new Date();
     const buAy = new Date(now); buAy.setDate(buAy.getDate()-30);
     const gecenAy = new Date(now); gecenAy.setDate(gecenAy.getDate()-60);
-
     const parseDate = s => {
       if(!s) return null;
       const clean = String(s).replace(/-/g,'');
       if(clean.length === 8) return new Date(clean.slice(0,4)+'-'+clean.slice(4,6)+'-'+clean.slice(6,8));
       return null;
     };
-
-    const yeni = (tumData||[]).filter(u => {
-      const d = parseDate(u.oda_tescil_tarihi);
-      return d && d >= buAy;
-    });
-    const gecenAyUye = (tumData||[]).filter(u => {
-      const d = parseDate(u.oda_tescil_tarihi);
-      return d && d >= gecenAy && d < buAy;
-    });
-
+    const yeni = (tumData||[]).filter(u => { const d=parseDate(u.oda_tescil_tarihi); return d && d >= buAy; });
+    const gecenAyUye = (tumData||[]).filter(u => { const d=parseDate(u.oda_tescil_tarihi); return d && d >= gecenAy && d < buAy; });
     setEl('um-metric-yeni', yeni.length.toLocaleString('tr-TR'));
     setEl('um-metric-yeni-sub', 'Geçen ay: ' + gecenAyUye.length);
   }
@@ -6256,7 +6262,6 @@ window.etkPrsYilKarToggle=function(){
   window.umSort   = function(tab,key){ if(ST[tab].sort===key) ST[tab].dir*=-1; else{ST[tab].sort=key;ST[tab].dir=1;} ST[tab].page=1; umDraw(tab); };
   window.umDraw   = umDraw;
   window.umRenderAll = function(){ ['aktif','askida','terk'].forEach(t=>{ try{ umDraw(t); }catch(e){} }); };
-
   function umDraw(tab){
     const data = filterData(tab);
     const {page,pp,sel} = ST[tab];
