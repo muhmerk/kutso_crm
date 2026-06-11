@@ -6103,18 +6103,18 @@ window.etkPrsYilKarToggle=function(){
   }
 
   function rowAktif(u){
-    const aidat=u.odendi?`<span style="color:#1D9E75;font-weight:500">Ödendi</span>`:`<span style="color:#854F0B;font-weight:500">₺${u.aidat.toLocaleString()}</span>`;
-    const durum=u.odendi?badge('b-green',`${dot('#1D9E75')}Aktif`):badge('b-amber',`${dot('#EF9F27')}Borçlu`);
+    const aidat=u.odendi?`<span style="color:#1D9E75;font-weight:500">Ödendi</span>`:`<span style="color:#854F0B;font-weight:500">${u.borc?'₺'+Number(u.borc).toLocaleString():'Bekliyor'}</span>`;
+    const durum=u.odendi?badge('b-green',`${dot('#1D9E75')}Faal`):badge('b-amber',`${dot('#EF9F27')}Borçlu`);
     const ihr=u.ihracat?badge('b-teal','<i class="ti ti-world" style="font-size:11px"></i> Evet'):'<span style="color:var(--text2);font-size:11px">—</span>';
     const sel=ST.aktif.sel===u.id?' um-sel':'';
-    return `<tr class="um-row${sel}" onclick="umOpenPanel('aktif',${u.id})">
+    return `<tr class="um-row${sel}" onclick="umOpenPanel('aktif','${u.id}')">
       <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${u.no}</td>
-      <td><div style="font-weight:500;max-width:155px;overflow:hidden;text-overflow:ellipsis">${u.firma}</div><div style="font-size:10px;color:var(--text2)">${u.yetkili}</div></td>
-      <td>${badge('b-gray',u.sektor)}</td>
-      <td style="font-size:11px;color:var(--text2);max-width:105px;overflow:hidden;text-overflow:ellipsis">${u.meslek}</td>
-      <td><code style="font-size:10px;background:var(--surface2);padding:1px 5px;border-radius:4px">${u.nace}</code></td>
-      <td style="font-size:11px">${u.ilce}</td>
-      <td style="font-size:11px;text-align:center">${u.calisan}</td>
+      <td><div style="font-weight:500;max-width:155px;overflow:hidden;text-overflow:ellipsis">${u.firma}</div><div style="font-size:10px;color:var(--text2)">${u.yetkili||'—'}</div></td>
+      <td>${badge('b-gray',u.sektor||'—')}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:105px;overflow:hidden;text-overflow:ellipsis">${u.meslek||'—'}</td>
+      <td><code style="font-size:10px;background:var(--surface2);padding:1px 5px;border-radius:4px">${u.nace||'—'}</code></td>
+      <td style="font-size:11px">${u.ilce||'—'}</td>
+      <td style="font-size:11px;text-align:center">${u.calisan||'—'}</td>
       <td>${ihr}</td>
       <td>${aidat}</td>
       <td>${durum}</td>
@@ -6123,32 +6123,32 @@ window.etkPrsYilKarToggle=function(){
 
   function rowAskida(u){
     const gc=u.gecikme>90?'#E24B4A':u.gecikme>45?'#EF9F27':'#854F0B';
-    return `<tr class="um-row" onclick="umOpenPanel('askida',${u.id})">
+    return `<tr class="um-row" onclick="umOpenPanel('askida','${u.id}')">
       <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${u.no}</td>
-      <td><div style="font-weight:500;max-width:150px;overflow:hidden;text-overflow:ellipsis">${u.firma}</div><div style="font-size:10px;color:var(--text2)">${u.yetkili}</div></td>
-      <td>${badge('b-gray',u.sektor)}</td>
-      <td style="font-size:11px;color:var(--text2);max-width:110px;overflow:hidden;text-overflow:ellipsis">${u.meslek}</td>
-      <td style="font-size:11px">${u.ilce}</td>
-      <td style="font-size:11px;text-align:center">${u.calisan}</td>
-      <td style="color:#854F0B;font-weight:500">₺${u.borc.toLocaleString()}</td>
-      <td><span style="color:${gc};font-weight:500;font-size:12px">${u.gecikme} gün</span></td>
-      <td style="font-size:11px;color:var(--text2)">${u.sorumlu}</td>
+      <td><div style="font-weight:500;max-width:150px;overflow:hidden;text-overflow:ellipsis">${u.firma}</div><div style="font-size:10px;color:var(--text2)">${u.yetkili||'—'}</div></td>
+      <td>${badge('b-gray',u.sektor||'—')}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:110px;overflow:hidden;text-overflow:ellipsis">${u.meslek||'—'}</td>
+      <td style="font-size:11px">${u.ilce||'—'}</td>
+      <td style="font-size:11px;text-align:center">${u.calisan||'—'}</td>
+      <td style="color:#854F0B;font-weight:500">₺${Number(u.borc||0).toLocaleString()}</td>
+      <td><span style="color:${gc};font-weight:500;font-size:12px">${u.gecikme||0} gün</span></td>
+      <td style="font-size:11px;color:var(--text2)">${u.sorumlu||'—'}</td>
       <td><button class="btn btn-sm" style="font-size:11px;padding:4px 9px" onclick="event.stopPropagation()">Hatırlat</button></td>
     </tr>`;
   }
 
   function rowTerk(u){
     const nbadge={'Kapanış':'b-red','Taşınma':'b-blue','Ekonomik':'b-amber','Diğer':'b-gray'}[u.terkNeden]||'b-gray';
-    return `<tr class="um-row" onclick="umOpenPanel('terk',${u.id})">
+    return `<tr class="um-row" onclick="umOpenPanel('terk','${u.id}')">
       <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${u.no}</td>
-      <td><div style="font-weight:500;max-width:150px;overflow:hidden;text-overflow:ellipsis">${u.firma}</div><div style="font-size:10px;color:var(--text2)">${u.yetkili}</div></td>
-      <td>${badge('b-gray',u.sektor)}</td>
-      <td style="font-size:11px;color:var(--text2);max-width:110px;overflow:hidden;text-overflow:ellipsis">${u.meslek}</td>
-      <td style="font-size:11px">${u.ilce}</td>
-      <td style="font-size:11px;text-align:center">${u.calisan}</td>
-      <td style="font-size:11px;color:var(--text2)">${u.terkTarihi}</td>
-      <td>${badge(nbadge,u.terkNeden)}</td>
-      <td style="font-size:11px;color:var(--text2)">${u.sonAidat}</td>
+      <td><div style="font-weight:500;max-width:150px;overflow:hidden;text-overflow:ellipsis">${u.firma}</div><div style="font-size:10px;color:var(--text2)">${u.yetkili||'—'}</div></td>
+      <td>${badge('b-gray',u.sektor||'—')}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:110px;overflow:hidden;text-overflow:ellipsis">${u.meslek||'—'}</td>
+      <td style="font-size:11px">${u.ilce||'—'}</td>
+      <td style="font-size:11px;text-align:center">${u.calisan||'—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${u.terkTarihi||'—'}</td>
+      <td>${badge(nbadge,u.terkNeden||'—')}</td>
+      <td style="font-size:11px;color:var(--text2)">${u.sonAidat||'—'}</td>
     </tr>`;
   }
 
@@ -6204,7 +6204,7 @@ window.etkPrsYilKarToggle=function(){
 
   window.umOpenPanel = function(tab, id){
     const allD = tab==='aktif'?DA:tab==='askida'?DS:DT;
-    const u = allD.find(x=>x.id===id); if(!u) return;
+    const u = allD.find(x=>x.id===id || String(x.id)===String(id)); if(!u) return;
     ST[tab].sel=id; umDraw(tab);
     const panel  = document.getElementById('um-panel-'+tab);
     const layout = document.getElementById('um-layout-'+tab);
