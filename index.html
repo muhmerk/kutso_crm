@@ -3711,6 +3711,43 @@ function toggleTpl(header) {
     {bg:'#FAECE7',c:'#712B13'},{bg:'#EAF3DE',c:'#27500A'}
   ];
 
+  /* Timeline cache — IIFE başında tanımla */
+  const TIMELINE_CACHE = {};
+
+  /* CRM Modal */
+  function crmModalAc(baslik, sub, govde, onKaydet) {
+    let overlay = document.getElementById('crm-modal-overlay');
+    if(!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'crm-modal-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;display:flex;align-items:center;justify-content:center';
+      overlay.innerHTML = `<div style="background:var(--surface);border-radius:16px;padding:24px;width:min(520px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+          <div>
+            <div id="crm-modal-title" style="font-size:16px;font-weight:600"></div>
+            <div id="crm-modal-sub" style="font-size:12px;color:var(--text2);margin-top:2px"></div>
+          </div>
+          <button onclick="crmModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:0;line-height:1">×</button>
+        </div>
+        <div id="crm-modal-body" style="display:flex;flex-direction:column;gap:12px"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
+          <button class="btn" onclick="crmModalKapat()">İptal</button>
+          <button class="btn btn-p" id="crm-modal-kaydet"><i class="ti ti-check"></i> Kaydet</button>
+        </div>
+      </div>`;
+      document.body.appendChild(overlay);
+    }
+    document.getElementById('crm-modal-title').textContent = baslik;
+    document.getElementById('crm-modal-sub').textContent = sub||'';
+    document.getElementById('crm-modal-body').innerHTML = govde;
+    document.getElementById('crm-modal-kaydet').onclick = onKaydet;
+    overlay.style.display = 'flex';
+  }
+  window.crmModalKapat = function() {
+    const o = document.getElementById('crm-modal-overlay');
+    if(o) o.style.display = 'none';
+  };
+
   /* Demo firmalar */
   const FIRMS = [
     { id:1, no:'1203', firma:'Kütahya Makine San. A.Ş.', yetkili:'Hasan Kaya', tel:'0552 987 65 43', email:'info@ktymakine.com.tr', vergi:'4380123456', kayit:'12 Mart 2018', sektor:'Üretim / Makine', ilce:'OSB', durum:'aktif', tags:['Stratejik Üye','İhracatçı','Aktif'] },
