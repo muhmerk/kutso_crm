@@ -355,6 +355,7 @@ async function supaYukleAkreditasyon() {
         const zatenVar = window.AKR_ST.calismalar[c.madde_id][c.yil].find(x => x.id === c.id);
         if (!zatenVar) window.AKR_ST.calismalar[c.madde_id][c.yil].push({
           id: c.id, metin: c.metin, dosya: c.dosya || '',
+          dosyalar: Array.isArray(c.dosyalar) ? c.dosyalar : [],
           tarih: c.tarih, giren: c.giren, girenKul: c.giren_kul
         });
       });
@@ -14379,45 +14380,74 @@ window.akrCalismaAc=function(maddeId,sadeceBak){
   const listesi=(AKR_ST.calismalar[maddeId]?.[AKR_ST.yil])||[];
   body.innerHTML=`
     ${yazabilir?`
-    <div style="margin-bottom:16px;padding:12px 14px;background:var(--surface2);border-radius:10px">
+    <div style="margin-bottom:16px;padding:14px;background:var(--surface2);border-radius:10px">
       <div style="font-size:12px;font-weight:500;margin-bottom:8px">Yeni Çalışma Ekle — ${AKR_ST.yil}</div>
-      <textarea id="akr-yeni-calisma" class="yk-inp" style="min-height:80px;resize:vertical;margin-bottom:8px" placeholder="Yaptığınız çalışma, hazırladığınız belge veya alınan kararı açıklayın..."></textarea>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="akr-yeni-dosya" class="yk-inp" style="flex:1" placeholder="Belge/dosya adı (opsiyonel)...">
+      <textarea id="akr-yeni-calisma" class="yk-inp" style="min-height:70px;resize:vertical;margin-bottom:8px" placeholder="Yaptığınız çalışma, hazırladığınız belge veya alınan kararı açıklayın..."></textarea>
+      <!-- Dosya Yükleme -->
+      <div id="akr-dosya-drop" style="border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:var(--surface);margin-bottom:8px;transition:border-color .2s"
+        ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
+        ondragleave="this.style.borderColor='var(--border)'"
+        ondrop="event.preventDefault();this.style.borderColor='var(--border)';akrDosyaDrop(event.dataTransfer.files)"
+        onclick="document.getElementById('akr-dosya-input').click()">
+        <i class="ti ti-cloud-upload" style="font-size:22px;color:var(--text2);display:block;margin-bottom:4px"></i>
+        <div style="font-size:12px;color:var(--text2)">Belge eklemek için tıklayın veya sürükleyin</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">PDF, Word, Excel — maks. 10MB</div>
+      </div>
+      <input type="file" id="akr-dosya-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg" style="display:none" onchange="akrDosyaDrop(this.files)">
+      <div id="akr-dosya-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px"></div>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-p btn-sm" onclick="akrCalismaKaydet()"><i class="ti ti-plus"></i> Ekle</button>
       </div>
     </div>`:''}
     <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px">${AKR_ST.yil} Yılı Kayıtları (${listesi.length})</div>
-    ${listesi.length===0?`<div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-folder" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>Bu yıl için henüz çalışma örneği girilmedi</div>`:
-    listesi.map(c=>`<div style="border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:7px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:11px;font-weight:500;color:var(--blue)">${c.giren}</span>
-        <span style="font-size:10px;color:var(--text2)">${c.tarih}</span>
-      </div>
-      <div style="font-size:12px;line-height:1.6">${c.metin}</div>
-      ${c.dosya?`<div style="margin-top:5px;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--teal)"><i class="ti ti-file" style="font-size:13px"></i>${c.dosya}</div>`:''}
-      ${(yonetici||c.girenKul===currentUser?.kullanici)?`<button class="btn btn-sm" style="margin-top:6px;font-size:10px;padding:2px 7px;color:var(--red)" onclick="akrCalismaSil('${maddeId}','${c.id}')"><i class="ti ti-trash"></i></button>`:''}
-    </div>`).join('')}`;
+    ${listesi.length===0
+      ? `<div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-folder" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>Bu yıl için henüz çalışma örneği girilmedi</div>`
+      : listesi.map(c=>`<div style="border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:7px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:11px;font-weight:500;color:var(--blue)">${c.giren}</span>
+          <span style="font-size:10px;color:var(--text2)">${c.tarih}</span>
+        </div>
+        <div style="font-size:12px;line-height:1.6">${c.metin}</div>
+        ${(c.dosyalar||[]).length>0
+          ? `<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${(c.dosyalar||[]).map(d=>`
+            <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--surface2);border-radius:6px">
+              <i class="ti ${akrDosyaIkon(d.ad)}" style="font-size:15px;color:${akrDosyaRenk(d.ad)};flex-shrink:0"></i>
+              <span style="font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.ad}</span>
+              <a href="${d.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:2px 7px;flex-shrink:0"><i class="ti ti-download"></i></a>
+            </div>`).join('')}</div>`
+          : c.dosya ? `<div style="margin-top:5px;font-size:11px;color:var(--teal)"><i class="ti ti-file"></i> ${c.dosya}</div>` : ''}
+        ${(yonetici||c.girenKul===currentUser?.kullanici)
+          ? `<button class="btn btn-sm" style="margin-top:6px;font-size:10px;padding:2px 7px;color:var(--red)" onclick="akrCalismaSil('${maddeId}','${c.id}')"><i class="ti ti-trash"></i> Sil</button>`
+          : ''}
+      </div>`).join('')}`;
   footer.innerHTML=`<button class="btn btn-sm" onclick="akrCalismaKapat()">Kapat</button>`;
   document.getElementById('akr-calisma-overlay').style.display='flex';
 };
 
-window.akrCalismaKaydet=function(){
+window.akrCalismaKaydet=async function(){
   const metin=(document.getElementById('akr-yeni-calisma')?.value||'').trim();
-  const dosya=(document.getElementById('akr-yeni-dosya')?.value||'').trim();
   if(!metin){alert('Lütfen çalışma açıklamasını yazın.');return;}
+
+  /* Yüklenen dosyaları topla */
+  const dosyalar=[];
+  document.querySelectorAll('#akr-dosya-list .akr-dosya-satir').forEach(s=>{
+    if(s.dataset.ad && s.dataset.url) dosyalar.push({ad:s.dataset.ad, url:s.dataset.url});
+  });
+
   const tarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
   if(!AKR_ST.calismalar[_akrCalismaAktif]) AKR_ST.calismalar[_akrCalismaAktif]={};
   if(!AKR_ST.calismalar[_akrCalismaAktif][AKR_ST.yil]) AKR_ST.calismalar[_akrCalismaAktif][AKR_ST.yil]=[];
   AKR_ST.calismalar[_akrCalismaAktif][AKR_ST.yil].unshift({
-    id:'c'+Date.now(), metin, dosya, tarih,
+    id:'c'+Date.now(), metin, dosyalar, dosya: dosyalar[0]?.ad||'', tarih,
     giren:currentUser?.adSoyad||'Bilinmiyor',
     girenKul:currentUser?.kullanici||''
   });
   /* Supabase'e kaydet */
   supaAkrCalisma({
     yil: AKR_ST.yil, madde_id: _akrCalismaAktif,
-    metin, dosya: dosya||null, tarih,
+    metin, dosya: dosyalar[0]?.ad||null,
+    dosyalar: dosyalar.length>0 ? dosyalar : null,
+    tarih,
     giren: currentUser?.adSoyad||'Bilinmiyor',
     giren_kul: currentUser?.kullanici||''
   });
@@ -14430,6 +14460,59 @@ window.akrCalismaSil=function(maddeId,cId){
     AKR_ST.calismalar[maddeId][AKR_ST.yil]=AKR_ST.calismalar[maddeId][AKR_ST.yil].filter(c=>c.id!==cId);
   }
   akrCalismaAc(maddeId);
+};
+
+
+function akrDosyaIkon(ad){
+  const ext=(ad||'').split('.').pop().toLowerCase();
+  if(ext==='pdf') return 'ti-file-type-pdf';
+  if(['doc','docx'].includes(ext)) return 'ti-file-type-doc';
+  if(['xls','xlsx'].includes(ext)) return 'ti-file-type-xls';
+  if(['ppt','pptx'].includes(ext)) return 'ti-presentation';
+  if(['png','jpg','jpeg'].includes(ext)) return 'ti-photo';
+  return 'ti-file-description';
+}
+function akrDosyaRenk(ad){
+  const ext=(ad||'').split('.').pop().toLowerCase();
+  if(ext==='pdf') return '#E24B4A';
+  if(['doc','docx'].includes(ext)) return '#185FA5';
+  if(['xls','xlsx'].includes(ext)) return '#1D9E75';
+  if(['ppt','pptx'].includes(ext)) return '#EF9F27';
+  return 'var(--text2)';
+}
+
+window.akrDosyaDrop=async function(files){
+  if(!files||files.length===0) return;
+  const list=document.getElementById('akr-dosya-list');
+  const dropEl=document.getElementById('akr-dosya-drop');
+  if(!list) return;
+  if(dropEl){dropEl.style.opacity='.5';dropEl.style.pointerEvents='none';}
+  for(const file of Array.from(files)){
+    if(file.size>10*1024*1024){alert(file.name+' 10MB sinirini asiyor.');continue;}
+    const satir=document.createElement('div');
+    satir.className='akr-dosya-satir';
+    satir.style.cssText='display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--surface);border:0.5px solid var(--border);border-radius:6px';
+    satir.innerHTML='<i class="ti '+akrDosyaIkon(file.name)+'" style="font-size:16px;color:'+akrDosyaRenk(file.name)+';flex-shrink:0"></i><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+file.name+'</div><div style="font-size:10px;color:var(--blue)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:10px"></i> Yukleniyor...</div></div>';
+    list.appendChild(satir);
+    try{
+      const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path='akr/'+(_akrCalismaAktif||'genel')+'/'+Date.now()+'_'+safeName;
+      const r=await _supa.storage.from('akr-evraklar').upload(path,file,{upsert:true});
+      if(r.error) throw r.error;
+      const ud=_supa.storage.from('akr-evraklar').getPublicUrl(path);
+      const url=ud.data?.publicUrl||'';
+      const boyut=file.size>1024*1024?(file.size/1024/1024).toFixed(1)+' MB':(file.size/1024).toFixed(0)+' KB';
+      satir.dataset.ad=file.name;
+      satir.dataset.url=url;
+      satir.innerHTML='<i class="ti '+akrDosyaIkon(file.name)+'" style="font-size:16px;color:'+akrDosyaRenk(file.name)+';flex-shrink:0"></i><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+file.name+'</div><div style="font-size:10px;color:var(--teal)">'+boyut+' ✓ Yuklendi</div></div><button type="button" onclick="this.closest(\".akr-dosya-satir\").remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:3px;font-size:16px;line-height:1;flex-shrink:0">×</button>';
+    }catch(err){
+      satir.innerHTML='<i class="ti ti-alert-circle" style="font-size:16px;color:var(--red);flex-shrink:0"></i><div style="flex:1;font-size:12px;color:var(--red)">'+file.name+' — Yukleme basarisiz</div><button type="button" onclick="this.closest(\".akr-dosya-satir\").remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:3px;font-size:16px;line-height:1;flex-shrink:0">×</button>';
+      console.error('Akr dosya yukleme hatasi:',err);
+    }
+  }
+  if(dropEl){dropEl.style.opacity='';dropEl.style.pointerEvents='';}
+  const inp=document.getElementById('akr-dosya-input');
+  if(inp) inp.value='';
 };
 
 window.akrCalismaKapat=function(){
