@@ -3861,12 +3861,14 @@ function toggleTpl(header) {
     if (hits.length === 0) {
       box.innerHTML = `<div style="padding:14px 16px;color:var(--text2);font-size:13px;text-align:center"><i class="ti ti-mood-empty" style="font-size:20px;display:block;margin-bottom:6px"></i>Kayıt bulunamadı</div>`;
     } else {
-      box.innerHTML = hits.map(f => {
+      box.innerHTML = hits.map((f,i) => {
         const av = AVCOL[(f.id||0) % AVCOL.length] || AVCOL[0];
         const init = f.firma.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
         const dColor = f.durum==='faal'||f.durum==='aktif' ? '#1D9E75' : f.durum==='askida' ? '#EF9F27' : '#E24B4A';
         const dLabel = f.durum==='faal'||f.durum==='aktif' ? 'Faal' : f.durum==='askida' ? 'Askıda' : f.durum==='terk' ? 'Terk' : 'Pasif';
-        return `<div class="crm-result-item" onclick="crmSelect(${JSON.stringify(f.no||f.id)})">
+        /* ID'yi data attribute olarak sakla, onclick içinde geçirme */
+        const safeId = 'crm-hit-'+i;
+        return `<div class="crm-result-item" data-crmid="${encodeURIComponent(String(f.no||f.id))}" id="${safeId}" onclick="crmSelectById('${safeId}')">
           <div style="width:34px;height:34px;border-radius:50%;background:${av.bg};color:${av.c};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">${init}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.firma}</div>
@@ -3878,6 +3880,13 @@ function toggleTpl(header) {
     }
     box.style.display = 'block';
   }
+
+  window.crmSelectById = function(elId) {
+    const el = document.getElementById(elId);
+    if(!el) return;
+    const id = decodeURIComponent(el.dataset.crmid);
+    crmSelect(id);
+  };
 
   /* Firma seç */
   window.crmSelect = async function(id, tab) {
