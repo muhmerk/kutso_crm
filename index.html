@@ -471,9 +471,36 @@ function supaRealtimeBaslat() {
 
   /* Akreditasyon */
   _supa.channel('db-akreditasyon')
-    .on('postgres_changes', { event:'*', schema:'public', table:'akr_calismalar' }, async ()=>{
-      await supaYukleAkreditasyon();
-      supaEkranYenile('akreditasyon');
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'akr_calismalar' }, async (payload)=>{
+      const c = payload.new;
+      if(!c) return;
+      if(!window.AKR_ST.calismalar[c.madde_id]) window.AKR_ST.calismalar[c.madde_id]={};
+      if(!window.AKR_ST.calismalar[c.madde_id][c.yil]) window.AKR_ST.calismalar[c.madde_id][c.yil]=[];
+      const zatenVar = window.AKR_ST.calismalar[c.madde_id][c.yil].find(x=>x.id===c.id);
+      if(!zatenVar) {
+        window.AKR_ST.calismalar[c.madde_id][c.yil].unshift({
+          id:c.id, metin:c.metin, dosya:c.dosya||'',
+          dosyalar:Array.isArray(c.dosyalar)?c.dosyalar:[],
+          tarih:c.tarih, giren:c.giren, girenKul:c.giren_kul
+        });
+        if(window.akrRender) window.akrRender();
+        /* Modal açıksa yenile */
+        if(document.getElementById('akr-calisma-overlay')?.style.display==='flex' && window._akrCalismaAktif===c.madde_id) {
+          window.akrCalismaAc(c.madde_id);
+        }
+      }
+    })
+    .on('postgres_changes', { event:'DELETE', schema:'public', table:'akr_calismalar' }, (payload)=>{
+      const c = payload.old;
+      if(!c) return;
+      if(window.AKR_ST.calismalar[c.madde_id]?.[c.yil]) {
+        window.AKR_ST.calismalar[c.madde_id][c.yil] = window.AKR_ST.calismalar[c.madde_id][c.yil].filter(x=>x.id!==c.id);
+        if(window.akrRender) window.akrRender();
+        /* Modal açıksa yenile */
+        if(document.getElementById('akr-calisma-overlay')?.style.display==='flex' && window._akrCalismaAktif===c.madde_id) {
+          window.akrCalismaAc(c.madde_id);
+        }
+      }
     })
     .on('postgres_changes', { event:'*', schema:'public', table:'akr_sorumlular' }, async ()=>{
       await supaYukleAkreditasyon();
@@ -14364,8 +14391,10 @@ window.akrSorumluAta=function(maddeId,kullanici){
 
 /* ─── Çalışma Örnekleri ─── */
 let _akrCalismaAktif=null;
+window._akrCalismaAktif=null;
 window.akrCalismaAc=function(maddeId,sadeceBak){
   _akrCalismaAktif=maddeId;
+  window._akrCalismaAktif=maddeId;
   /* Madde bilgisi bul */
   let madde=null;
   AKR_YAPI.forEach(b=>{
