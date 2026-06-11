@@ -3726,22 +3726,28 @@ function toggleTpl(header) {
   /* İletişim notlarını Supabase'den yükle */
   const TIMELINE_CACHE = {};
   async function crmTimelineYukle(firmaId) {
-    if(TIMELINE_CACHE[firmaId]) return TIMELINE_CACHE[firmaId];
-    const { data } = await _supa.from('crm_iletisim').select('*').eq('uye_id', firmaId).order('created_at', {ascending:false});
+    const cacheKey = String(firmaId);
+    if(TIMELINE_CACHE[cacheKey]) return TIMELINE_CACHE[cacheKey];
+    const { data } = await _supa.from('crm_iletisim').select('*')
+      .eq('uye_id', String(firmaId))
+      .order('created_at', {ascending:false});
     const tipRenk = { 'telefon':'#1D9E75', 'eposta':'#534AB7', 'ziyaret':'#EF9F27', 'toplanti':'#185FA5', 'diger':'#888' };
     const tipIcon = { 'telefon':'ti-phone', 'eposta':'ti-mail', 'ziyaret':'ti-map-pin', 'toplanti':'ti-users', 'diger':'ti-notes' };
+    const tipLabel = { 'telefon':'Telefon', 'eposta':'E-posta', 'ziyaret':'Ziyaret', 'toplanti':'Toplantı', 'diger':'Not' };
     const items = (data||[]).map(d=>({
       tip: d.tip||'diger', renk: tipRenk[d.tip]||'#888',
       icon: tipIcon[d.tip]||'ti-notes',
-      baslik: d.ozet||'Not', detay: '', tarih: d.tarih||'', kisi: d.giren||''
+      baslik: (tipLabel[d.tip]||'Not')+': '+( d.ozet||''), detay: '', tarih: d.tarih||'', kisi: d.giren||''
     }));
-    TIMELINE_CACHE[firmaId] = items;
+    TIMELINE_CACHE[cacheKey] = items;
     return items;
   }
 
   function crmTimelineRender(firmaId) {
     const el = document.getElementById('crm-timeline');
     if(!el) return;
+    /* Cache temizle */
+    delete TIMELINE_CACHE[String(firmaId)];
     el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>';
     crmTimelineYukle(firmaId).then(items=>{
       if(!items.length){
@@ -3795,12 +3801,12 @@ function toggleTpl(header) {
     const tarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
     const giren=currentUser?.adSoyad||'Bilinmiyor';
     const {error}=await _supa.from('crm_iletisim').insert([{
-      uye_id: currentFirm.id, tip, ozet, tarih,
+      uye_id: String(currentFirm.id||currentFirm.no), tip, ozet, tarih,
       tarih_iso: new Date().toISOString().slice(0,10),
       giren, giren_kul: currentUser?.kullanici||''
     }]);
     if(error){ alert('Kaydetme hatası: '+error.message); return; }
-    delete TIMELINE_CACHE[currentFirm.id]; /* Cache temizle */
+    delete TIMELINE_CACHE[currentFirm.id];
     document.getElementById('crm-not-overlay')?.remove();
     crmTimelineRender(currentFirm.id);
     alert('✓ Not kaydedildi.');
@@ -4058,11 +4064,15 @@ function toggleTpl(header) {
     const contentEl = document.getElementById('crm-mem-content');
     if(!emptyEl || !contentEl) return;
 
-    /* MEM_ANKET_DB'den bu firmanın anketlerini bul */
+    /* MEM_ANKET_DB'den bu firmanın anketlerini bul — ad veya ID ile */
     const tumAnketler = [];
     Object.values(window.MEM_ANKET_DB||{}).forEach(yilAnketler=>{
       (yilAnketler||[]).forEach(a=>{
-        if(a.firmaId === String(firmaId) || a.firma === currentFirm?.firma) tumAnketler.push(a);
+        if(
+          String(a.firmaId) === String(firmaId) ||
+          (currentFirm && a.firma && a.firma === currentFirm.firma) ||
+          (currentFirm && String(a.firmaId) === String(currentFirm.no))
+        ) tumAnketler.push(a);
       });
     });
 
@@ -4126,7 +4136,11 @@ function toggleTpl(header) {
     if(!emptyEl || !listEl) return;
 
     /* SIK_DB'den bu firmanın şikayetlerini bul */
-    const list = Object.values(window.SIK_DB||{}).filter(s => s.firmaId === String(firmaId) || s.firma === currentFirm?.firma);
+    const list = Object.values(window.SIK_DB||{}).filter(s =>
+      String(s.firmaId) === String(firmaId) ||
+      (currentFirm && s.firma && s.firma === currentFirm.firma) ||
+      (currentFirm && String(s.firmaId) === String(currentFirm.no))
+    );
 
     if (list.length === 0) {
       emptyEl.style.display = 'block';
@@ -4527,22 +4541,19 @@ function toggleTpl(header) {
   window.crmGorevEkle = function() {
     if(!currentFirm){ alert('Önce bir firma seçin.'); return; }
     const personelOpts = (window.PERSONEL||[]).map(p=>`<option value="${p.kullanici}">${p.ad} ${p.soyad}</option>`).join('');
-    ipModalAc('Görev Ekle', currentFirm.firma, `
+    crmModalAc('Görev Ekle', currentFirm.firma, `
       <div><label class="yk-lbl">Görev Başlığı *</label><input id="crm-gv-baslik" class="yk-inp" placeholder="Görevi kısaca açıklayın..."></div>
       <div><label class="yk-lbl">Açıklama</label><textarea id="crm-gv-aciklama" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Detaylı açıklama..."></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Atanacak Kişi *</label><select id="crm-gv-atanan" class="yk-inp"><option value="">Seçin...</option>${personelOpts}</select></div>
         <div><label class="yk-lbl">Son Tarih</label><input id="crm-gv-tarih" class="yk-inp" type="date"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="yk-lbl">Öncelik</label>
-          <select id="crm-gv-oncelik" class="yk-inp">
-            <option value="normal">Normal</option>
-            <option value="yuksek">Yüksek</option>
-            <option value="dusuk">Düşük</option>
-          </select>
-        </div>
-        <div><label class="yk-lbl">Kaynak</label><input class="yk-inp" value="CRM - ${currentFirm.firma}" disabled style="opacity:.7"></div>
+      <div><label class="yk-lbl">Öncelik</label>
+        <select id="crm-gv-oncelik" class="yk-inp">
+          <option value="normal">Normal</option>
+          <option value="yuksek">Yüksek</option>
+          <option value="dusuk">Düşük</option>
+        </select>
       </div>`,
       async () => {
         const baslik = document.getElementById('crm-gv-baslik')?.value.trim();
@@ -4558,12 +4569,13 @@ function toggleTpl(header) {
           atama_tarihi: new Date().toISOString().slice(0,10),
           kaynak: 'CRM',
           oncelik: document.getElementById('crm-gv-oncelik')?.value||'normal',
-          durum: 'planlandi', not_: `Firma: ${currentFirm.firma} (No: ${currentFirm.no})`
+          durum: 'planlandi',
+          not_: `Firma: ${currentFirm.firma} (No: ${currentFirm.no})`
         };
         const { error } = await _supa.from('gorevler').insert([yeniGorev]);
         if(error){ alert('Görev kaydedilemedi: '+error.message); return; }
         if(window.GOREV_DB) window.GOREV_DB.push(yeniGorev);
-        ipModalKapat();
+        crmModalKapat();
         crmGorevlerYukle(currentFirm.id);
         alert('✓ Görev oluşturuldu!');
       }
@@ -4573,7 +4585,7 @@ function toggleTpl(header) {
   /* ── GÖREV DURUM DEĞİŞTİR ── */
   window.crmGorevDurumDegistir = function(gorevId, mevcutDurum) {
     const durumlar = {planlandi:'Planlandı',devam:'Devam',tamamlandi:'Tamamlandı',iptal:'İptal'};
-    ipModalAc('Görev Durumu Güncelle', '', `
+    crmModalAc('Görev Durumu Güncelle', '', `
       <div><label class="yk-lbl">Durum</label>
         <select id="crm-gv-yeni-durum" class="yk-inp">
           ${Object.entries(durumlar).map(([k,v])=>`<option value="${k}" ${k===mevcutDurum?'selected':''}>${v}</option>`).join('')}
@@ -4585,17 +4597,16 @@ function toggleTpl(header) {
         const { error } = await _supa.from('gorevler').update({durum:yeniDurum}).eq('id',gorevId);
         if(error){ alert('Güncellenemedi: '+error.message); return; }
         if(window.GOREV_DB) { const g=window.GOREV_DB.find(x=>x.id===gorevId); if(g) g.durum=yeniDurum; }
-        ipModalKapat();
+        crmModalKapat();
         crmGorevlerYukle(currentFirm?.id);
       }
     );
   };
 
-  /* ── ŞİKAYET EKLE (CRM'den) ── */
   window.crmSikayetEkle = function() {
     if(!currentFirm){ alert('Önce bir firma seçin.'); return; }
     const kategoriler = ['Hizmet Kalitesi','Aidat/Finans','Bilgilendirme','Etkinlik','Personel','Diğer'];
-    ipModalAc('Şikayet Ekle', currentFirm.firma, `
+    crmModalAc('Şikayet Ekle', currentFirm.firma, `
       <div><label class="yk-lbl">Şikayet Konusu *</label><input id="crm-sik-konu" class="yk-inp" placeholder="Kısa konu başlığı..."></div>
       <div><label class="yk-lbl">Detay *</label><textarea id="crm-sik-detay" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Şikayeti detaylıca açıklayın..."></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -4618,19 +4629,19 @@ function toggleTpl(header) {
         const yil = new Date().getFullYear();
         const sikayet_no = 'SK'+Date.now().toString().slice(-6);
         const id = genUUID();
+        const durum = document.getElementById('crm-sik-oncelik')?.value||'İncelemede';
         const { error } = await _supa.from('sikayetler').insert([{
           id, sikayet_no, konu, aciklama: detay,
           kategori: document.getElementById('crm-sik-kat')?.value||'Diğer',
-          oncelik: document.getElementById('crm-sik-oncelik')?.value||'İncelemede',
-          durum: document.getElementById('crm-sik-oncelik')?.value||'İncelemede',
-          tarih, yil, firma_adi: currentFirm.firma,
-          uye_id: String(currentFirm.id),
+          oncelik: durum, durum, tarih, yil,
+          firma_adi: currentFirm.firma,
+          uye_id: String(currentFirm.id||currentFirm.no),
           sorumlu_kul: currentUser?.kullanici||''
         }]);
         if(error){ alert('Şikayet kaydedilemedi: '+error.message); return; }
-        ipModalKapat();
+        crmModalKapat();
         renderSik(currentFirm.id);
-        if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
+        if(window.supaYukleSikayetler) window.supaYukleSikayetler();
         alert('✓ Şikayet kaydedildi!');
       }
     );
