@@ -3857,22 +3857,25 @@ function toggleTpl(header) {
     }, 300);
   };
 
+  const _CRM_AVCOL = [{bg:'#E1F5EE',c:'#085041'},{bg:'#E8F1FB',c:'#0C447C'},{bg:'#EEEDFE',c:'#3C3489'},{bg:'#FEF3DE',c:'#633806'},{bg:'#FAECE7',c:'#712B13'}];
+
   function crmSearchRender(hits, box) {
     if (hits.length === 0) {
       box.innerHTML = `<div style="padding:14px 16px;color:var(--text2);font-size:13px;text-align:center"><i class="ti ti-mood-empty" style="font-size:20px;display:block;margin-bottom:6px"></i>Kayıt bulunamadı</div>`;
     } else {
+      /* Sonuçları _crmHits'e sakla, onclick index ile çağırsın */
+      window._crmHits = hits;
       box.innerHTML = hits.map((f,i) => {
-        const av = AVCOL[(f.id||0) % AVCOL.length] || AVCOL[0];
-        const init = f.firma.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+        const hashCode = str => { let h=0; for(let c of str) h=(h<<5)-h+c.charCodeAt(0)|0; return Math.abs(h); };
+        const av = _CRM_AVCOL[hashCode(f.firma) % _CRM_AVCOL.length];
+        const init = f.firma.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
         const dColor = f.durum==='faal'||f.durum==='aktif' ? '#1D9E75' : f.durum==='askida' ? '#EF9F27' : '#E24B4A';
         const dLabel = f.durum==='faal'||f.durum==='aktif' ? 'Faal' : f.durum==='askida' ? 'Askıda' : f.durum==='terk' ? 'Terk' : 'Pasif';
-        /* ID'yi data attribute olarak sakla, onclick içinde geçirme */
-        const safeId = 'crm-hit-'+i;
-        return `<div class="crm-result-item" data-crmid="${encodeURIComponent(String(f.no||f.id))}" id="${safeId}" onclick="crmSelectById('${safeId}')">
+        return `<div class="crm-result-item" onclick="crmSelectByIndex(${i})">
           <div style="width:34px;height:34px;border-radius:50%;background:${av.bg};color:${av.c};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0">${init}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.firma}</div>
-            <div style="font-size:11px;color:var(--text2)">Üye No: ${f.no} ${f.sektor && f.sektor!=='—'?'· '+f.sektor:''} ${f.vergi?'· VN:'+f.vergi:''}</div>
+            <div style="font-size:11px;color:var(--text2)">Üye No: ${f.no} ${f.sektor&&f.sektor!=='—'?'· '+f.sektor:''} ${f.vergi?'· VN:'+f.vergi:''}</div>
           </div>
           <span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:99px;background:${dColor}20;color:${dColor};flex-shrink:0">${dLabel}</span>
         </div>`;
@@ -3880,6 +3883,13 @@ function toggleTpl(header) {
     }
     box.style.display = 'block';
   }
+
+  window.crmSelectByIndex = function(i) {
+    const hits = window._crmHits || [];
+    if(!hits[i]) return;
+    const f = hits[i];
+    crmSelect(f.no || f.id);
+  };
 
   window.crmSelectById = function(elId) {
     const el = document.getElementById(elId);
