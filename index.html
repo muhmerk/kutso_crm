@@ -12833,11 +12833,8 @@ function projeFormHtml(p){
               <div style="font-size:10px;color:var(--text2)">${e.boyut||''}</div>
             </div>
             ${e.url?`<a href="${e.url}" target="_blank" class="btn btn-sm" style="font-size:11px;padding:3px 8px;flex-shrink:0"><i class="ti ti-download"></i> İndir</a>`:''}
-            <button type="button" onclick="this.closest('.ip-evrak-satir').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;line-height:1">×</button>
+            <button type="button" onclick="this.closest('.ip-evrak-satir').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:18px;flex-shrink:0;line-height:1" title="Sil">×</button>
           </div>`).join('')}
-      </div>
-      <div id="ip-evrak-yukleniyor" style="display:none;font-size:12px;color:var(--blue);margin-top:6px;display:flex;align-items:center;gap:6px">
-        <i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Yükleniyor...
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
@@ -12937,29 +12934,28 @@ let _ipEvrakAktifProjeId = null;
 window.ipEvrakDrop = async function(files) {
   if(!files || files.length === 0) return;
   const list = document.getElementById('ip-evrak-list');
-  const yukEl = document.getElementById('ip-evrak-yukleniyor');
   if(!list) return;
-  if(yukEl) yukEl.style.display = 'flex';
+
+  /* Yükleme alanını disabled göster */
+  const dropEl = document.getElementById('ip-evrak-drop');
+  if(dropEl) { dropEl.style.opacity = '.5'; dropEl.style.pointerEvents = 'none'; }
 
   for(const file of Array.from(files)) {
     if(file.size > 10 * 1024 * 1024) { alert(`${file.name} 10MB sınırını aşıyor.`); continue; }
 
-    /* Önce listeye "yükleniyor" olarak ekle */
-    const tempId = 'ev-temp-' + Date.now();
+    /* Geçici yükleniyor satırı */
     const satir = document.createElement('div');
-    satir.id = tempId;
     satir.className = 'ip-evrak-satir';
     satir.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border:0.5px solid var(--border);border-radius:8px';
-    satir.innerHTML = `<i class="ti ${ipEvrakIkon(file.name)}" style="font-size:18px;color:${ipEvrakRenk(file.name)};flex-shrink:0"></i>
+    satir.innerHTML = `
+      <i class="ti ${ipEvrakIkon(file.name)}" style="font-size:18px;color:${ipEvrakRenk(file.name)};flex-shrink:0"></i>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</div>
-        <div style="font-size:10px;color:var(--text2)">${(file.size/1024).toFixed(0)} KB</div>
-      </div>
-      <span style="font-size:11px;color:var(--blue);flex-shrink:0"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Yükleniyor...</span>`;
+        <div style="font-size:10px;color:var(--blue)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:10px"></i> Yükleniyor...</div>
+      </div>`;
     list.appendChild(satir);
 
     try {
-      /* Supabase Storage'a yükle */
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
       const path = `projeler/${_ipEvrakAktifProjeId||'gecici'}/${Date.now()}_${safeName}`;
       const { error } = await _supa.storage.from('ip-evraklar').upload(path, file, { upsert: true });
@@ -12967,29 +12963,37 @@ window.ipEvrakDrop = async function(files) {
 
       const { data: urlData } = _supa.storage.from('ip-evraklar').getPublicUrl(path);
       const publicUrl = urlData?.publicUrl || '';
-      const boyutStr = (file.size/1024).toFixed(0) + ' KB';
+      const boyutStr = file.size > 1024*1024
+        ? (file.size/1024/1024).toFixed(1)+' MB'
+        : (file.size/1024).toFixed(0)+' KB';
 
-      /* Satırı güncelle — data attribute olarak URL sakla */
-      satir.dataset.ad  = file.name;
+      /* Dataset'e yaz */
+      satir.dataset.ad = file.name;
       satir.dataset.url = publicUrl;
       satir.dataset.boyut = boyutStr;
-      satir.innerHTML = `<i class="ti ${ipEvrakIkon(file.name)}" style="font-size:18px;color:${ipEvrakRenk(file.name)};flex-shrink:0"></i>
+
+      /* Satırı güncelle */
+      satir.innerHTML = `
+        <i class="ti ${ipEvrakIkon(file.name)}" style="font-size:18px;color:${ipEvrakRenk(file.name)};flex-shrink:0"></i>
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</div>
           <div style="font-size:10px;color:var(--teal)">${boyutStr} · ✓ Yüklendi</div>
         </div>
         <a href="${publicUrl}" target="_blank" class="btn btn-sm" style="font-size:11px;padding:3px 8px;flex-shrink:0"><i class="ti ti-download"></i> İndir</a>
-        <button type="button" onclick="this.closest('.ip-evrak-satir').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px;flex-shrink:0;line-height:1">×</button>`;
+        <button type="button" onclick="this.closest('.ip-evrak-satir').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:18px;flex-shrink:0;line-height:1" title="Sil">×</button>`;
 
     } catch(err) {
-      satir.innerHTML = `<i class="ti ti-alert-circle" style="font-size:18px;color:var(--red);flex-shrink:0"></i>
-        <div style="flex:1;font-size:12px;color:var(--red)">${file.name} — Yükleme başarısız</div>
-        <button type="button" onclick="this.closest('.ip-evrak-satir').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:16px">×</button>`;
+      satir.innerHTML = `
+        <i class="ti ti-alert-circle" style="font-size:18px;color:var(--red);flex-shrink:0"></i>
+        <div style="flex:1;font-size:12px;color:var(--red)">${file.name} — Yükleme başarısız: ${err.message||''}</div>
+        <button type="button" onclick="this.closest('.ip-evrak-satir').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;font-size:18px;line-height:1">×</button>`;
       console.error('Evrak yükleme hatası:', err);
     }
   }
 
-  if(yukEl) yukEl.style.display = 'none';
+  /* Yükleme alanını tekrar aktif et */
+  if(dropEl) { dropEl.style.opacity = ''; dropEl.style.pointerEvents = ''; }
+
   /* Dosya input'unu sıfırla */
   const inp = document.getElementById('ip-evrak-input');
   if(inp) inp.value = '';
