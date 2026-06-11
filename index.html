@@ -711,9 +711,11 @@ async function supaGundemEkle(g) {
 /* Akreditasyon çalışma DB'ye ekle */
 async function supaAkrCalisma(c) {
   try {
-    await _supa.from('akr_calismalar').insert([c]);
+    const {data, error} = await _supa.from('akr_calismalar').insert([c]).select('id').single();
+    if(error) throw error;
     console.log('✓ Akreditasyon çalışması DB\'ye eklendi');
-  } catch(e) { console.error('Akreditasyon çalışma hatası:', e); }
+    return data?.id || null;
+  } catch(e) { console.error('Akreditasyon çalışma hatası:', e); return null; }
 }
 
 /* Akreditasyon sorumlu DB'ye kaydet */
@@ -14435,30 +14437,45 @@ window.akrCalismaKaydet=async function(){
   });
 
   const tarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  const localId='c'+Date.now();
+  const yeniKayit={
+    id: localId, metin, dosyalar, dosya: dosyalar[0]?.ad||'', tarih,
+    giren: currentUser?.adSoyad||'Bilinmiyor',
+    girenKul: currentUser?.kullanici||''
+  };
+
   if(!AKR_ST.calismalar[_akrCalismaAktif]) AKR_ST.calismalar[_akrCalismaAktif]={};
   if(!AKR_ST.calismalar[_akrCalismaAktif][AKR_ST.yil]) AKR_ST.calismalar[_akrCalismaAktif][AKR_ST.yil]=[];
-  AKR_ST.calismalar[_akrCalismaAktif][AKR_ST.yil].unshift({
-    id:'c'+Date.now(), metin, dosyalar, dosya: dosyalar[0]?.ad||'', tarih,
-    giren:currentUser?.adSoyad||'Bilinmiyor',
-    girenKul:currentUser?.kullanici||''
-  });
-  /* Supabase'e kaydet */
-  supaAkrCalisma({
+  AKR_ST.calismalar[_akrCalismaAktif][AKR_ST.yil].unshift(yeniKayit);
+
+  /* Supabase'e kaydet — gerçek ID'yi al */
+  const dbId = await supaAkrCalisma({
     yil: AKR_ST.yil, madde_id: _akrCalismaAktif,
     metin, dosya: dosyalar[0]?.ad||null,
-    dosyalar: dosyalar.length>0 ? dosyalar : null,
+    dosyalar: dosyalar.length>0 ? dosyalar : [],
     tarih,
     giren: currentUser?.adSoyad||'Bilinmiyor',
     giren_kul: currentUser?.kullanici||''
   });
+
+  /* Local objedeki ID'yi DB ID ile güncelle */
+  if(dbId) yeniKayit.id = dbId;
+
   akrCalismaAc(_akrCalismaAktif);
 };
 
-window.akrCalismaSil=function(maddeId,cId){
+window.akrCalismaSil=async function(maddeId,cId){
   if(!confirm('Bu kaydı silmek istiyor musunuz?')) return;
+  /* Önce local'den kaldır */
   if(AKR_ST.calismalar[maddeId]?.[AKR_ST.yil]){
     AKR_ST.calismalar[maddeId][AKR_ST.yil]=AKR_ST.calismalar[maddeId][AKR_ST.yil].filter(c=>c.id!==cId);
   }
+  /* Supabase'den sil */
+  try {
+    const {error} = await _supa.from('akr_calismalar').delete().eq('id', cId);
+    if(error) console.error('Akr silme hatası:', error.message);
+    else console.log('✓ Akreditasyon çalışması silindi');
+  } catch(e) { console.error('Akr silme hatası:', e); }
   akrCalismaAc(maddeId);
 };
 
