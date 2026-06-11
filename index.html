@@ -3958,8 +3958,10 @@ function toggleTpl(header) {
     document.getElementById('crm-empty-state').style.display = 'none';
 
     /* Avatar */
-    const av = AVCOL[f.id % AVCOL.length];
-    const init = f.firma.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const _avcol = [{bg:'#E1F5EE',c:'#085041'},{bg:'#E8F1FB',c:'#0C447C'},{bg:'#EEEDFE',c:'#3C3489'},{bg:'#FEF3DE',c:'#633806'},{bg:'#FAECE7',c:'#712B13'}];
+    const _hashCode = str => { let h=0; for(let ch of String(str||'')) h=(h<<5)-h+ch.charCodeAt(0)|0; return Math.abs(h); };
+    const av = _avcol[_hashCode(f.firma) % _avcol.length];
+    const init = f.firma.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
     const avEl = document.getElementById('crm-avatar');
     avEl.style.background = av.bg; avEl.style.color = av.c; avEl.textContent = init;
 
@@ -6096,8 +6098,9 @@ window.etkPrsYilKarToggle=function(){
     ST[tab].sel=id; umDraw(tab);
     const panel  = document.getElementById('um-panel-'+tab);
     const layout = document.getElementById('um-layout-'+tab);
-    const av = AVCOL[id%AVCOL.length];
-    const init = u.yetkili.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const av = AVCOL[_hashCode(u.firma) % AVCOL.length];
+    const _hashCode = str => { let h=0; for(let ch of String(str||'')) h=(h<<5)-h+ch.charCodeAt(0)|0; return Math.abs(h); };
+    const init = u.firma.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
 
     const statusBadge = u.durum==='askida'
       ? badge('b-amber',`${dot('#EF9F27')}Askıda`)
