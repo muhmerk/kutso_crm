@@ -13205,9 +13205,11 @@ window.ipProjeEkle = function(strId,hId){
             yil: aktifYil||new Date().getFullYear()
           }]);
         }
+        /* DB'den yeniden yükle */
+        if(window.supaYukleIsPlan) await window.supaYukleIsPlan();
+        if(window.ipRenderPlan) window.ipRenderPlan();
       });
-      ipSyncData();
-      ipModalKapat(); ipRenderPlan();
+      ipModalKapat();
       if(window.dashboardGuncelle) window.dashboardGuncelle();
     }
   );
@@ -13235,6 +13237,7 @@ window.ipProjeDuzenle = async function(projId){
     govde,
     async ()=>{
       projeFormOku(proje,proje);
+      ipModalKapat();
       _supa.from('ip_projeler').update({
         ad:proje.ad||'', etiket:proje.etiket||null, pct:proje.pct||0,
         durum:proje.durum||'planlandi', sorumlu_personel:proje.sorumluPersonel||null,
@@ -13253,7 +13256,12 @@ window.ipProjeDuzenle = async function(projId){
         notlar: proje.yillar||{},
         evraklar: proje.evraklar?.length>0 ? proje.evraklar : [],
         hedef_katkisi: proje.hedefKatkisi||null
-      }).eq('id',projId).then(({error})=>{if(error) console.error('Proje güncelleme hatası:',error.message);});
+      }).eq('id',projId).then(async ({error})=>{
+        if(error) { console.error('Proje güncelleme hatası:',error.message); return; }
+        /* DB'den yeniden yükle — evraklar dahil */
+        if(window.supaYukleIsPlan) await window.supaYukleIsPlan();
+        if(window.ipRenderPlan) window.ipRenderPlan();
+      });
 
       /* Gösterge hedeflerini takip tablosuna kaydet/güncelle */
       const gosler = Array.isArray(proje.gosterge) ? proje.gosterge : (proje.gosterge ? [proje.gosterge] : []);
