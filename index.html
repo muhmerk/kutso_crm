@@ -6308,7 +6308,7 @@ window.etkPrsYilKarToggle=function(){
           <div class="um-psec-title">İşlemler</div>
           <div style="display:flex;gap:7px;flex-wrap:wrap">
             <button class="btn btn-sm" onclick="umDetayTOBBYukle('${u.no}','${tab}')"><i class="ti ti-cloud-download"></i> TOBB'dan Güncelle</button>
-            <button class="btn btn-sm" onclick="sw('crm',null);window._crmAutoSelect='${u.id}';"><i class="ti ti-user-circle"></i> CRM Kaydı</button>
+            <button class="btn btn-sm" onclick="window._crmAutoSelect='${u.id}';const nb=document.querySelector('[onclick*=\'sw(\\\'crm\\\'\']');if(nb)sw('crm',nb);"><i class="ti ti-user-circle"></i> CRM Kaydı</button>
             ${tab==='askida'?'<button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Hatırlatma</button>':''}
             ${tab==='terk'?'<button class="btn btn-p btn-sm"><i class="ti ti-user-check"></i> Geri Kazan</button>':''}
           </div>
