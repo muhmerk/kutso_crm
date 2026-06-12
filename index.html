@@ -7664,9 +7664,14 @@ function renderPrsList() {
   body.innerHTML = data.map(p => {
     const av = prsAv(p);
     const sel = activePersonelId===p.id ? 'background:var(--blue-bg)' : '';
-    return `<tr style="cursor:pointer;${sel}" onclick="prsOpenDetail(${p.id})"
+    /* Tam görüntüleme yetkisi olmayan personel sadece kendi kartını açabilir */
+    const tikla = prsEklemeYetkiVar() || kendiId()===p.id;
+    const rowAttrs = tikla
+      ? `style="cursor:pointer;${sel}" onclick="prsOpenDetail(${p.id})"
         onmouseover="this.querySelectorAll('td').forEach(t=>t.style.background='var(--surface2)')"
-        onmouseout="this.querySelectorAll('td').forEach(t=>t.style.background='${activePersonelId===p.id?'var(--blue-bg)':''}')">
+        onmouseout="this.querySelectorAll('td').forEach(t=>t.style.background='${activePersonelId===p.id?'var(--blue-bg)':''}')"`
+      : `style="cursor:default;${sel}"`;
+    return `<tr ${rowAttrs}>
       <td><div style="display:flex;align-items:center;gap:8px">
         <div style="width:32px;height:32px;border-radius:50%;background:${av.bg};color:${av.c};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">${av.init}</div>
         <div><div style="font-weight:500">${p.ad} ${p.soyad}</div><div style="font-size:10px;color:var(--text2)">${p.email}</div></div>
@@ -7676,7 +7681,7 @@ function renderPrsList() {
       <td style="font-size:12px;color:var(--text2)">${p.baslama}</td>
       <td>${p.durum==='aktif'?'<span class="badge b-green">Aktif</span>':'<span class="badge b-amber">İzinde</span>'}</td>
       <td>${(ozlukYetkiVar() || kendiId()==p.id) ? `<button class="btn btn-sm" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation();prsTabAndSelect('ozluk',${p.id})"><i class="ti ti-folder"></i> Özlük</button>` : `<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;opacity:.35;cursor:not-allowed" disabled title="Yetki yok"><i class="ti ti-lock"></i> Özlük</button>`}</td>
-      <td><button class="btn btn-sm" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation();prsOpenDetail(${p.id})"><i class="ti ti-eye"></i></button>
+      <td>${tikla ? `<button class="btn btn-sm" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation();prsOpenDetail(${p.id})"><i class="ti ti-eye"></i></button>` : `<button class="btn btn-sm" style="font-size:10px;padding:3px 7px;opacity:.35;cursor:not-allowed" disabled title="Görüntüleme yetkiniz yok"><i class="ti ti-lock"></i></button>`}
       ${prsEklemeYetkiVar()?`<button class="btn btn-sm" style="font-size:10px;padding:3px 7px;color:var(--red);margin-left:3px" onclick="event.stopPropagation();prsSilModal(${p.id})" title="Personeli sil"><i class="ti ti-trash"></i></button>`:''}</td>
     </tr>`;
   }).join('');
@@ -7707,6 +7712,15 @@ window.prsFltBirim = function(b) { prsFlt.birim=b; renderPrsList(); };
 window.prsOpenDetail = function(id) {
   const p = PERSONEL.find(x=>x.id===id);
   if (!p) return;
+
+  /* Yetkisi olmayan kullanıcı sadece kendi kartını açabilir */
+  const tamYetki = prsEklemeYetkiVar();
+  const kendisi = kendiId()===p.id;
+  if (!tamYetki && !kendisi) {
+    alert('Bu personelin bilgilerini görüntüleme yetkiniz yok.');
+    return;
+  }
+
   activePersonelId = id;
   renderPrsList();
   const av = prsAv(p);
@@ -7720,6 +7734,9 @@ window.prsOpenDetail = function(id) {
       <span class="badge b-green" style="font-size:10px">${d.durum==='aktif'?'Aktif':'Pasif'}</span>
     </div>`;
   }).join('');
+
+  /* Telefon ve T.C. kimlik gibi hassas bilgiler sadece kendisi veya tam yetkili için görünür */
+  const hassasGorunur = tamYetki || kendisi;
 
   panel.innerHTML = `
     <div style="padding:14px 16px;border-bottom:0.5px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:5;display:flex;justify-content:space-between;align-items:flex-start">
@@ -7736,10 +7753,15 @@ window.prsOpenDetail = function(id) {
     <div style="padding:14px 16px;border-bottom:0.5px solid var(--border)">
       <div style="font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Kişisel Bilgiler</div>
       <div style="display:flex;flex-direction:column;gap:8px">
+        ${hassasGorunur ? `
         <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text2)"><i class="ti ti-phone" style="font-size:12px;vertical-align:-1px;margin-right:5px"></i>Telefon</span><a href="tel:${p.tel}" style="color:#185FA5">${p.tel}</a></div>
         <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text2)"><i class="ti ti-mail" style="font-size:12px;vertical-align:-1px;margin-right:5px"></i>E-posta</span><a href="mailto:${p.email}" style="color:#185FA5;overflow:hidden;text-overflow:ellipsis;max-width:160px">${p.email}</a></div>
         <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text2)"><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:5px"></i>İşe başlama</span><span>${p.baslama}</span></div>
         <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text2)"><i class="ti ti-id" style="font-size:12px;vertical-align:-1px;margin-right:5px"></i>T.C. Kimlik</span><span style="font-family:var(--mono);font-size:11px">${p.tc}</span></div>
+        ` : `
+        <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text2)"><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:5px"></i>İşe başlama</span><span>${p.baslama}</span></div>
+        <div style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:5px;margin-top:4px"><i class="ti ti-lock"></i> Telefon, e-posta ve T.C. kimlik bilgileri yalnızca yetkili personel ve ilgili kişi tarafından görüntülenebilir.</div>
+        `}
       </div>
     </div>
     <div style="padding:14px 16px;border-bottom:0.5px solid var(--border)">
