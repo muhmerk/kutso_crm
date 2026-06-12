@@ -1863,6 +1863,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   <div class="sb-section">Üyeler</div>
   <button class="nav" onclick="sw('uyeler',this)"><i class="ti ti-building-store"></i>Üye Modülü</button>
   <button class="nav" onclick="sw('crm',this)"><i class="ti ti-user-circle"></i>CRM</button>
+  <button class="nav" onclick="sw('sicil',this)"><i class="ti ti-building-bank"></i>Ticaret Sicil</button>
   <button class="nav" id="nav-mem" onclick="memNavToggle(this)"><i class="ti ti-mood-smile"></i>Memnuniyet<i class="ti ti-chevron-right" id="mem-nav-chev" style="margin-left:auto;font-size:12px;transition:transform .2s"></i></button>
   <div id="mem-nav-sub" style="display:none;margin-left:16px;border-left:2px solid var(--border);padding-left:8px;margin-bottom:4px">
     <button class="nav nav-sub" id="nav-mem-uye" onclick="memNavSec('uye',this)"><i class="ti ti-building-store" style="font-size:14px"></i>Üye</button>
@@ -3265,19 +3266,96 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
   <!-- ══════════ SİCİL ══════════ -->
   <div id="s-sicil" class="section">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-      <i class="ti ti-file-certificate" style="font-size:22px;color:var(--blue)"></i>
-      <div>
-        <div style="font-size:18px;font-weight:600">Ticaret Sicili</div>
-        <div style="font-size:12px;color:var(--text2)">Sicil işlemleri ve kayıtlar</div>
+
+    <!-- ARAMA ALANI -->
+    <div id="sicil-search-view">
+      <div style="max-width:560px;margin:0 auto;padding:24px 0 16px">
+        <div style="font-size:15px;font-weight:500;margin-bottom:4px">Firma Ara</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Ticaret sicil kaydı eklemek istediğiniz firmayı arayın</div>
+        <div style="position:relative">
+          <i class="ti ti-search" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text2);pointer-events:none"></i>
+          <input id="sicil-q" class="um-search" style="padding:10px 14px 10px 40px;font-size:14px;border-radius:10px;border:0.5px solid var(--border2)" placeholder="Firma adı, üye no, sicil no..." oninput="sicilSearch(this.value)" autocomplete="off">
+        </div>
+        <div id="sicil-results" style="margin-top:8px;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;display:none;background:var(--surface);box-shadow:var(--shadow-md)"></div>
+      </div>
+      <div style="text-align:center;padding:40px;color:var(--text2)">
+        <i class="ti ti-building-bank" style="font-size:40px;display:block;margin-bottom:14px;opacity:.3"></i>
+        <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:8px">Ticaret Sicil İşlem Kaydı</div>
+        <div style="font-size:13px">Yukarıdan bir firma arayıp seçin, ardından o firmaya ait yeni bir<br>ticaret sicil işlemi (Kuruluş, Değişiklik, Terkin, vb.) ekleyebilirsiniz.</div>
       </div>
     </div>
-    <div class="card">
-      <div class="ch"><span class="ct">Sicil İşlemleri</span></div>
-      <div style="text-align:center;padding:40px;color:var(--text2)">
-        <i class="ti ti-file-certificate" style="font-size:40px;display:block;margin-bottom:14px;opacity:.3"></i>
-        <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:8px">Sicil Modülü</div>
-        <div style="font-size:13px">Bu alan Ticaret Sicili personeline özel olarak yapılandırılacak.</div>
+
+    <!-- FİRMA DETAY / İŞLEM EKLEME -->
+    <div id="sicil-detay-view" style="display:none">
+      <button class="btn btn-sm" style="margin-bottom:12px" onclick="sicilGeri()"><i class="ti ti-arrow-left"></i> Aramaya Dön</button>
+
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="um-avatar" id="sicil-firma-avatar" style="background:#E8F1FB;color:#0C447C">--</div>
+          <div>
+            <div style="font-weight:500;font-size:14px" id="sicil-firma-ad">—</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Sicil No: <span id="sicil-firma-no">—</span> · Üye No: <span id="sicil-firma-uyeno">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- YENİ İŞLEM EKLEME FORMU -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="ch"><span class="ct">Yeni İşlem Ekle</span></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label class="yk-lbl">İşlem Türü *</label>
+            <select id="sicil-talep-turu" class="yk-inp">
+              <option value="">Seçiniz...</option>
+              <option value="Kuruluş">Kuruluş</option>
+              <option value="Değişiklik">Değişiklik</option>
+              <option value="Terkin">Terkin</option>
+              <option value="Toplu Terkin">Toplu Terkin</option>
+              <option value="Tasfiye">Tasfiye</option>
+              <option value="Ek Tasfiye">Ek Tasfiye</option>
+              <option value="Ticaret Sicil Tasdiknamesi">Ticaret Sicil Tasdiknamesi</option>
+              <option value="İflas Konkordato Belgesi">İflas Konkordato Belgesi</option>
+              <option value="Acentelik">Acentelik</option>
+              <option value="Acente İptal">Acente İptal</option>
+              <option value="Merkez Nakli">Merkez Nakli</option>
+              <option value="Merkez Nakli Sonucu Silinme">Merkez Nakli Sonucu Silinme</option>
+              <option value="Merkez Nakli Belgesi (TSY md 111)">Merkez Nakli Belgesi (TSY md 111)</option>
+              <option value="Durum Belgesi">Durum Belgesi</option>
+              <option value="Nevi Değişikliği">Nevi Değişikliği</option>
+              <option value="İntibak/Nevi Değişikliği">İntibak/Nevi Değişikliği</option>
+              <option value="Ad/Soyad Değişikliği">Ad/Soyad Değişikliği</option>
+              <option value="Tapu Yetki Belgesi">Tapu Yetki Belgesi</option>
+              <option value="Konkordato Mühleti Reddi">Konkordato Mühleti Reddi</option>
+              <option value="Konkordato Tasdiki">Konkordato Tasdiki</option>
+              <option value="Konkordato Tasdiki Talebinin Reddi">Konkordato Tasdiki Talebinin Reddi</option>
+              <option value="Geçici Konkordato Mühleti Verilmesi">Geçici Konkordato Mühleti Verilmesi</option>
+              <option value="Yönetim Kayyımı İşlemleri">Yönetim Kayyımı İşlemleri</option>
+              <option value="İflas Başlatma">İflas Başlatma</option>
+              <option value="Kuruluş Bölünme (Devir Alan)">Kuruluş Bölünme (Devir Alan)</option>
+              <option value="Kısmi Bölünme (Devir Olan)">Kısmi Bölünme (Devir Olan)</option>
+              <option value="Değişiklik Birleşme (Devir Alan)">Değişiklik Birleşme (Devir Alan)</option>
+              <option value="Değişiklik Birleşme (Devir Olan)">Değişiklik Birleşme (Devir Olan)</option>
+              <option value="İnternet Sitesi Tescili">İnternet Sitesi Tescili</option>
+            </select>
+          </div>
+          <div>
+            <label class="yk-lbl">Tarih *</label>
+            <input type="date" id="sicil-tarih" class="yk-inp">
+          </div>
+          <div>
+            <label class="yk-lbl">Detay / Açıklama <span style="font-weight:400;color:var(--text2)">(isteğe bağlı)</span></label>
+            <textarea id="sicil-detay" class="yk-inp" style="min-height:70px;resize:vertical" placeholder="İşlemle ilgili ek bilgi, açıklama yazabilirsiniz..."></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <button class="btn btn-p btn-sm" onclick="sicilKaydet()"><i class="ti ti-plus"></i> Kaydet</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GEÇMİŞ KAYITLAR -->
+      <div class="card">
+        <div class="ch"><span class="ct">İşlem Geçmişi</span></div>
+        <div id="sicil-gecmis-content"><div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div></div>
       </div>
     </div>
   </div>
@@ -3730,6 +3808,7 @@ const META = {
   dashboard:    { title: 'Genel Bakış',          sub: (()=>{const n=new Date();return n.toLocaleDateString('tr-TR',{month:'long',year:'numeric'});})(),                                    right: '<div class="sync-chip"><div class="sync-dot"></div>TOBB sync: 08:00</div>' },
   uyeler:       { title: 'Üye Modülü',            sub: '5.121 kayıtlı üye · TOBB\'dan otomatik senkronize', right: '<div class="sync-chip"><div class="sync-dot"></div>TOBB sync: 08:00</div>' },
   crm:          { title: 'CRM',                   sub: 'İletişim ve görev takibi',                       right: '' },
+  sicil:        { title: 'Ticaret Sicil',         sub: 'Üye ticaret sicil işlemleri kaydı',              right: '' },
   memnuniyet:   { title: 'Üye Memnuniyeti',       sub: `Yıllık karşılaştırmalı · ${new Date().getFullYear()-4}–${new Date().getFullYear()}`,            right: '' },
   sikayet:      { title: 'Şikayet Yönetimi',      sub: '',                                               right: '' },
   yk:           { title: 'Kararlar',              sub: 'YK · Meslek Komitesi · Meclis · Görevler',       right: '' },
@@ -3774,6 +3853,9 @@ function sw(id, btn) {
       window._crmAutoSelect = null;
       setTimeout(()=>{ if(window.crmSelect) window.crmSelect(autoId); }, 300);
     }
+  } else if (id === 'sicil') {
+    /* Sicil modülüne her girişte arama ekranına dön */
+    if(window.sicilGeri) window.sicilGeri();
   }
 }
 
@@ -14960,5 +15042,189 @@ window.sifreDegistirKaydet = async function(){
     show('Hata: '+e.message, false);
   }
 };
+
+/* ══ TİCARET SİCİL MODÜLÜ ══ */
+(function(){
+  let currentSicilFirm = null;
+  let _sicilSearchTimer = null;
+
+  const _SICIL_AVCOL = [{bg:'#E1F5EE',c:'#085041'},{bg:'#E8F1FB',c:'#0C447C'},{bg:'#EEEDFE',c:'#3C3489'},{bg:'#FEF3DE',c:'#633806'},{bg:'#FAECE7',c:'#712B13'}];
+  const _hashCode = str => { let h=0; for(let c of String(str||'')) h=(h<<5)-h+c.charCodeAt(0)|0; return Math.abs(h); };
+
+  window.sicilSearch = function(q) {
+    const box = document.getElementById('sicil-results');
+    if (!q || q.length < 1) { box.style.display='none'; return; }
+    clearTimeout(_sicilSearchTimer);
+
+    /* Yerel veride ara */
+    const ql = q.toLowerCase();
+    const kaynak = window._ETK_UYELER || [];
+    const localHits = kaynak.filter(f =>
+      (f.firma||'').toLowerCase().includes(ql) ||
+      String(f.no||'').includes(ql) ||
+      (f.ticaretSicilNo||'').toLowerCase().includes(ql)
+    ).slice(0, 8);
+
+    if (localHits.length > 0) sicilSearchRender(localHits, box);
+    box.style.display = 'block';
+
+    _sicilSearchTimer = setTimeout(async () => {
+      try {
+        const { data } = await _supa.from('uyeler')
+          .select('uye_oid,unvan,uye_oda_sicil_no,ticaret_sicil_no,uyelik_durum')
+          .or(`unvan.ilike.%${q}%,uye_oda_sicil_no.eq.${q},ticaret_sicil_no.eq.${q}`)
+          .limit(8);
+
+        if((data||[]).length > 0) {
+          const supaHits = (data||[]).map(u=>({
+            id: u.uye_oda_sicil_no || u.uye_oid,
+            no: u.uye_oda_sicil_no||'',
+            firma: u.unvan||'',
+            ticaretSicilNo: u.ticaret_sicil_no||'',
+            durum: u.uyelik_durum||'faal',
+            _uye_oid: u.uye_oid
+          }));
+          const tum = [...localHits];
+          supaHits.forEach(s=>{ if(!tum.find(l=>String(l.no)===String(s.no))) tum.push(s); });
+          sicilSearchRender(tum.slice(0,8), box);
+        }
+      } catch(e) { /* sessiz */ }
+    }, 300);
+  };
+
+  function sicilSearchRender(hits, box) {
+    if (hits.length === 0) {
+      box.innerHTML = `<div style="padding:14px 16px;color:var(--text2);font-size:13px;text-align:center"><i class="ti ti-mood-empty" style="font-size:20px;display:block;margin-bottom:6px"></i>Kayıt bulunamadı</div>`;
+      return;
+    }
+    window._sicilHits = hits;
+    box.innerHTML = hits.map((f,i) => {
+      const av = _SICIL_AVCOL[_hashCode(f.firma) % _SICIL_AVCOL.length];
+      const init = (f.firma||'').split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+      return `<div onclick="sicilSelectByIndex(${i})" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:0.5px solid var(--border)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <div class="um-avatar" style="background:${av.bg};color:${av.c};width:32px;height:32px;font-size:12px">${init}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.firma}</div>
+          <div style="font-size:11px;color:var(--text2)">Üye No: ${f.no||'—'} · Sicil No: ${f.ticaretSicilNo||'—'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.sicilSelectByIndex = function(i) {
+    const f = (window._sicilHits||[])[i];
+    if(!f) return;
+    sicilSelect(f);
+  };
+
+  function sicilSelect(f) {
+    currentSicilFirm = f;
+    document.getElementById('sicil-search-view').style.display = 'none';
+    document.getElementById('sicil-detay-view').style.display = 'block';
+    document.getElementById('sicil-results').style.display = 'none';
+    document.getElementById('sicil-q').value = '';
+
+    const av = _SICIL_AVCOL[_hashCode(f.firma) % _SICIL_AVCOL.length];
+    const init = (f.firma||'').split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+    const avatarEl = document.getElementById('sicil-firma-avatar');
+    avatarEl.style.background = av.bg; avatarEl.style.color = av.c; avatarEl.textContent = init;
+
+    document.getElementById('sicil-firma-ad').textContent = f.firma||'—';
+    document.getElementById('sicil-firma-no').textContent = f.ticaretSicilNo||'—';
+    document.getElementById('sicil-firma-uyeno').textContent = f.no||'—';
+
+    /* Formu sıfırla */
+    document.getElementById('sicil-talep-turu').value = '';
+    document.getElementById('sicil-tarih').value = new Date().toISOString().slice(0,10);
+    document.getElementById('sicil-detay').value = '';
+
+    sicilGecmisYukle();
+  }
+
+  window.sicilGeri = function() {
+    document.getElementById('sicil-search-view').style.display = 'block';
+    document.getElementById('sicil-detay-view').style.display = 'none';
+    currentSicilFirm = null;
+  };
+
+  window.sicilKaydet = async function() {
+    if(!currentSicilFirm) return;
+    const talepTuru = document.getElementById('sicil-talep-turu').value;
+    const tarih = document.getElementById('sicil-tarih').value;
+    const detay = document.getElementById('sicil-detay').value.trim();
+
+    if(!talepTuru) { alert('Lütfen işlem türünü seçin.'); return; }
+    if(!tarih) { alert('Lütfen tarih girin.'); return; }
+
+    const sicilNo = currentSicilFirm.ticaretSicilNo || '';
+    if(!sicilNo) { alert('Bu firmanın ticaret sicil numarası tanımlı değil.'); return; }
+
+    const yil = new Date(tarih).getFullYear();
+
+    try {
+      const { error } = await _supa.from('ticaret_sicil_hizmetleri').insert([{
+        yil, sicil_no: sicilNo, unvan: currentSicilFirm.firma,
+        talep_turu: talepTuru, tescil_tarihi: tarih,
+        detay: detay||null,
+        giren_kul: currentUser?.kullanici||''
+      }]);
+      if(error) throw error;
+
+      /* Formu sıfırla */
+      document.getElementById('sicil-talep-turu').value = '';
+      document.getElementById('sicil-detay').value = '';
+      document.getElementById('sicil-tarih').value = new Date().toISOString().slice(0,10);
+
+      sicilGecmisYukle();
+      show?.('✓ İşlem kaydedildi.', true);
+    } catch(e) {
+      alert('Kaydetme hatası: '+e.message);
+    }
+  };
+
+  async function sicilGecmisYukle() {
+    const el = document.getElementById('sicil-gecmis-content');
+    if(!el || !currentSicilFirm) return;
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>';
+
+    const sicilNo = currentSicilFirm.ticaretSicilNo || '';
+    if(!sicilNo) {
+      el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Ticaret sicil numarası tanımlı değil</div>';
+      return;
+    }
+
+    try {
+      const { data } = await _supa.from('ticaret_sicil_hizmetleri').select('*')
+        .eq('sicil_no', sicilNo)
+        .order('tescil_tarihi', {ascending:false});
+
+      if(!data || data.length===0) {
+        el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Henüz işlem kaydı yok</div>';
+        return;
+      }
+
+      const tipRenk = {
+        'Kuruluş':'#1D9E75','Değişiklik':'#185FA5','Terkin':'#E24B4A','Tasfiye':'#E24B4A',
+        'Toplu Terkin':'#E24B4A','Ek Tasfiye':'#E24B4A','İflas Konkordato Belgesi':'#EF9F27',
+        'Ticaret Sicil Tasdiknamesi':'#534AB7','Acentelik':'#1D9E75','Merkez Nakli':'#EF9F27'
+      };
+
+      el.innerHTML = data.map(d=>{
+        const tarih = d.tescil_tarihi ? new Date(d.tescil_tarihi).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '—';
+        const renk = tipRenk[d.talep_turu] || '#888';
+        return `<div style="border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+            <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px;background:${renk}20;color:${renk}">${d.talep_turu||'—'}</span>
+            <span style="font-size:11px;color:var(--text2)">${tarih}</span>
+          </div>
+          ${d.detay?`<div style="font-size:12px;color:var(--text);line-height:1.6;margin-top:4px">${d.detay}</div>`:''}
+          ${d.giren_kul?`<div style="font-size:10px;color:var(--text3);margin-top:4px">Giren: ${d.giren_kul}</div>`:''}
+        </div>`;
+      }).join('');
+    } catch(e) {
+      el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2)">Yüklenemedi</div>';
+    }
+  }
+})();
 </script>
 </html>
