@@ -569,6 +569,44 @@ async function supaYuklePersonel() {
   } catch(e) { console.warn('Personel yükleme hatası:', e); }
 }
 
+/* Personel belgeleri (özlük/sözleşme/diğer) — DB'den yükle */
+window.PRS_BELGELER = {};
+async function supaYuklePersonelBelgeler() {
+  try {
+    const { data, error } = await _supa.from('personel_belgeler').select('*').order('created_at',{ascending:false});
+    if (error) { console.warn('Personel belgeler DB hatası:', error.message); return; }
+    window.PRS_BELGELER = {};
+    (data||[]).forEach(b=>{
+      const pid = b.personel_id;
+      if(!window.PRS_BELGELER[pid]) window.PRS_BELGELER[pid] = {};
+      if(!window.PRS_BELGELER[pid][b.tip]) window.PRS_BELGELER[pid][b.tip] = [];
+      window.PRS_BELGELER[pid][b.tip].push(b);
+    });
+    console.log('✓ Personel belgeler DB\'den yüklendi:', (data||[]).length);
+  } catch(e) { console.warn('Personel belgeler yükleme hatası:', e); }
+}
+
+/* Personel eğitim kayıtları — DB'den yükle */
+async function supaYuklePersonelEgitimler() {
+  try {
+    const { data, error } = await _supa.from('personel_egitimler').select('*').order('tarih_iso',{ascending:false});
+    if (error) { console.warn('Personel eğitimler DB hatası:', error.message); return; }
+    /* Mevcut hardcoded verileri sıfırla, sadece DB verisini kullan */
+    Object.keys(window.EGITIMLER||{}).forEach(k=>{ if(k!=='default') delete window.EGITIMLER[k]; });
+    window.EGITIMLER.default = [];
+    (data||[]).forEach(e=>{
+      const pid = e.personel_id;
+      if(!window.EGITIMLER[pid]) window.EGITIMLER[pid] = [];
+      window.EGITIMLER[pid].push({
+        id: e.id, ad: e.ad, tarih: e.tarih, tarihIso: e.tarih_iso,
+        sure: e.sure||'—', kurum: e.kurum||'—', konu: e.konu||'',
+        sertifika: !!e.sertifika, certNo: e.cert_no||''
+      });
+    });
+    console.log('✓ Personel eğitimler DB\'den yüklendi:', (data||[]).length);
+  } catch(e) { console.warn('Personel eğitimler yükleme hatası:', e); }
+}
+
 /* Kullanıcılar yükle — Supabase'den */
 async function supaYukleKullanicilar() {
   try {
@@ -769,9 +807,11 @@ async function supaAkrSorumlu(yil, maddeId, kullanici) {
 /* Personel eğitim DB'ye ekle */
 async function supaPrsEgitimEkle(e) {
   try {
-    await _supa.from('personel_egitimler').insert([e]);
+    const { data, error } = await _supa.from('personel_egitimler').insert([e]).select('id').single();
+    if(error) throw error;
     console.log('✓ Personel eğitimi DB\'ye eklendi');
-  } catch(e) { console.error('Personel eğitim hatası:', e); }
+    return data?.id || null;
+  } catch(e) { console.error('Personel eğitim hatası:', e); return null; }
 }
 
 /* İş planı strateji DB'ye ekle/güncelle */
@@ -3666,7 +3706,7 @@ async function doLogin() {
   currentUser = user;
 
   /* Supabase'den tüm verileri yükle — paralel ama tamamlanmasını bekle */
-  await Promise.all([supaYukleKullanicilar(), supaYuklePersonel()]);
+  await Promise.all([supaYukleKullanicilar(), supaYuklePersonel(), supaYuklePersonelBelgeler(), supaYuklePersonelEgitimler()]);
   await Promise.all([
     supaYukleYK(),
     supaYukleMK(),
@@ -7550,42 +7590,8 @@ const PERSONEL = [
 window.PERSONEL = PERSONEL; /* diğer modüller için global */
 window.USERS = USERS; /* global erişim için */
 
-const OZLUK_DOCS = {
-  1: [
-    { ad:'İş Sözleşmesi', tur:'sozlesme', tarih:'01 Oca 2015', durum:'aktif' },
-    { ad:'Nüfus Cüzdanı Fotokopisi', tur:'kimlik', tarih:'01 Oca 2015', durum:'aktif' },
-    { ad:'Diploma (Lisans)', tur:'egitim_belge', tarih:'01 Oca 2015', durum:'aktif' },
-    { ad:'SGK İşe Giriş Bildirimi', tur:'sgk', tarih:'01 Oca 2015', durum:'aktif' },
-    { ad:'Adli Sicil Kaydı', tur:'resmi', tarih:'15 Oca 2024', durum:'aktif' },
-    { ad:'İkramiye Ödeme Belgesi 2024', tur:'maas', tarih:'31 Ara 2024', durum:'aktif' },
-  ],
-  default: [
-    { ad:'İş Sözleşmesi', tur:'sozlesme', tarih:'İşe başlama', durum:'aktif' },
-    { ad:'Nüfus Cüzdanı Fotokopisi', tur:'kimlik', tarih:'İşe başlama', durum:'aktif' },
-    { ad:'SGK İşe Giriş Bildirimi', tur:'sgk', tarih:'İşe başlama', durum:'aktif' },
-    { ad:'Diploma Fotokopisi', tur:'egitim_belge', tarih:'İşe başlama', durum:'aktif' },
-  ]
-};
-
-const EGITIMLER = {
-  1: [
-    { ad:'Kriz Yönetimi ve İletişim', tarih:'20 Mar 2025', sure:'1 gün', kurum:'TOBB Akademi', sertifika:true },
-    { ad:'Liderlik ve Stratejik Yönetim', tarih:'15 Oca 2025', sure:'2 gün', kurum:'TÜSSİDE', sertifika:true },
-    { ad:'e-Devlet Entegrasyonu', tarih:'10 Kas 2024', sure:'1 gün', kurum:'Bakanlık', sertifika:false },
-  ],
-  2: [
-    { ad:'Muhasebe ve Vergi Mevzuatı', tarih:'18 Nis 2025', sure:'2 gün', kurum:'TÜRMOB', sertifika:true },
-    { ad:'e-Fatura Uygulamaları', tarih:'05 Şub 2025', sure:'1 gün', kurum:'GİB', sertifika:true },
-  ],
-  4: [
-    { ad:'Siber Güvenlik Temelleri', tarih:'22 Nis 2025', sure:'3 gün', kurum:'BTK', sertifika:true },
-    { ad:'Bulut Sistemleri Yönetimi', tarih:'14 Mar 2025', sure:'2 gün', kurum:'Microsoft', sertifika:true },
-    { ad:'Veri Tabanı Yönetimi', tarih:'10 Oca 2025', sure:'2 gün', kurum:'Oracle', sertifika:true },
-  ],
-  default: [
-    { ad:'TOBB Oryantasyon Eğitimi', tarih:'İşe başlama', sure:'2 gün', kurum:'TOBB', sertifika:true },
-  ]
-};
+/* Eğitim verileri Supabase'den yüklenir — başlangıçta boş */
+const EGITIMLER = { default: [] };
 window.EGITIMLER = EGITIMLER; /* global erişim — ETK_PRS sync */
 
 const YK_KARARLAR = {
@@ -7601,31 +7607,7 @@ const YK_KARARLAR = {
   default: []
 };
 
-const SOZLESMELER = {
-  1: [
-    { ad:'Belirsiz Süreli İş Sözleşmesi', baslama:'01 Oca 2015', bitis:'—', tur:'Belirsiz Süreli', durum:'aktif', imza:'01 Oca 2015' },
-    { ad:'Gizlilik Taahhütnamesi', baslama:'01 Oca 2015', bitis:'—', tur:'Taahhütname', durum:'aktif', imza:'01 Oca 2015' },
-    { ad:'Rekabet Yasağı Sözleşmesi', baslama:'01 Oca 2020', bitis:'—', tur:'Özel Sözleşme', durum:'aktif', imza:'01 Oca 2020' },
-  ],
-  default: [
-    { ad:'İş Sözleşmesi', baslama:'İşe başlama', bitis:'—', tur:'Belirsiz Süreli', durum:'aktif', imza:'İşe başlama' },
-    { ad:'Gizlilik Taahhütnamesi', baslama:'İşe başlama', bitis:'—', tur:'Taahhütname', durum:'aktif', imza:'İşe başlama' },
-  ]
-};
-
-const DIGER_BELGELER = {
-  1: [
-    { ad:'2025 Yıllık İzin Takip Formu', tur:'izin', tarih:'01 Oca 2025' },
-    { ad:'Performans Değerlendirme 2024', tur:'performans', tarih:'31 Ara 2024' },
-    { ad:'Kişisel Veri İşleme Onayı', tur:'kvkk', tarih:'01 Oca 2015' },
-    { ad:'İş Sağlığı Güvenliği Sertifikası', tur:'isg', tarih:'15 Mar 2024' },
-  ],
-  default: [
-    { ad:'Yıllık İzin Takip Formu', tur:'izin', tarih:'01 Oca 2025' },
-    { ad:'Kişisel Veri İşleme Onayı', tur:'kvkk', tarih:'İşe başlama' },
-    { ad:'İş Sağlığı Güvenliği Sertifikası', tur:'isg', tarih:'En son eğitim' },
-  ]
-};
+/* Sözleşmeler ve diğer belgeler artık PRS_BELGELER (Supabase) üzerinden yönetiliyor */
 
 let activePersonelId = null;
 let prsFlt = { q:'', birim:'' };
@@ -7726,14 +7708,16 @@ window.prsOpenDetail = function(id) {
   const av = prsAv(p);
   const panel = document.getElementById('prs-detail-panel');
   const layout = document.getElementById('prs-layout');
-  const ozlukList = (OZLUK_DOCS[id]||OZLUK_DOCS.default).map(d => {
-    const t = turIkon[d.tur]||turIkon.default;
-    return `<div class="prs-doc-row">
-      <div class="prs-doc-icon" style="background:${t.bg}"><i class="ti ${t.ic}" style="color:${t.c};font-size:15px"></i></div>
-      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.ad}</div><div style="font-size:10px;color:var(--text2)">${d.tarih}</div></div>
-      <span class="badge b-green" style="font-size:10px">${d.durum==='aktif'?'Aktif':'Pasif'}</span>
-    </div>`;
-  }).join('');
+  const ozlukDosyalari = (window.PRS_BELGELER[id]||{}).ozluk || [];
+  const ozlukList = ozlukDosyalari.length === 0
+    ? `<div style="text-align:center;padding:16px;color:var(--text2);font-size:12px"><i class="ti ti-folder-x" style="font-size:20px;display:block;margin-bottom:4px;opacity:.4"></i>Henüz belge yüklenmedi</div>`
+    : ozlukDosyalari.map(d => {
+        return `<div class="prs-doc-row">
+          <div class="prs-doc-icon" style="background:var(--surface2)"><i class="ti ${prsBelgeIkon(d.ad)}" style="color:${prsBelgeRenk(d.ad)};font-size:15px"></i></div>
+          <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.ad}</div><div style="font-size:10px;color:var(--text2)">${d.tarih||''}</div></div>
+          <a href="${d.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:3px 7px"><i class="ti ti-download"></i></a>
+        </div>`;
+      }).join('');
 
   /* Telefon ve T.C. kimlik gibi hassas bilgiler sadece kendisi veya tam yetkili için görünür */
   const hassasGorunur = tamYetki || kendisi;
@@ -7904,36 +7888,37 @@ window.prsSilModal = function(id){
 };
 function fillPrsSelects() {
   const opts = PERSONEL.map(p=>`<option value="${p.id}">${p.ad} ${p.soyad} — ${p.unvan}</option>`).join('');
+  const tamYetki = prsEklemeYetkiVar();
+  const kId = kendiId();
+  const kisi = kId ? PERSONEL.find(x=>x.id===kId) : null;
 
-  /* Özlük — yetki kontrolü sadece içerik göstermede, select herkese açık */
-  const ozlukEl = document.getElementById('prs-ozluk-sec');
-  if (ozlukEl) {
-    ozlukEl.disabled = false;
-    if (ozlukYetkiVar()) {
-      ozlukEl.innerHTML = `<option value="">Personel seçin...</option>${opts}`;
-    } else {
-      /* Yetkisiz: sadece kendi kaydını göster, otomatik seç */
-      const kId = kendiId();
-      const kisi = kId ? PERSONEL.find(x=>x.id===kId) : null;
-      if (kisi) {
-        ozlukEl.innerHTML = `<option value="${kisi.id}">${kisi.ad} ${kisi.soyad} — ${kisi.unvan}</option>`;
-        ozlukEl.disabled = true;
-        setTimeout(()=>{
-          prsOzlukLoad(kisi.id);
-          const btn = document.getElementById('prs-ozluk-upload-btn');
-          if (btn) btn.style.display = 'inline-flex';
-        }, 50);
-      } else {
-        ozlukEl.innerHTML = '<option value="">Erişim yetkiniz yok</option>';
-        ozlukEl.disabled = true;
-      }
-    }
-  }
+  const tabConfig = {
+    ozluk:  { loadFn:'prsOzlukLoad',    btn:'prs-ozluk-upload-btn' },
+    egitim: { loadFn:'prsEgitimLoad',   btn:'prs-egitim-ekle-btn' },
+    soz:    { loadFn:'prsSozlesmeLoad', btn:'prs-soz-upload-btn' },
+    dig:    { loadFn:'prsDigerLoad',    btn:'prs-dig-upload-btn' }
+  };
 
-  /* Diğer sekmeler — tümü açık */
-  ['egitim','soz','dig'].forEach(k=>{
+  Object.keys(tabConfig).forEach(k=>{
     const el = document.getElementById('prs-'+k+'-sec');
-    if (el) { el.disabled = false; el.innerHTML=`<option value="">Personel seçin...</option>${opts}`; }
+    if (!el) return;
+    const cfg = tabConfig[k];
+    if (tamYetki) {
+      el.disabled = false;
+      el.innerHTML = `<option value="">Personel seçin...</option>${opts}`;
+    } else if (kisi) {
+      /* Yetkisiz: sadece kendi kaydı, otomatik seçili ve sabit */
+      el.innerHTML = `<option value="${kisi.id}">${kisi.ad} ${kisi.soyad} — ${kisi.unvan}</option>`;
+      el.disabled = true;
+      setTimeout(()=>{
+        if (window[cfg.loadFn]) window[cfg.loadFn](kisi.id);
+        const btn = document.getElementById(cfg.btn);
+        if (btn) btn.style.display = 'inline-flex';
+      }, 50);
+    } else {
+      el.innerHTML = '<option value="">Erişim yetkiniz yok</option>';
+      el.disabled = true;
+    }
   });
 }
 
@@ -7974,11 +7959,12 @@ window.prsOzlukLoad = function(id) {
     return;
   }
 
-  if (uploadBtn) uploadBtn.style.display='inline-flex';
+  if (uploadBtn) uploadBtn.style.display='none'; /* artık ayrı drop alanı kullanılıyor */
 
   const p = PERSONEL.find(x=>x.id==id);
-  const docs = OZLUK_DOCS[id]||OZLUK_DOCS.default;
-  const canUpload = ozlukYetkiVar();
+  const canUpload = ozlukYetkiVar() || kendiId()==id;
+  const canDelete = ozlukYetkiVar();
+  const list = (window.PRS_BELGELER[id]||{}).ozluk || [];
   el.innerHTML=`
     <div class="card" style="padding:0;overflow:hidden">
       <div style="padding:10px 14px;background:var(--surface2);border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
@@ -7986,9 +7972,12 @@ window.prsOzlukLoad = function(id) {
           <span style="font-size:12px;font-weight:500">${p?p.ad+' '+p.soyad+' — Özlük Dosyası':''}</span>
           ${!ozlukYetkiVar() ? '<span class="badge b-blue" style="font-size:10px"><i class="ti ti-user" style="font-size:11px"></i> Kendi dosyanız</span>' : ''}
         </div>
-        <span style="font-size:11px;color:var(--text2)">${docs.length} belge</span>
+        <span style="font-size:11px;color:var(--text2)">${list.length} belge</span>
       </div>
-      ${docList(docs)}
+      <div style="padding:12px 14px">
+        ${canUpload ? prsUploadDropHtml('ozluk') : ''}
+        ${prsBelgeListHtml('ozluk', id, canDelete)}
+      </div>
     </div>`;
 };
 
@@ -8607,6 +8596,18 @@ window.prsEgitimLoad = function(id) {
     if(ekleBtn) ekleBtn.style.display='none';
     return;
   }
+  /* Yetki kontrolü */
+  if (!prsEklemeYetkiVar() && kendiId() != id) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2)">
+      <div style="width:52px;height:52px;border-radius:12px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <i class="ti ti-lock" style="font-size:24px;color:var(--red)"></i>
+      </div>
+      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">Erişim Kısıtlı</div>
+      <div style="font-size:12px;line-height:1.6">Bu personelin eğitim kayıtlarını görüntüleme yetkiniz bulunmuyor.<br>Sadece kendi eğitim kayıtlarınıza erişebilirsiniz.</div>
+    </div>`;
+    if(ekleBtn) ekleBtn.style.display='none';
+    return;
+  }
   if(ekleBtn) ekleBtn.style.display='inline-flex';
   const p = PERSONEL.find(x=>x.id==id);
   const list = EGITIMLER[id]||EGITIMLER.default;
@@ -8671,26 +8672,36 @@ window.prsSozlesmeLoad = function(id) {
     if (uploadBtn) uploadBtn.style.display='none';
     return;
   }
-  if (uploadBtn) uploadBtn.style.display='inline-flex';
+  /* Yetki kontrolü */
+  if (!prsEklemeYetkiVar() && kendiId() != id) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2)">
+      <div style="width:52px;height:52px;border-radius:12px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <i class="ti ti-lock" style="font-size:24px;color:var(--red)"></i>
+      </div>
+      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">Erişim Kısıtlı</div>
+      <div style="font-size:12px;line-height:1.6">Bu personelin sözleşmelerini görüntüleme yetkiniz bulunmuyor.<br>Sadece kendi sözleşmelerinize erişebilirsiniz.</div>
+    </div>`;
+    if (uploadBtn) uploadBtn.style.display='none';
+    return;
+  }
+  if (uploadBtn) uploadBtn.style.display='none';
   const p = PERSONEL.find(x=>x.id==id);
-  const list = SOZLESMELER[id]||SOZLESMELER.default;
+  const canUpload = prsEklemeYetkiVar() || kendiId()==id;
+  const canDelete = prsEklemeYetkiVar();
+  const list = (window.PRS_BELGELER[id]||{}).soz || [];
   el.innerHTML=`
     <div class="card" style="padding:0;overflow:hidden">
       <div style="padding:10px 14px;background:var(--surface2);border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:500">${p?p.ad+' '+p.soyad+' — Sözleşmeler':''}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;font-weight:500">${p?p.ad+' '+p.soyad+' — Sözleşmeler':''}</span>
+          ${!prsEklemeYetkiVar() ? '<span class="badge b-blue" style="font-size:10px"><i class="ti ti-user" style="font-size:11px"></i> Kendi kaydınız</span>' : ''}
+        </div>
         <span style="font-size:11px;color:var(--text2)">${list.length} sözleşme</span>
       </div>
-      ${list.map(s=>`<div class="prs-doc-row">
-        <div class="prs-doc-icon" style="background:var(--blue-bg)"><i class="ti ti-file-text" style="color:var(--blue);font-size:15px"></i></div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:500">${s.ad}</div>
-          <div style="font-size:10px;color:var(--text2)">${s.tur} · Başlama: ${s.baslama} · Bitiş: ${s.bitis}</div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button class="btn btn-sm" style="font-size:10px;padding:3px 7px"><i class="ti ti-download"></i></button>
-          <span class="badge ${s.durum==='aktif'?'b-green':'b-red'}">${s.durum==='aktif'?'Aktif':'Sona Erdi'}</span>
-        </div>
-      </div>`).join('')}
+      <div style="padding:12px 14px">
+        ${canUpload ? prsUploadDropHtml('soz') : ''}
+        ${prsBelgeListHtml('soz', id, canDelete)}
+      </div>
     </div>`;
 };
 
@@ -8702,16 +8713,36 @@ window.prsDigerLoad = function(id) {
     if (uploadBtn) uploadBtn.style.display='none';
     return;
   }
-  if (uploadBtn) uploadBtn.style.display='inline-flex';
+  /* Yetki kontrolü */
+  if (!prsEklemeYetkiVar() && kendiId() != id) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2)">
+      <div style="width:52px;height:52px;border-radius:12px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <i class="ti ti-lock" style="font-size:24px;color:var(--red)"></i>
+      </div>
+      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">Erişim Kısıtlı</div>
+      <div style="font-size:12px;line-height:1.6">Bu personelin belgelerini görüntüleme yetkiniz bulunmuyor.<br>Sadece kendi belgelerinize erişebilirsiniz.</div>
+    </div>`;
+    if (uploadBtn) uploadBtn.style.display='none';
+    return;
+  }
+  if (uploadBtn) uploadBtn.style.display='none';
   const p = PERSONEL.find(x=>x.id==id);
-  const docs = DIGER_BELGELER[id]||DIGER_BELGELER.default;
+  const canUpload = prsEklemeYetkiVar() || kendiId()==id;
+  const canDelete = prsEklemeYetkiVar();
+  const list = (window.PRS_BELGELER[id]||{}).dig || [];
   el.innerHTML=`
     <div class="card" style="padding:0;overflow:hidden">
       <div style="padding:10px 14px;background:var(--surface2);border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:500">${p?p.ad+' '+p.soyad+' — Diğer Belgeler':''}</span>
-        <span style="font-size:11px;color:var(--text2)">${docs.length} belge</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;font-weight:500">${p?p.ad+' '+p.soyad+' — Diğer Belgeler':''}</span>
+          ${!prsEklemeYetkiVar() ? '<span class="badge b-blue" style="font-size:10px"><i class="ti ti-user" style="font-size:11px"></i> Kendi kaydınız</span>' : ''}
+        </div>
+        <span style="font-size:11px;color:var(--text2)">${list.length} belge</span>
       </div>
-      ${docList(docs.map(d=>({...d,tur:d.tur,tarih:d.tarih,ad:d.ad})))}
+      <div style="padding:12px 14px">
+        ${canUpload ? prsUploadDropHtml('dig') : ''}
+        ${prsBelgeListHtml('dig', id, canDelete)}
+      </div>
     </div>`;
 };
 
@@ -11858,10 +11889,137 @@ window.prsUploadClick = function(tip) {
   const secId = 'prs-' + tip + '-sec';
   const sel = document.getElementById(secId);
   if (!sel || !sel.value) { alert('Lütfen önce personel seçin.'); return; }
-  const p = window.PERSONEL ? window.PERSONEL.find(x => x.id == sel.value) : null;
-  const ad = p ? p.ad + ' ' + p.soyad : 'Seçilen personel';
-  alert(`"${ad}" için belge yükleme:\n\nGerçek uygulamada dosya seçme penceresi açılacak ve seçilen belge sunucuya yüklenecek.`);
+  const inp = document.getElementById('prs-' + tip + '-file-input');
+  if (inp) inp.click();
 };
+
+function prsBelgeIkon(ad){
+  const ext=(ad||'').split('.').pop().toLowerCase();
+  if(ext==='pdf') return 'ti-file-type-pdf';
+  if(['doc','docx'].includes(ext)) return 'ti-file-type-doc';
+  if(['xls','xlsx'].includes(ext)) return 'ti-file-type-xls';
+  if(['ppt','pptx'].includes(ext)) return 'ti-presentation';
+  if(['png','jpg','jpeg'].includes(ext)) return 'ti-photo';
+  return 'ti-file-description';
+}
+function prsBelgeRenk(ad){
+  const ext=(ad||'').split('.').pop().toLowerCase();
+  if(ext==='pdf') return '#E24B4A';
+  if(['doc','docx'].includes(ext)) return '#185FA5';
+  if(['xls','xlsx'].includes(ext)) return '#1D9E75';
+  if(['ppt','pptx'].includes(ext)) return '#EF9F27';
+  return 'var(--text2)';
+}
+
+/* Dosya yükleme — sürükle-bırak veya dosya seçici */
+window.prsBelgeDrop = async function(tip, files){
+  if(!files||files.length===0) return;
+  const secId = 'prs-' + tip + '-sec';
+  const sel = document.getElementById(secId);
+  const pid = sel ? parseInt(sel.value||'0') : 0;
+  if(!pid){ alert('Lütfen önce personel seçin.'); return; }
+
+  const listId = 'prs-' + tip + '-upload-list';
+  const list = document.getElementById(listId);
+  const dropEl = document.getElementById('prs-' + tip + '-drop');
+  if(dropEl){ dropEl.style.opacity='.5'; dropEl.style.pointerEvents='none'; }
+
+  for(const file of Array.from(files)){
+    if(file.size>10*1024*1024){ alert(file.name+' 10MB sınırını aşıyor.'); continue; }
+
+    const satir=document.createElement('div');
+    satir.className='prs-doc-row';
+    satir.innerHTML=`<div class="prs-doc-icon" style="background:var(--surface2)"><i class="ti ${prsBelgeIkon(file.name)}" style="color:${prsBelgeRenk(file.name)};font-size:15px"></i></div>
+      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</div>
+      <div style="font-size:10px;color:var(--blue)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:10px"></i> Yükleniyor...</div></div>`;
+    if(list) list.appendChild(satir);
+
+    try{
+      const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path='personel/'+pid+'/'+tip+'/'+Date.now()+'_'+safeName;
+      const {error}=await _supa.storage.from('personel-evraklar').upload(path,file,{upsert:true});
+      if(error) throw error;
+      const {data:urlData}=_supa.storage.from('personel-evraklar').getPublicUrl(path);
+      const url=urlData?.publicUrl||'';
+      const boyut=file.size>1024*1024?(file.size/1024/1024).toFixed(1)+' MB':(file.size/1024).toFixed(0)+' KB';
+      const tarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+
+      const { data: inserted, error: insErr } = await _supa.from('personel_belgeler').insert([{
+        personel_id: pid, tip, ad: file.name, url, boyut, tarih,
+        yukleyen: currentUser?.kullanici||''
+      }]).select().single();
+      if(insErr) throw insErr;
+
+      /* Local state güncelle */
+      if(!window.PRS_BELGELER[pid]) window.PRS_BELGELER[pid]={};
+      if(!window.PRS_BELGELER[pid][tip]) window.PRS_BELGELER[pid][tip]=[];
+      window.PRS_BELGELER[pid][tip].unshift(inserted);
+
+      satir.remove();
+      /* Sekmeyi yeniden çiz */
+      if(tip==='ozluk' && window.prsOzlukLoad) window.prsOzlukLoad(pid);
+      if(tip==='soz' && window.prsSozlesmeLoad) window.prsSozlesmeLoad(pid);
+      if(tip==='dig' && window.prsDigerLoad) window.prsDigerLoad(pid);
+    }catch(err){
+      satir.innerHTML=`<div class="prs-doc-icon" style="background:var(--red-bg)"><i class="ti ti-alert-circle" style="color:var(--red);font-size:15px"></i></div>
+        <div style="flex:1;font-size:12px;color:var(--red)">${file.name} — Yükleme başarısız</div>
+        <button class="btn btn-sm" onclick="this.closest('.prs-doc-row').remove()" style="font-size:10px">×</button>`;
+      console.error('Personel belge yükleme hatası:',err);
+    }
+  }
+  if(dropEl){ dropEl.style.opacity=''; dropEl.style.pointerEvents=''; }
+  const inp=document.getElementById('prs-'+tip+'-file-input');
+  if(inp) inp.value='';
+};
+
+/* Belge sil */
+window.prsBelgeSil = async function(tip, pid, belgeId){
+  if(!confirm('Bu belgeyi silmek istiyor musunuz?')) return;
+  try{
+    const {error}=await _supa.from('personel_belgeler').delete().eq('id',belgeId);
+    if(error) throw error;
+    if(window.PRS_BELGELER[pid]?.[tip]){
+      window.PRS_BELGELER[pid][tip]=window.PRS_BELGELER[pid][tip].filter(b=>b.id!==belgeId);
+    }
+    if(tip==='ozluk' && window.prsOzlukLoad) window.prsOzlukLoad(pid);
+    if(tip==='soz' && window.prsSozlesmeLoad) window.prsSozlesmeLoad(pid);
+    if(tip==='dig' && window.prsDigerLoad) window.prsDigerLoad(pid);
+  }catch(err){
+    alert('Silme hatası: '+(err.message||err));
+  }
+};
+
+/* Sürükle-bırak yükleme alanı HTML'i */
+function prsUploadDropHtml(tip){
+  return `<div id="prs-${tip}-drop" style="border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:var(--surface2);margin-bottom:10px;transition:border-color .2s"
+    ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
+    ondragleave="this.style.borderColor='var(--border)'"
+    ondrop="event.preventDefault();this.style.borderColor='var(--border)';prsBelgeDrop('${tip}',event.dataTransfer.files)"
+    onclick="document.getElementById('prs-${tip}-file-input').click()">
+    <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--text2);display:block;margin-bottom:5px"></i>
+    <div style="font-size:12px;color:var(--text2)">Belge eklemek için tıklayın veya sürükleyin</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px">PDF, Word, Excel — maks. 10MB</div>
+  </div>
+  <input type="file" id="prs-${tip}-file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg" style="display:none" onchange="prsBelgeDrop('${tip}',this.files)">
+  <div id="prs-${tip}-upload-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>`;
+}
+
+/* Gerçek belge listesi render — silme butonlu */
+function prsBelgeListHtml(tip, pid, canDelete){
+  const list = (window.PRS_BELGELER[pid]||{})[tip] || [];
+  if(list.length===0){
+    return `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px"><i class="ti ti-folder-x" style="font-size:24px;display:block;margin-bottom:6px;opacity:.4"></i>Henüz belge yüklenmedi</div>`;
+  }
+  return list.map(b=>`<div class="prs-doc-row">
+    <div class="prs-doc-icon" style="background:var(--surface2)"><i class="ti ${prsBelgeIkon(b.ad)}" style="color:${prsBelgeRenk(b.ad)};font-size:15px"></i></div>
+    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.ad}</div><div style="font-size:10px;color:var(--text2)">${b.tarih||''} ${b.boyut?'· '+b.boyut:''}</div></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <a href="${b.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:3px 7px"><i class="ti ti-download"></i></a>
+      ${canDelete?`<button class="btn btn-sm" style="font-size:10px;padding:3px 7px;color:var(--red)" onclick="prsBelgeSil('${tip}',${pid},'${b.id}')"><i class="ti ti-trash"></i></button>`:''}
+    </div>
+  </div>`).join('');
+}
+
 /* ══ MEMNUNİYET EKLE + YIL BAZLI HİZMET VERİSİ ══ */
 
 /* Hizmet alanı bazlı yıllık veriler */
@@ -13770,7 +13928,7 @@ window.prsEgCertChange = function(){
   if(hLbl){ hLbl.style.background=!evet?'var(--surface2)':''; hLbl.style.borderColor=!evet?'var(--border2)':'var(--border2)'; }
 };
 
-window.prsEgitimKaydet = function(){
+window.prsEgitimKaydet = async function(){
   const ad    = (document.getElementById('prs-eg-ad')?.value||'').trim();
   const kurum = (document.getElementById('prs-eg-kurum')?.value||'').trim();
   const tarihVal = document.getElementById('prs-eg-tarih')?.value;
@@ -13784,15 +13942,16 @@ window.prsEgitimKaydet = function(){
   const tarih  = new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
   const pid    = parseInt(document.getElementById('prs-egitim-sec')?.value||'0');
   if(!pid){ alert('Personel seçimi kayboldu, tekrar deneyin.'); return; }
-  /* EGITIMLER datasına ekle */
+  /* Supabase'e kaydet — gerçek ID'yi al */
+  const yeniKayit = { ad, tarih, tarihIso: tarihVal, sure, kurum, konu, sertifika, certNo };
   if(!EGITIMLER[pid]) EGITIMLER[pid]=[];
-  EGITIMLER[pid].unshift({ ad, tarih, sure, kurum, konu, sertifika, certNo });
-  /* Supabase'e kaydet */
-  supaPrsEgitimEkle({
+  EGITIMLER[pid].unshift(yeniKayit);
+  const dbId = await supaPrsEgitimEkle({
     personel_id: pid, ad, tarih,
     tarih_iso: tarihVal, sure, kurum, konu,
     sertifika, cert_no: certNo||null
   });
+  if(dbId) yeniKayit.id = dbId;
   prsEgitimModalKapat();
   prsEgitimLoad(pid);
   alert(`✓ "${ad}" eğitim kaydı eklendi.`);
