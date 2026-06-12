@@ -4606,25 +4606,29 @@ function toggleTpl(header) {
     el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>';
 
     const sicilNo = (currentFirm?.ticaretSicilNo||'').trim();
-    /* Sicil numarasından sadece sayısal kısmı al — '2024/002' -> '002' veya direkt sayı '13266' */
-    let aramaNo = sicilNo;
-    /* Eğer "YYYY/NNN" formatındaysa son kısmı al, başındaki sıfırları temizle */
-    if(sicilNo.includes('/')) {
-      const parts = sicilNo.split('/');
-      aramaNo = parts[parts.length-1].replace(/^0+/,'');
-    }
 
-    if(!aramaNo) {
+    if(!sicilNo) {
       el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text2);font-size:13px">Ticaret sicil numarası tanımlı değil</div>';
       return;
     }
 
     try {
-      /* Önce tam eşleşme dene, sonra firma adıyla dene */
+      /* 1) Önce tam eşleşme (örn: "ÇAVDARHİSAR/99" veya "13266") */
       let { data } = await _supa.from('ticaret_sicil_hizmetleri').select('*')
-        .eq('sicil_no', aramaNo)
+        .eq('sicil_no', sicilNo)
         .order('tescil_tarihi', {ascending:false});
 
+      /* 2) "YYYY/NNN" formatında ise son kısmı dene (TOBB oda sicil no formatı) */
+      if((!data || data.length===0) && sicilNo.includes('/')) {
+        const parts = sicilNo.split('/');
+        const sonKisim = parts[parts.length-1].replace(/^0+/,'');
+        const { data: data2 } = await _supa.from('ticaret_sicil_hizmetleri').select('*')
+          .eq('sicil_no', sonKisim)
+          .order('tescil_tarihi', {ascending:false});
+        data = data2;
+      }
+
+      /* 3) Hâlâ yoksa firma adıyla dene */
       if((!data || data.length===0) && currentFirm?.firma) {
         const { data: data2 } = await _supa.from('ticaret_sicil_hizmetleri').select('*')
           .ilike('unvan', `%${currentFirm.firma.split(' ').slice(0,3).join(' ')}%`)
@@ -6860,27 +6864,30 @@ window.etkPrsYilKarToggle=function(){
     try {
       const tsEl = document.getElementById('um-ticaretsicil-icerik');
       if(tsEl) {
-        const sicilNoRaw = (document.querySelector('#um-resmi-fields')?.textContent||'');
-        let aramaNo = sicilNo || '';
         const uyeData2 = (await _supa.from('uyeler').select('ticaret_sicil_no,unvan').or(`uye_oda_sicil_no.eq.${sicilNo},mersis_no.eq.${mersisNo}`).maybeSingle()).data;
-        let tsNo = uyeData2?.ticaret_sicil_no || '';
-        if(tsNo.includes('/')) {
-          const parts = tsNo.split('/');
-          tsNo = parts[parts.length-1].replace(/^0+/,'');
-        }
-        if(!tsNo) {
+        const tsNoOrig = uyeData2?.ticaret_sicil_no || '';
+        if(!tsNoOrig) {
           tsEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Ticaret sicil numarası tanımlı değil</div>';
         } else {
-          let { data: tsData } = await _supa.from('ticaret_sicil_hizmetleri').select('*').eq('sicil_no', tsNo).order('tescil_tarihi',{ascending:false});
+          /* 1) Tam eşleşme */
+          let { data: tsData } = await _supa.from('ticaret_sicil_hizmetleri').select('*').eq('sicil_no', tsNoOrig).order('tescil_tarihi',{ascending:false});
+          /* 2) "YYYY/NNN" formatıysa son kısmı dene */
+          if((!tsData || tsData.length===0) && tsNoOrig.includes('/')) {
+            const parts = tsNoOrig.split('/');
+            const sonKisim = parts[parts.length-1].replace(/^0+/,'');
+            const { data: tsData2 } = await _supa.from('ticaret_sicil_hizmetleri').select('*').eq('sicil_no', sonKisim).order('tescil_tarihi',{ascending:false});
+            tsData = tsData2;
+          }
+          /* 3) Firma adıyla dene */
           if((!tsData || tsData.length===0) && uyeData2?.unvan) {
             const { data: tsData2 } = await _supa.from('ticaret_sicil_hizmetleri').select('*').ilike('unvan', `%${uyeData2.unvan.split(' ').slice(0,3).join(' ')}%`).order('tescil_tarihi',{ascending:false});
             tsData = tsData2;
           }
           if(!tsData || tsData.length===0) {
-            tsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Ticaret sicil kaydı bulunamadı (Sicil No: ${tsNo})</div>`;
+            tsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Ticaret sicil kaydı bulunamadı (Sicil No: ${tsNoOrig})</div>`;
           } else {
             const tipRenk = {'Kuruluş':'#1D9E75','Değişiklik':'#185FA5','Terkin':'#E24B4A','Tasfiye':'#E24B4A','Toplu Terkin':'#E24B4A','Ek Tasfiye':'#E24B4A','İflas Konkordato Belgesi':'#EF9F27','Ticaret Sicil Tasdiknamesi':'#534AB7','Acentelik':'#1D9E75','Merkez Nakli':'#EF9F27'};
-            tsEl.innerHTML = `<div style="font-size:11px;color:var(--text2);margin-bottom:8px">${tsData.length} kayıt — Sicil No: <strong>${tsNo}</strong></div>` +
+            tsEl.innerHTML = `<div style="font-size:11px;color:var(--text2);margin-bottom:8px">${tsData.length} kayıt — Sicil No: <strong>${tsNoOrig}</strong></div>` +
               tsData.map(d=>{
                 const tarih = d.tescil_tarihi ? new Date(d.tescil_tarihi).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '—';
                 const renk = tipRenk[d.talep_turu]||'#888';
