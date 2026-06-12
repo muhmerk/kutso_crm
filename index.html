@@ -15047,6 +15047,7 @@ window.sifreDegistirKaydet = async function(){
 (function(){
   let currentSicilFirm = null;
   let _sicilSearchTimer = null;
+  let _sicilEditId = null; /* Düzenleme modunda olan kaydın ID'si */
 
   const _SICIL_AVCOL = [{bg:'#E1F5EE',c:'#085041'},{bg:'#E8F1FB',c:'#0C447C'},{bg:'#EEEDFE',c:'#3C3489'},{bg:'#FEF3DE',c:'#633806'},{bg:'#FAECE7',c:'#712B13'}];
   const _hashCode = str => { let h=0; for(let c of String(str||'')) h=(h<<5)-h+c.charCodeAt(0)|0; return Math.abs(h); };
@@ -15134,9 +15135,7 @@ window.sifreDegistirKaydet = async function(){
     document.getElementById('sicil-firma-uyeno').textContent = f.no||'—';
 
     /* Formu sıfırla */
-    document.getElementById('sicil-talep-turu').value = '';
-    document.getElementById('sicil-tarih').value = new Date().toISOString().slice(0,10);
-    document.getElementById('sicil-detay').value = '';
+    sicilFormSifirla();
 
     sicilGecmisYukle();
   }
@@ -15162,23 +15161,65 @@ window.sifreDegistirKaydet = async function(){
     const yil = new Date(tarih).getFullYear();
 
     try {
-      const { error } = await _supa.from('ticaret_sicil_hizmetleri').insert([{
-        yil, sicil_no: sicilNo, unvan: currentSicilFirm.firma,
-        talep_turu: talepTuru, tescil_tarihi: tarih,
-        detay: detay||null,
-        giren_kul: currentUser?.kullanici||''
-      }]);
-      if(error) throw error;
+      if(_sicilEditId) {
+        /* Güncelleme */
+        const { error } = await _supa.from('ticaret_sicil_hizmetleri').update({
+          yil, talep_turu: talepTuru, tescil_tarihi: tarih, detay: detay||null
+        }).eq('id', _sicilEditId);
+        if(error) throw error;
+        _sicilEditId = null;
+      } else {
+        /* Yeni kayıt */
+        const { error } = await _supa.from('ticaret_sicil_hizmetleri').insert([{
+          yil, sicil_no: sicilNo, unvan: currentSicilFirm.firma,
+          talep_turu: talepTuru, tescil_tarihi: tarih,
+          detay: detay||null,
+          giren_kul: currentUser?.kullanici||''
+        }]);
+        if(error) throw error;
+      }
 
       /* Formu sıfırla */
-      document.getElementById('sicil-talep-turu').value = '';
-      document.getElementById('sicil-detay').value = '';
-      document.getElementById('sicil-tarih').value = new Date().toISOString().slice(0,10);
-
+      sicilFormSifirla();
       sicilGecmisYukle();
-      show?.('✓ İşlem kaydedildi.', true);
     } catch(e) {
-      alert('Kaydetme hatası: '+e.message);
+      alert('Kaydetme hatası: '+(e.message||e));
+    }
+  };
+
+  function sicilFormSifirla() {
+    document.getElementById('sicil-talep-turu').value = '';
+    document.getElementById('sicil-detay').value = '';
+    document.getElementById('sicil-tarih').value = new Date().toISOString().slice(0,10);
+    _sicilEditId = null;
+    const btn = document.querySelector('#sicil-detay-view .card .ch .ct');
+    /* Kaydet butonu metnini sıfırla */
+    const kaydetBtn = document.querySelector('#sicil-detay-view .card button.btn-p');
+    if(kaydetBtn) kaydetBtn.innerHTML = '<i class="ti ti-plus"></i> Kaydet';
+  }
+
+  window.sicilDuzenle = function(id) {
+    const kayit = (window._sicilGecmis||[]).find(d=>d.id===id);
+    if(!kayit) return;
+    _sicilEditId = id;
+    document.getElementById('sicil-talep-turu').value = kayit.talep_turu||'';
+    document.getElementById('sicil-tarih').value = (kayit.tescil_tarihi||'').slice(0,10);
+    document.getElementById('sicil-detay').value = kayit.detay||'';
+    const kaydetBtn = document.querySelector('#sicil-detay-view .card button.btn-p');
+    if(kaydetBtn) kaydetBtn.innerHTML = '<i class="ti ti-check"></i> Güncelle';
+    /* Forma scroll */
+    document.getElementById('sicil-talep-turu').scrollIntoView({behavior:'smooth', block:'center'});
+  };
+
+  window.sicilSil = async function(id) {
+    if(!confirm('Bu kaydı silmek istiyor musunuz?')) return;
+    try {
+      const { error } = await _supa.from('ticaret_sicil_hizmetleri').delete().eq('id', id);
+      if(error) throw error;
+      if(_sicilEditId === id) sicilFormSifirla();
+      sicilGecmisYukle();
+    } catch(e) {
+      alert('Silme hatası: '+(e.message||e));
     }
   };
 
@@ -15199,9 +15240,11 @@ window.sifreDegistirKaydet = async function(){
         .order('tescil_tarihi', {ascending:false});
 
       if(!data || data.length===0) {
+        window._sicilGecmis = [];
         el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Henüz işlem kaydı yok</div>';
         return;
       }
+      window._sicilGecmis = data;
 
       const tipRenk = {
         'Kuruluş':'#1D9E75','Değişiklik':'#185FA5','Terkin':'#E24B4A','Tasfiye':'#E24B4A',
@@ -15212,10 +15255,18 @@ window.sifreDegistirKaydet = async function(){
       el.innerHTML = data.map(d=>{
         const tarih = d.tescil_tarihi ? new Date(d.tescil_tarihi).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '—';
         const renk = tipRenk[d.talep_turu] || '#888';
+        /* Manuel eklenen kayıtlar (giren_kul dolu) düzenlenebilir/silinebilir */
+        const duzenlenebilir = !!d.giren_kul;
         return `<div style="border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
             <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px;background:${renk}20;color:${renk}">${d.talep_turu||'—'}</span>
-            <span style="font-size:11px;color:var(--text2)">${tarih}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;color:var(--text2)">${tarih}</span>
+              ${duzenlenebilir ? `
+                <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" onclick="sicilDuzenle('${d.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
+                <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" onclick="sicilSil('${d.id}')" title="Sil"><i class="ti ti-trash"></i></button>
+              ` : ''}
+            </div>
           </div>
           ${d.detay?`<div style="font-size:12px;color:var(--text);line-height:1.6;margin-top:4px">${d.detay}</div>`:''}
           ${d.giren_kul?`<div style="font-size:10px;color:var(--text3);margin-top:4px">Giren: ${d.giren_kul}</div>`:''}
