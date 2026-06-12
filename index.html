@@ -814,6 +814,24 @@ async function supaPrsEgitimEkle(e) {
   } catch(e) { console.error('Personel eğitim hatası:', e); return null; }
 }
 
+/* Personel eğitim kaydını güncelle */
+async function supaPrsEgitimGuncelle(id, updates) {
+  try {
+    const { error } = await _supa.from('personel_egitimler').update(updates).eq('id', id);
+    if(error) throw error;
+    console.log('✓ Personel eğitimi güncellendi');
+  } catch(e) { console.error('Personel eğitim güncelleme hatası:', e); throw e; }
+}
+
+/* Personel eğitim kaydını sil */
+async function supaPrsEgitimSil(id) {
+  try {
+    const { error } = await _supa.from('personel_egitimler').delete().eq('id', id);
+    if(error) throw error;
+    console.log('✓ Personel eğitimi silindi');
+  } catch(e) { console.error('Personel eğitim silme hatası:', e); throw e; }
+}
+
 /* İş planı strateji DB'ye ekle/güncelle */
 async function supaIpStratejiKaydet(s) {
   try {
@@ -7976,7 +7994,7 @@ window.prsOzlukLoad = function(id) {
       </div>
       <div style="padding:12px 14px">
         ${canUpload ? prsUploadDropHtml('ozluk') : ''}
-        ${prsBelgeListHtml('ozluk', id, canDelete)}
+        ${prsBelgeListHtml('ozluk', id, canUpload)}
       </div>
     </div>`;
 };
@@ -8636,6 +8654,10 @@ window.prsEgitimLoad = function(id) {
               ? `<span class="badge b-green" style="font-size:10px"><i class="ti ti-certificate" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>Sertifikalı</span>`
               : `<span class="badge b-gray" style="font-size:10px">Sertifikasız</span>`}
             ${e.certNo?`<span style="font-size:10px;color:var(--text2);font-family:var(--mono)">${e.certNo}</span>`:''}
+            ${e.id ? `<div style="display:flex;gap:4px;margin-top:2px">
+              <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" onclick="prsEgitimDuzenleModal('${e.id}',${id})" title="Düzenle"><i class="ti ti-edit"></i></button>
+              <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" onclick="prsEgitimSil('${e.id}',${id})" title="Sil"><i class="ti ti-trash"></i></button>
+            </div>` : ''}
           </div>
         </div>`).join('')}
     </div>`;
@@ -8700,7 +8722,7 @@ window.prsSozlesmeLoad = function(id) {
       </div>
       <div style="padding:12px 14px">
         ${canUpload ? prsUploadDropHtml('soz') : ''}
-        ${prsBelgeListHtml('soz', id, canDelete)}
+        ${prsBelgeListHtml('soz', id, canUpload)}
       </div>
     </div>`;
 };
@@ -8741,7 +8763,7 @@ window.prsDigerLoad = function(id) {
       </div>
       <div style="padding:12px 14px">
         ${canUpload ? prsUploadDropHtml('dig') : ''}
-        ${prsBelgeListHtml('dig', id, canDelete)}
+        ${prsBelgeListHtml('dig', id, canUpload)}
       </div>
     </div>`;
 };
@@ -11956,7 +11978,8 @@ window.prsBelgeDrop = async function(tip, files){
       window.PRS_BELGELER[pid][tip].unshift(inserted);
 
       satir.remove();
-      /* Sekmeyi yeniden çiz */
+      /* Garanti tazelik için DB'den yeniden yükle, sonra sekmeyi yeniden çiz */
+      await supaYuklePersonelBelgeler();
       if(tip==='ozluk' && window.prsOzlukLoad) window.prsOzlukLoad(pid);
       if(tip==='soz' && window.prsSozlesmeLoad) window.prsSozlesmeLoad(pid);
       if(tip==='dig' && window.prsDigerLoad) window.prsDigerLoad(pid);
@@ -12015,10 +12038,32 @@ function prsBelgeListHtml(tip, pid, canDelete){
     <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.ad}</div><div style="font-size:10px;color:var(--text2)">${b.tarih||''} ${b.boyut?'· '+b.boyut:''}</div></div>
     <div style="display:flex;gap:6px;align-items:center">
       <a href="${b.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:3px 7px"><i class="ti ti-download"></i></a>
-      ${canDelete?`<button class="btn btn-sm" style="font-size:10px;padding:3px 7px;color:var(--red)" onclick="prsBelgeSil('${tip}',${pid},'${b.id}')"><i class="ti ti-trash"></i></button>`:''}
+      ${canDelete?`<button class="btn btn-sm" style="font-size:10px;padding:3px 7px" onclick="prsBelgeDuzenle('${tip}',${pid},'${b.id}')" title="Adını düzenle"><i class="ti ti-edit"></i></button>`:''}
+      ${canDelete?`<button class="btn btn-sm" style="font-size:10px;padding:3px 7px;color:var(--red)" onclick="prsBelgeSil('${tip}',${pid},'${b.id}')" title="Sil"><i class="ti ti-trash"></i></button>`:''}
     </div>
   </div>`).join('');
 }
+
+/* Belge adını düzenle */
+window.prsBelgeDuzenle = async function(tip, pid, belgeId){
+  const list = (window.PRS_BELGELER[pid]||{})[tip] || [];
+  const belge = list.find(b=>b.id===belgeId);
+  if(!belge) return;
+  const yeniAd = prompt('Belge adını düzenleyin:', belge.ad);
+  if(yeniAd===null) return;
+  const ad = yeniAd.trim();
+  if(!ad){ alert('Belge adı boş olamaz.'); return; }
+  try{
+    const {error}=await _supa.from('personel_belgeler').update({ad}).eq('id',belgeId);
+    if(error) throw error;
+    belge.ad = ad;
+    if(tip==='ozluk' && window.prsOzlukLoad) window.prsOzlukLoad(pid);
+    if(tip==='soz' && window.prsSozlesmeLoad) window.prsSozlesmeLoad(pid);
+    if(tip==='dig' && window.prsDigerLoad) window.prsDigerLoad(pid);
+  }catch(err){
+    alert('Güncelleme hatası: '+(err.message||err));
+  }
+};
 
 /* ══ MEMNUNİYET EKLE + YIL BAZLI HİZMET VERİSİ ══ */
 
@@ -13889,6 +13934,8 @@ window.sikayetModalKapat = function(){
 };
 
 /* ══ PERSONEL EĞİTİM EKLE ══ */
+let _prsEgitimEditId = null; /* Düzenleme modunda olan kaydın ID'si */
+
 window.prsEgitimEkleModal = function(){
   const selEl = document.getElementById('prs-egitim-sec');
   const pid = selEl?.value;
@@ -13896,6 +13943,13 @@ window.prsEgitimEkleModal = function(){
   const p = window.PERSONEL?.find(x=>x.id==pid);
   const subEl = document.getElementById('prs-egitim-modal-sub');
   if(subEl && p) subEl.textContent = p.ad + ' ' + p.soyad;
+  _prsEgitimEditId = null;
+  const titleEl = document.querySelector('#prs-egitim-modal .ck, #prs-egitim-modal > div > div:first-child > div:first-child > div:first-child');
+  /* Başlığı sıfırla */
+  const modalTitle = document.querySelector('#prs-egitim-modal div[style*="font-size:15px"]');
+  if(modalTitle) modalTitle.textContent = 'Eğitim Kaydı Ekle';
+  const kaydetBtn = document.querySelector('#prs-egitim-modal button.btn-p');
+  if(kaydetBtn) kaydetBtn.innerHTML = '<i class="ti ti-check"></i> Kaydet';
   /* Formu temizle */
   ['prs-eg-ad','prs-eg-sure','prs-eg-kurum','prs-eg-konu','prs-eg-cert-no'].forEach(elId=>{
     const el=document.getElementById(elId); if(el) el.value='';
@@ -13911,6 +13965,37 @@ window.prsEgitimEkleModal = function(){
   const hLbl = document.getElementById('prs-eg-cert-hayir-lbl');
   if(eLbl){ eLbl.style.background=''; eLbl.style.borderColor='var(--border2)'; }
   if(hLbl){ hLbl.style.background=''; hLbl.style.borderColor='var(--border2)'; }
+  document.getElementById('prs-egitim-modal').style.display='flex';
+};
+
+/* Eğitim kaydını düzenleme modalında aç */
+window.prsEgitimDuzenleModal = function(egitimId, pid){
+  const list = EGITIMLER[pid]||[];
+  const kayit = list.find(e=>String(e.id)===String(egitimId));
+  if(!kayit){ alert('Kayıt bulunamadı.'); return; }
+  _prsEgitimEditId = egitimId;
+
+  const p = window.PERSONEL?.find(x=>x.id==pid);
+  const subEl = document.getElementById('prs-egitim-modal-sub');
+  if(subEl && p) subEl.textContent = p.ad + ' ' + p.soyad;
+
+  const modalTitle = document.querySelector('#prs-egitim-modal div[style*="font-size:15px"]');
+  if(modalTitle) modalTitle.textContent = 'Eğitim Kaydını Düzenle';
+  const kaydetBtn = document.querySelector('#prs-egitim-modal button.btn-p');
+  if(kaydetBtn) kaydetBtn.innerHTML = '<i class="ti ti-check"></i> Güncelle';
+
+  document.getElementById('prs-eg-ad').value = kayit.ad||'';
+  document.getElementById('prs-eg-sure').value = kayit.sure||'';
+  document.getElementById('prs-eg-kurum').value = kayit.kurum||'';
+  document.getElementById('prs-eg-konu').value = kayit.konu||'';
+  document.getElementById('prs-eg-cert-no').value = kayit.certNo||'';
+  document.getElementById('prs-eg-tarih').value = (kayit.tarihIso||'').slice(0,10) || new Date().toISOString().slice(0,10);
+
+  const evetRadio = document.getElementById('prs-eg-cert-evet');
+  const hayirRadio = document.getElementById('prs-eg-cert-hayir');
+  if(kayit.sertifika){ evetRadio.checked=true; hayirRadio.checked=false; } else { evetRadio.checked=false; hayirRadio.checked=true; }
+  prsEgCertChange();
+
   document.getElementById('prs-egitim-modal').style.display='flex';
 };
 
@@ -13942,7 +14027,28 @@ window.prsEgitimKaydet = async function(){
   const tarih  = new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
   const pid    = parseInt(document.getElementById('prs-egitim-sec')?.value||'0');
   if(!pid){ alert('Personel seçimi kayboldu, tekrar deneyin.'); return; }
-  /* Supabase'e kaydet — gerçek ID'yi al */
+
+  if(_prsEgitimEditId){
+    /* Güncelleme */
+    try{
+      await supaPrsEgitimGuncelle(_prsEgitimEditId, {
+        ad, tarih, tarih_iso: tarihVal, sure, kurum, konu,
+        sertifika, cert_no: certNo||null
+      });
+      const list = EGITIMLER[pid]||[];
+      const kayit = list.find(e=>String(e.id)===String(_prsEgitimEditId));
+      if(kayit){ kayit.ad=ad; kayit.tarih=tarih; kayit.tarihIso=tarihVal; kayit.sure=sure; kayit.kurum=kurum; kayit.konu=konu; kayit.sertifika=sertifika; kayit.certNo=certNo; }
+      _prsEgitimEditId = null;
+      prsEgitimModalKapat();
+      prsEgitimLoad(pid);
+      alert(`✓ "${ad}" eğitim kaydı güncellendi.`);
+    }catch(err){
+      alert('Güncelleme hatası: '+(err.message||err));
+    }
+    return;
+  }
+
+  /* Yeni kayıt */
   const yeniKayit = { ad, tarih, tarihIso: tarihVal, sure, kurum, konu, sertifika, certNo };
   if(!EGITIMLER[pid]) EGITIMLER[pid]=[];
   EGITIMLER[pid].unshift(yeniKayit);
@@ -13955,6 +14061,20 @@ window.prsEgitimKaydet = async function(){
   prsEgitimModalKapat();
   prsEgitimLoad(pid);
   alert(`✓ "${ad}" eğitim kaydı eklendi.`);
+};
+
+/* Eğitim kaydını sil */
+window.prsEgitimSil = async function(egitimId, pid){
+  if(!confirm('Bu eğitim kaydını silmek istiyor musunuz?')) return;
+  try{
+    await supaPrsEgitimSil(egitimId);
+    if(EGITIMLER[pid]){
+      EGITIMLER[pid] = EGITIMLER[pid].filter(e=>String(e.id)!==String(egitimId));
+    }
+    prsEgitimLoad(pid);
+  }catch(err){
+    alert('Silme hatası: '+(err.message||err));
+  }
 };
 
 /* Dashboard iş planı yıl seçici */
