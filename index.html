@@ -647,6 +647,15 @@ async function supaPersonelSil(id, kullanici) {
   } catch(e) { console.error('Personel silme hatası:', e); }
 }
 
+/* Personel bilgilerini güncelle */
+async function supaPersonelGuncelle(id, updates) {
+  try {
+    const { error } = await _supa.from('personel').update(updates).eq('id', id);
+    if (error) console.error('Personel güncelleme hatası:', error.message);
+    else console.log('✓ Personel güncellendi');
+  } catch(e) { console.error('Personel güncelleme hatası:', e); }
+}
+
 /* Kullanıcı adı/şifre güncelle */
 async function supaKullaniciGuncelle(eskiKul, yeniKul, yeniSifre) {
   try {
@@ -7742,7 +7751,7 @@ window.prsOpenDetail = function(id) {
         ${(ozlukYetkiVar() || kendiId()==p.id) ? `<button class="btn btn-sm" onclick="prsTabAndSelect('ozluk',${p.id})"><i class="ti ti-folder-open"></i> Özlük</button>` : `<button class="btn btn-sm" disabled title="Bu dosyayı görüntüleme yetkiniz yok" style="opacity:.4;cursor:not-allowed"><i class="ti ti-lock"></i> Özlük</button>`}
         <button class="btn btn-sm" onclick="prsTabAndSelect('egitim',${p.id})"><i class="ti ti-school"></i> Eğitimler</button>
         <button class="btn btn-sm" onclick="prsTabAndSelect('sozlesme',${p.id})"><i class="ti ti-file-text"></i> Sözleşme</button>
-        <button class="btn btn-p btn-sm"><i class="ti ti-edit"></i> Düzenle</button>
+        ${(prsEklemeYetkiVar()) ? `<button class="btn btn-p btn-sm" onclick="prsDuzenleModal(${p.id})"><i class="ti ti-edit"></i> Düzenle</button>` : ''}
       </div>
     </div>`;
   panel.style.display='block';
@@ -14901,6 +14910,68 @@ window.prsEkleModal = function(){
     if(window.renderPrsList) window.renderPrsList();
     if(window.fillPrsSelects) window.fillPrsSelects();
     if(window.prsMetrikleriGuncelle) window.prsMetrikleriGuncelle();
+  };
+  o.style.display='flex';
+};
+
+window.prsDuzenleModal = function(id){
+  var p=window.PERSONEL.find(function(x){return x.id===id;});
+  if(!p){alert('Personel bulunamadı.');return;}
+  var o=document.getElementById('prs-modal-overlay');
+  var b=document.getElementById('prs-modal-body');
+  var k=document.getElementById('prs-modal-kaydet');
+  if(!o||!b||!k) return;
+  document.getElementById('prs-modal-title').textContent='Personel Bilgilerini Düzenle';
+  var birimOpts=['Genel Sekreterlik','Sicil','Kurumsal İletişim','Girişimcilik Ofisi','Projeler','Muamelat','Dış Ticaret','İlk Temas Noktası','Sanayi','İK / Kalite'];
+  b.innerHTML='<div style="display:flex;flex-direction:column;gap:12px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div><label class="yk-lbl">Ad <span style="color:var(--red)">*</span></label><input id="pem-ad" class="yk-inp" value="'+(p.ad||'')+'"></div>'
+    +'<div><label class="yk-lbl">Soyad <span style="color:var(--red)">*</span></label><input id="pem-soyad" class="yk-inp" value="'+(p.soyad||'')+'"></div></div>'
+    +'<div><label class="yk-lbl">Unvan <span style="color:var(--red)">*</span></label><input id="pem-unvan" class="yk-inp" value="'+(p.unvan||'')+'"></div>'
+    +'<div><label class="yk-lbl">Birim</label>'
+    +'<select id="pem-birim" class="yk-inp">'
+    +birimOpts.map(function(bm){ return '<option value="'+bm+'" '+(p.birim===bm?'selected':'')+'>'+bm+'</option>'; }).join('')
+    +(birimOpts.includes(p.birim)?'':'<option value="'+(p.birim||'')+'" selected>'+(p.birim||'—')+'</option>')
+    +'</select></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div><label class="yk-lbl">Telefon</label><input id="pem-tel" class="yk-inp" value="'+(p.tel||'')+'"></div>'
+    +'<div><label class="yk-lbl">E-posta</label><input id="pem-email" class="yk-inp" value="'+(p.email||'')+'"></div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div><label class="yk-lbl">İşe Başlama</label><input id="pem-baslama" class="yk-inp" value="'+(p.baslama||'')+'"></div>'
+    +'<div><label class="yk-lbl">T.C. Kimlik No</label><input id="pem-tc" class="yk-inp" value="'+(p.tc&&p.tc!=="—"?p.tc:'')+'" placeholder="11 haneli"></div></div>'
+    +'<div><label class="yk-lbl">Durum</label>'
+    +'<select id="pem-durum" class="yk-inp">'
+    +'<option value="aktif" '+(p.durum==='aktif'?'selected':'')+'>Aktif (Görevde)</option>'
+    +'<option value="izinli" '+(p.durum==='izinli'?'selected':'')+'>İzinde</option>'
+    +'</select></div>'
+    +'</div>';
+  k.onclick=async function(){
+    var ad=(document.getElementById('pem-ad').value||'').trim();
+    var soyad=(document.getElementById('pem-soyad').value||'').trim().toUpperCase();
+    var unvan=(document.getElementById('pem-unvan').value||'').trim();
+    if(!ad||!soyad||!unvan){alert('Ad, soyad ve unvan zorunludur.');return;}
+    var birim=(document.getElementById('pem-birim').value||'').trim()||'—';
+    var tel=(document.getElementById('pem-tel').value||'').trim()||'—';
+    var email=(document.getElementById('pem-email').value||'').trim()||'—';
+    var baslama=(document.getElementById('pem-baslama').value||'').trim()||'—';
+    var tc=(document.getElementById('pem-tc').value||'').trim()||'—';
+    var durum=(document.getElementById('pem-durum').value||'aktif');
+
+    /* Yerel güncelle */
+    p.ad=ad; p.soyad=soyad; p.unvan=unvan; p.birim=birim;
+    p.tel=tel; p.email=email; p.baslama=baslama; p.tc=tc; p.durum=durum;
+
+    /* DB'ye kaydet */
+    await supaPersonelGuncelle(p.id, {
+      ad:ad, soyad:soyad, unvan:unvan, birim:birim,
+      tel:tel, email:email, baslama:baslama, tc:tc, durum:durum
+    });
+
+    o.style.display='none';
+    if(window.renderPrsList) window.renderPrsList();
+    if(window.fillPrsSelects) window.fillPrsSelects();
+    if(window.prsMetrikleriGuncelle) window.prsMetrikleriGuncelle();
+    if(typeof prsOpenDetail==='function') prsOpenDetail(p.id);
   };
   o.style.display='flex';
 };
