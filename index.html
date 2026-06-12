@@ -524,6 +524,83 @@ function supaRealtimeBaslat() {
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Personel dinleniyor'); });
 
+  /* Personel belgeleri (özlük/sözleşme/diğer) */
+  _supa.channel('db-personel-belgeler')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'personel_belgeler' }, (payload)=>{
+      const b = payload.new;
+      if(!b) return;
+      const pid = b.personel_id;
+      if(!window.PRS_BELGELER[pid]) window.PRS_BELGELER[pid]={};
+      if(!window.PRS_BELGELER[pid][b.tip]) window.PRS_BELGELER[pid][b.tip]=[];
+      if(!window.PRS_BELGELER[pid][b.tip].find(x=>x.id===b.id)){
+        window.PRS_BELGELER[pid][b.tip].unshift(b);
+      }
+      prsBelgeEkraniYenile(b.tip, pid);
+    })
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'personel_belgeler' }, (payload)=>{
+      const b = payload.new;
+      if(!b) return;
+      const pid = b.personel_id;
+      const list = window.PRS_BELGELER[pid]?.[b.tip];
+      if(list){
+        const idx = list.findIndex(x=>x.id===b.id);
+        if(idx>-1) list[idx]=b;
+      }
+      prsBelgeEkraniYenile(b.tip, pid);
+    })
+    .on('postgres_changes', { event:'DELETE', schema:'public', table:'personel_belgeler' }, (payload)=>{
+      const b = payload.old;
+      if(!b) return;
+      const pid = b.personel_id;
+      if(window.PRS_BELGELER[pid]?.[b.tip]){
+        window.PRS_BELGELER[pid][b.tip] = window.PRS_BELGELER[pid][b.tip].filter(x=>x.id!==b.id);
+      }
+      prsBelgeEkraniYenile(b.tip, pid);
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Personel belgeleri dinleniyor'); });
+
+  /* Personel eğitim kayıtları */
+  _supa.channel('db-personel-egitimler')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'personel_egitimler' }, (payload)=>{
+      const e = payload.new;
+      if(!e) return;
+      const pid = e.personel_id;
+      if(!window.EGITIMLER[pid]) window.EGITIMLER[pid]=[];
+      if(!window.EGITIMLER[pid].find(x=>String(x.id)===String(e.id))){
+        window.EGITIMLER[pid].unshift({
+          id:e.id, ad:e.ad, tarih:e.tarih, tarihIso:e.tarih_iso,
+          sure:e.sure||'—', kurum:e.kurum||'—', konu:e.konu||'',
+          sertifika:!!e.sertifika, certNo:e.cert_no||''
+        });
+      }
+      prsEgitimEkraniYenile(pid);
+    })
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'personel_egitimler' }, (payload)=>{
+      const e = payload.new;
+      if(!e) return;
+      const pid = e.personel_id;
+      const list = window.EGITIMLER[pid];
+      if(list){
+        const idx = list.findIndex(x=>String(x.id)===String(e.id));
+        if(idx>-1) list[idx] = {
+          id:e.id, ad:e.ad, tarih:e.tarih, tarihIso:e.tarih_iso,
+          sure:e.sure||'—', kurum:e.kurum||'—', konu:e.konu||'',
+          sertifika:!!e.sertifika, certNo:e.cert_no||''
+        };
+      }
+      prsEgitimEkraniYenile(pid);
+    })
+    .on('postgres_changes', { event:'DELETE', schema:'public', table:'personel_egitimler' }, (payload)=>{
+      const e = payload.old;
+      if(!e) return;
+      const pid = e.personel_id;
+      if(window.EGITIMLER[pid]){
+        window.EGITIMLER[pid] = window.EGITIMLER[pid].filter(x=>String(x.id)!==String(e.id));
+      }
+      prsEgitimEkraniYenile(pid);
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Personel eğitimleri dinleniyor'); });
+
   /* İş Planı */
   _supa.channel('db-isplan')
     .on('postgres_changes', { event:'*', schema:'public', table:'ip_stratejiler' }, async ()=>{
@@ -11907,6 +11984,23 @@ window.updateTopbarUser = function(user){
 })();
 
 /* ══ PERSONEL UPLOAD CLICK ══ */
+/* Realtime güncelleme sonrası ilgili sekme açıksa yeniden çiz */
+function prsBelgeEkraniYenile(tip, pid){
+  const secMap = {ozluk:'prs-ozluk-sec', soz:'prs-soz-sec', dig:'prs-dig-sec'};
+  const sel = document.getElementById(secMap[tip]);
+  if(!sel || parseInt(sel.value||'0') !== pid) return;
+  if(tip==='ozluk' && window.prsOzlukLoad) window.prsOzlukLoad(pid);
+  if(tip==='soz' && window.prsSozlesmeLoad) window.prsSozlesmeLoad(pid);
+  if(tip==='dig' && window.prsDigerLoad) window.prsDigerLoad(pid);
+  /* Personel kartı açıksa özlük özetini de güncelle */
+  if(tip==='ozluk' && activePersonelId===pid && window.prsOpenDetail) window.prsOpenDetail(pid);
+}
+
+function prsEgitimEkraniYenile(pid){
+  const sel = document.getElementById('prs-egitim-sec');
+  if(sel && parseInt(sel.value||'0') === pid && window.prsEgitimLoad) window.prsEgitimLoad(pid);
+}
+
 window.prsUploadClick = function(tip) {
   const secId = 'prs-' + tip + '-sec';
   const sel = document.getElementById(secId);
