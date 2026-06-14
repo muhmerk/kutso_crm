@@ -14549,6 +14549,11 @@ window.sikayetKaydet = function(){
   if(window.sikTrendGuncelle) window.sikTrendGuncelle();
   if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
 
+  if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
+  if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(yil);
+  alert(`✓ "${konu}" şikayeti kaydedildi.\nNo: ${no}\nSüreç takibi: Meriç Keskin`);
+};
+
 window.sikayetSil = async function(id, btn){
   if(!confirm('Bu şikayeti silmek istiyor musunuz? Bu işlem geri alınamaz.')) return;
   try {
@@ -14579,10 +14584,6 @@ window.sikayetSilById = async function(dbId, btn){
     if(window.sikTrendGuncelle) window.sikTrendGuncelle();
     if(window.dashboardGuncelle) window.dashboardGuncelle();
   } catch(e) { alert('Silme hatası: '+(e.message||e)); }
-};
-  if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
-  if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(yil);
-  alert(`✓ "${konu}" şikayeti kaydedildi.\nNo: ${no}\nSüreç takibi: Meriç Keskin`);
 };
 
 /* Şikayet durum filtresi */
