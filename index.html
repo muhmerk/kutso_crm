@@ -184,6 +184,8 @@ async function supaYukleSikayetler() {
       }
       if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(new Date().getFullYear());
       if(window.sikTrendGuncelle) window.sikTrendGuncelle();
+      if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(new Date().getFullYear());
+      if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
       if(window.dashboardGuncelle) window.dashboardGuncelle();
       console.log('✓ Şikayetler yüklendi:', sikayetler.length);
       window._sikVeriYuklendi = true;
@@ -14552,9 +14554,8 @@ window.sikayetKaydet = function(){
   /* Trend ve metrikler güncelle */
   if(window.sikTrendGuncelle) window.sikTrendGuncelle();
   if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
-
-  if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
   if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(yil);
+  if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
   alert(`✓ "${konu}" şikayeti kaydedildi.\nNo: ${no}\nSüreç takibi: Meriç Keskin`);
 };
 
