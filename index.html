@@ -186,6 +186,7 @@ async function supaYukleSikayetler() {
       if(window.sikTrendGuncelle) window.sikTrendGuncelle();
       if(window.dashboardGuncelle) window.dashboardGuncelle();
       console.log('✓ Şikayetler yüklendi:', sikayetler.length);
+      window._sikVeriYuklendi = true;
     };
     trySet();
   } catch(e){ console.warn('Şikayet yükleme hatası:', e); }
@@ -14252,9 +14253,18 @@ function sikYilVerisi(yil){
     kategoriler[kat]=(kategoriler[kat]||0)+1;
   });
 
+  /* DOM'da o yıla ait kart varsa ya da hiç kart kalmadıysa gerçek veriyi döndür */
+  /* Eğer o yıl için DOM'da herhangi bir kart zaten varsa veya kontrol yapıldıysa null değil 0 döndür */
+  const domKartSayisi = document.querySelectorAll(`#s-sikayet .sk[data-yil="${yil}"]`).length;
+  const dbKayitSayisi = Object.values(window.SIK_DB||{}).filter(k=>(k.yil||parseInt((k.tarih||'').slice(-4))||0)===yil).length;
+  if(toplam>0 || domKartSayisi>=0 && dbKayitSayisi>=0 && (document.querySelector('#s-sikayet .sk') || Object.keys(window.SIK_DB||{}).length>0)){
+    /* En az bir kez veri yüklenmiş — gerçek sayıyı döndür (0 olsa bile) */
+    if(window._sikVeriYuklendi) return {toplam, acik, kritik, cozulen, kategoriler};
+  }
+
   if(toplam>0) return {toplam, acik, kritik, cozulen, kategoriler};
 
-  /* Statik fallback — geçmiş yıllar için örnek veri */
+  /* Statik fallback — hiç veri yüklenmemişse */
   return SIK_GECMIS_DATA[yil]||null;
 }
 
@@ -15784,5 +15794,47 @@ window.sifreDegistirKaydet = async function(){
     }
   }
 })();
+</script>
+
+<script>
+/* ── Şikayet Silme Fonksiyonları (global scope) ── */
+window.sikayetSil = async function(id) {
+  if(!confirm('Bu şikayeti silmek istiyor musunuz? Bu işlem geri alınamaz.')) return;
+  try {
+    const kart = document.querySelector('.sk[data-id="'+id+'"]');
+    if(kart) kart.remove();
+    if(window.SIK_DB && window.SIK_DB[id]) {
+      const no = window.SIK_DB[id].no;
+      delete window.SIK_DB[id];
+      if(no) {
+        const r = await window.supabase.createClient ? null :
+          await fetch(''); // dummy
+        const { data } = await _supa.from('sikayetler').select('id').eq('sikayet_no', no).maybeSingle();
+        if(data?.id) {
+          await _supa.from('sikayet_notlar').delete().eq('sikayet_id', data.id);
+          await _supa.from('sikayetler').delete().eq('id', data.id);
+        }
+      }
+    }
+    const yil = new Date().getFullYear();
+    if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
+    if(window.sikTrendGuncelle) window.sikTrendGuncelle();
+    if(window.dashboardGuncelle) window.dashboardGuncelle();
+  } catch(e) { alert('Silme hatası: '+(e.message||e)); }
+};
+
+window.sikayetSilById = async function(dbId) {
+  if(!confirm('Bu şikayeti silmek istiyor musunuz? Bu işlem geri alınamaz.')) return;
+  try {
+    const kart = document.querySelector('.sk[data-id="'+dbId+'"]');
+    if(kart) kart.remove();
+    await _supa.from('sikayet_notlar').delete().eq('sikayet_id', dbId);
+    await _supa.from('sikayetler').delete().eq('id', dbId);
+    const yil = new Date().getFullYear();
+    if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
+    if(window.sikTrendGuncelle) window.sikTrendGuncelle();
+    if(window.dashboardGuncelle) window.dashboardGuncelle();
+  } catch(e) { alert('Silme hatası: '+(e.message||e)); }
+};
 </script>
 </html>
