@@ -191,6 +191,7 @@ async function supaYukleSikayetler() {
     trySet();
   } catch(e){ console.warn('Şikayet yükleme hatası:', e); }
 }
+window.supaYukleSikayetler = supaYukleSikayetler;
 
 /* İş planını sessizce yükle — aktif yılı değiştirmez */
 async function supaYukleIsPlanSessiz() {
@@ -2018,7 +2019,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   <div class="sb-section">Üyeler</div>
   <button class="nav" onclick="sw('uyeler',this)"><i class="ti ti-building-store"></i>Üye Modülü</button>
   <button class="nav" onclick="sw('crm',this)"><i class="ti ti-user-circle"></i>CRM</button>
-  <button class="nav" onclick="sw('sicil',this)"><i class="ti ti-building-bank"></i>Ticaret Sicil</button>
+  <button class="nav" id="nav-sicil" onclick="sw('sicil',this)" style="display:none"><i class="ti ti-building-bank"></i>Ticaret Sicili</button>
   <button class="nav" id="nav-mem" onclick="memNavToggle(this)"><i class="ti ti-mood-smile"></i>Memnuniyet<i class="ti ti-chevron-right" id="mem-nav-chev" style="margin-left:auto;font-size:12px;transition:transform .2s"></i></button>
   <div id="mem-nav-sub" style="display:none;margin-left:16px;border-left:2px solid var(--border);padding-left:8px;margin-bottom:4px">
     <button class="nav nav-sub" id="nav-mem-uye" onclick="memNavSec('uye',this)"><i class="ti ti-building-store" style="font-size:14px"></i>Üye</button>
@@ -2044,7 +2045,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   <button class="nav" onclick="sw('isplani',this)"><i class="ti ti-target"></i>İş Planı</button>
 
   <div class="sb-divider" id="sicil-nav-divider" style="display:none"></div>
-  <button class="nav" id="nav-sicil" onclick="sw('sicil',this)" style="display:none"><i class="ti ti-file-certificate"></i>Sicil</button>
+  <button class="nav" id="nav-sicil" onclick="sw('sicil',this)" style="display:none"><i class="ti ti-building-bank"></i>Ticaret Sicili</button>
 
   <div class="sb-divider"></div>
   <div class="sb-section">Personel</div>
@@ -12782,12 +12783,12 @@ window.sw = function(id, btn){
 
 /* ── Sicil menüsü görünürlüğü ── */
 window.sicilGuncelle = function(){
-  const sicilPersonel=['sonmez','fatih','ramazan'];
-  const goster=currentUser&&sicilPersonel.includes(currentUser.kullanici);
-  const btn=document.getElementById('nav-sicil');
-  const div=document.getElementById('sicil-nav-divider');
-  if(btn){ btn.style.display=goster?'flex':'none'; }
-  if(div){ div.style.display=goster?'block':'none'; }
+  const sicilPersonel=['sonmez','fatih','ramazan','admin'];
+  const goster = currentUser && (sicilPersonel.includes(currentUser.kullanici) || currentUser.rol==='sicil');
+  const btn = document.getElementById('nav-sicil');
+  const div = document.getElementById('sicil-nav-divider');
+  if(btn) btn.style.display = goster ? 'flex' : 'none';
+  if(div) div.style.display = goster ? 'block' : 'none';
 };
 document.addEventListener('DOMContentLoaded', ()=>{
   setTimeout(window.memYilSirala, 200);
@@ -15823,9 +15824,13 @@ window.sikayetSilById = async function(dbId) {
     if(kart) kart.remove();
     await _supa.from('sikayet_notlar').delete().eq('sikayet_id', dbId);
     await _supa.from('sikayetler').delete().eq('id', dbId);
+    /* DB'den taze yükle */
+    if(window.supaYukleSikayetler) await window.supaYukleSikayetler();
     const yil = new Date().getFullYear();
     if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
     if(window.sikTrendGuncelle) window.sikTrendGuncelle();
+    if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
+    if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(yil);
     if(window.dashboardGuncelle) window.dashboardGuncelle();
   } catch(e) { alert('Silme hatası: '+(e.message||e)); }
 };
