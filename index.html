@@ -14238,11 +14238,10 @@ function sikYilVerisi(yil){
     kategoriler[kat]=(kategoriler[kat]||0)+1;
   });
 
-  /* 2. SIK_DB'de olup DOM'da olmayan kayıtlar (nadir) */
+  /* SIK_DB'de olup DOM'da olmayan kayıtlar */
   Object.values(window.SIK_DB||{}).forEach(k=>{
     const kYil=k.yil||parseInt((k.tarih||'').slice(-4))||0;
     if(kYil!==yil) return;
-    /* DOM'da zaten varsa sayma */
     if(document.querySelector(`#s-sikayet .sk[data-id="${k.id}"]`)) return;
     toplam++;
     const d=(k.durum||'').toLowerCase();
@@ -14253,19 +14252,11 @@ function sikYilVerisi(yil){
     kategoriler[kat]=(kategoriler[kat]||0)+1;
   });
 
-  /* DOM'da o yıla ait kart varsa ya da hiç kart kalmadıysa gerçek veriyi döndür */
-  /* Eğer o yıl için DOM'da herhangi bir kart zaten varsa veya kontrol yapıldıysa null değil 0 döndür */
-  const domKartSayisi = document.querySelectorAll(`#s-sikayet .sk[data-yil="${yil}"]`).length;
-  const dbKayitSayisi = Object.values(window.SIK_DB||{}).filter(k=>(k.yil||parseInt((k.tarih||'').slice(-4))||0)===yil).length;
-  if(toplam>0 || domKartSayisi>=0 && dbKayitSayisi>=0 && (document.querySelector('#s-sikayet .sk') || Object.keys(window.SIK_DB||{}).length>0)){
-    /* En az bir kez veri yüklenmiş — gerçek sayıyı döndür (0 olsa bile) */
-    if(window._sikVeriYuklendi) return {toplam, acik, kritik, cozulen, kategoriler};
-  }
-
+  /* Veri yüklendiyse her zaman gerçek sayıyı döndür (0 dahil) */
+  if(window._sikVeriYuklendi) return {toplam, acik, kritik, cozulen, kategoriler};
+  /* Daha önce yüklenmemişse ve veri varsa döndür */
   if(toplam>0) return {toplam, acik, kritik, cozulen, kategoriler};
-
-  /* Statik fallback — hiç veri yüklenmemişse */
-  return SIK_GECMIS_DATA[yil]||null;
+  return null;
 }
 
 function sikMetrikleriGuncelle(yil){
@@ -14304,7 +14295,9 @@ function sikTrendGuncelle(){
   const guncelYil=new Date().getFullYear();
   const yillar=[];
   for(let y=guncelYil-4; y<=guncelYil; y++) yillar.push(y);
-  const veriler=yillar.map(y=>({ yil:y, veri:sikYilVerisi(y) })).filter(x=>x.veri);
+  const veriler = window._sikVeriYuklendi
+    ? yillar.map(y=>({ yil:y, veri:sikYilVerisi(y)||{toplam:0,acik:0,kritik:0,cozulen:0,kategoriler:{}} }))
+    : yillar.map(y=>({ yil:y, veri:sikYilVerisi(y) })).filter(x=>x.veri);
   if(!veriler.length){ el.innerHTML='<div style="font-size:13px;color:var(--text2);text-align:center;padding:16px">Henüz veri yok</div>'; return; }
   const maxT=Math.max(...veriler.map(v=>v.veri.toplam),1);
   if(badge&&veriler.length>=2){
