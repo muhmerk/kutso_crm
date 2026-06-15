@@ -10064,7 +10064,12 @@ function mkRender(){
   const yonetici = mkYoneticiMi();
   document.getElementById('mk-yonetici-view').style.display = yonetici?'block':'none';
   document.getElementById('mk-personel-view').style.display  = yonetici?'none':'block';
-  if(yonetici){ mkRenderMetrik(); mkRenderListe(); }
+  if(yonetici){
+    mkRenderMetrik();
+    /* Eğer bir toplantı detayı açıksa listeye dönme */
+    if(mkAktifToplantı) mkAcToplantı(mkAktifToplantı);
+    else mkRenderListe();
+  }
   else mkRenderPersonel();
   setTimeout(function(){ if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle(); }, 50);
 }
@@ -10268,9 +10273,9 @@ window.mkGundemEkle = function(toplantıId, mevcutId){
     }
     ykModalKapat();
     await supaYukleMK();
-    /* mkRender yerine direkt toplantı detayına dön — liste sayfasına gitmesin */
-    const hedefId = toplantıId || (mevcutId ? MK_DB.gundemler.find(x=>x.id===mevcutId)?.toplantıId : '');
-    if(hedefId) mkAcToplantı(hedefId);
+    /* Liste sayfasına gitmesin — mevcut toplantıda kal */
+    const hedefIdMk = toplantıId || (mevcutId ? (MK_DB.gundemler.find(x=>x.id===mevcutId)?.toplantıId||'') : '');
+    if(hedefIdMk) mkAcToplantı(hedefIdMk);
     else { mkRenderMetrik(); mkRenderListe(); }
     if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
   };
@@ -10459,7 +10464,12 @@ function meclisRender(){
   const yonetici = mkYoneticiMi();
   document.getElementById('meclis-yonetici-view').style.display = yonetici?'block':'none';
   document.getElementById('meclis-personel-view').style.display  = yonetici?'none':'block';
-  if(yonetici){ meclisRenderMetrik(); meclisRenderListe(); }
+  if(yonetici){
+    meclisRenderMetrik();
+    /* Eğer bir toplantı detayı açıksa listeye dönme */
+    if(meclisAktifToplantı) meclisAcToplantı(meclisAktifToplantı);
+    else meclisRenderListe();
+  }
   else meclisRenderPersonel();
   setTimeout(function(){ if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle(); }, 50);
 }
