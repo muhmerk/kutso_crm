@@ -458,6 +458,7 @@ function supaRealtimeBaslat() {
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'etk_evraklar' }, (payload)=>{
       const ev = payload.new;
       if(!ev) return;
+      /* ETK_DATA */
       const etk = (window.ETK_DATA?.etkinlikler||[]).find(e=>e.id===ev.etkinlik_id);
       if(etk){
         if(!etk.evraklar) etk.evraklar=[];
@@ -465,27 +466,37 @@ function supaRealtimeBaslat() {
           etk.evraklar.push({id:ev.id, ad:ev.ad, tur:ev.tur||'Diğer', url:ev.url||'', tarih:ev.tarih, giren:ev.giren});
         }
         const overlay = document.getElementById('etk-evrak-overlay');
-        if(overlay && (window._etkEvrakAktif===ev.etkinlik_id)){
+        if(overlay && window._etkEvrakAktif===ev.etkinlik_id){
           overlay.remove();
           setTimeout(()=>{ if(window.etkEvrakAc) window.etkEvrakAc(ev.etkinlik_id); }, 50);
         }
         if(window.etkRender) window.etkRender();
       }
+      /* ETK_PRS_DATA */
+      const etkPrs = (window.ETK_PRS_DATA?.etkinlikler||[]).find(e=>e.id===ev.etkinlik_id);
+      if(etkPrs){
+        if(!etkPrs.evraklar) etkPrs.evraklar=[];
+        if(!etkPrs.evraklar.find(x=>String(x.id)===String(ev.id))){
+          etkPrs.evraklar.push({id:ev.id, ad:ev.ad, tur:ev.tur||'Diğer', url:ev.url||'', tarih:ev.tarih, giren:ev.giren});
+        }
+        const overlay2 = document.getElementById('etk-prs-evrak-overlay');
+        if(overlay2 && window._etkPrsEvrakAktif===ev.etkinlik_id){
+          overlay2.remove();
+          setTimeout(()=>{ if(window.etkPrsEvrakAc) window.etkPrsEvrakAc(ev.etkinlik_id); }, 50);
+        }
+        if(window.etkPrsRender) window.etkPrsRender();
+      }
     })
     .on('postgres_changes', { event:'DELETE', schema:'public', table:'etk_evraklar' }, (payload)=>{
       const ev = payload.old;
       if(!ev?.id) return;
-      /* etkinlik_id payload'da gelmeyebilir — tüm etkinliklerde ara */
+      /* ETK_DATA */
       const etkinlikler = window.ETK_DATA?.etkinlikler||[];
       let hedefEtk = null;
       for(const e of etkinlikler){
-        if((e.evraklar||[]).find(x=>String(x.id)===String(ev.id))){
-          hedefEtk = e; break;
-        }
+        if((e.evraklar||[]).find(x=>String(x.id)===String(ev.id))){ hedefEtk=e; break; }
       }
-      if(!hedefEtk && ev.etkinlik_id){
-        hedefEtk = etkinlikler.find(e=>e.id===ev.etkinlik_id);
-      }
+      if(!hedefEtk && ev.etkinlik_id) hedefEtk = etkinlikler.find(e=>e.id===ev.etkinlik_id);
       if(hedefEtk){
         hedefEtk.evraklar = (hedefEtk.evraklar||[]).filter(x=>String(x.id)!==String(ev.id));
         const overlay = document.getElementById('etk-evrak-overlay');
@@ -494,6 +505,21 @@ function supaRealtimeBaslat() {
           setTimeout(()=>{ if(window.etkEvrakAc) window.etkEvrakAc(hedefEtk.id); }, 50);
         }
         if(window.etkRender) window.etkRender();
+      }
+      /* ETK_PRS_DATA */
+      const etkinliklerPrs = window.ETK_PRS_DATA?.etkinlikler||[];
+      let hedefEtkPrs = null;
+      for(const e of etkinliklerPrs){
+        if((e.evraklar||[]).find(x=>String(x.id)===String(ev.id))){ hedefEtkPrs=e; break; }
+      }
+      if(hedefEtkPrs){
+        hedefEtkPrs.evraklar = (hedefEtkPrs.evraklar||[]).filter(x=>String(x.id)!==String(ev.id));
+        const overlay2 = document.getElementById('etk-prs-evrak-overlay');
+        if(overlay2 && window._etkPrsEvrakAktif===hedefEtkPrs.id){
+          overlay2.remove();
+          setTimeout(()=>{ if(window.etkPrsEvrakAc) window.etkPrsEvrakAc(hedefEtkPrs.id); }, 50);
+        }
+        if(window.etkPrsRender) window.etkPrsRender();
       }
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlik evrakları dinleniyor'); });
@@ -8448,37 +8474,45 @@ window.etkPrsEvrakAc=function(etkId){
   const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===etkId);
   if(!etk) return;
   if(!etk.evraklar) etk.evraklar=[];
+  window._etkPrsEvrakAktif = etkId;
   const existing=document.getElementById('etk-prs-evrak-overlay');
   if(existing) existing.remove();
+  const _etkYetki = currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici);
   const ov=document.createElement('div');
   ov.id='etk-prs-evrak-overlay';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:260;display:flex;align-items:center;justify-content:center';
-  ov.innerHTML=`<div style="background:var(--surface);border-radius:14px;width:500px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  ov.innerHTML=`<div style="background:var(--surface);border-radius:14px;width:520px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="padding:14px 18px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
       <div><div style="font-size:14px;font-weight:600">Evrak Yönetimi</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${etk.ad}</div></div>
       <button onclick="document.getElementById('etk-prs-evrak-overlay').remove()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2)"><i class="ti ti-x"></i></button>
     </div>
     <div style="padding:14px 18px;overflow-y:auto;flex:1">
-      <div style="margin-bottom:14px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:0.5px dashed var(--border2)">
-        <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Evrak Ekle</div>
-        <input id="etk-prs-evrak-ad" class="yk-inp" style="margin-bottom:6px" placeholder="Evrak adı / açıklama *">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-          <select id="etk-prs-evrak-tur" class="yk-inp">
-            <option value="Tutanak">Tutanak</option><option value="Sertifika">Sertifika</option>
-            <option value="Katılımcı Listesi">Katılımcı Listesi</option><option value="Fotoğraf">Fotoğraf</option>
-            <option value="Rapor">Rapor</option><option value="Diğer">Diğer</option>
-          </select>
-          <input id="etk-prs-evrak-dosya" class="yk-inp" placeholder="Dosya adı (.pdf, .docx...)">
+      ${_etkYetki ? `<div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Evrak Yükle</div>
+        <div id="etk-prs-evrak-drop" style="border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:var(--surface2);transition:border-color .2s"
+          ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
+          ondragleave="this.style.borderColor='var(--border)'"
+          ondrop="event.preventDefault();this.style.borderColor='var(--border)';etkPrsEvrakDrop(event.dataTransfer.files,'${etkId}')"
+          onclick="document.getElementById('etk-prs-evrak-file-input').click()">
+          <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--text2);display:block;margin-bottom:5px"></i>
+          <div style="font-size:12px;color:var(--text2)">Dosya eklemek için tıklayın veya sürükleyin</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">PDF, Word, Excel — maks. 10MB</div>
         </div>
-        <button class="btn btn-p btn-sm" onclick="etkPrsEvrakKaydet('${etkId}')"><i class="ti ti-plus"></i> Ekle</button>
-      </div>
+        <input type="file" id="etk-prs-evrak-file-input" data-etk-id="${etkId}" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg" style="display:none" onchange="etkPrsEvrakDrop(this.files,this.dataset.etkId)">
+      </div>` : `<div style="margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2)"><i class="ti ti-lock" style="margin-right:5px"></i>Evrak yükleme yetkisi sadece Genel Sekreterlik ve İK personelindedir.</div>`}
       <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:8px">${etk.evraklar.length} evrak kayıtlı</div>
       <div id="etk-prs-evrak-list">
-        ${etk.evraklar.length===0?'<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px"><i class="ti ti-file" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>Henüz evrak eklenmedi</div>'
-          :etk.evraklar.map((ev,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:0.5px solid var(--border);border-radius:7px;margin-bottom:6px;background:var(--surface)">
-            <div style="width:32px;height:32px;border-radius:7px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-file" style="font-size:15px;color:var(--blue)"></i></div>
-            <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500">${ev.ad}</div><div style="font-size:11px;color:var(--text2)">${ev.tur}${ev.dosya?' · '+ev.dosya:''} · ${ev.tarih}</div></div>
-            <button onclick="etkPrsEvrakSil('${etkId}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:14px;padding:2px;border-radius:5px"><i class="ti ti-trash"></i></button>
+        ${etk.evraklar.length===0
+          ?'<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px"><i class="ti ti-file" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>Henüz evrak eklenmedi</div>'
+          :etk.evraklar.map((ev)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:0.5px solid var(--border);border-radius:7px;margin-bottom:6px;background:var(--surface)">
+            <div style="width:32px;height:32px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ${etkEvrakIkon?etkEvrakIkon(ev.ad||''):'ti-file'}" style="font-size:15px;color:${etkEvrakRenk?etkEvrakRenk(ev.ad||''):'var(--blue)'}"></i>
+            </div>
+            <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev.ad}</div><div style="font-size:10px;color:var(--text2)">${ev.tur||''}${ev.tarih?' · '+ev.tarih:''}</div></div>
+            <div style="display:flex;gap:5px;align-items:center">
+              ${_etkYetki && ev.url?`<a href="${ev.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:2px 7px"><i class="ti ti-download"></i></a>`:''}
+              ${_etkYetki?`<button onclick="etkPrsEvrakSil('${etkId}','${ev.id}')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px 4px"><i class="ti ti-trash"></i></button>`:''}
+            </div>
           </div>`).join('')}
       </div>
     </div>
@@ -8486,34 +8520,56 @@ window.etkPrsEvrakAc=function(etkId){
   document.body.appendChild(ov);
 };
 
-window.etkPrsEvrakKaydet=function(etkId){
-  const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===etkId);
-  if(!etk) return;
-  const ad=(document.getElementById('etk-prs-evrak-ad')?.value||'').trim();
-  if(!ad){alert('Evrak adı zorunludur.');return;}
-  if(!etk.evraklar) etk.evraklar=[];
-  const tur=document.getElementById('etk-prs-evrak-tur')?.value||'Diğer';
-  const dosya=document.getElementById('etk-prs-evrak-dosya')?.value.trim()||'';
-  const tarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-  const giren=currentUser?.adSoyad||'Sistem';
-  etk.evraklar.push({ id:'ev'+Date.now(), ad, tur, dosya, tarih, giren });
-  _supa.from('etk_evraklar').insert([{ etkinlik_id:etkId, ad, tur, dosya:dosya||null, tarih, giren }])
-    .then(({error})=>{if(error) console.error('Personel evrak kaydetme hatası:',error.message);});
+window.etkPrsEvrakDrop = async function(files, etkId){
+  if(!files||files.length===0) return;
+  const aktifId = etkId || window._etkPrsEvrakAktif;
+  const etk = ETK_PRS_DATA.etkinlikler.find(e=>e.id===aktifId);
+  if(!etk){ console.error('Etkinlik bulunamadı:', aktifId); return; }
+  const dropEl = document.getElementById('etk-prs-evrak-drop');
+  if(dropEl){dropEl.style.opacity='.5';dropEl.style.pointerEvents='none';}
+  for(const file of Array.from(files)){
+    if(file.size>10*1024*1024){alert(file.name+' 10MB sınırını aşıyor.');continue;}
+    try{
+      const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path='etkinlik/'+aktifId+'/'+Date.now()+'_'+safeName;
+      const {error:upErr}=await _supa.storage.from('etkinlik-evraklar').upload(path,file,{upsert:true});
+      if(upErr) throw upErr;
+      const {data:urlData}=_supa.storage.from('etkinlik-evraklar').getPublicUrl(path);
+      const url=urlData?.publicUrl||'';
+      const tarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+      const giren=currentUser?.adSoyad||'Sistem';
+      const {data:ins,error:insErr}=await _supa.from('etk_evraklar').insert([{
+        etkinlik_id:aktifId, ad:file.name, tur:'Diğer', url, tarih, giren
+      }]).select().single();
+      if(insErr) throw insErr;
+      if(!etk.evraklar) etk.evraklar=[];
+      etk.evraklar.push({id:ins.id, ad:file.name, tur:'Diğer', url, tarih, giren});
+    }catch(err){
+      console.error('Personel evrak yükleme hatası:',err);
+      alert(file.name+' yüklenemedi: '+(err.message||err));
+    }
+  }
+  if(dropEl){dropEl.style.opacity='';dropEl.style.pointerEvents='';}
+  const inp=document.getElementById('etk-prs-evrak-file-input');
+  if(inp) inp.value='';
   document.getElementById('etk-prs-evrak-overlay')?.remove();
-  etkPrsEvrakAc(etkId);
-  etkPrsRender();
+  etkPrsEvrakAc(aktifId);
+  if(window.etkPrsRender) window.etkPrsRender();
 };
 
-window.etkPrsEvrakSil=function(etkId,idx){
+window.etkPrsEvrakKaydet=function(etkId){ /* artık etkPrsEvrakDrop kullanılıyor */ };
+
+window.etkPrsEvrakSil=async function(etkId,evrakId){
   const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===etkId);
   if(!etk||!confirm('Bu evrakı silmek istiyor musunuz?')) return;
-  const evrak=etk.evraklar[idx];
-  etk.evraklar.splice(idx,1);
-  if(evrak?.id && !evrak.id.startsWith('ev')) _supa.from('etk_evraklar').delete().eq('id',evrak.id)
-    .then(({error})=>{if(error) console.error('Personel evrak silme hatası:',error.message);});
+  etk.evraklar=(etk.evraklar||[]).filter(ev=>String(ev.id)!==String(evrakId));
   document.getElementById('etk-prs-evrak-overlay')?.remove();
   etkPrsEvrakAc(etkId);
-  etkPrsRender();
+  if(window.etkPrsRender) window.etkPrsRender();
+  if(evrakId && !String(evrakId).startsWith('ev')){
+    const {error}=await _supa.from('etk_evraklar').delete().eq('id',evrakId);
+    if(error) console.error('Personel evrak silme hatası:',error.message);
+  }
 };
 
 window.etkPrsTamamla=function(id){
