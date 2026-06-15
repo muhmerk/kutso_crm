@@ -474,14 +474,24 @@ function supaRealtimeBaslat() {
     })
     .on('postgres_changes', { event:'DELETE', schema:'public', table:'etk_evraklar' }, (payload)=>{
       const ev = payload.old;
-      if(!ev) return;
-      const etk = (window.ETK_DATA?.etkinlikler||[]).find(e=>e.id===ev.etkinlik_id);
-      if(etk){
-        etk.evraklar = (etk.evraklar||[]).filter(x=>String(x.id)!==String(ev.id));
+      if(!ev?.id) return;
+      /* etkinlik_id payload'da gelmeyebilir — tüm etkinliklerde ara */
+      const etkinlikler = window.ETK_DATA?.etkinlikler||[];
+      let hedefEtk = null;
+      for(const e of etkinlikler){
+        if((e.evraklar||[]).find(x=>String(x.id)===String(ev.id))){
+          hedefEtk = e; break;
+        }
+      }
+      if(!hedefEtk && ev.etkinlik_id){
+        hedefEtk = etkinlikler.find(e=>e.id===ev.etkinlik_id);
+      }
+      if(hedefEtk){
+        hedefEtk.evraklar = (hedefEtk.evraklar||[]).filter(x=>String(x.id)!==String(ev.id));
         const overlay = document.getElementById('etk-evrak-overlay');
-        if(overlay && window._etkEvrakAktif===ev.etkinlik_id){
+        if(overlay && window._etkEvrakAktif===hedefEtk.id){
           overlay.remove();
-          setTimeout(()=>{ if(window.etkEvrakAc) window.etkEvrakAc(ev.etkinlik_id); }, 50);
+          setTimeout(()=>{ if(window.etkEvrakAc) window.etkEvrakAc(hedefEtk.id); }, 50);
         }
         if(window.etkRender) window.etkRender();
       }
@@ -5600,14 +5610,17 @@ function toggleTpl(header) {
   window.etkEvrakSil = async function(etkId, evrakId){
     const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
     if(!etk||!confirm('Bu evrakı silmek istiyor musunuz?')) return;
+    /* Önce local'den kaldır — realtime'da etkinlik_id yok, bu yüzden önceden saklarız */
     etk.evraklar = (etk.evraklar||[]).filter(ev=>String(ev.id)!==String(evrakId));
-    if(evrakId && !String(evrakId).startsWith('ev')){
-      await _supa.from('etk_evraklar').delete().eq('id',evrakId)
-        .then(({error})=>{if(error) console.error('Evrak silme hatası:',error.message);});
-    }
+    /* Overlay'i yenile */
     document.getElementById('etk-evrak-overlay')?.remove();
     etkEvrakAc(etkId);
-    if(window.etkRender) window.etkRender(); else renderList();
+    if(window.etkRender) window.etkRender();
+    /* Sonra DB'den sil */
+    if(evrakId && !String(evrakId).startsWith('ev')){
+      const {error} = await _supa.from('etk_evraklar').delete().eq('id',evrakId);
+      if(error) console.error('Evrak silme hatası:', error.message);
+    }
   };
 
   window.etkSil = function(etkId){
