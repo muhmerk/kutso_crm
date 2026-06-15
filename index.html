@@ -3958,6 +3958,12 @@ async function doLogin() {
 
   /* Supabase'den tüm verileri yükle — paralel ama tamamlanmasını bekle */
   await Promise.all([supaYukleKullanicilar(), supaYuklePersonel(), supaYuklePersonelBelgeler(), supaYuklePersonelEgitimler()]);
+
+  /* personel tablosundan güncel ad/soyad al */
+  const pGuncel = (window.PERSONEL||[]).find(x=>x.kullanici===currentUser.kullanici);
+  if(pGuncel) {
+    currentUser.adSoyad = pGuncel.ad + ' ' + pGuncel.soyad;
+  }
   await Promise.all([
     supaYukleYK(),
     supaYukleMK(),
@@ -6108,6 +6114,7 @@ function toggleTpl(header) {
   /* ─── Ana render ─── */
   /* ─── Ana render ─── */
   function renderMemBasliklar(etk){ window._etkAnketPuanlar={}; renderAnketSistemi(etk); }
+  window.renderMemBasliklar = renderMemBasliklar;
 
   function renderAnketSistemi(etk){
     const baslikEl = document.getElementById('etk-mem-baslik-list');
@@ -8978,7 +8985,7 @@ window.etkPrsAnketDuzenle=function(etkId,ankId){
     });
   });
   /* Kaydet butonunu güncelle */
-  const kaydetBtn=document.querySelector('#etk-prs-anket-form button.btn-p');
+  const kaydetBtn=document.getElementById('etk-prs-anket-kaydet-btn');
   if(kaydetBtn){
     kaydetBtn.innerHTML='<i class="ti ti-check"></i> Güncelle';
     kaydetBtn.setAttribute('onclick',`etkPrsAnketGuncelle('${etkId}','${ankId}')`);
@@ -9009,7 +9016,7 @@ window.etkPrsAnketGuncelle=async function(etkId,ankId){
   }
   window._etkAnketPuanlar={}; window._etkAnketDuzenlemeId=null;
   /* Kaydet butonunu sıfırla */
-  const kaydetBtn=document.querySelector('#etk-prs-anket-form button.btn-p');
+  const kaydetBtn=document.getElementById('etk-prs-anket-kaydet-btn');
   if(kaydetBtn){
     kaydetBtn.innerHTML='<i class="ti ti-check"></i> Kaydet';
     kaydetBtn.setAttribute('onclick',`etkPrsAnketKaydet('${etkId}')`);
