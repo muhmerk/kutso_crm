@@ -8901,6 +8901,7 @@ function etkPrsMemRender(etk){
               <span style="font-size:11px;color:var(--text2);margin-left:8px">${ank.tarih} · ${ank.giren}</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px">
+              ${yetkili?`<button class="btn btn-sm" style="font-size:10px;padding:1px 6px" onclick="event.stopPropagation();etkPrsAnketDuzenle('${etk.id}','${ank.id}')"><i class="ti ti-edit"></i></button>`:''}
               ${yetkili?`<button class="btn btn-sm" style="font-size:10px;padding:1px 6px;color:var(--red)" onclick="event.stopPropagation();etkPrsAnketSilOnay('${etk.id}','${ank.id}')"><i class="ti ti-trash"></i></button>`:''}
               <i class="ti ti-chevron-down" id="chev-ankprs-${ank.id}" style="font-size:13px;color:var(--text2)"></i>
             </div>
@@ -8915,11 +8916,69 @@ function etkPrsMemRender(etk){
   const uyeEl=document.getElementById('etk-prs-mem-uye-list'); if(uyeEl) uyeEl.innerHTML='';
 }
 
-window.etkPrsAnketSilOnay=function(etkId,ankId){
+window.etkPrsAnketSilOnay=async function(etkId,ankId){
   if(!confirm('Bu anketi silmek istiyor musunuz?')) return;
   const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===etkId);
   if(!etk||!etk.anketler) return;
   etk.anketler=etk.anketler.filter(a=>a.id!==ankId);
+  etkPrsMemRender(etk); etkPrsRender(); etkPrsMetrikleriGuncelle();
+  /* DB'den sil */
+  if(ankId && !String(ankId).startsWith('ankp')){
+    const {error}=await _supa.from('etk_anketler').delete().eq('id',ankId);
+    if(error) console.error('Anket silme hatası:',error.message);
+  }
+};
+
+window.etkPrsAnketDuzenle=function(etkId,ankId){
+  const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===etkId);
+  if(!etk) return;
+  const ank=etk.anketler.find(a=>a.id===ankId);
+  if(!ank) return;
+  /* Mevcut puanları forma yükle */
+  const YAPI=window.ETK_ANKET_YAPI||[];
+  window._etkAnketPuanlar={};
+  window._etkAnketDuzenlemeId=ankId;
+  YAPI.forEach(b=>{
+    b.sorular.forEach((s,si)=>{
+      const p=ank.cevaplar[b.baslik]?.[s]||0;
+      window._etkAnketPuanlar[b.id+'-'+si]=p;
+      for(let yp=1;yp<=5;yp++){
+        const el=document.getElementById('yildiz-prs-'+b.id+'-'+si+'-'+yp);
+        if(el) el.style.color=yp<=p?'#F5A623':'#D1D5DB';
+      }
+    });
+  });
+  /* Kaydet butonunu güncelle */
+  const kaydetBtn=document.querySelector('#etk-prs-anket-form button.btn-p');
+  if(kaydetBtn){
+    kaydetBtn.innerHTML='<i class="ti ti-check"></i> Güncelle';
+    kaydetBtn.setAttribute('onclick',`etkPrsAnketGuncelle('${etkId}','${ankId}')`);
+  }
+  /* Forma scroll */
+  document.getElementById('etk-prs-anket-form')?.scrollIntoView({behavior:'smooth',block:'center'});
+};
+
+window.etkPrsAnketGuncelle=async function(etkId,ankId){
+  const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===etkId);
+  if(!etk) return;
+  const ank=etk.anketler.find(a=>a.id===ankId);
+  if(!ank) return;
+  const YAPI=window.ETK_ANKET_YAPI||[];
+  const cevaplar={};
+  YAPI.forEach(b=>{ cevaplar[b.baslik]={}; b.sorular.forEach((s,si)=>{ cevaplar[b.baslik][s]=window._etkAnketPuanlar?.[b.id+'-'+si]||0; }); });
+  ank.cevaplar=cevaplar;
+  /* DB güncelle */
+  if(ankId && !String(ankId).startsWith('ankp')){
+    const {error}=await _supa.from('etk_anketler').update({cevaplar}).eq('id',ankId);
+    if(error) console.error('Anket güncelleme hatası:',error.message);
+  }
+  window._etkAnketPuanlar={}; window._etkAnketDuzenlemeId=null;
+  /* Kaydet butonunu sıfırla */
+  const kaydetBtn=document.querySelector('#etk-prs-anket-form button.btn-p');
+  if(kaydetBtn){
+    kaydetBtn.innerHTML='<i class="ti ti-check"></i> Kaydet';
+    kaydetBtn.setAttribute('onclick',`etkPrsAnketKaydet('${etkId}')`);
+  }
   etkPrsMemRender(etk); etkPrsRender(); etkPrsMetrikleriGuncelle();
 };
 
@@ -8929,7 +8988,7 @@ window.etkPrsYildizSec=function(bid,si,puan){
   for(let p=1;p<=5;p++){ const el=document.getElementById('yildiz-prs-'+bid+'-'+si+'-'+p); if(el) el.style.color=p<=puan?'#F5A623':'#D1D5DB'; }
 };
 window.etkPrsAnkAcc=function(elId){ const el=document.getElementById(elId); const chev=document.getElementById('chev-'+elId); if(!el) return; const open=el.style.display!=='none'; el.style.display=open?'none':'block'; if(chev) chev.className='ti '+(open?'ti-chevron-down':'ti-chevron-up'); };
-window.etkPrsAnketKaydet=function(etkId){
+window.etkPrsAnketKaydet=async function(etkId){
   const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===etkId); if(!etk) return;
   if(!etk.anketler) etk.anketler=[];
   const YAPI=window.ETK_ANKET_YAPI||[];
@@ -8938,9 +8997,10 @@ window.etkPrsAnketKaydet=function(etkId){
   if(eksik&&!confirm('Bazı maddeler puanlanmadı. Yine de kaydetmek istiyor musunuz?')) return;
   const ankTarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
   const ankGiren=currentUser?.adSoyad||'Sistem';
-  etk.anketler.push({ id:'ankp'+Date.now(), tarih:ankTarih, giren:ankGiren, cevaplar });
-  _supa.from('etk_anketler').insert([{etkinlik_id:etkId, tarih:ankTarih, giren:ankGiren, cevaplar}])
-    .then(({error})=>{if(error) console.error('Personel eğitim anketi kaydetme hatası:',error.message);});
+  const yeniAnk={ id:'ankp'+Date.now(), tarih:ankTarih, giren:ankGiren, cevaplar };
+  etk.anketler.push(yeniAnk);
+  const {data:ins}=await _supa.from('etk_anketler').insert([{etkinlik_id:etkId, tarih:ankTarih, giren:ankGiren, cevaplar}]).select('id').single();
+  if(ins?.id) yeniAnk.id=ins.id;
   window._etkAnketPuanlar={}; etkPrsMemRender(etk); etkPrsRender(); etkPrsMetrikleriGuncelle();
 };
 
