@@ -447,15 +447,27 @@ function supaRealtimeBaslat() {
       await supaYukleEtkinlikler();
       supaEkranYenile('etkinlik');
     })
-    .on('postgres_changes', { event:'*', schema:'public', table:'etk_katilimcilar' }, async ()=>{
-      await supaYukleEtkinlikler();
-      supaEkranYenile('etkinlik');
-    })
     .on('postgres_changes', { event:'*', schema:'public', table:'etk_anketler' }, async ()=>{
       await supaYukleEtkinlikler();
       supaEkranYenile('etkinlik');
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlikler dinleniyor'); });
+
+  /* Katılımcı değişiklikleri — ayrı channel */
+  _supa.channel('db-etk-katilimci')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'etk_katilimcilar' }, async ()=>{
+      await supaYukleEtkinlikler();
+      supaEkranYenile('etkinlik');
+      /* CRM açıksa yenile */
+      if(window.currentFirm && window.renderEtk) window.renderEtk(window.currentFirm.id);
+    })
+    .on('postgres_changes', { event:'DELETE', schema:'public', table:'etk_katilimcilar' }, async ()=>{
+      await supaYukleEtkinlikler();
+      supaEkranYenile('etkinlik');
+      /* CRM açıksa yenile */
+      if(window.currentFirm && window.renderEtk) window.renderEtk(window.currentFirm.id);
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlik katılımcıları dinleniyor'); });
 
   /* Etkinlik evrakları — ayrı channel (subscribe sonrası binding eklenemiyor) */
   _supa.channel('db-etk-evraklar')
@@ -6206,13 +6218,22 @@ function toggleTpl(header) {
     renderKatilimciList(etk);  /* katılımcı listesi puanı güncelle */
   };
 
-  window.etkRemoveKatilimci = function(etkId, idx) {
+  window.etkRemoveKatilimci = async function(etkId, idx) {
     const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
     if (!etk) return;
+    const k = etk.katilimcilar[idx];
     etk.katilimcilar.splice(idx, 1);
     renderKatilimciList(etk);
     renderMemBasliklar(etk);
     renderMemUyeList(etk);
+    /* DB'den sil */
+    if(k){
+      let q = _supa.from('etk_katilimcilar').delete().eq('etkinlik_id', etkId);
+      if(k.firmaId) q = q.eq('uye_id', k.firmaId);
+      else if(k.kullanici) q = q.eq('kullanici', k.kullanici);
+      const {error} = await q;
+      if(error) console.error('Katılımcı silme hatası:', error.message);
+    }
   };
 
   /* Üye arama — DA global array'den */
