@@ -399,6 +399,10 @@ function supaEkranYenile(modul) {
     if(window.etkMetrikleriGuncelle) window.etkMetrikleriGuncelle();
     if(window.etkPrsMetrikleriGuncelle) window.etkPrsMetrikleriGuncelle();
     if(window.dashboardGuncelle) window.dashboardGuncelle();
+    /* CRM etkinlik sekmesi açıksa yenile */
+    if(window.currentFirm && document.getElementById('crm-pane-etkinlik')?.style.display!=='none'){
+      if(window.renderEtk) window.renderEtk(window.currentFirm.id);
+    }
   } else if (modul === 'sikayet') {
     if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(new Date().getFullYear());
     if(window.sikTrendGuncelle) window.sikTrendGuncelle();
@@ -4472,6 +4476,7 @@ function toggleTpl(header) {
 
     if (!f) { console.warn('Firma bulunamadı:', id); return; }
     currentFirm = f;
+    window.currentFirm = f;
 
     /* Arama kapat */
     document.getElementById('crm-results').style.display = 'none';
@@ -4690,6 +4695,7 @@ function toggleTpl(header) {
 
   /* etkinlik geçmişi render */
   function renderEtk(firmaId) {
+    window.renderEtk = renderEtk;
     const emptyEl = document.getElementById('crm-etk-empty');
     const listEl  = document.getElementById('crm-etk-list');
     if (!emptyEl || !listEl) return;
