@@ -8478,6 +8478,8 @@ window.etkPrsEvrakAc=function(etkId){
   const existing=document.getElementById('etk-prs-evrak-overlay');
   if(existing) existing.remove();
   const _etkYetki = currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici);
+  function _ikon(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(e==='pdf') return 'ti-file-type-pdf'; if(['doc','docx'].includes(e)) return 'ti-file-type-doc'; if(['xls','xlsx'].includes(e)) return 'ti-file-type-xls'; if(['ppt','pptx'].includes(e)) return 'ti-presentation'; return 'ti-file-description'; }
+  function _renk(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(e==='pdf') return '#E24B4A'; if(['doc','docx'].includes(e)) return '#185FA5'; if(['xls','xlsx'].includes(e)) return '#1D9E75'; if(['ppt','pptx'].includes(e)) return '#EF9F27'; return 'var(--text2)'; }
   const ov=document.createElement('div');
   ov.id='etk-prs-evrak-overlay';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:260;display:flex;align-items:center;justify-content:center';
@@ -8506,7 +8508,7 @@ window.etkPrsEvrakAc=function(etkId){
           ?'<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px"><i class="ti ti-file" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>Henüz evrak eklenmedi</div>'
           :etk.evraklar.map((ev)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:0.5px solid var(--border);border-radius:7px;margin-bottom:6px;background:var(--surface)">
             <div style="width:32px;height:32px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <i class="ti ${etkEvrakIkon?etkEvrakIkon(ev.ad||''):'ti-file'}" style="font-size:15px;color:${etkEvrakRenk?etkEvrakRenk(ev.ad||''):'var(--blue)'}"></i>
+              <i class="ti ${_ikon(ev.ad||'')}" style="font-size:15px;color:${_renk(ev.ad||'')}"></i>
             </div>
             <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev.ad}</div><div style="font-size:10px;color:var(--text2)">${ev.tur||''}${ev.tarih?' · '+ev.tarih:''}</div></div>
             <div style="display:flex;gap:5px;align-items:center">
