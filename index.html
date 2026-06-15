@@ -129,7 +129,7 @@ async function supaYukleEtkinlikler() {
           kullanici:k.kullanici||'', unvan:'', memnuniyet:0, puanlar:{}
         })),
         anketler:(anketler||[]).filter(a=>a.etkinlik_id===e.id).map(a=>({ id:a.id, tarih:a.tarih, giren:a.giren, cevaplar:a.cevaplar||{} })),
-        evraklar:(evraklar||[]).filter(v=>v.etkinlik_id===e.id).map(v=>({ id:v.id, ad:v.ad, tur:v.tur, dosya:v.dosya||'', tarih:v.tarih, giren:v.giren }))
+        evraklar:(evraklar||[]).filter(v=>v.etkinlik_id===e.id).map(v=>({ id:v.id, ad:v.ad, tur:v.tur, dosya:v.dosya||'', url:v.url||'', tarih:v.tarih, giren:v.giren }))
       };
     }
     /* ETK_DATA henüz init edilmemişse bekle */
