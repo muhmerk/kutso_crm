@@ -13072,6 +13072,11 @@ window.memKaydet = function(){
 
   window.memModalKapat();
 
+  /* CRM memnuniyet sekmesi açıksa yenile */
+  if(window.currentFirm && window.crmRenderMem){
+    setTimeout(()=>window.crmRenderMem(window.currentFirm.id), 300);
+  }
+
   /* Seçili yılı bul — yeni anketin yılına değil, picker'daki yıla göre güncelle */
   const ydState = window.YD_STATE?.memnuniyet;
   const secilenYil = ydState && ydState.size ? Math.max(...Array.from(ydState)) : new Date().getFullYear();
