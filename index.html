@@ -12818,22 +12818,22 @@ window.memEkleModal = function(duzenleId){
         <label class="yk-lbl">Üye / Firma <span style="color:var(--red)">*</span></label>
         <div style="position:relative">
           <input id="mem-f-firma" class="yk-inp" placeholder="Firma adı veya üye no..." autocomplete="off"
-            oninput="memFirmaAra(this.value)" value="${mevcut?.firma||''}">
+            oninput="memFirmaAra(this.value)">
           <div id="mem-firma-sonuclar" style="display:none;position:absolute;z-index:300;background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);max-height:160px;overflow-y:auto;width:100%;margin-top:2px"></div>
-          <input type="hidden" id="mem-f-firma-id" value="${mevcut?.firmaId||''}">
+          <input type="hidden" id="mem-f-firma-id">
         </div>
       </div>
       <div><label class="yk-lbl">Anketi Dolduran Kişi</label>
-        <input id="mem-f-yetkili" class="yk-inp" placeholder="Ad Soyad" value="${mevcut?.yetkili||''}"></div>
+        <input id="mem-f-yetkili" class="yk-inp" placeholder="Ad Soyad"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Tarih</label>
-        <input id="mem-f-tarih" type="date" class="yk-inp" value="${mevcut?.tarih||new Date().toISOString().slice(0,10)}"></div>
+        <input id="mem-f-tarih" type="date" class="yk-inp" value="${new Date().toISOString().slice(0,10)}"></div>
       <div><label class="yk-lbl">İhracat gerçekleştiriyor musunuz?</label>
         <select id="mem-f-ihracat" class="yk-inp">
           <option value="">Belirtilmedi</option>
-          <option value="evet" ${mevcut?.ihracat==='evet'?'selected':''}>Evet</option>
-          <option value="hayır" ${mevcut?.ihracat==='hayır'?'selected':''}>Hayır</option>
+          <option value="evet">Evet</option>
+          <option value="hayır">Hayır</option>
         </select></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -12841,20 +12841,20 @@ window.memEkleModal = function(duzenleId){
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
           ${['Sanayi İşletme','Ticaret İşletme','Kadın Girişimci İşletme'].map(t=>`
             <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer">
-              <input type="checkbox" class="mem-isletme-tip" value="${t}" ${mevcut?.isletmeTipi?.includes(t)?'checked':''}> ${t}
+              <input type="checkbox" class="mem-isletme-tip" value="${t}"> ${t}
             </label>`).join('')}
         </div>
       </div>
       <div><label class="yk-lbl">NACE Kodu</label>
-        <input id="mem-f-nace" class="yk-inp" placeholder="6 haneli NACE kodu" value="${mevcut?.nace||''}"></div>
+        <input id="mem-f-nace" class="yk-inp" placeholder="6 haneli NACE kodu"></div>
     </div>
     <div>
       <label class="yk-lbl">Görüş ve Öneriler (Soru 28)</label>
-      <textarea id="mem-f-yorum" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Odamızın sunmasını istediğiniz yeni bir hizmet, uygulama veya program...">${mevcut?.yorum||''}</textarea>
+      <textarea id="mem-f-yorum" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Odamızın sunmasını istediğiniz yeni bir hizmet, uygulama veya program..."></textarea>
     </div>
     <div>
       <label class="yk-lbl">Sonuç Raporu E-posta (Soru 29)</label>
-      <input id="mem-f-eposta" class="yk-inp" placeholder="ornek@firma.com" value="${mevcut?.eposta||''}">
+      <input id="mem-f-eposta" class="yk-inp" placeholder="ornek@firma.com">
     </div>
     <div style="border-top:1.5px solid var(--border);padding-top:14px">
       <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">
@@ -12865,6 +12865,25 @@ window.memEkleModal = function(duzenleId){
 
   /* Cevap state */
   window._memCevaplar = mevcut?.cevaplar ? {...mevcut.cevaplar} : {};
+
+  /* Alanları JS ile doldur — HTML attribute içinde özel karakter sorunu yaşanmaması için */
+  if(mevcut){
+    const setVal = (id, val) => { const el=document.getElementById(id); if(el) el.value=val||''; };
+    setVal('mem-f-firma', mevcut.firma||'');
+    setVal('mem-f-firma-id', mevcut.firmaId||'');
+    setVal('mem-f-yetkili', mevcut.yetkili||'');
+    setVal('mem-f-tarih', mevcut.tarihIso||'');
+    setVal('mem-f-nace', mevcut.nace||'');
+    setVal('mem-f-eposta', mevcut.eposta||'');
+    setVal('mem-f-yorum', mevcut.yorum||'');
+    const ihracatEl = document.getElementById('mem-f-ihracat');
+    if(ihracatEl) ihracatEl.value = mevcut.ihracat||'';
+    /* Checkboxlar */
+    document.querySelectorAll('.mem-isletme-tip').forEach(cb=>{
+      cb.checked = mevcut.isletmeTipi?.includes(cb.value)||false;
+    });
+  }
+
   document.getElementById('mem-modal-overlay').style.display = 'flex';
 };
 
