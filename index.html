@@ -5440,19 +5440,35 @@ function toggleTpl(header) {
   /* ── Evrak Yönetimi ── */
   let _etkEvrakAktif = null;
 
+  function etkEvrakIkon(ad){
+    const ext=(ad||'').split('.').pop().toLowerCase();
+    if(ext==='pdf') return 'ti-file-type-pdf';
+    if(['doc','docx'].includes(ext)) return 'ti-file-type-doc';
+    if(['xls','xlsx'].includes(ext)) return 'ti-file-type-xls';
+    if(['ppt','pptx'].includes(ext)) return 'ti-presentation';
+    if(['png','jpg','jpeg'].includes(ext)) return 'ti-photo';
+    return 'ti-file-description';
+  }
+  function etkEvrakRenk(ad){
+    const ext=(ad||'').split('.').pop().toLowerCase();
+    if(ext==='pdf') return '#E24B4A';
+    if(['doc','docx'].includes(ext)) return '#185FA5';
+    if(['xls','xlsx'].includes(ext)) return '#1D9E75';
+    if(['ppt','pptx'].includes(ext)) return '#EF9F27';
+    return 'var(--text2)';
+  }
+
   window.etkEvrakAc = function(etkId){
     _etkEvrakAktif = etkId;
     const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
     if(!etk) return;
     if(!etk.evraklar) etk.evraklar = [];
-    /* Basit prompt yerine overlay kullan — ama etk-ekle-overlay dolu olabilir
-       Yeni minimal overlay oluştur */
     const existing = document.getElementById('etk-evrak-overlay');
     if(existing) existing.remove();
     const ov = document.createElement('div');
     ov.id = 'etk-evrak-overlay';
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:250;display:flex;align-items:center;justify-content:center';
-    ov.innerHTML = `<div style="background:var(--surface);border-radius:14px;width:500px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    ov.innerHTML = `<div style="background:var(--surface);border-radius:14px;width:520px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
       <div style="padding:14px 18px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
         <div>
           <div style="font-size:14px;font-weight:600">Evrak Yönetimi</div>
@@ -5461,22 +5477,19 @@ function toggleTpl(header) {
         <button onclick="document.getElementById('etk-evrak-overlay').remove()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2)"><i class="ti ti-x"></i></button>
       </div>
       <div style="padding:14px 18px;overflow-y:auto;flex:1">
-        <!-- Yeni evrak ekle -->
-        <div style="margin-bottom:14px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:0.5px dashed var(--border2)">
-          <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Evrak Ekle</div>
-          <input id="etk-evrak-ad" class="yk-inp" style="margin-bottom:6px" placeholder="Evrak adı / açıklama *">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-            <select id="etk-evrak-tur" class="yk-inp">
-              <option value="Tutanak">Tutanak</option>
-              <option value="Sertifika">Sertifika</option>
-              <option value="Katılımcı Listesi">Katılımcı Listesi</option>
-              <option value="Fotoğraf">Fotoğraf</option>
-              <option value="Rapor">Rapor</option>
-              <option value="Diğer">Diğer</option>
-            </select>
-            <input id="etk-evrak-dosya" class="yk-inp" placeholder="Dosya adı (.pdf, .docx...)">
+        <!-- Yükleme alanı -->
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Evrak Yükle</div>
+          <div id="etk-evrak-drop" style="border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:var(--surface2);transition:border-color .2s"
+            ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
+            ondragleave="this.style.borderColor='var(--border)'"
+            ondrop="event.preventDefault();this.style.borderColor='var(--border)';etkEvrakDrop(event.dataTransfer.files)"
+            onclick="document.getElementById('etk-evrak-file-input').click()">
+            <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--text2);display:block;margin-bottom:5px"></i>
+            <div style="font-size:12px;color:var(--text2)">Dosya eklemek için tıklayın veya sürükleyin</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">PDF, Word, Excel — maks. 10MB</div>
           </div>
-          <button class="btn btn-p btn-sm" onclick="etkEvrakKaydet()"><i class="ti ti-plus"></i> Ekle</button>
+          <input type="file" id="etk-evrak-file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg" style="display:none" onchange="etkEvrakDrop(this.files)">
         </div>
         <!-- Mevcut evraklar -->
         <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:8px">${etk.evraklar.length} evrak kayıtlı</div>
@@ -5484,14 +5497,17 @@ function toggleTpl(header) {
           ${etk.evraklar.length===0
             ? '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px"><i class="ti ti-file" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4"></i>Henüz evrak eklenmedi</div>'
             : etk.evraklar.map((ev,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:0.5px solid var(--border);border-radius:7px;margin-bottom:6px;background:var(--surface)">
-                <div style="width:32px;height:32px;border-radius:7px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                  <i class="ti ti-file" style="font-size:15px;color:var(--blue)"></i>
+                <div style="width:32px;height:32px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <i class="ti ${etkEvrakIkon(ev.ad||ev.dosya||'')}" style="font-size:15px;color:${etkEvrakRenk(ev.ad||ev.dosya||'')}"></i>
                 </div>
                 <div style="flex:1;min-width:0">
-                  <div style="font-size:12px;font-weight:500">${ev.ad}</div>
-                  <div style="font-size:11px;color:var(--text2)">${ev.tur}${ev.dosya?' · '+ev.dosya:''} · ${ev.tarih}</div>
+                  <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev.ad}</div>
+                  <div style="font-size:10px;color:var(--text2)">${ev.tur||''}${ev.tarih?' · '+ev.tarih:''}</div>
                 </div>
-                <button onclick="etkEvrakSil('${etkId}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:14px;padding:2px;border-radius:5px"><i class="ti ti-trash"></i></button>
+                <div style="display:flex;gap:5px;align-items:center">
+                  ${ev.url?`<a href="${ev.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:2px 7px"><i class="ti ti-download"></i></a>`:''}
+                  <button onclick="etkEvrakSil('${etkId}','${ev.id}')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px 4px"><i class="ti ti-trash"></i></button>
+                </div>
               </div>`).join('')}
         </div>
       </div>
@@ -5499,31 +5515,52 @@ function toggleTpl(header) {
     document.body.appendChild(ov);
   };
 
-  window.etkEvrakKaydet = function(){
+  window.etkEvrakDrop = async function(files){
+    if(!files||files.length===0) return;
     const etk = ETK_DATA.etkinlikler.find(e=>e.id===_etkEvrakAktif);
     if(!etk) return;
-    const ad = document.getElementById('etk-evrak-ad')?.value.trim();
-    if(!ad){ alert('Evrak adı zorunludur.'); return; }
-    if(!etk.evraklar) etk.evraklar=[];
-    const tur=document.getElementById('etk-evrak-tur')?.value||'Diğer';
-    const dosya=document.getElementById('etk-evrak-dosya')?.value.trim()||'';
-    const tarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-    const giren=currentUser?.adSoyad||'Sistem';
-    etk.evraklar.push({ id:'ev'+Date.now(), ad, tur, dosya, tarih, giren });
-    _supa.from('etk_evraklar').insert([{ etkinlik_id:_etkEvrakAktif, ad, tur, dosya:dosya||null, tarih, giren }])
-      .then(({error})=>{if(error) console.error('Evrak kaydetme hatası:',error.message);});
+    const dropEl = document.getElementById('etk-evrak-drop');
+    if(dropEl){dropEl.style.opacity='.5';dropEl.style.pointerEvents='none';}
+
+    for(const file of Array.from(files)){
+      if(file.size>10*1024*1024){alert(file.name+' 10MB sınırını aşıyor.');continue;}
+      try{
+        const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path='etkinlik/'+_etkEvrakAktif+'/'+Date.now()+'_'+safeName;
+        const {error}=await _supa.storage.from('etkinlik-evraklar').upload(path,file,{upsert:true});
+        if(error) throw error;
+        const {data:urlData}=_supa.storage.from('etkinlik-evraklar').getPublicUrl(path);
+        const url=urlData?.publicUrl||'';
+        const tarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+        const giren=currentUser?.adSoyad||'Sistem';
+        const {data:ins,error:insErr}=await _supa.from('etk_evraklar').insert([{
+          etkinlik_id:_etkEvrakAktif, ad:file.name, tur:'Diğer', url, tarih, giren
+        }]).select().single();
+        if(insErr) throw insErr;
+        if(!etk.evraklar) etk.evraklar=[];
+        etk.evraklar.push({id:ins.id, ad:file.name, tur:'Diğer', url, tarih, giren});
+      }catch(err){
+        alert(file.name+' yüklenemedi: '+(err.message||err));
+      }
+    }
+    if(dropEl){dropEl.style.opacity='';dropEl.style.pointerEvents='';}
+    const inp=document.getElementById('etk-evrak-file-input');
+    if(inp) inp.value='';
     document.getElementById('etk-evrak-overlay')?.remove();
     etkEvrakAc(_etkEvrakAktif);
     if(window.etkRender) window.etkRender(); else renderList();
   };
 
-  window.etkEvrakSil = function(etkId, idx){
+  window.etkEvrakKaydet = function(){ /* artık etkEvrakDrop kullanılıyor */ };
+
+  window.etkEvrakSil = async function(etkId, evrakId){
     const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
     if(!etk||!confirm('Bu evrakı silmek istiyor musunuz?')) return;
-    const evrak=etk.evraklar[idx];
-    etk.evraklar.splice(idx,1);
-    if(evrak?.id && !evrak.id.startsWith('ev')) _supa.from('etk_evraklar').delete().eq('id',evrak.id)
-      .then(({error})=>{if(error) console.error('Evrak silme hatası:',error.message);});
+    etk.evraklar = (etk.evraklar||[]).filter(ev=>String(ev.id)!==String(evrakId));
+    if(evrakId && !String(evrakId).startsWith('ev')){
+      await _supa.from('etk_evraklar').delete().eq('id',evrakId)
+        .then(({error})=>{if(error) console.error('Evrak silme hatası:',error.message);});
+    }
     document.getElementById('etk-evrak-overlay')?.remove();
     etkEvrakAc(etkId);
     if(window.etkRender) window.etkRender(); else renderList();
