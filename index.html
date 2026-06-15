@@ -8363,6 +8363,13 @@ function etkPrsRender(){
   const tBadge={'Eğitim':'b-purple','Seminer':'b-purple','Toplantı':'b-gray','Etkinlik':'b-blue'};
   let etks=[...ETK_PRS_DATA.etkinlikler];
   etks.forEach(e=>{ if(e.durum!=='tamamlandi') e.durum=prsEtkOtoDurum(e); });
+  /* Yıl filtresi */
+  if(window._etkPrsYilFilter && window._etkPrsYilFilter.size>0){
+    etks=etks.filter(e=>{
+      const yil=e.tarihIso?new Date(e.tarihIso).getFullYear():parseInt((e.tarih||'').replace(/[^0-9]/g,' ').trim().split(' ').pop())||0;
+      return window._etkPrsYilFilter.has(yil);
+    });
+  }
   if(prsAktifFilter==='yaklaşan'){
     const now=new Date(); now.setHours(0,0,0,0); const bH=new Date(now); bH.setDate(bH.getDate()+7);
     etks=etks.filter(e=>{ if(e.durum==='tamamlandi') return false; const d=window.etkTarihParse?window.etkTarihParse(e.tarih,e.tarihIso):null; return d&&d>=now&&d<=bH; });
