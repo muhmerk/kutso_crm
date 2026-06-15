@@ -421,6 +421,19 @@ function supaEkranYenile(modul) {
   }
 }
 
+window.etkAySec = function(modul, ay){
+  const ayNum = ay ? parseInt(ay) : null;
+  if(modul==='egitim'){
+    window._etkAyFilter = ayNum;
+    if(window.etkRender) window.etkRender();
+    if(window.etkMetrikleriGuncelle) window.etkMetrikleriGuncelle();
+  } else if(modul==='egitim-prs'){
+    window._etkPrsAyFilter = ayNum;
+    if(window.etkPrsRender) window.etkPrsRender();
+    if(window.etkPrsMetrikleriGuncelle) window.etkPrsMetrikleriGuncelle();
+  }
+};
+
 function _etkAnketEkraniYenile(etkId){
   if(!etkId) return;
   /* ETK_PRS sekmesi */
@@ -3079,7 +3092,10 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
 
     <!-- Personel ETK ana içerik -->
-    <div id="yd-placeholder-egitim-prs" style="margin-bottom:0"></div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:0">
+      <div id="yd-placeholder-egitim-prs" style="margin-bottom:0"></div>
+      <select id="ay-sec-egitim-prs" onchange="etkAySec('egitim-prs',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:center"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select>
+    </div>
     <div class="mg" id="etk-prs-metrics" style="margin-bottom:14px;min-height:72px">
       <div class="mc"><div class="mc-lbl">Toplam etkinlik</div><div class="mc-val" id="etk-prs-m-toplam">0</div><div class="mc-sub">Seçilen yıl</div></div>
       <div class="mc"><div class="mc-lbl">Gerçekleşen</div><div class="mc-val" id="etk-prs-m-gerceklesen">0</div><div class="mc-sub up"></div></div>
@@ -3252,7 +3268,10 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         </div>
       </div>
     </div>
-    <div id="yd-placeholder-egitim" style="margin-bottom:0"></div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:0">
+      <div id="yd-placeholder-egitim" style="margin-bottom:0"></div>
+      <select id="ay-sec-egitim" onchange="etkAySec('egitim',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:center"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select>
+    </div>
     <div class="mg" id="etk-metrics" style="margin-bottom:14px;min-height:72px">
       <div class="mc"><div class="mc-lbl">Toplam etkinlik</div><div class="mc-val" id="etk-m-toplam">—</div><div class="mc-sub" id="etk-m-toplam-sub">Seçilen yıl</div></div>
       <div class="mc"><div class="mc-lbl">Gerçekleşen</div><div class="mc-val" id="etk-m-gerceklesen">—</div><div class="mc-sub up"></div></div>
@@ -5474,6 +5493,13 @@ function toggleTpl(header) {
         return etkYF.has(y);
       });
     }
+    /* Ay filtresi */
+    if(window._etkAyFilter){
+      etks = etks.filter(e=>{
+        const d = etkTarihParse(e.tarih, e.tarihIso);
+        return d && (d.getMonth()+1) === window._etkAyFilter;
+      });
+    }
     /* Arama filtresi */
     if(_etkArama){
       etks = etks.filter(e=>
@@ -6102,11 +6128,65 @@ function toggleTpl(header) {
     if(window.etkMetrikleriGuncelle) window.etkMetrikleriGuncelle();
   };
 
-  window.etkAnketSil = function(etkId, ankId){
+  window.etkAnketSil = async function(etkId, ankId){
     if(!confirm('Bu anketi silmek istiyor musunuz?')) return;
     const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
     if(!etk||!etk.anketler) return;
     etk.anketler = etk.anketler.filter(a=>a.id!==ankId);
+    renderAnketSistemi(etk);
+    if(window.etkMetrikleriGuncelle) window.etkMetrikleriGuncelle();
+    /* DB'den sil */
+    if(ankId && !String(ankId).startsWith('ank')){
+      const {error}=await _supa.from('etk_anketler').delete().eq('id',ankId);
+      if(error) console.error('Üye anket silme hatası:', error.message);
+    }
+  };
+
+  window.etkAnketDuzenle = function(etkId, ankId){
+    const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
+    if(!etk) return;
+    const ank = etk.anketler.find(a=>a.id===ankId);
+    if(!ank) return;
+    const YAPI = window.ETK_ANKET_YAPI||[];
+    window._etkAnketPuanlar = {};
+    window._etkAnketDuzenlemeId = ankId;
+    YAPI.forEach(b=>{
+      b.sorular.forEach((s,si)=>{
+        const p = ank.cevaplar[b.baslik]?.[s]||0;
+        window._etkAnketPuanlar[b.id+'-'+si] = p;
+        for(let yp=1;yp<=5;yp++){
+          const el = document.getElementById('yildiz-'+b.id+'-'+si+'-'+yp);
+          if(el) el.style.color = yp<=p ? '#F5A623' : '#D1D5DB';
+        }
+      });
+    });
+    const kaydetBtn = document.getElementById('etk-anket-kaydet-btn');
+    if(kaydetBtn){
+      kaydetBtn.innerHTML = '<i class="ti ti-check"></i> Güncelle';
+      kaydetBtn.setAttribute('onclick', `etkAnketGuncelle('${etkId}','${ankId}')`);
+    }
+    document.getElementById('etk-mem-baslik-list')?.scrollIntoView({behavior:'smooth',block:'start'});
+  };
+
+  window.etkAnketGuncelle = async function(etkId, ankId){
+    const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
+    if(!etk) return;
+    const ank = etk.anketler.find(a=>a.id===ankId);
+    if(!ank) return;
+    const YAPI = window.ETK_ANKET_YAPI||[];
+    const cevaplar = {};
+    YAPI.forEach(b=>{ cevaplar[b.baslik]={}; b.sorular.forEach((s,si)=>{ cevaplar[b.baslik][s]=window._etkAnketPuanlar?.[b.id+'-'+si]||0; }); });
+    ank.cevaplar = cevaplar;
+    if(ankId && !String(ankId).startsWith('ank')){
+      const {error}=await _supa.from('etk_anketler').update({cevaplar}).eq('id',ankId);
+      if(error) console.error('Üye anket güncelleme hatası:', error.message);
+    }
+    window._etkAnketPuanlar = {}; window._etkAnketDuzenlemeId = null;
+    const kaydetBtn = document.getElementById('etk-anket-kaydet-btn');
+    if(kaydetBtn){
+      kaydetBtn.innerHTML = '<i class="ti ti-send"></i> Anketi Kaydet';
+      kaydetBtn.removeAttribute('onclick');
+    }
     renderAnketSistemi(etk);
     if(window.etkMetrikleriGuncelle) window.etkMetrikleriGuncelle();
   };
@@ -6225,6 +6305,7 @@ function toggleTpl(header) {
                 <span style="font-size:11px;color:var(--text2);margin-left:8px">${ank.tarih} · ${ank.giren}</span>
               </div>
               <div style="display:flex;align-items:center;gap:6px">
+                ${yetkili?`<button class="btn btn-sm" style="font-size:10px;padding:1px 6px" onclick="event.stopPropagation();etkAnketDuzenle('${etk.id}','${ank.id}')"><i class="ti ti-edit"></i></button>`:''}
                 ${yetkili?`<button class="btn btn-sm" style="font-size:10px;padding:1px 6px;color:var(--red)" onclick="event.stopPropagation();etkAnketSil('${etk.id}','${ank.id}')"><i class="ti ti-trash"></i></button>`:''}
                 <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text2)" id="chev-ank-${ank.id}"></i>
               </div>
@@ -8409,6 +8490,13 @@ function etkPrsMetrikleriGuncelle(){
       return window._etkPrsYilFilter.has(yil);
     });
   }
+  /* Ay filtresi */
+  if(window._etkPrsAyFilter){
+    etks=etks.filter(e=>{
+      const d=e.tarihIso?new Date(e.tarihIso):null;
+      return d && (d.getMonth()+1)===window._etkPrsAyFilter;
+    });
+  }
   const toplam=etks.length, gercek=etks.filter(e=>e.durum==='tamamlandi').length;
   const kat=etks.reduce((s,e)=>s+(e.katilimcilar||[]).length,0);
   let mT=0,mS=0;
@@ -8471,6 +8559,13 @@ function etkPrsRender(){
     etks=etks.filter(e=>{
       const yil=e.tarihIso?new Date(e.tarihIso).getFullYear():parseInt((e.tarih||'').replace(/[^0-9]/g,' ').trim().split(' ').pop())||0;
       return window._etkPrsYilFilter.has(yil);
+    });
+  }
+  /* Ay filtresi */
+  if(window._etkPrsAyFilter){
+    etks=etks.filter(e=>{
+      const d=e.tarihIso?new Date(e.tarihIso):null;
+      return d && (d.getMonth()+1)===window._etkPrsAyFilter;
     });
   }
   if(prsAktifFilter==='yaklaşan'){
