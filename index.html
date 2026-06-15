@@ -451,7 +451,11 @@ function supaRealtimeBaslat() {
       await supaYukleEtkinlikler();
       supaEkranYenile('etkinlik');
     })
-    .on('postgres_changes', { event:'INSERT', schema:'public', table:'etk_evraklar' }, async (payload)=>{
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlikler dinleniyor'); });
+
+  /* Etkinlik evrakları — ayrı channel (subscribe sonrası binding eklenemiyor) */
+  _supa.channel('db-etk-evraklar')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'etk_evraklar' }, (payload)=>{
       const ev = payload.new;
       if(!ev) return;
       const etk = (window.ETK_DATA?.etkinlikler||[]).find(e=>e.id===ev.etkinlik_id);
@@ -460,30 +464,29 @@ function supaRealtimeBaslat() {
         if(!etk.evraklar.find(x=>String(x.id)===String(ev.id))){
           etk.evraklar.push({id:ev.id, ad:ev.ad, tur:ev.tur||'Diğer', url:ev.url||'', tarih:ev.tarih, giren:ev.giren});
         }
-        /* Overlay açık ve bu etkinliğe aitse yenile */
         const overlay = document.getElementById('etk-evrak-overlay');
-        if(overlay && (window._etkEvrakAktif===ev.etkinlik_id || _etkEvrakAktif===ev.etkinlik_id)){
+        if(overlay && (window._etkEvrakAktif===ev.etkinlik_id)){
           overlay.remove();
-          window.etkEvrakAc(ev.etkinlik_id);
+          if(window.etkEvrakAc) window.etkEvrakAc(ev.etkinlik_id);
         }
         if(window.etkRender) window.etkRender();
       }
     })
-    .on('postgres_changes', { event:'DELETE', schema:'public', table:'etk_evraklar' }, async (payload)=>{
+    .on('postgres_changes', { event:'DELETE', schema:'public', table:'etk_evraklar' }, (payload)=>{
       const ev = payload.old;
       if(!ev) return;
       const etk = (window.ETK_DATA?.etkinlikler||[]).find(e=>e.id===ev.etkinlik_id);
       if(etk){
         etk.evraklar = (etk.evraklar||[]).filter(x=>String(x.id)!==String(ev.id));
         const overlay = document.getElementById('etk-evrak-overlay');
-        if(overlay && (window._etkEvrakAktif===ev.etkinlik_id || _etkEvrakAktif===ev.etkinlik_id)){
+        if(overlay && (window._etkEvrakAktif===ev.etkinlik_id)){
           overlay.remove();
-          window.etkEvrakAc(ev.etkinlik_id);
+          if(window.etkEvrakAc) window.etkEvrakAc(ev.etkinlik_id);
         }
         if(window.etkRender) window.etkRender();
       }
     })
-    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlikler dinleniyor'); });
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlik evrakları dinleniyor'); });
 
   /* Şikayetler */
   _supa.channel('db-sikayet')
