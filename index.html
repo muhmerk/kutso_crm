@@ -421,6 +421,19 @@ function supaEkranYenile(modul) {
   }
 }
 
+function _etkAnketEkraniYenile(etkId){
+  if(!etkId) return;
+  /* ETK_PRS sekmesi */
+  const etkPrs = window.ETK_PRS_DATA?.etkinlikler?.find(e=>e.id===etkId);
+  if(etkPrs && window.etkPrsMemRender) window.etkPrsMemRender(etkPrs);
+  if(window.etkPrsMetrikleriGuncelle) window.etkPrsMetrikleriGuncelle();
+  /* ETK sekmesi */
+  const etk = window.ETK_DATA?.etkinlikler?.find(e=>e.id===etkId);
+  if(etk && window.renderMemBasliklar) window.renderMemBasliklar(etk);
+  if(window.etkMetrikleriGuncelle) window.etkMetrikleriGuncelle();
+}
+window._etkAnketEkraniYenile = _etkAnketEkraniYenile;
+
 function supaRealtimeBaslat() {
   if (_realtimeBaslatildi) return;
   _realtimeBaslatildi = true;
@@ -447,11 +460,27 @@ function supaRealtimeBaslat() {
       await supaYukleEtkinlikler();
       supaEkranYenile('etkinlik');
     })
-    .on('postgres_changes', { event:'*', schema:'public', table:'etk_anketler' }, async ()=>{
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlikler dinleniyor'); });
+
+  /* Anket değişiklikleri — ayrı channel */
+  _supa.channel('db-etk-anket')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'etk_anketler' }, async (payload)=>{
       await supaYukleEtkinlikler();
       supaEkranYenile('etkinlik');
+      /* Açık memnuniyet formunu yenile */
+      _etkAnketEkraniYenile(payload.new?.etkinlik_id);
     })
-    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlikler dinleniyor'); });
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'etk_anketler' }, async (payload)=>{
+      await supaYukleEtkinlikler();
+      supaEkranYenile('etkinlik');
+      _etkAnketEkraniYenile(payload.new?.etkinlik_id);
+    })
+    .on('postgres_changes', { event:'DELETE', schema:'public', table:'etk_anketler' }, async (payload)=>{
+      await supaYukleEtkinlikler();
+      supaEkranYenile('etkinlik');
+      _etkAnketEkraniYenile(payload.old?.etkinlik_id);
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlik anketleri dinleniyor'); });
 
   /* Katılımcı değişiklikleri — ayrı channel */
   _supa.channel('db-etk-katilimci')
@@ -8966,11 +8995,17 @@ window.etkPrsAnketGuncelle=async function(etkId,ankId){
   const YAPI=window.ETK_ANKET_YAPI||[];
   const cevaplar={};
   YAPI.forEach(b=>{ cevaplar[b.baslik]={}; b.sorular.forEach((s,si)=>{ cevaplar[b.baslik][s]=window._etkAnketPuanlar?.[b.id+'-'+si]||0; }); });
+  /* Local güncelle */
   ank.cevaplar=cevaplar;
-  /* DB güncelle */
+  /* DB güncelle — gerçek UUID ise update, değilse insert */
   if(ankId && !String(ankId).startsWith('ankp')){
     const {error}=await _supa.from('etk_anketler').update({cevaplar}).eq('id',ankId);
     if(error) console.error('Anket güncelleme hatası:',error.message);
+  } else {
+    /* Geçici ID — DB'ye yeni kayıt ekle */
+    const ankTarih=ank.tarih; const ankGiren=ank.giren;
+    const {data:ins}=await _supa.from('etk_anketler').insert([{etkinlik_id:etkId, tarih:ankTarih, giren:ankGiren, cevaplar}]).select('id').single();
+    if(ins?.id) ank.id=ins.id;
   }
   window._etkAnketPuanlar={}; window._etkAnketDuzenlemeId=null;
   /* Kaydet butonunu sıfırla */
