@@ -125,7 +125,7 @@ async function supaYukleEtkinlikler() {
         durum:e.durum||'planlandi',
         katilimcilar:(katilimcilar||[]).filter(k=>k.etkinlik_id===e.id).map(k=>({
           firmaId:k.uye_id, firma:k.firma||'', yetkili:k.yetkili||'',
-          dis:k.dis||false, ad:k.dis_ad||'', eposta:k.dis_eposta||'',
+          dis:k.dis||false, ad:k.kullanici?k.yetkili||k.dis_ad||'':k.dis_ad||'', eposta:k.dis_eposta||'',
           kullanici:k.kullanici||'', unvan:'', memnuniyet:0, puanlar:{}
         })),
         anketler:(anketler||[]).filter(a=>a.etkinlik_id===e.id).map(a=>({ id:a.id, tarih:a.tarih, giren:a.giren, cevaplar:a.cevaplar||{} })),
@@ -4694,13 +4694,17 @@ function toggleTpl(header) {
     const listEl  = document.getElementById('crm-etk-list');
     if (!emptyEl || !listEl) return;
 
-    if (!window.ETK_DATA) {
+    if (!window.ETK_DATA && !window.ETK_PRS_DATA) {
       emptyEl.style.display = 'block'; listEl.innerHTML = ''; return;
     }
 
-    /* Firma ID veya firma adı ile eşleştir */
+    /* Firma ID veya firma adı ile eşleştir — ETK_DATA ve ETK_PRS_DATA her ikisinde ara */
     const katilan = [];
-    ETK_DATA.etkinlikler.forEach(etk => {
+    const tumEtkinlikler = [
+      ...(window.ETK_DATA?.etkinlikler||[]),
+      ...(window.ETK_PRS_DATA?.etkinlikler||[])
+    ];
+    tumEtkinlikler.forEach(etk => {
       const k = etk.katilimcilar.find(c =>
         String(c.firmaId) === String(firmaId) ||
         (currentFirm && c.firma && c.firma === currentFirm.firma)
@@ -8668,27 +8672,48 @@ window.etkPrsModalTab=function(pane,btn){
   }
 };
 
-window.etkPrsKatilimciEkle=function(){
+window.etkPrsKatilimciEkle=async function(){
   const selEl=document.getElementById('etk-prs-personel-sec');
   if(!selEl||!selEl.value) return;
   const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===prsAktifEtkId);
   if(!etk) return;
   if(!etk.katilimcilar) etk.katilimcilar=[];
   const p=(window.PERSONEL||[]).find(x=>x.kullanici===selEl.value);
-  etk.katilimcilar.push({ kullanici:selEl.value, ad:p?p.ad+' '+p.soyad:selEl.value, unvan:p?.unvan||'' });
-  /* Supabase'e kaydet */
+  const adSoyad = p ? p.ad+' '+p.soyad : selEl.value;
+  etk.katilimcilar.push({ kullanici:selEl.value, ad:adSoyad, unvan:p?.unvan||'' });
+  /* Supabase etk_katilimcilar'a kaydet */
   _supa.from('etk_katilimcilar').insert([{
     etkinlik_id: prsAktifEtkId,
     personel_id: p?.id||null,
     kullanici: selEl.value,
-    yetkili: p?p.ad+' '+p.soyad:selEl.value
+    yetkili: adSoyad
   }]).then(({error})=>{if(error) console.error('Personel katılımcı kaydetme hatası:',error.message);});
-  /* EGITIMLER senkronizasyon */
-  if(p&&window.EGITIMLER){
+  /* Personel eğitimler tablosuna da ekle (personel sekmesinde görünsün) */
+  if(p){
     const eid=p.id;
+    if(!window.EGITIMLER) window.EGITIMLER={};
     if(!window.EGITIMLER[eid]) window.EGITIMLER[eid]=[];
+    const tarihIso = etk.tarihIso || '';
+    const yeniEgitim = {
+      ad: etk.ad, tarih: etk.tarih, tarihIso,
+      sure: etk.saat||'—', kurum:'Kütahya TSO',
+      konu: etk.tur, sertifika:false, certNo:'', _etkPrsId: etk.id
+    };
     if(!window.EGITIMLER[eid].find(e=>e._etkPrsId===etk.id)){
-      window.EGITIMLER[eid].unshift({ _etkPrsId:etk.id, ad:etk.ad, tarih:etk.tarih, sure:etk.saat||'—', kurum:'Kütahya TSO', konu:etk.tur, sertifika:false, certNo:'' });
+      window.EGITIMLER[eid].unshift(yeniEgitim);
+      /* DB'ye de kaydet */
+      const {data:ins} = await _supa.from('personel_egitimler').insert([{
+        personel_id: eid,
+        ad: etk.ad,
+        tarih: etk.tarih,
+        tarih_iso: tarihIso||null,
+        sure: etk.saat||'—',
+        kurum: 'Kütahya TSO',
+        konu: etk.tur||'',
+        sertifika: false,
+        cert_no: null
+      }]).select('id').single();
+      if(ins?.id) yeniEgitim.id = ins.id;
     }
   }
   selEl.innerHTML='<option value="">Personel seçin...</option>'+(window.PERSONEL||[]).filter(pp=>!(etk.katilimcilar||[]).find(k=>k.kullanici===pp.kullanici)).map(pp=>`<option value="${pp.kullanici}">${pp.ad} ${pp.soyad} — ${pp.unvan}</option>`).join('');
