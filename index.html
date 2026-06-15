@@ -458,12 +458,38 @@ function supaRealtimeBaslat() {
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'etk_katilimcilar' }, async ()=>{
       await supaYukleEtkinlikler();
       supaEkranYenile('etkinlik');
+      /* Açık olan etkinlik kartının katılımcı listesini yenile */
+      if(window._etkPrsAcc && window.ETK_PRS_DATA && window.etkPrsKatilimciRender){
+        window._etkPrsAcc.forEach(id=>{
+          const etk=window.ETK_PRS_DATA.etkinlikler.find(e=>e.id===id);
+          if(etk) window.etkPrsKatilimciRender(etk);
+        });
+      }
+      if(window._etkAcc && window.ETK_DATA && window.renderKatilimciList){
+        window._etkAcc.forEach(id=>{
+          const etk=window.ETK_DATA.etkinlikler.find(e=>e.id===id);
+          if(etk) window.renderKatilimciList(etk);
+        });
+      }
       /* CRM açıksa yenile */
       if(window.currentFirm && window.renderEtk) window.renderEtk(window.currentFirm.id);
     })
     .on('postgres_changes', { event:'DELETE', schema:'public', table:'etk_katilimcilar' }, async ()=>{
       await supaYukleEtkinlikler();
       supaEkranYenile('etkinlik');
+      /* Açık olan etkinlik kartının katılımcı listesini yenile */
+      if(window._etkPrsAcc && window.ETK_PRS_DATA && window.etkPrsKatilimciRender){
+        window._etkPrsAcc.forEach(id=>{
+          const etk=window.ETK_PRS_DATA.etkinlikler.find(e=>e.id===id);
+          if(etk) window.etkPrsKatilimciRender(etk);
+        });
+      }
+      if(window._etkAcc && window.ETK_DATA && window.renderKatilimciList){
+        window._etkAcc.forEach(id=>{
+          const etk=window.ETK_DATA.etkinlikler.find(e=>e.id===id);
+          if(etk) window.renderKatilimciList(etk);
+        });
+      }
       /* CRM açıksa yenile */
       if(window.currentFirm && window.renderEtk) window.renderEtk(window.currentFirm.id);
     })
@@ -5386,6 +5412,7 @@ function toggleTpl(header) {
   /* ── Arama ve Accordion state ── */
   let _etkArama = '';
   const _etkAcc = new Set();
+  window._etkAcc = _etkAcc;
 
   function renderList() {
     const list = document.getElementById('etk-list');
@@ -5886,6 +5913,7 @@ function toggleTpl(header) {
   };
 
   function renderKatilimciList(etk) {
+    window.renderKatilimciList = renderKatilimciList;
     const cnt = document.getElementById('etk-kat-count');
     if(cnt) cnt.textContent = '(' + etk.katilimcilar.length + ')';
     const listEl = document.getElementById('etk-katilimci-list');
@@ -8473,6 +8501,7 @@ window.etkPrsFilter=function(val,btn){ prsAktifFilter=val; document.querySelecto
 let _etkPrsArama='';
 window.etkPrsArama=function(q){ _etkPrsArama=q.toLowerCase().trim(); etkPrsRender(); };
 const _etkPrsAcc=new Set();
+window._etkPrsAcc=_etkPrsAcc;
 window.etkPrsKartToggle=function(id){ if(_etkPrsAcc.has(id)) _etkPrsAcc.delete(id); else _etkPrsAcc.add(id); etkPrsRender(); };
 window.etkPrsYeniEkle=function(){
   const sel=document.getElementById('etk-prs-f-sorumlu');
@@ -8748,6 +8777,7 @@ window.etkPrsKatilimciEkle=async function(){
 };
 
 function etkPrsKatilimciRender(etk){
+  window.etkPrsKatilimciRender = etkPrsKatilimciRender;
   const listEl=document.getElementById('etk-prs-katilimci-list');
   const cnt=document.getElementById('etk-prs-kat-count');
   if(cnt) cnt.textContent='('+(etk.katilimcilar||[]).length+')';
