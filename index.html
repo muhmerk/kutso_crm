@@ -5518,13 +5518,13 @@ function toggleTpl(header) {
           <div id="etk-evrak-drop" style="border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:var(--surface2);transition:border-color .2s"
             ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
             ondragleave="this.style.borderColor='var(--border)'"
-            ondrop="event.preventDefault();this.style.borderColor='var(--border)';etkEvrakDrop(event.dataTransfer.files)"
+            ondrop="event.preventDefault();this.style.borderColor='var(--border)';etkEvrakDrop(event.dataTransfer.files,'${etkId}')"
             onclick="document.getElementById('etk-evrak-file-input').click()">
             <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--text2);display:block;margin-bottom:5px"></i>
             <div style="font-size:12px;color:var(--text2)">Dosya eklemek için tıklayın veya sürükleyin</div>
             <div style="font-size:10px;color:var(--text3);margin-top:2px">PDF, Word, Excel — maks. 10MB</div>
           </div>
-          <input type="file" id="etk-evrak-file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg" style="display:none" onchange="etkEvrakDrop(this.files)">
+          <input type="file" id="etk-evrak-file-input" data-etk-id="${etkId}" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg" style="display:none" onchange="etkEvrakDrop(this.files, this.dataset.etkId)">
         </div>` : `<div style="margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2)"><i class="ti ti-lock" style="margin-right:5px"></i>Evrak yükleme yetkisi sadece Genel Sekreterlik ve İK personelindedir.</div>`}
         <!-- Mevcut evraklar -->
         <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:8px">${etk.evraklar.length} evrak kayıtlı</div>
@@ -5550,10 +5550,12 @@ function toggleTpl(header) {
     document.body.appendChild(ov);
   };
 
-  window.etkEvrakDrop = async function(files){
+  window.etkEvrakDrop = async function(files, etkId){
     if(!files||files.length===0) return;
-    const etk = ETK_DATA.etkinlikler.find(e=>e.id===_etkEvrakAktif);
-    if(!etk) return;
+    /* etkId önce parametre, sonra _etkEvrakAktif */
+    const aktifId = etkId || _etkEvrakAktif || window._etkEvrakAktif;
+    const etk = ETK_DATA.etkinlikler.find(e=>e.id===aktifId);
+    if(!etk){ console.error('Etkinlik bulunamadı:', aktifId); return; }
     const dropEl = document.getElementById('etk-evrak-drop');
     if(dropEl){dropEl.style.opacity='.5';dropEl.style.pointerEvents='none';}
 
@@ -5561,20 +5563,22 @@ function toggleTpl(header) {
       if(file.size>10*1024*1024){alert(file.name+' 10MB sınırını aşıyor.');continue;}
       try{
         const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-        const path='etkinlik/'+_etkEvrakAktif+'/'+Date.now()+'_'+safeName;
-        const {error}=await _supa.storage.from('etkinlik-evraklar').upload(path,file,{upsert:true});
-        if(error) throw error;
+        const path='etkinlik/'+aktifId+'/'+Date.now()+'_'+safeName;
+        const {error:upErr}=await _supa.storage.from('etkinlik-evraklar').upload(path,file,{upsert:true});
+        if(upErr) throw upErr;
         const {data:urlData}=_supa.storage.from('etkinlik-evraklar').getPublicUrl(path);
         const url=urlData?.publicUrl||'';
         const tarih=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
         const giren=currentUser?.adSoyad||'Sistem';
         const {data:ins,error:insErr}=await _supa.from('etk_evraklar').insert([{
-          etkinlik_id:_etkEvrakAktif, ad:file.name, tur:'Diğer', url, tarih, giren
+          etkinlik_id:aktifId, ad:file.name, tur:'Diğer', url, tarih, giren
         }]).select().single();
         if(insErr) throw insErr;
         if(!etk.evraklar) etk.evraklar=[];
         etk.evraklar.push({id:ins.id, ad:file.name, tur:'Diğer', url, tarih, giren});
+        console.log('✓ Evrak yüklendi:', file.name);
       }catch(err){
+        console.error('Evrak yükleme hatası:', err);
         alert(file.name+' yüklenemedi: '+(err.message||err));
       }
     }
@@ -5582,7 +5586,7 @@ function toggleTpl(header) {
     const inp=document.getElementById('etk-evrak-file-input');
     if(inp) inp.value='';
     document.getElementById('etk-evrak-overlay')?.remove();
-    etkEvrakAc(_etkEvrakAktif);
+    etkEvrakAc(aktifId);
     if(window.etkRender) window.etkRender(); else renderList();
   };
 
