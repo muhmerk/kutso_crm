@@ -467,7 +467,7 @@ function supaRealtimeBaslat() {
         const overlay = document.getElementById('etk-evrak-overlay');
         if(overlay && (window._etkEvrakAktif===ev.etkinlik_id)){
           overlay.remove();
-          if(window.etkEvrakAc) window.etkEvrakAc(ev.etkinlik_id);
+          setTimeout(()=>{ if(window.etkEvrakAc) window.etkEvrakAc(ev.etkinlik_id); }, 50);
         }
         if(window.etkRender) window.etkRender();
       }
@@ -479,9 +479,9 @@ function supaRealtimeBaslat() {
       if(etk){
         etk.evraklar = (etk.evraklar||[]).filter(x=>String(x.id)!==String(ev.id));
         const overlay = document.getElementById('etk-evrak-overlay');
-        if(overlay && (window._etkEvrakAktif===ev.etkinlik_id)){
+        if(overlay && window._etkEvrakAktif===ev.etkinlik_id){
           overlay.remove();
-          if(window.etkEvrakAc) window.etkEvrakAc(ev.etkinlik_id);
+          setTimeout(()=>{ if(window.etkEvrakAc) window.etkEvrakAc(ev.etkinlik_id); }, 50);
         }
         if(window.etkRender) window.etkRender();
       }
