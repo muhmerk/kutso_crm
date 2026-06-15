@@ -13036,13 +13036,25 @@ window.memKaydet = function(){
     cevaplar:{...cevaplar}, katOrt, ortPuan
   });
 
-  /* Supabase'e kaydet */
-  supaMemAnketEkle({
-    uye_id: firmaId||null, firma, yetkili, tarih,
-    tarih_iso: tarihVal, yil, ihracat, isletme_tipi: isletmeTipi,
-    nace, yorum, eposta, cevaplar, kat_ort: katOrt,
-    ort_puan: ortPuan, giren_kul: currentUser?.kullanici||''
-  });
+  /* Supabase'e kaydet — düzenleme ise UPDATE, yeni ise INSERT */
+  if(aktifId && !String(aktifId).startsWith('ma')){
+    /* Mevcut kaydı güncelle */
+    _supa.from('mem_anketler').update({
+      uye_id: firmaId||null, firma, yetkili, tarih,
+      tarih_iso: tarihVal, yil, ihracat, isletme_tipi: isletmeTipi,
+      nace, yorum, eposta, cevaplar, kat_ort: katOrt, ort_puan: ortPuan
+    }).eq('id', aktifId).then(({error})=>{
+      if(error) console.error('Memnuniyet güncelleme hatası:', error.message);
+      else console.log('✓ Memnuniyet anketi güncellendi');
+    });
+  } else {
+    supaMemAnketEkle({
+      uye_id: firmaId||null, firma, yetkili, tarih,
+      tarih_iso: tarihVal, yil, ihracat, isletme_tipi: isletmeTipi,
+      nace, yorum, eposta, cevaplar, kat_ort: katOrt,
+      ort_puan: ortPuan, giren_kul: currentUser?.kullanici||''
+    });
+  }
 
   /* MEM_HIZMET_DATA güncelle */
   const HD = window.MEM_HIZMET_DATA;
