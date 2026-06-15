@@ -8306,6 +8306,13 @@ function prsEtkOtoDurum(etk){
 function etkPrsMetrikleriGuncelle(){
   let etks=[...ETK_PRS_DATA.etkinlikler];
   etks.forEach(e=>{ if(e.durum!=='tamamlandi') e.durum=prsEtkOtoDurum(e); });
+  /* Yıl filtresi */
+  if(window._etkPrsYilFilter && window._etkPrsYilFilter.size>0){
+    etks=etks.filter(e=>{
+      const yil=e.tarihIso?new Date(e.tarihIso).getFullYear():parseInt((e.tarih||'').replace(/[^0-9]/g,' ').trim().split(' ').pop())||0;
+      return window._etkPrsYilFilter.has(yil);
+    });
+  }
   const toplam=etks.length, gercek=etks.filter(e=>e.durum==='tamamlandi').length;
   const kat=etks.reduce((s,e)=>s+(e.katilimcilar||[]).length,0);
   let mT=0,mS=0;
