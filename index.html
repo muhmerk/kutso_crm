@@ -608,6 +608,18 @@ function supaRealtimeBaslat() {
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlik evrakları dinleniyor'); });
 
+  /* Memnuniyet anketleri — ayrı channel */
+  _supa.channel('db-mem-anket')
+    .on('postgres_changes', { event:'*', schema:'public', table:'mem_anketler' }, async ()=>{
+      await supaYukleMemnuniyet();
+      supaEkranYenile('memnuniyet');
+      /* CRM memnuniyet sekmesi açıksa yenile */
+      if(window.currentFirm && window.crmRenderMem){
+        window.crmRenderMem(window.currentFirm.id);
+      }
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Memnuniyet anketleri dinleniyor'); });
+
   /* Şikayetler */
   _supa.channel('db-sikayet')
     .on('postgres_changes', { event:'*', schema:'public', table:'sikayetler' }, async ()=>{
