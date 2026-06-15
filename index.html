@@ -8266,6 +8266,7 @@ window.egitimSec = function(sekme, btn){
     document.getElementById('tb-title').textContent='Eğitim & Etkinlik — Personel';
     document.getElementById('tb-sub').textContent='Personel eğitim ve etkinlik takibi';
     const mevcutYil=new Date().getFullYear();
+    window._etkPrsYilFilter=new Set([mevcutYil]);
     if(window.YD_STATE) window.YD_STATE['egitim-prs']=new Set([mevcutYil]);
     setTimeout(()=>{ 
       if(window.initYilPickers) window.initYilPickers();
