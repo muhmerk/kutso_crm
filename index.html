@@ -8844,6 +8844,7 @@ window.etkPrsKatilimciCikar=function(etkId,idx){
 
 /* ─ Memnuniyet ─ */
 function etkPrsMemRender(etk){
+  window.etkPrsMemRender = etkPrsMemRender;
   const el=document.getElementById('etk-prs-mem-baslik-list');
   if(!el) return;
   if(!etk.anketler) etk.anketler=[];
