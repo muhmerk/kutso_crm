@@ -9532,6 +9532,7 @@ function ykGundemKartHtml(g, sira, yoneticiMod){
     ${yoneticiMod ? `<div style="margin-top:10px;display:flex;gap:7px">
       <button class="btn btn-sm" style="font-size:11px" onclick="ykGundemEkleModal('${g.toplantıId}', '${g.id}')"><i class="ti ti-user-plus"></i> Atama Ekle</button>
       <button class="btn btn-sm" style="font-size:11px" onclick="ykGundemDuzenle('${g.toplantıId}', '${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+      <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="ykGundemSil('${g.id}','${g.toplantıId}')"><i class="ti ti-trash"></i> Sil</button>
       ${g.durum!=='tamamlandi' ? `<button class="btn btn-p btn-sm" style="font-size:11px" onclick="ykGundemTamamla('${g.id}')"><i class="ti ti-check"></i> Tümünü Tamamlandı İşaretle</button>` : ''}
     </div>` : ''}
   </div>`;
@@ -9549,6 +9550,44 @@ window.ykAtamaTamamla = function(gundemId, kullanici){
   ykRender();
   if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
   if(window.dashboardGuncelle) window.dashboardGuncelle();
+};
+
+/* ── Gündem Silme Fonksiyonları ── */
+window.ykGundemSil = async function(gundemId, toplantıId){
+  if(!confirm('Bu gündem maddesini silmek istiyor musunuz? Atamalar da silinecek.')) return;
+  /* Atamaları sil */
+  await _supa.from('karar_atamalar').delete().eq('gundem_id', gundemId);
+  /* Gündem sil */
+  const {error} = await _supa.from('karar_gundemler').delete().eq('id', gundemId);
+  if(error){ alert('Silme hatası: '+error.message); return; }
+  /* Local güncelle */
+  YK_DB.gundemler = YK_DB.gundemler.filter(g=>g.id!==gundemId);
+  /* Toplantı sayfasında kal */
+  if(toplantıId) ykAcToplantı(toplantıId);
+  else ykRender();
+  if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+};
+
+window.mkGundemSil = async function(gundemId, toplantıId){
+  if(!confirm('Bu gündem maddesini silmek istiyor musunuz? Atamalar da silinecek.')) return;
+  await _supa.from('karar_atamalar').delete().eq('gundem_id', gundemId);
+  const {error} = await _supa.from('karar_gundemler').delete().eq('id', gundemId);
+  if(error){ alert('Silme hatası: '+error.message); return; }
+  MK_DB.gundemler = MK_DB.gundemler.filter(g=>g.id!==gundemId);
+  if(toplantıId) mkAcToplantı(toplantıId);
+  else mkRenderListe();
+  if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+};
+
+window.meclisGundemSil = async function(gundemId, toplantıId){
+  if(!confirm('Bu kararı silmek istiyor musunuz? Atamalar da silinecek.')) return;
+  await _supa.from('karar_atamalar').delete().eq('gundem_id', gundemId);
+  const {error} = await _supa.from('karar_gundemler').delete().eq('id', gundemId);
+  if(error){ alert('Silme hatası: '+error.message); return; }
+  MECLIS_DB.gundemler = MECLIS_DB.gundemler.filter(g=>g.id!==gundemId);
+  if(toplantıId) meclisAcToplantı(toplantıId);
+  else meclisRenderListe();
+  if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 };
 
 window.ykGundemTamamla = function(gundemId){
@@ -10174,6 +10213,7 @@ window.mkAcToplantı = function(id){
         ${mkYoneticiMi()&&g.durum!=='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
           <button class="btn btn-sm" style="font-size:11px" onclick="mkGundemEkle('${id}','${g.id}')"><i class="ti ti-user-plus"></i> Atama</button>
       <button class="btn btn-sm" style="font-size:11px" onclick="mkGundemDuzenle('${id}','${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+          <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="mkGundemSil('${g.id}','${id}')"><i class="ti ti-trash"></i> Sil</button>
           <button class="btn btn-p btn-sm" style="font-size:11px" onclick="mkGundemTam('${g.id}')"><i class="ti ti-check"></i> Tamamlandı</button>
         </div>`:''}
       </div>`;
@@ -10565,6 +10605,7 @@ window.meclisAcToplantı = function(id){
       ${mkYoneticiMi()&&g.durum!=='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
         <button class="btn btn-sm" style="font-size:11px" onclick="meclisKararEkle('${id}','${g.id}')"><i class="ti ti-user-plus"></i> Atama</button>
         <button class="btn btn-sm" style="font-size:11px" onclick="meclisKararDuzenle('${id}','${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+        <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="meclisGundemSil('${g.id}','${id}')"><i class="ti ti-trash"></i> Sil</button>
         <button class="btn btn-p btn-sm" style="font-size:11px" onclick="meclisGundemTam('${g.id}')"><i class="ti ti-check"></i> Uygulandı</button>
       </div>`:''}
     </div>`).join('');
