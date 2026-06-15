@@ -457,12 +457,13 @@ function supaRealtimeBaslat() {
       const etk = (window.ETK_DATA?.etkinlikler||[]).find(e=>e.id===ev.etkinlik_id);
       if(etk){
         if(!etk.evraklar) etk.evraklar=[];
-        if(!etk.evraklar.find(x=>x.id===ev.id)){
+        if(!etk.evraklar.find(x=>String(x.id)===String(ev.id))){
           etk.evraklar.push({id:ev.id, ad:ev.ad, tur:ev.tur||'Diğer', url:ev.url||'', tarih:ev.tarih, giren:ev.giren});
         }
-        /* Overlay açıksa yenile */
-        if(document.getElementById('etk-evrak-overlay') && window._etkEvrakAktif===ev.etkinlik_id){
-          document.getElementById('etk-evrak-overlay').remove();
+        /* Overlay açık ve bu etkinliğe aitse yenile */
+        const overlay = document.getElementById('etk-evrak-overlay');
+        if(overlay && (window._etkEvrakAktif===ev.etkinlik_id || _etkEvrakAktif===ev.etkinlik_id)){
+          overlay.remove();
           window.etkEvrakAc(ev.etkinlik_id);
         }
         if(window.etkRender) window.etkRender();
@@ -473,10 +474,10 @@ function supaRealtimeBaslat() {
       if(!ev) return;
       const etk = (window.ETK_DATA?.etkinlikler||[]).find(e=>e.id===ev.etkinlik_id);
       if(etk){
-        etk.evraklar = (etk.evraklar||[]).filter(x=>x.id!==ev.id);
-        /* Overlay açıksa yenile */
-        if(document.getElementById('etk-evrak-overlay') && window._etkEvrakAktif===ev.etkinlik_id){
-          document.getElementById('etk-evrak-overlay').remove();
+        etk.evraklar = (etk.evraklar||[]).filter(x=>String(x.id)!==String(ev.id));
+        const overlay = document.getElementById('etk-evrak-overlay');
+        if(overlay && (window._etkEvrakAktif===ev.etkinlik_id || _etkEvrakAktif===ev.etkinlik_id)){
+          overlay.remove();
           window.etkEvrakAc(ev.etkinlik_id);
         }
         if(window.etkRender) window.etkRender();
@@ -5501,8 +5502,9 @@ function toggleTpl(header) {
     const ov = document.createElement('div');
     ov.id = 'etk-evrak-overlay';
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:250;display:flex;align-items:center;justify-content:center';
-    const canDelete = prsEklemeYetkiVar(); /* Sadece GS/İK silebilir */
-    const canDownload = prsEklemeYetkiVar(); /* Sadece GS/İK indirebilir */
+    const _etkYetki = currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici);
+    const canDelete = _etkYetki; /* Sadece GS/İK silebilir */
+    const canDownload = _etkYetki; /* Sadece GS/İK indirebilir */
     ov.innerHTML = `<div style="background:var(--surface);border-radius:14px;width:520px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
       <div style="padding:14px 18px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
         <div>
