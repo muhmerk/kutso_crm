@@ -186,9 +186,10 @@ async function supaYukleSikayetler() {
           section.appendChild(div);
         });
       }
-      if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(new Date().getFullYear());
+      const aktifYil = window.YD_STATE?.['sikayet']?.size ? Math.max(...Array.from(window.YD_STATE['sikayet'])) : new Date().getFullYear();
+      if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(aktifYil);
       if(window.sikTrendGuncelle) window.sikTrendGuncelle();
-      if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(new Date().getFullYear());
+      if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(aktifYil);
       if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
       if(window.dashboardGuncelle) window.dashboardGuncelle();
       console.log('✓ Şikayetler yüklendi:', sikayetler.length);
