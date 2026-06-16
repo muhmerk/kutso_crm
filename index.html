@@ -617,6 +617,10 @@ function supaRealtimeBaslat() {
   _supa.channel('db-sikayet')
     .on('postgres_changes', { event:'*', schema:'public', table:'sikayetler' }, async ()=>{
       await supaYukleSikayetler();
+      /* CRM şikayet sekmesi açıksa yenile */
+      if(window.currentFirm && window.crmRenderSik){
+        window.crmRenderSik(window.currentFirm.id);
+      }
     })
     .on('postgres_changes', { event:'*', schema:'public', table:'sikayet_notlar' }, async ()=>{
       await supaYukleSikayetler();
