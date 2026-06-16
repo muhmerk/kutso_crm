@@ -410,6 +410,8 @@ function supaEkranYenile(modul) {
   } else if (modul === 'memnuniyet') {
     if(window.memTrendGuncelle) window.memTrendGuncelle();
     if(window.memHizmetGuncelle) window.memHizmetGuncelle(new Date().getFullYear());
+    if(window.memAnketListesiGuncelle) window.memAnketListesiGuncelle(new Date().getFullYear());
+    if(window.memKarsilastirmaGuncelle) window.memKarsilastirmaGuncelle();
     if(window.memPrsTrendGuncelle) window.memPrsTrendGuncelle();
     if(window.dashboardGuncelle) window.dashboardGuncelle();
   } else if (modul === 'akreditasyon') {
