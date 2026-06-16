@@ -192,6 +192,8 @@ async function supaYukleSikayetler() {
       if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(aktifYil);
       if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
       if(window.dashboardGuncelle) window.dashboardGuncelle();
+      /* Kart görünürlüğü ve boş durum mesajını güncelle */
+      if(window.YD_STATE?.['sikayet'] && window._sikayetCallback) window._sikayetCallback(window.YD_STATE['sikayet']);
       console.log('✓ Şikayetler yüklendi:', sikayetler.length);
       window._sikVeriYuklendi = true;
     };
@@ -12394,6 +12396,7 @@ window.updateTopbarUser = function(user){
 
   /* ŞİKAYET */
   function sikayetCallback(yillar){
+    window._sikayetCallback = sikayetCallback;
     /* Tek seçim — en büyük (tek) seçili yıl */
     const mevcutYil = new Date().getFullYear();
     const secilenYil = yillar.size ? Math.max(...Array.from(yillar)) : mevcutYil;
@@ -15066,6 +15069,8 @@ window.sikayetEkleModal = function(duzenleId){
       const el=document.getElementById(elId); if(el) el.value='';
     });
     const fidEl = document.getElementById('sik-f-firma-id'); if(fidEl) fidEl.value='';
+    const katEl=document.getElementById('sik-f-kategori'); if(katEl) katEl.value='Diğer';
+    const oncEl=document.getElementById('sik-f-oncelik'); if(oncEl) oncEl.value='incelemede';
     /* Varsayılan tarih: bugün */
     const tarihEl = document.getElementById('sik-f-tarih');
     if(tarihEl) tarihEl.value = new Date().toISOString().slice(0,10);
@@ -15095,7 +15100,7 @@ window.sikayetKaydet = async function(){
     /* DÜZENLEME — mevcut kaydı güncelle */
     const { error } = await _supa.from('sikayetler').update({
       uye_id: parseInt(firmaId)||null, firma_adi: firma,
-      konu, aciklama: detay, kategori, oncelik: badgeTxt,
+      konu, aciklama: detay, kategori, oncelik: badgeTxt, durum: badgeTxt,
       tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil
     }).eq('id', duzenleId);
     if(error){ alert('Güncelleme hatası: '+error.message); return; }
@@ -15115,7 +15120,7 @@ window.sikayetKaydet = async function(){
   /* Supabase'e kaydet — gerçek UUID için select().single() kullan */
   const { data: ins, error: insErr } = await _supa.from('sikayetler').insert([{
     sikayet_no: no, uye_id: parseInt(firmaId)||null, firma_adi: firma,
-    konu, aciklama: detay, kategori, oncelik: badgeTxt,
+    konu, aciklama: detay, kategori, oncelik: badgeTxt, durum: badgeTxt,
     sorumlu_kul: currentUser?.kullanici||'',
     tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil
   }]).select().single();
