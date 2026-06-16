@@ -179,6 +179,10 @@ async function supaYukleSikayetler() {
           div.className='sk'; div.dataset.yil=s.yil||''; div.dataset.durum=s.durum||''; div.dataset.id=s.id; div.dataset.giren=s.sorumlu_kul||'';
           const badgeCls=bMap[s.durum]||'b-gray'; const oncelikRenk=onMap[s.durum]||'#888';
           div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div><div class="sk-no">${s.sikayet_no||''} · ${s.firma_adi||''}</div><div class="sk-title"><span class="priority" style="background:${oncelikRenk}"></span>${s.konu||''}</div></div><span class="badge ${badgeCls}">${s.durum||''}</span></div><div class="sk-body">${s.aciklama||'—'}</div><div class="sk-foot"><div class="sk-meta"><span>${s.sorumlu_kul||''}</span><span>${s.tarih||''}</span><span>${s.kategori||''}</span></div><div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="sikSurecAc('${s.id}')">Süreç</button><button class="btn btn-sm" onclick="sikayetEkleModal('${s.id}')"><i class="ti ti-edit"></i></button><button class="btn btn-sm" style="color:var(--red)" onclick="sikayetSilById('${s.id}',this)"><i class="ti ti-trash"></i></button></div></div>`;
+          /* Aktif yıl filtresine göre görünürlük ayarla */
+          if(window.YD_STATE?.['sikayet']){
+            div.style.display = window.YD_STATE['sikayet'].has(parseInt(s.yil)) ? '' : 'none';
+          }
           section.appendChild(div);
         });
       }
