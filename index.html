@@ -166,7 +166,7 @@ async function supaYukleSikayetler() {
     const trySet = () => {
       window.SIK_DB = {};
       sikayetler.forEach(s=>{
-        window.SIK_DB[s.id] = { id:s.id, no:s.sikayet_no||'', firma:s.firma_adi||'', firmaId:s.uye_id||'', konu:s.konu, detay:s.aciklama||'', kategori:s.kategori||'Diğer', oncelik:s.oncelik||'incelemede', yil:s.yil||new Date().getFullYear(), tarih:s.tarih||'', tarihIso:s.tarih_iso||'', durum:s.durum||'İncelemede', girenKullanici:s.sorumlu_kul||'', girenAd:s.sorumlu_kul||'', notlar:(notlar||[]).filter(n=>n.sikayet_id===s.id).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi })), surec:(notlar||[]).filter(n=>n.sikayet_id===s.id && n.yeni_durum).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi, yeniDurum:n.yeni_durum })) };
+        window.SIK_DB[s.id] = { id:s.id, no:s.sikayet_no||'', firma:s.firma_adi||'', firmaId:s.uye_id||'', konu:s.konu, detay:s.aciklama||'', kategori:s.kategori||'Diğer', oncelik:s.oncelik||'Normal', yil:s.yil||new Date().getFullYear(), tarih:s.tarih||'', tarihIso:s.tarih_iso||'', durum:s.durum||'İncelemede', girenKullanici:s.sorumlu_kul||'', girenAd:s.sorumlu_kul||'', notlar:(notlar||[]).filter(n=>n.sikayet_id===s.id).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi })), surec:(notlar||[]).filter(n=>n.sikayet_id===s.id && n.yeni_durum).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi, yeniDurum:n.yeni_durum })) };
       });
       /* Şikayet kartlarını DOM'a yeniden çiz */
       const section = document.getElementById('s-sikayet');
@@ -177,8 +177,11 @@ async function supaYukleSikayetler() {
         sikayetler.forEach(s=>{
           const div=document.createElement('div');
           div.className='sk'; div.dataset.yil=s.yil||''; div.dataset.durum=s.durum||''; div.dataset.id=s.id; div.dataset.giren=s.sorumlu_kul||'';
-          const badgeCls=bMap[s.durum]||'b-gray'; const oncelikRenk=onMap[s.durum]||'#888';
-          div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div><div class="sk-no">${s.sikayet_no||''} · ${s.firma_adi||''}</div><div class="sk-title"><span class="priority" style="background:${oncelikRenk}"></span>${s.konu||''}</div></div><span class="badge ${badgeCls}">${s.durum||''}</span></div><div class="sk-body">${s.aciklama||'—'}</div><div class="sk-foot"><div class="sk-meta"><span>${s.sorumlu_kul||''}</span><span>${s.tarih||''}</span><span>${s.kategori||''}</span></div><div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="sikSurecAc('${s.id}')">Süreç</button><button class="btn btn-sm" onclick="sikayetEkleModal('${s.id}')"><i class="ti ti-edit"></i></button><button class="btn btn-sm" style="color:var(--red)" onclick="sikayetSilById('${s.id}',this)"><i class="ti ti-trash"></i></button></div></div>`;
+          const badgeCls=bMap[s.durum]||'b-gray';
+          const oncMap2={'Kritik':'#E24B4A','Normal':'#185FA5','Düşük':'#1D9E75'};
+          const oncelikRenk=oncMap2[s.oncelik]||'#888';
+          const oncBadgeCls={'Kritik':'b-red','Normal':'b-blue','Düşük':'b-green'}[s.oncelik]||'b-gray';
+          div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div><div class="sk-no">${s.sikayet_no||''} · ${s.firma_adi||''}</div><div class="sk-title"><span class="priority" style="background:${oncelikRenk}"></span>${s.konu||''}</div></div><div style="display:flex;gap:5px;flex-shrink:0"><span class="badge ${oncBadgeCls}" style="font-size:10px">${s.oncelik||'Normal'}</span><span class="badge ${badgeCls}">${s.durum||''}</span></div></div><div class="sk-body">${s.aciklama||'—'}</div><div class="sk-foot"><div class="sk-meta"><span>${s.sorumlu_kul||''}</span><span>${s.tarih||''}</span><span>${s.kategori||''}</span></div><div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="sikSurecAc('${s.id}')">Süreç</button><button class="btn btn-sm" onclick="sikayetEkleModal('${s.id}')"><i class="ti ti-edit"></i></button><button class="btn btn-sm" style="color:var(--red)" onclick="sikayetSilById('${s.id}',this)"><i class="ti ti-trash"></i></button></div></div>`;
           /* Aktif yıl filtresine göre görünürlük ayarla */
           if(window.YD_STATE?.['sikayet']){
             div.style.display = window.YD_STATE['sikayet'].has(parseInt(s.yil)) ? '' : 'none';
@@ -2841,8 +2844,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
               <label class="yk-lbl">Öncelik</label>
               <select id="sik-f-oncelik" class="yk-inp">
                 <option value="kritik">Kritik</option>
-                <option value="incelemede" selected>Normal</option>
-                <option value="beklemede">Düşük</option>
+                <option value="normal" selected>Normal</option>
+                <option value="dusuk">Düşük</option>
               </select>
             </div>
           </div>
@@ -4773,8 +4776,9 @@ function toggleTpl(header) {
         return;
       }
 
-      const duBadge  = { Kritik:'b-red', İncelemede:'b-blue', Çözüldü:'b-green', Beklemede:'b-amber', Tamamlandı:'b-purple' };
-      const dotColor = { Kritik:'#E24B4A', İncelemede:'#185FA5', Çözüldü:'#1D9E75', Beklemede:'#EF9F27', Tamamlandı:'#534AB7' };
+      const duBadge  = { İncelemede:'b-blue', Çözüldü:'b-green', Beklemede:'b-amber', Tamamlandı:'b-purple' };
+      const dotColor = { Kritik:'#E24B4A', Normal:'#185FA5', Düşük:'#1D9E75' };
+      const oncBadge = { Kritik:'b-red', Normal:'b-blue', Düşük:'b-green' };
 
       listEl.innerHTML = list.map(s=>`
         <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
@@ -4782,10 +4786,13 @@ function toggleTpl(header) {
             <div>
               <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:3px">${s.sikayet_no||''}</div>
               <div style="font-size:13px;font-weight:500">
-                <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${dotColor[s.durum]||'#888'};margin-right:5px;vertical-align:middle"></span>${s.konu}
+                <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${dotColor[s.oncelik]||'#888'};margin-right:5px;vertical-align:middle"></span>${s.konu}
               </div>
             </div>
-            <span class="badge ${duBadge[s.durum]||'b-gray'}">${s.durum||'—'}</span>
+            <div style="display:flex;gap:5px;flex-shrink:0">
+              <span class="badge ${oncBadge[s.oncelik]||'b-gray'}" style="font-size:10px">${s.oncelik||'Normal'}</span>
+              <span class="badge ${duBadge[s.durum]||'b-gray'}">${s.durum||'—'}</span>
+            </div>
           </div>
           <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px">${s.aciklama||'—'}</div>
           <div style="display:flex;justify-content:space-between;align-items:center">
@@ -12409,11 +12416,12 @@ window.updateTopbarUser = function(user){
       if(!yilEsles){ el.style.display='none'; return; }
       /* Durum filtresi */
       if(!aktifFiltre){ el.style.display=''; visible++; return; }
-      const badge = el.querySelector('.badge')?.textContent?.trim()||'';
+      const durum = el.dataset.durum||'';
+      const oncelikBadge = el.querySelector('.badge')?.textContent?.trim()||'';
       let goster = false;
-      if(aktifFiltre==='açık') goster=(badge!=='Çözüldü'&&badge!=='Tamamlandı');
-      else if(aktifFiltre==='Kritik') goster=(badge==='Kritik');
-      else goster=(badge===aktifFiltre);
+      if(aktifFiltre==='açık') goster=(durum!=='Çözüldü'&&durum!=='Tamamlandı');
+      else if(aktifFiltre==='Kritik') goster=(oncelikBadge==='Kritik');
+      else goster=(durum===aktifFiltre);
       el.style.display=goster?'':'none';
       if(goster) visible++;
     });
@@ -15058,8 +15066,8 @@ window.sikayetEkleModal = function(duzenleId){
     const katEl=document.getElementById('sik-f-kategori'); if(katEl) katEl.value=s.kategori||'Diğer';
     const oncEl=document.getElementById('sik-f-oncelik');
     if(oncEl){
-      const oncMap={'Kritik':'kritik','İncelemede':'incelemede','Beklemede':'beklemede'};
-      oncEl.value = oncMap[s.durum] || 'incelemede';
+      const oncMap={'Kritik':'kritik','Normal':'normal','Düşük':'dusuk'};
+      oncEl.value = oncMap[s.oncelik] || 'normal';
     }
     const tarihEl = document.getElementById('sik-f-tarih');
     if(tarihEl) tarihEl.value = s.tarihIso || new Date().toISOString().slice(0,10);
@@ -15070,7 +15078,7 @@ window.sikayetEkleModal = function(duzenleId){
     });
     const fidEl = document.getElementById('sik-f-firma-id'); if(fidEl) fidEl.value='';
     const katEl=document.getElementById('sik-f-kategori'); if(katEl) katEl.value='Diğer';
-    const oncEl=document.getElementById('sik-f-oncelik'); if(oncEl) oncEl.value='incelemede';
+    const oncEl=document.getElementById('sik-f-oncelik'); if(oncEl) oncEl.value='normal';
     /* Varsayılan tarih: bugün */
     const tarihEl = document.getElementById('sik-f-tarih');
     if(tarihEl) tarihEl.value = new Date().toISOString().slice(0,10);
@@ -15092,15 +15100,15 @@ window.sikayetKaydet = async function(){
   const yil  = tarihObj.getFullYear();
   if(!firma || !konu){ alert('Firma ve şikayet konusu zorunludur.'); return; }
   const tarih = tarihObj.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-  const badgeTxt = {kritik:'Kritik', incelemede:'İncelemede', beklemede:'Beklemede'}[oncelik]||'İncelemede';
+  const oncelikTxt = {kritik:'Kritik', normal:'Normal', dusuk:'Düşük'}[oncelik]||'Normal';
   const girenAd = currentUser?.adSoyad||'Bilinmiyor';
   const duzenleId = window._sikDuzenleId;
 
   if(duzenleId){
-    /* DÜZENLEME — mevcut kaydı güncelle */
+    /* DÜZENLEME — mevcut kaydı güncelle. Durum (süreç) alanına dokunmuyoruz, sadece öncelik */
     const { error } = await _supa.from('sikayetler').update({
       uye_id: parseInt(firmaId)||null, firma_adi: firma,
-      konu, aciklama: detay, kategori, oncelik: badgeTxt, durum: badgeTxt,
+      konu, aciklama: detay, kategori, oncelik: oncelikTxt,
       tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil
     }).eq('id', duzenleId);
     if(error){ alert('Güncelleme hatası: '+error.message); return; }
@@ -15120,7 +15128,7 @@ window.sikayetKaydet = async function(){
   /* Supabase'e kaydet — gerçek UUID için select().single() kullan */
   const { data: ins, error: insErr } = await _supa.from('sikayetler').insert([{
     sikayet_no: no, uye_id: parseInt(firmaId)||null, firma_adi: firma,
-    konu, aciklama: detay, kategori, oncelik: badgeTxt, durum: badgeTxt,
+    konu, aciklama: detay, kategori, oncelik: oncelikTxt, durum: 'İncelemede',
     sorumlu_kul: currentUser?.kullanici||'',
     tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil
   }]).select().single();
@@ -15162,12 +15170,13 @@ window.sikFilter = function(btn, filtre){
     const kartYil = parseInt(kart.dataset.yil||'0');
     if(kartYil && kartYil !== secilenYil){ kart.style.display='none'; return; }
 
-    /* Sonra durum filtresi */
+    /* Sonra durum/öncelik filtresi */
     if(!filtre){ kart.style.display=''; return; }
-    const badge = kart.querySelector('.badge')?.textContent?.trim()||'';
-    if(filtre==='açık')       kart.style.display=(badge!=='Çözüldü'&&badge!=='Tamamlandı')?'':'none';
-    else if(filtre==='Kritik') kart.style.display=(badge==='Kritik')?'':'none';
-    else                       kart.style.display=(badge===filtre)?'':'none';
+    const durum = kart.dataset.durum||'';
+    const oncelikBadge = kart.querySelector('.badge')?.textContent?.trim()||'';
+    if(filtre==='açık')        kart.style.display=(durum!=='Çözüldü'&&durum!=='Tamamlandı')?'':'none';
+    else if(filtre==='Kritik') kart.style.display=(oncelikBadge==='Kritik')?'':'none';
+    else                       kart.style.display=(durum===filtre)?'':'none';
   });
 };
 
@@ -15188,7 +15197,7 @@ window.sikSurecAc = function(kartId){
   const durumHtml = sikTakipMi() ? `
     <div><label class="yk-lbl">Durum Güncelle</label>
     <select id="sik-surec-durum" class="yk-inp">
-      ${['Kritik','İncelemede','Beklemede','Çözüldü','Tamamlandı'].map(d=>`<option ${durum===d?'selected':''}>${d}</option>`).join('')}
+      ${['İncelemede','Beklemede','Çözüldü','Tamamlandı'].map(d=>`<option ${durum===d?'selected':''}>${d}</option>`).join('')}
     </select></div>
     <div><label class="yk-lbl">Süreç Notu</label>
     <textarea id="sik-surec-not" class="yk-inp" style="min-height:72px;resize:vertical" placeholder="Yapılan işlem, sonuç, bir sonraki adım..."></textarea></div>` :
@@ -15229,8 +15238,9 @@ window.sikSurecKaydet = function(kartId, domKart){
     .then(({error})=>{if(error) console.error('Şikayet durum hatası:',error.message);});
   const kart = domKart||document.querySelector(`.sk[data-id="${kartId}"]`);
   if(kart && yeniDurum){
-    const bMap={'Kritik':'b-red','İncelemede':'b-blue','Beklemede':'b-amber','Çözüldü':'b-green','Tamamlandı':'b-purple'};
-    const badge=kart.querySelector('.badge');
+    const bMap={'İncelemede':'b-blue','Beklemede':'b-amber','Çözüldü':'b-green','Tamamlandı':'b-purple'};
+    const badges=kart.querySelectorAll('.badge');
+    const badge=badges[badges.length-1]; /* durum badge'i her zaman sonuncu */
     if(badge){ badge.textContent=yeniDurum; badge.className='badge '+(bMap[yeniDurum]||'b-gray'); }
     kart.dataset.durum=yeniDurum;
   }
