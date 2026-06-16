@@ -166,7 +166,7 @@ async function supaYukleSikayetler() {
     const trySet = () => {
       window.SIK_DB = {};
       sikayetler.forEach(s=>{
-        window.SIK_DB[s.id] = { id:s.id, no:s.sikayet_no||'', firma:s.firma_adi||'', firmaId:s.uye_id||'', konu:s.konu, detay:s.aciklama||'', kategori:s.kategori||'Diğer', oncelik:s.oncelik||'incelemede', yil:s.yil||new Date().getFullYear(), tarih:s.tarih||'', durum:s.durum||'İncelemede', girenKullanici:s.sorumlu_kul||'', girenAd:s.sorumlu_kul||'', notlar:(notlar||[]).filter(n=>n.sikayet_id===s.id).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi })), surec:(notlar||[]).filter(n=>n.sikayet_id===s.id && n.yeni_durum).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi, yeniDurum:n.yeni_durum })) };
+        window.SIK_DB[s.id] = { id:s.id, no:s.sikayet_no||'', firma:s.firma_adi||'', firmaId:s.uye_id||'', konu:s.konu, detay:s.aciklama||'', kategori:s.kategori||'Diğer', oncelik:s.oncelik||'incelemede', yil:s.yil||new Date().getFullYear(), tarih:s.tarih||'', tarihIso:s.tarih_iso||'', durum:s.durum||'İncelemede', girenKullanici:s.sorumlu_kul||'', girenAd:s.sorumlu_kul||'', notlar:(notlar||[]).filter(n=>n.sikayet_id===s.id).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi })), surec:(notlar||[]).filter(n=>n.sikayet_id===s.id && n.yeni_durum).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi, yeniDurum:n.yeni_durum })) };
       });
       /* Şikayet kartlarını DOM'a yeniden çiz */
       const section = document.getElementById('s-sikayet');
@@ -178,7 +178,7 @@ async function supaYukleSikayetler() {
           const div=document.createElement('div');
           div.className='sk'; div.dataset.yil=s.yil||''; div.dataset.durum=s.durum||''; div.dataset.id=s.id; div.dataset.giren=s.sorumlu_kul||'';
           const badgeCls=bMap[s.durum]||'b-gray'; const oncelikRenk=onMap[s.durum]||'#888';
-          div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div><div class="sk-no">${s.sikayet_no||''} · ${s.firma_adi||''}</div><div class="sk-title"><span class="priority" style="background:${oncelikRenk}"></span>${s.konu||''}</div></div><span class="badge ${badgeCls}">${s.durum||''}</span></div><div class="sk-body">${s.aciklama||'—'}</div><div class="sk-foot"><div class="sk-meta"><span>${s.sorumlu_kul||''}</span><span>${s.tarih||''}</span><span>${s.kategori||''}</span></div><div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="sikSurecAc('${s.id}')">Süreç</button><button class="btn btn-sm" style="color:var(--red)" onclick="sikayetSilById('${s.id}',this)"><i class="ti ti-trash"></i></button></div></div>`;
+          div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div><div class="sk-no">${s.sikayet_no||''} · ${s.firma_adi||''}</div><div class="sk-title"><span class="priority" style="background:${oncelikRenk}"></span>${s.konu||''}</div></div><span class="badge ${badgeCls}">${s.durum||''}</span></div><div class="sk-body">${s.aciklama||'—'}</div><div class="sk-foot"><div class="sk-meta"><span>${s.sorumlu_kul||''}</span><span>${s.tarih||''}</span><span>${s.kategori||''}</span></div><div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="sikSurecAc('${s.id}')">Süreç</button><button class="btn btn-sm" onclick="sikayetEkleModal('${s.id}')"><i class="ti ti-edit"></i></button><button class="btn btn-sm" style="color:var(--red)" onclick="sikayetSilById('${s.id}',this)"><i class="ti ti-trash"></i></button></div></div>`;
           section.appendChild(div);
         });
       }
@@ -613,6 +613,20 @@ function supaRealtimeBaslat() {
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlik evrakları dinleniyor'); });
 
   /* Memnuniyet anketleri — ayrı channel */
+  /* Şikayetler */
+  _supa.channel('db-sikayet')
+    .on('postgres_changes', { event:'*', schema:'public', table:'sikayetler' }, async ()=>{
+      await supaYukleSikayetler();
+    })
+    .on('postgres_changes', { event:'*', schema:'public', table:'sikayet_notlar' }, async ()=>{
+      await supaYukleSikayetler();
+      /* Süreç modalı açıksa yenile */
+      if(document.getElementById('sik-surec-overlay')?.style.display==='flex' && window._sikSurecAktifId && window.sikSurecAc){
+        window.sikSurecAc(window._sikSurecAktifId);
+      }
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Şikayetler dinleniyor'); });
+
   /* Memnuniyet */
   _supa.channel('db-memnuniyet')
     .on('postgres_changes', { event:'*', schema:'public', table:'mem_anketler' }, async ()=>{
@@ -15016,21 +15030,42 @@ window.sikModalKapat = function(){
   document.getElementById('sik-modal-overlay').style.display='none';
   const box = document.getElementById('sik-firma-sonuclar');
   if(box) box.style.display='none';
+  window._sikDuzenleId = null;
 };
 
-window.sikayetEkleModal = function(){
-  ['sik-f-firma','sik-f-konu','sik-f-detay','sik-f-not'].forEach(elId=>{
-    const el=document.getElementById(elId); if(el) el.value='';
-  });
-  const fidEl = document.getElementById('sik-f-firma-id'); if(fidEl) fidEl.value='';
-  /* Varsayılan tarih: bugün */
-  const tarihEl = document.getElementById('sik-f-tarih');
-  if(tarihEl) tarihEl.value = new Date().toISOString().slice(0,10);
-  document.getElementById('sik-modal-title').textContent = 'Yeni Şikayet Kaydı';
+window.sikayetEkleModal = function(duzenleId){
+  window._sikDuzenleId = duzenleId||null;
+  if(duzenleId && window.SIK_DB[duzenleId]){
+    const s = window.SIK_DB[duzenleId];
+    const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val||''; };
+    setVal('sik-f-firma', s.firma);
+    setVal('sik-f-firma-id', s.firmaId);
+    setVal('sik-f-konu', s.konu);
+    setVal('sik-f-detay', s.detay);
+    setVal('sik-f-not', '');
+    const katEl=document.getElementById('sik-f-kategori'); if(katEl) katEl.value=s.kategori||'Diğer';
+    const oncEl=document.getElementById('sik-f-oncelik');
+    if(oncEl){
+      const oncMap={'Kritik':'kritik','İncelemede':'incelemede','Beklemede':'beklemede'};
+      oncEl.value = oncMap[s.durum] || 'incelemede';
+    }
+    const tarihEl = document.getElementById('sik-f-tarih');
+    if(tarihEl) tarihEl.value = s.tarihIso || new Date().toISOString().slice(0,10);
+    document.getElementById('sik-modal-title').textContent = 'Şikayeti Düzenle';
+  } else {
+    ['sik-f-firma','sik-f-konu','sik-f-detay','sik-f-not'].forEach(elId=>{
+      const el=document.getElementById(elId); if(el) el.value='';
+    });
+    const fidEl = document.getElementById('sik-f-firma-id'); if(fidEl) fidEl.value='';
+    /* Varsayılan tarih: bugün */
+    const tarihEl = document.getElementById('sik-f-tarih');
+    if(tarihEl) tarihEl.value = new Date().toISOString().slice(0,10);
+    document.getElementById('sik-modal-title').textContent = 'Yeni Şikayet Kaydı';
+  }
   document.getElementById('sik-modal-overlay').style.display='flex';
 };
 
-window.sikayetKaydet = function(){
+window.sikayetKaydet = async function(){
   const firma   = (document.getElementById('sik-f-firma')?.value||'').trim();
   const firmaId = document.getElementById('sik-f-firma-id')?.value||'';
   const konu    = (document.getElementById('sik-f-konu')?.value||'').trim();
@@ -15043,42 +15078,42 @@ window.sikayetKaydet = function(){
   const yil  = tarihObj.getFullYear();
   if(!firma || !konu){ alert('Firma ve şikayet konusu zorunludur.'); return; }
   const tarih = tarihObj.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  const badgeTxt = {kritik:'Kritik', incelemede:'İncelemede', beklemede:'Beklemede'}[oncelik]||'İncelemede';
+  const girenAd = currentUser?.adSoyad||'Bilinmiyor';
+  const duzenleId = window._sikDuzenleId;
+
+  if(duzenleId){
+    /* DÜZENLEME — mevcut kaydı güncelle */
+    const { error } = await _supa.from('sikayetler').update({
+      uye_id: parseInt(firmaId)||null, firma_adi: firma,
+      konu, aciklama: detay, kategori, oncelik: badgeTxt,
+      tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil
+    }).eq('id', duzenleId);
+    if(error){ alert('Güncelleme hatası: '+error.message); return; }
+    if(not_){
+      await _supa.from('sikayet_notlar').insert([{ sikayet_id:duzenleId, metin:not_, tarih, kisi:girenAd }]);
+    }
+    window._sikDuzenleId = null;
+    sikModalKapat();
+    await supaYukleSikayetler();
+    alert(`✓ Şikayet güncellendi.`);
+    return;
+  }
+
+  /* YENİ KAYIT */
   const sayac = document.querySelectorAll('#s-sikayet .sk').length + 1;
   const no = `ŞKY-${yil}-${String(sayac).padStart(4,'0')}`;
-  const id  = genUUID();
-  const oncelikRenk = {kritik:'#E24B4A', incelemede:'#185FA5', beklemede:'#EF9F27'}[oncelik]||'#185FA5';
-  const badgeCls    = {kritik:'b-red', incelemede:'b-blue', beklemede:'b-amber'}[oncelik]||'b-blue';
-  const badgeTxt    = {kritik:'Kritik', incelemede:'İncelemede', beklemede:'Beklemede'}[oncelik]||'İncelemede';
-  const girenAd = currentUser?.adSoyad||'Bilinmiyor';
-  window.SIK_DB[id] = { id, no, firma, firmaId, konu, detay, kategori, oncelik, yil,
-    tarih, girenKullanici:currentUser?.kullanici||'', girenAd, durum:badgeTxt, notlar:[], surec:[] };
-  if(not_) window.SIK_DB[id].notlar.push({ metin:not_, tarih, kisi:girenAd });
-  /* Supabase'e kaydet */
-  supaShikayetEkle({
+  /* Supabase'e kaydet — gerçek UUID için select().single() kullan */
+  const { data: ins, error: insErr } = await _supa.from('sikayetler').insert([{
     sikayet_no: no, uye_id: parseInt(firmaId)||null, firma_adi: firma,
     konu, aciklama: detay, kategori, oncelik: badgeTxt,
     sorumlu_kul: currentUser?.kullanici||'',
     tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil
-  });
-  const div = document.createElement('div');
-  div.className='sk'; div.dataset.yil=yil; div.dataset.durum=badgeTxt;
-  div.dataset.id=id; div.dataset.giren=currentUser?.kullanici||'';
-  div.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-      <div><div class="sk-no">${no} · ${firma}</div>
-        <div class="sk-title"><span class="priority" style="background:${oncelikRenk}"></span>${konu}</div></div>
-      <span class="badge ${badgeCls}">${badgeTxt}</span>
-    </div>
-    <div class="sk-body">${detay||'—'}</div>
-    <div class="sk-foot">
-      <div class="sk-meta"><span>${girenAd}</span><span>${tarih}</span><span>${kategori}</span></div>
-      <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="sikSurecAc('${id}')">Süreç</button><button class="btn btn-sm" style="color:var(--red)" onclick="sikayetSil('${id}',this)"><i class="ti ti-trash"></i></button></div>
-    </div>`;
-  const section = document.getElementById('s-sikayet');
-  const firstSk = section.querySelector('.sk');
-  if(firstSk) section.insertBefore(div, firstSk); else section.appendChild(div);
-  if(window.YD_STATE?.['sikayet'])
-    div.style.display = window.YD_STATE['sikayet'].has(yil) ? '' : 'none';
+  }]).select().single();
+  if(insErr){ alert('Kaydetme hatası: '+insErr.message); return; }
+  if(not_ && ins?.id){
+    await _supa.from('sikayet_notlar').insert([{ sikayet_id:ins.id, metin:not_, tarih, kisi:girenAd }]);
+  }
 
   /* CRM senkronizasyonu — firma ID'si varsa CRM şikayet sekmesine ekle */
   if(firmaId && window.CRM_SIKAYETLER){
@@ -15087,51 +15122,15 @@ window.sikayetKaydet = function(){
       no, konu, detay:detay||konu, tarih, kategori,
       durum: oncelik, sorumlu: currentUser?.adSoyad||girenAd, cevap:null
     });
-    /* Eğer CRM açık ve bu firma gösteriliyorsa yenile */
     if(window.crmGetCurrentFirmId && window.crmGetCurrentFirmId()===firmaId && window.crmRenderSik)
       window.crmRenderSik(firmaId);
   }
   sikModalKapat();
-  if(window.dashboardGuncelle) window.dashboardGuncelle();
-  /* Trend ve metrikler güncelle */
-  if(window.sikTrendGuncelle) window.sikTrendGuncelle();
-  if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
-  if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(yil);
-  if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
+  await supaYukleSikayetler();
   alert(`✓ "${konu}" şikayeti kaydedildi.\nNo: ${no}\nSüreç takibi: Meriç Keskin`);
 };
 
-window.sikayetSil = async function(id, btn){
-  if(!confirm('Bu şikayeti silmek istiyor musunuz? Bu işlem geri alınamaz.')) return;
-  try {
-    const dbKayit = window.SIK_DB[id];
-    const kart = document.querySelector(`.sk[data-id="${id}"]`);
-    if(kart) kart.remove();
-    if(window.SIK_DB[id]) delete window.SIK_DB[id];
-    if(dbKayit?.no) {
-      const { data } = await _supa.from('sikayetler').select('id').eq('sikayet_no', dbKayit.no).maybeSingle();
-      if(data?.id) await supaShikayetSil(data.id);
-    }
-    const aktifYil = new Date().getFullYear();
-    if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(aktifYil);
-    if(window.sikTrendGuncelle) window.sikTrendGuncelle();
-    if(window.dashboardGuncelle) window.dashboardGuncelle();
-  } catch(e) { alert('Silme hatası: '+(e.message||e)); }
-};
-
-/* DB'den yüklenen kartlar için — gerçek UUID ile direkt sil */
-window.sikayetSilById = async function(dbId, btn){
-  if(!confirm('Bu şikayeti silmek istiyor musunuz? Bu işlem geri alınamaz.')) return;
-  try {
-    const kart = document.querySelector(`.sk[data-id="${dbId}"]`);
-    if(kart) kart.remove();
-    await supaShikayetSil(dbId);
-    const aktifYil = new Date().getFullYear();
-    if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(aktifYil);
-    if(window.sikTrendGuncelle) window.sikTrendGuncelle();
-    if(window.dashboardGuncelle) window.dashboardGuncelle();
-  } catch(e) { alert('Silme hatası: '+(e.message||e)); }
-};
+/* sikayetSil ve sikayetSilById fonksiyonları dosya sonunda tanımlı (kanonik versiyon) */
 
 /* Şikayet durum filtresi */
 window._sikAktifFiltre = '';
@@ -15160,6 +15159,7 @@ window.sikFilter = function(btn, filtre){
 
 /* Süreç modalı */
 window.sikSurecAc = function(kartId){
+  window._sikSurecAktifId = kartId;
   const overlay = document.getElementById('sik-surec-overlay');
   if(!overlay) return;
   const db = window.SIK_DB[kartId];
@@ -15197,7 +15197,7 @@ window.sikSurecAc = function(kartId){
   if(btn){ btn.style.display=kanYetki?'inline-flex':'none'; btn.onclick=()=>sikSurecKaydet(kartId,dom); }
   overlay.style.display='flex';
 };
-window.sikSurecKapat = function(){ document.getElementById('sik-surec-overlay').style.display='none'; };
+window.sikSurecKapat = function(){ document.getElementById('sik-surec-overlay').style.display='none'; window._sikSurecAktifId=null; };
 window.sikSurecKaydet = function(kartId, domKart){
   const not_ = document.getElementById('sik-surec-not')?.value?.trim();
   const yeniDurum = sikTakipMi() ? document.getElementById('sik-surec-durum')?.value : null;
@@ -16335,47 +16335,15 @@ window.sifreDegistirKaydet = async function(){
 
 <script>
 /* ── Şikayet Silme Fonksiyonları (global scope) ── */
-window.sikayetSil = async function(id) {
-  if(!confirm('Bu şikayeti silmek istiyor musunuz? Bu işlem geri alınamaz.')) return;
-  try {
-    const kart = document.querySelector('.sk[data-id="'+id+'"]');
-    if(kart) kart.remove();
-    if(window.SIK_DB && window.SIK_DB[id]) {
-      const no = window.SIK_DB[id].no;
-      delete window.SIK_DB[id];
-      if(no) {
-        const r = await window.supabase.createClient ? null :
-          await fetch(''); // dummy
-        const { data } = await _supa.from('sikayetler').select('id').eq('sikayet_no', no).maybeSingle();
-        if(data?.id) {
-          await _supa.from('sikayet_notlar').delete().eq('sikayet_id', data.id);
-          await _supa.from('sikayetler').delete().eq('id', data.id);
-        }
-      }
-    }
-    const yil = new Date().getFullYear();
-    if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
-    if(window.sikTrendGuncelle) window.sikTrendGuncelle();
-    if(window.dashboardGuncelle) window.dashboardGuncelle();
-  } catch(e) { alert('Silme hatası: '+(e.message||e)); }
-};
-
 window.sikayetSilById = async function(dbId) {
   if(!confirm('Bu şikayeti silmek istiyor musunuz? Bu işlem geri alınamaz.')) return;
   try {
-    const kart = document.querySelector('.sk[data-id="'+dbId+'"]');
-    if(kart) kart.remove();
     await _supa.from('sikayet_notlar').delete().eq('sikayet_id', dbId);
     await _supa.from('sikayetler').delete().eq('id', dbId);
-    /* DB'den taze yükle */
-    if(window.supaYukleSikayetler) await window.supaYukleSikayetler();
-    const yil = new Date().getFullYear();
-    if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(yil);
-    if(window.sikTrendGuncelle) window.sikTrendGuncelle();
-    if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
-    if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(yil);
-    if(window.dashboardGuncelle) window.dashboardGuncelle();
+    /* DB'den taze yükle — realtime de tetiklenecek ama anlık kendi ekranımızı güncelleyelim */
+    await supaYukleSikayetler();
   } catch(e) { alert('Silme hatası: '+(e.message||e)); }
 };
+window.sikayetSil = window.sikayetSilById;
 </script>
 </html>
