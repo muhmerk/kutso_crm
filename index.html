@@ -414,7 +414,7 @@ function supaEkranYenile(modul) {
     if(window.memAnketListesiGuncelle) window.memAnketListesiGuncelle(new Date().getFullYear());
     if(window.memKarsilastirmaGuncelle) window.memKarsilastirmaGuncelle();
     if(window.memYilSiralamaGuncelle) window.memYilSiralamaGuncelle();
-    if(window.memPrsTrendGuncelle) window.memPrsTrendGuncelle();
+    if(window.memPrsSayfaGuncelle) window.memPrsSayfaGuncelle();
     if(window.dashboardGuncelle) window.dashboardGuncelle();
   } else if (modul === 'akreditasyon') {
     if(window.akrRender) window.akrRender();
@@ -11951,16 +11951,26 @@ window.memPrsKaydet=function(){
   });
   if(!MEM_PRS_DB[yil]) MEM_PRS_DB[yil]=[];
   const aktifId=_memPrsAktifId;
-  if(aktifId){ for(const y in MEM_PRS_DB){ const idx=MEM_PRS_DB[y].findIndex(a=>a.id===aktifId); if(idx>-1){MEM_PRS_DB[y].splice(idx,1);break;} } }
-  const id='mp'+Date.now();
+  let eskiVeri = null;
+  if(aktifId){ for(const y in MEM_PRS_DB){ const idx=MEM_PRS_DB[y].findIndex(a=>a.id===aktifId); if(idx>-1){eskiVeri=MEM_PRS_DB[y][idx]; MEM_PRS_DB[y].splice(idx,1);break;} } }
+  const id=(aktifId && !String(aktifId).startsWith('mp')) ? aktifId : 'mp'+Date.now();
   const label=aciklama||(yil+' — Anket #'+(MEM_PRS_DB[yil].length+1));
   MEM_PRS_DB[yil].push({id,tarih,tarihIso:tarihVal,aciklama:label,yil,cevaplar:{...cevaplar},katOrt,ortPuan,ortPct});
-  /* Supabase'e kaydet */
-  supaMemPrsAnketEkle({
-    yil, tarih, tarih_iso: tarihVal,
-    cevaplar, ort_puan: ortPuan,
-    giren_kul: currentUser?.kullanici||''
-  });
+  /* Supabase'e kaydet — düzenleme ise UPDATE, yeni ise INSERT */
+  if(aktifId && !String(aktifId).startsWith('mp')){
+    _supa.from('mem_prs_anketler').update({
+      yil, tarih, tarih_iso: tarihVal, cevaplar, ort_puan: ortPuan
+    }).eq('id', aktifId).then(({error})=>{
+      if(error) console.error('Personel memnuniyet güncelleme hatası:', error.message);
+      else console.log('✓ Personel memnuniyet anketi güncellendi');
+    });
+  } else {
+    supaMemPrsAnketEkle({
+      yil, tarih, tarih_iso: tarihVal,
+      cevaplar, ort_puan: ortPuan,
+      giren_kul: currentUser?.kullanici||''
+    });
+  }
   memPrsModalKapat();
   /* Seçili yılı DEĞIŞTIRME — kullanıcı hangi yıldaysa orada kalsın */
   if(window.initYilPickers) window.initYilPickers();
@@ -11978,12 +11988,12 @@ window.memPrsKaydet=function(){
   if(window.memPrsYilKarsilastirmaGuncelle) window.memPrsYilKarsilastirmaGuncelle();
 };
 
-window.memPrsAnketSil=function(id){
+window.memPrsAnketSil=async function(id){
   if(!confirm('Bu anketi silmek istiyor musunuz?')) return;
   for(const y in MEM_PRS_DB){ const idx=MEM_PRS_DB[y].findIndex(a=>a.id===id); if(idx>-1){MEM_PRS_DB[y].splice(idx,1);break;} }
   if(id && !id.startsWith('mp')) {
-    _supa.from('mem_prs_anketler').delete().eq('id',id)
-      .then(({error})=>{ if(error) console.error('Personel memnuniyet anketi silme hatası:',error.message); });
+    const {error} = await _supa.from('mem_prs_anketler').delete().eq('id',id);
+    if(error) console.error('Personel memnuniyet anketi silme hatası:',error.message);
   }
   memPrsSayfaGuncelle();
 };
