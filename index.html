@@ -336,6 +336,7 @@ async function supaYukleMemnuniyet() {
       if(window.memHizmetGuncelle) window.memHizmetGuncelle(new Date().getFullYear());
       if(window.memPrsTrendGuncelle) window.memPrsTrendGuncelle();
       if(window.dashboardGuncelle) window.dashboardGuncelle();
+      window._memVeriYuklendi = true;
       console.log('✓ Memnuniyet yüklendi — Üye:', mappedUye.length, 'Personel:', mappedPrs.length);
     };
     trySet();
@@ -12750,7 +12751,8 @@ window.memHizmetGuncelle = function(yil) {
       const vals = anketler.map(a=>a.katOrt?.[kat]).filter(v=>v>0);
       if(vals.length) veri[kat] = Math.round(vals.reduce((s,v)=>s+v,0)/vals.length*10)/10;
     });
-  } else {
+  } else if(!window._memVeriYuklendi) {
+    /* Sadece DB'den hiç veri yüklenmemişse statik fallback kullan */
     const staticVeri = (window.MEM_HIZMET_DATA||{})[yil]||{};
     KATS.forEach(kat=>{ if(staticVeri[kat]) veri[kat]=staticVeri[kat]; });
   }
@@ -12925,7 +12927,7 @@ window.memYilSiralamaGuncelle = function(){
         anketler.forEach(a=>sorular.forEach(soru=>{ const p=a.cevaplar?.[soru]||0; if(p>0){t+=p;s++;} }));
         if(s) kat[k]=Math.round(t/s/4*100);
       });
-    } else {
+    } else if(!window._memVeriYuklendi) {
       const hiz=(window.MEM_HIZMET_DATA||{})[y]||{};
       KATS.forEach(k=>{ if(hiz[k]) kat[k]=Math.round(hiz[k]/4*100); });
     }
@@ -13121,7 +13123,7 @@ window.memKaydet = function(){
 };
 
 
-window.memAnketSil = function(id){
+window.memAnketSil = async function(id){
   if(!confirm('Bu anketi silmek istiyor musunuz?')) return;
   for(const yil in MEM_ANKET_DB){
     const idx=MEM_ANKET_DB[yil].findIndex(a=>a.id===id);
@@ -13129,8 +13131,8 @@ window.memAnketSil = function(id){
   }
   /* Sadece UUID formatındaki ID'leri DB'den sil */
   if(id && !id.startsWith('ma')) {
-    _supa.from('mem_anketler').delete().eq('id',id)
-      .then(({error})=>{ if(error) console.error('Memnuniyet anketi silme hatası:',error.message); });
+    const {error} = await _supa.from('mem_anketler').delete().eq('id',id);
+    if(error) console.error('Memnuniyet anketi silme hatası:',error.message);
   }
   window.memSayfaGuncelle();
 };
@@ -13195,7 +13197,9 @@ window.memKarsilastirmaGuncelle = function(){
     if(anketler.length){
       const vals=anketler.map(a=>a.katOrt?.[kat]).filter(v=>v>0);
       if(vals.length) return Math.round(vals.reduce((s,v)=>s+v,0)/vals.length*10)/10;
+      return null;
     }
+    if(window._memVeriYuklendi) return null;
     return (MEM_HIZMET_DATA[y]||{})[kat]||null;
   };
   el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1.5px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2)">Anket Başlığı</th>${yillar.map(y=>`<th style="text-align:center;padding:6px 4px;color:${y===secilenYil?'var(--blue)':'var(--text2)'};font-weight:${y===secilenYil?600:400}">${y}</th>`).join('')}</tr></thead><tbody>${KATS.map(kat=>`<tr style="border-bottom:0.5px solid var(--border)44"><td style="padding:6px 8px;font-size:12px">${kat}</td>${yillar.map(y=>{ const val=getVal(y,kat); if(!val) return `<td style="text-align:center;color:var(--text2);font-size:12px;padding:6px 4px">—</td>`; const isLast=y===secilenYil; const col=val>=3.5?'var(--teal)':val>=2.5?'#185FA5':'var(--amber)'; return `<td style="text-align:center;padding:6px 4px;font-weight:${isLast?500:400};color:${isLast?col:'var(--text2)'};font-size:12px">${val}</td>`; }).join('')}</tr>`).join('')}</tbody></table>`;
@@ -13216,8 +13220,10 @@ window.memTrendGuncelle = function(){
     if(anketler.length){
       const p=anketler.map(a=>a.ortPuan).filter(v=>v>0);
       if(p.length) return {yil:y, ort:Math.round(p.reduce((s,v)=>s+v,0)/p.length*10)/10, sayi:anketler.length};
+      return {yil:y, ort:0, sayi:anketler.length};
     }
-    /* MEM_HIZMET_DATA fallback */
+    if(window._memVeriYuklendi) return {yil:y, ort:0, sayi:0};
+    /* MEM_HIZMET_DATA fallback — sadece DB'den hiç veri yüklenmemişse */
     const hiz=(window.MEM_HIZMET_DATA||{})[y]||{};
     const vals=Object.values(hiz).filter(v=>v>0);
     if(vals.length) return {yil:y, ort:Math.round(vals.reduce((s,v)=>s+v,0)/vals.length*10)/10, sayi:0};
