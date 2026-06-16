@@ -11626,7 +11626,7 @@ function memPrsTrendGuncelle(){
   if(!el) return;
   const guncelYil=new Date().getFullYear(); const yillar=[]; for(let y=guncelYil-4;y<=guncelYil;y++) yillar.push(y);
   const veriler=yillar.map(y=>{ const a=MEM_PRS_DB[y]||[]; if(!a.length) return null; const p=a.map(x=>x.ortPuan).filter(v=>v>0); return {yil:y,ort:p.length?Math.round(p.reduce((s,v)=>s+v,0)/p.length*10)/10:0,sayi:a.length}; }).filter(Boolean);
-  if(!veriler.length){ el.innerHTML='<div style="font-size:13px;color:var(--text2);text-align:center;padding:16px">Henüz veri yok</div>'; if(badge) badge.textContent=''; return; }
+  if(!veriler.length){ el.innerHTML='<div style="font-size:13px;color:var(--text2);text-align:center;padding:16px">Henüz veri yok</div>'; if(badge) badge.textContent=''; if(ozet) ozet.innerHTML=''; return; }
   const enYeni=veriler[veriler.length-1].yil;
   if(badge&&veriler.length>=2){ const fark=Math.round((veriler[veriler.length-1].ort-veriler[0].ort)*10)/10; badge.textContent=(fark>=0?'+':'')+fark+' / '+veriler.length+' yıl'; badge.className='badge '+(fark>0?'b-green':fark<0?'b-red':'b-gray'); }
   el.innerHTML=[...veriler].reverse().map(y=>{ const pct=Math.round(y.ort/4*100); const renk=y.ort>=3.5?'#1D9E75':y.ort>=3.0?'#5DCAA5':y.ort>=2.5?'#85B7EB':'#EF9F27'; const yazi=y.ort>=3.0?'#fff':'#0C447C'; const isL=y.yil===enYeni;
@@ -11788,7 +11788,7 @@ function memPrsTrendGuncelle(){
   if(!el) return;
   const guncelYil=new Date().getFullYear(); const yillar=[]; for(let y=guncelYil-4;y<=guncelYil;y++) yillar.push(y);
   const veriler=yillar.map(y=>{ const a=MEM_PRS_DB[y]||[]; if(!a.length) return null; const p=a.map(x=>x.ortPuan).filter(v=>v>0); return {yil:y,ort:p.length?Math.round(p.reduce((s,v)=>s+v,0)/p.length*10)/10:0,sayi:a.length}; }).filter(Boolean);
-  if(!veriler.length){ el.innerHTML='<div style="font-size:13px;color:var(--text2);text-align:center;padding:16px">Henüz veri yok</div>'; if(badge) badge.textContent=''; return; }
+  if(!veriler.length){ el.innerHTML='<div style="font-size:13px;color:var(--text2);text-align:center;padding:16px">Henüz veri yok</div>'; if(badge) badge.textContent=''; if(ozet) ozet.innerHTML=''; return; }
   const enYeni=veriler[veriler.length-1].yil;
   if(badge&&veriler.length>=2){ const fark=Math.round((veriler[veriler.length-1].ort-veriler[0].ort)*10)/10; badge.textContent=(fark>=0?'+':'')+fark+' / '+veriler.length+' yıl'; badge.className='badge '+(fark>0?'b-green':fark<0?'b-red':'b-gray'); }
   el.innerHTML=[...veriler].reverse().map(y=>{ const pct=Math.round(y.ort/4*100); const renk=y.ort>=3.5?'#1D9E75':y.ort>=3.0?'#5DCAA5':y.ort>=2.5?'#85B7EB':'#EF9F27'; const yazi=y.ort>=3.0?'#fff':'#0C447C'; const isL=y.yil===enYeni;
