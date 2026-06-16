@@ -11663,16 +11663,15 @@ function memPrsKarsilastirmaGuncelle(){
   const yillar = Array.from({length:5},(_,i)=>secilenYil-4+i); /* [secilenYil-4 .. secilenYil] */
   const KATS = window.MEM_PRS_KATEGORILER||[];
   yillar.forEach(y=>{
-    if(!MEM_PRS_ALAN_DATA[y]||!Object.keys(MEM_PRS_ALAN_DATA[y]).length){
-      const anketler=MEM_PRS_DB[y]||[];
-      const ao={};
-      KATS.forEach(kat=>{
-        let t=0,s=0;
-        anketler.forEach(a=>kat.sorular.forEach(soru=>{ const p=a.cevaplar?.[soru]||0; if(p>0){t+=p;s++;} }));
-        if(s) ao[kat.baslik]={ort4:Math.round(t/s*10)/10, pct:Math.round(t/s/4*100)};
-      });
-      MEM_PRS_ALAN_DATA[y]=ao;
-    }
+    /* Her zaman yeniden hesapla — cache eski (silinmiş/güncellenmiş) veriyi gösterebilir */
+    const anketler=MEM_PRS_DB[y]||[];
+    const ao={};
+    KATS.forEach(kat=>{
+      let t=0,s=0;
+      anketler.forEach(a=>kat.sorular.forEach(soru=>{ const p=a.cevaplar?.[soru]||0; if(p>0){t+=p;s++;} }));
+      if(s) ao[kat.baslik]={ort4:Math.round(t/s*10)/10, pct:Math.round(t/s/4*100)};
+    });
+    MEM_PRS_ALAN_DATA[y]=ao;
   });
 
   const YRENK=['#185FA5','#1D9E75','#E87B2C','#9B59B6','#E24B4A'];
@@ -11821,16 +11820,15 @@ window.memPrsYilKarsilastirmaGuncelle=function(){
   const KATS=window.MEM_PRS_KATEGORILER||[];
   yillar.forEach(y=>{
     if(!window.MEM_PRS_ALAN_DATA) window.MEM_PRS_ALAN_DATA={};
-    if(!window.MEM_PRS_ALAN_DATA[y]||!Object.keys(window.MEM_PRS_ALAN_DATA[y]).length){
-      const anketler=DB[y]||[];
-      const ao={};
-      KATS.forEach(kat=>{
-        let t=0,s=0;
-        anketler.forEach(a=>kat.sorular.forEach(soru=>{ const p=a.cevaplar?.[soru]||0; if(p>0){t+=p;s++;} }));
-        if(s) ao[kat.baslik]={ort4:Math.round(t/s*10)/10, pct:Math.round(t/s/4*100)};
-      });
-      window.MEM_PRS_ALAN_DATA[y]=ao;
-    }
+    /* Her zaman yeniden hesapla — cache eski (silinmiş/güncellenmiş) veriyi gösterebilir */
+    const anketler=DB[y]||[];
+    const ao={};
+    KATS.forEach(kat=>{
+      let t=0,s=0;
+      anketler.forEach(a=>kat.sorular.forEach(soru=>{ const p=a.cevaplar?.[soru]||0; if(p>0){t+=p;s++;} }));
+      if(s) ao[kat.baslik]={ort4:Math.round(t/s*10)/10, pct:Math.round(t/s/4*100)};
+    });
+    window.MEM_PRS_ALAN_DATA[y]=ao;
   });
   const basliklar=KATS.map(k=>k.baslik);
   const enSonYil=secilenYil;
