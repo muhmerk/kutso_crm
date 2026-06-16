@@ -13220,9 +13220,8 @@ window.memTrendGuncelle = function(){
     if(anketler.length){
       const p=anketler.map(a=>a.ortPuan).filter(v=>v>0);
       if(p.length) return {yil:y, ort:Math.round(p.reduce((s,v)=>s+v,0)/p.length*10)/10, sayi:anketler.length};
-      return {yil:y, ort:0, sayi:anketler.length};
     }
-    if(window._memVeriYuklendi) return {yil:y, ort:0, sayi:0};
+    if(window._memVeriYuklendi) return null;
     /* MEM_HIZMET_DATA fallback — sadece DB'den hiç veri yüklenmemişse */
     const hiz=(window.MEM_HIZMET_DATA||{})[y]||{};
     const vals=Object.values(hiz).filter(v=>v>0);
