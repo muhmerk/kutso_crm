@@ -2391,6 +2391,20 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
     </div>
 
+    <!-- Etkinlik Detay Kartı -->
+    <div id="takvim-detay-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:310;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:460px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+        <div style="padding:14px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div id="takvim-detay-renk" style="width:12px;height:12px;border-radius:50%;flex-shrink:0"></div>
+            <div style="font-size:14px;font-weight:600" id="takvim-detay-tip-etiket"></div>
+          </div>
+          <button onclick="document.getElementById('takvim-detay-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+        </div>
+        <div id="takvim-detay-body" style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+    </div>
+
     <!-- Etkinlik ekleme modalı -->
     <div id="takvim-ekle-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:301;align-items:center;justify-content:center">
       <div style="background:var(--surface);border-radius:16px;width:460px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
@@ -14934,6 +14948,7 @@ window.sikayetModalKapat = function(){
 
 /* ══ PERSONEL EĞİTİM EKLE ══ */
 let _prsEgitimEditId = null; /* Düzenleme modunda olan kaydın ID'si */
+let _prsEgitimEditPid = null; /* Düzenleme modunda olan personelin ID'si */
 
 window.prsEgitimEkleModal = function(){
   const selEl = document.getElementById('prs-egitim-sec');
@@ -14973,6 +14988,7 @@ window.prsEgitimDuzenleModal = function(egitimId, pid){
   const kayit = list.find(e=>String(e.id)===String(egitimId));
   if(!kayit){ alert('Kayıt bulunamadı.'); return; }
   _prsEgitimEditId = egitimId;
+  _prsEgitimEditPid = parseInt(pid);
 
   const p = window.PERSONEL?.find(x=>x.id==pid);
   const subEl = document.getElementById('prs-egitim-modal-sub');
@@ -15026,7 +15042,7 @@ window.prsEgitimKaydet = async function(){
   const sertifika = certEl?.value === 'evet';
   const certNo = sertifika ? (document.getElementById('prs-eg-cert-no')?.value||'').trim() : '';
   const tarih  = new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-  const pid    = parseInt(document.getElementById('prs-egitim-sec')?.value||'0');
+  const pid = _prsEgitimEditId ? (_prsEgitimEditPid || parseInt(document.getElementById('prs-egitim-sec')?.value||'0')) : parseInt(document.getElementById('prs-egitim-sec')?.value||'0');
   if(!pid){ alert('Personel seçimi kayboldu, tekrar deneyin.'); return; }
 
   if(_prsEgitimEditId){
@@ -15041,6 +15057,7 @@ window.prsEgitimKaydet = async function(){
       const kayit = list.find(e=>String(e.id)===String(_prsEgitimEditId));
       if(kayit){ kayit.ad=ad; kayit.tarih=tarih; kayit.tarihIso=tarihVal; kayit.kurum=kurum; kayit.konu=konu; kayit.sertifika=sertifika; kayit.certNo=certNo; kayit.basSaat=basSaat; kayit.bitisSaat=bitisSaat; }
       _prsEgitimEditId = null;
+      _prsEgitimEditPid = null;
       prsEgitimModalKapat();
       prsEgitimLoad(pid);
       alert(`✓ "${ad}" eğitim kaydı güncellendi.`);
@@ -15885,10 +15902,31 @@ window.takvimGunAc = function(iso){
 window.takvimEtkinlikDetayGoster = function(idx){
   const e = window._takvimGunEtkinlikleri?.[idx];
   if(!e) return;
-  let mesaj = e.baslik+'\n'+(e.saat?e.saat+(e.bitisSaat?' – '+e.bitisSaat:'')+'\n':'')+(e.detay||'');
-  if(e.aciklama) mesaj += '\n\n'+e.aciklama;
-  if(e.ekleyenAd) mesaj += '\n\nEkleyen: '+e.ekleyenAd;
-  alert(mesaj);
+
+  const tipEtiketler = {
+    yk:'YK Toplantısı', mk:'Meslek Komitesi Toplantısı', meclis:'Meclis Toplantısı',
+    ziyaret:'Üye Ziyareti', etkinlik:'Eğitim / Etkinlik', egitim_prs:'Personel Eğitimi',
+    'egitim-prs':'Personel Eğitimi', genel:'Genel Etkinlik', kisisel:'Benim Terminim'
+  };
+
+  document.getElementById('takvim-detay-renk').style.background = e.renk;
+  document.getElementById('takvim-detay-tip-etiket').textContent = tipEtiketler[e.tip] || e.tip || 'Etkinlik';
+
+  function satir(label, val){ return val ? `<div><div style="font-size:10px;color:var(--text2);margin-bottom:2px">${label}</div><div style="font-size:13px">${val}</div></div>` : ''; }
+
+  const saatStr = e.saat ? (e.saat + (e.bitisSaat ? ' – ' + e.bitisSaat : '')) : '';
+
+  document.getElementById('takvim-detay-body').innerHTML = `
+    <div style="font-size:16px;font-weight:600;margin-bottom:4px">${e.baslik}</div>
+    ${satir('Tarih', e.tarihIso ? new Date(e.tarihIso+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'}) : '')}
+    ${satir('Saat', saatStr)}
+    ${satir('Detay', e.detay)}
+    ${satir('Açıklama', e.aciklama||'')}
+    ${satir('Ekleyen', e.ekleyenAd||'')}
+    ${e.tip==='genel' ? `<div style="margin-top:6px"><button class="btn btn-sm" style="color:var(--red)" onclick="document.getElementById('takvim-detay-overlay').style.display='none';takvimEtkinlikSil('${e.kaynakId}')"><i class="ti ti-trash"></i> Bu Etkinliği Sil</button></div>` : ''}
+  `;
+
+  document.getElementById('takvim-detay-overlay').style.display='flex';
 };
 
 /* ───────────────── TAKVİMDEN PERSONELe EĞİTİM EKLEME ───────────────── */
