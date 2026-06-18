@@ -2044,13 +2044,14 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 .um-pbtn.um-on { background:var(--blue); color:#fff; border-color:var(--blue); }
 .um-pbtn:disabled { opacity:.35; cursor:not-allowed; pointer-events:none; }
 
-#yd-placeholder-yk, #yd-placeholder-mk, #yd-placeholder-meclis, #yd-placeholder-gorev {
+#yd-placeholder-yk, #yd-placeholder-mk, #yd-placeholder-meclis, #yd-placeholder-gorev, #yd-placeholder-ziyaret {
   display:inline-flex !important;
   align-items:center !important;
 }
 #yd-placeholder-yk .yd-wrap, #yd-placeholder-mk .yd-wrap,
 #yd-placeholder-meclis .yd-wrap, #yd-placeholder-gorev .yd-wrap,
-#yd-placeholder-egitim .yd-wrap, #yd-placeholder-egitim-prs .yd-wrap {
+#yd-placeholder-egitim .yd-wrap, #yd-placeholder-egitim-prs .yd-wrap,
+#yd-placeholder-ziyaret .yd-wrap {
   margin-bottom:0 !important;
 }
 </style>
@@ -16044,11 +16045,13 @@ window.ziyDetayAc = function(id, sadeceGoruntule){
   }
 
   body.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <span class="badge ${durumBadge[z.durum]||'b-gray'}" style="font-size:12px">${durumTxt[z.durum]||z.durum||''}</span>
-      ${sadeceGoruntule ? '' : `<div style="display:flex;gap:6px">
-        <button class="btn btn-sm" onclick="document.getElementById('ziy-detay-overlay').style.display='none';ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>
-      </div>`}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="ziyPdfOlustur('once','${z.id}')"><i class="ti ti-file-text"></i> Brief (PDF)</button>
+        <button class="btn btn-sm" onclick="ziyPdfOlustur('sonra','${z.id}')"><i class="ti ti-file-check"></i> Tamamlandı Raporu (PDF)</button>
+        ${sadeceGoruntule ? '' : `<button class="btn btn-sm" onclick="document.getElementById('ziy-detay-overlay').style.display='none';ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>`}
+      </div>
     </div>
 
     ${blok('Firma Bilgileri', `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
@@ -16104,20 +16107,33 @@ window.ziyDetayAc = function(id, sadeceGoruntule){
 function ziyDosyaIkonGlobal(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(['jpg','jpeg','png','gif','webp'].includes(e)) return 'ti-photo'; if(e==='pdf') return 'ti-file-type-pdf'; return 'ti-file'; }
 
 /* ───────────────── PDF OLUŞTURMA ───────────────── */
-window.ziyPdfOlustur = async function(tip){
-  if(!_ziySecilenFirma){ alert('Önce firma seçin.'); return; }
+window.ziyPdfOlustur = async function(tip, kayitId){
+  /* Kayıttan mı, açık formdan mı veri okunacak belirle */
+  const z = kayitId ? window.ZIY_DB[kayitId] : null;
+  const firma = z ? {
+    id: z.uye_id, firma: z.firma_adi, no: z.uye_sicil_no, nace: z.nace_kod,
+    sektor: z.sektor, dereceTanimi: z.uye_derecesi, durum: z.uye_durumu
+  } : _ziySecilenFirma;
+  if(!firma){ alert('Önce firma seçin.'); return; }
   if(typeof window.jspdf === 'undefined'){ alert('PDF kütüphanesi yüklenemedi.'); return; }
 
-  const btnId = tip==='once' ? 'ziy-pdf-once-btn' : 'ziy-pdf-sonra-btn';
-  const btn = document.getElementById(btnId);
+  /* Form alanından mı, kayıttan mı okunacağını seçen yardımcı */
+  const al = (formId, kayitAlan) => z ? (z[kayitAlan] ?? '') : (document.getElementById(formId)?.value ?? '');
+  const heyet = z ? (z.personel_listesi||[]).map(p=>p.ad).join(', ') : window._ziySeciliPersonel.map(p=>p.ad).join(', ');
+  const talepKategorileri = z ? (z.talep_kategorileri||[]) : window._ziySeciliTalep;
+  const aksiyonlar = z ? (z.aksiyonlar||[]) : window._ziyAksiyonlar;
+  const memnuniyetSkoru = z ? z.memnuniyet_skoru : window._ziySeciliPuan;
+  const ihracatDurumVal = z ? z.ihracat_durum : document.getElementById('ziy-f-ihracat-durum')?.value;
+
+  const btn = (typeof event !== 'undefined' && event?.target) ? event.target.closest('button') : null;
   const eskiHtml = btn?.innerHTML;
   if(btn){ btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Hazırlanıyor...'; btn.disabled = true; }
 
   /* Üyenin CRM geçmişini çek: şikayet, memnuniyet, iletişim, etkinlik */
   let sikayetler=[], anketler=[], iletisim=[], etkinlikKatilim=[];
   try{
-    const firmaAdi = _ziySecilenFirma.firma||'';
-    const sicilNo = String(_ziySecilenFirma.no||'');
+    const firmaAdi = firma.firma||'';
+    const sicilNo = String(firma.no||'');
     const [sikRes, memRes, iletRes] = await Promise.all([
       _supa.from('sikayetler').select('*').ilike('firma_adi', `%${firmaAdi}%`).order('created_at',{ascending:false}).limit(10),
       _supa.from('mem_anketler').select('*').ilike('firma', `%${firmaAdi}%`).order('created_at',{ascending:false}).limit(10),
@@ -16129,7 +16145,7 @@ window.ziyPdfOlustur = async function(tip){
     /* Etkinlik katılımı — local veriden */
     const tumEtkinlikler = [...(window.ETK_DATA?.etkinlikler||[]), ...(window.ETK_PRS_DATA?.etkinlikler||[])];
     tumEtkinlikler.forEach(etk=>{
-      const k=(etk.katilimcilar||[]).find(c=>String(c.firmaId)===String(_ziySecilenFirma.id)||(c.firma&&c.firma===firmaAdi));
+      const k=(etk.katilimcilar||[]).find(c=>String(c.firmaId)===String(firma.id)||(c.firma&&c.firma===firmaAdi));
       if(k) etkinlikKatilim.push(etk);
     });
   }catch(e){ console.warn('CRM geçmişi çekme hatası:', e); }
@@ -16205,50 +16221,50 @@ window.ziyPdfOlustur = async function(tip){
 
   if(tip==='once'){
     baslik('ÜYE ZİYARETİ — ÖN BİLGİ FORMU (BRIEF)');
-    satir('Firma', _ziySecilenFirma.firma);
-    satir('Sicil No', _ziySecilenFirma.no);
-    satir('NACE Kodu', _ziySecilenFirma.nace);
-    satir('Sektör', _ziySecilenFirma.sektor);
-    satir('Üye Derecesi', _ziySecilenFirma.dereceTanimi);
-    satir('Üyelik Durumu', _ziySecilenFirma.durum);
+    satir('Firma', firma.firma);
+    satir('Sicil No', firma.no);
+    satir('NACE Kodu', firma.nace);
+    satir('Sektör', firma.sektor);
+    satir('Üye Derecesi', firma.dereceTanimi);
+    satir('Üyelik Durumu', firma.durum);
     y+=3;
-    satir('Ziyaret Tarihi', document.getElementById('ziy-f-tarih')?.value);
-    satir('Ziyaret Saati', document.getElementById('ziy-f-saat')?.value);
-    satir('Heyet', window._ziySeciliPersonel.map(p=>p.ad).join(', '));
-    satir('Ziyaret Türü', document.getElementById('ziy-f-tur')?.value);
-    satir('Görüşülecek Kişi', (document.getElementById('ziy-f-gorusulen-ad')?.value||'')+' — '+(document.getElementById('ziy-f-gorusulen-unvan')?.value||''));
+    satir('Ziyaret Tarihi', al('ziy-f-tarih','ziyaret_tarihi'));
+    satir('Ziyaret Saati', al('ziy-f-saat','ziyaret_saati'));
+    satir('Heyet', heyet);
+    satir('Ziyaret Türü', al('ziy-f-tur','ziyaret_turu'));
+    satir('Görüşülecek Kişi', al('ziy-f-gorusulen-ad','gorusulen_ad')+' — '+al('ziy-f-gorusulen-unvan','gorusulen_unvan'));
     altBaslik('Görüşme Öncesi Notlar');
-    paragraf(document.getElementById('ziy-f-on-notlar')?.value||'—');
+    paragraf(al('ziy-f-on-notlar','on_notlar')||'—');
     crmGecmisiEkle();
-    doc.save('Ziyaret_Brief_'+_ziySecilenFirma.firma.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
+    doc.save('Ziyaret_Brief_'+firma.firma.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
   } else {
     baslik('ÜYE ZİYARETİ — TAMAMLANDI RAPORU');
-    satir('Firma', _ziySecilenFirma.firma);
-    satir('Sicil No', _ziySecilenFirma.no);
-    satir('NACE / Sektör', (_ziySecilenFirma.nace||'—')+' / '+(_ziySecilenFirma.sektor||'—'));
-    satir('Ziyaret Tarihi', document.getElementById('ziy-f-tarih')?.value);
-    satir('Heyet', window._ziySeciliPersonel.map(p=>p.ad).join(', '));
-    satir('Görüşülen', (document.getElementById('ziy-f-gorusulen-ad')?.value||'')+' — '+(document.getElementById('ziy-f-gorusulen-unvan')?.value||''));
+    satir('Firma', firma.firma);
+    satir('Sicil No', firma.no);
+    satir('NACE / Sektör', (firma.nace||'—')+' / '+(firma.sektor||'—'));
+    satir('Ziyaret Tarihi', al('ziy-f-tarih','ziyaret_tarihi'));
+    satir('Heyet', heyet);
+    satir('Görüşülen', al('ziy-f-gorusulen-ad','gorusulen_ad')+' — '+al('ziy-f-gorusulen-unvan','gorusulen_unvan'));
     y+=2;
     altBaslik('İşletme Güncel Durum Tespiti');
-    paragraf(document.getElementById('ziy-f-durum-tespit')?.value||'—');
-    satir('Çalışan (Mavi/Beyaz Yaka)', (document.getElementById('ziy-f-mavi-yaka')?.value||'0')+' / '+(document.getElementById('ziy-f-beyaz-yaka')?.value||'0'));
-    satir('Faaliyet Alanı', (document.getElementById('ziy-f-metrekare')?.value||'—')+' m²');
-    const ihracatTxt = {yapiyor:'Yapıyor',potansiyel:'Potansiyeli Var',yapmiyor:'Yapmıyor'}[document.getElementById('ziy-f-ihracat-durum')?.value]||'—';
+    paragraf(al('ziy-f-durum-tespit','durum_tespit')||'—');
+    satir('Çalışan (Mavi/Beyaz Yaka)', (al('ziy-f-mavi-yaka','mavi_yaka')||'0')+' / '+(al('ziy-f-beyaz-yaka','beyaz_yaka')||'0'));
+    satir('Faaliyet Alanı', (al('ziy-f-metrekare','metrekare')||'—')+' m²');
+    const ihracatTxt = {yapiyor:'Yapıyor',potansiyel:'Potansiyeli Var',yapmiyor:'Yapmıyor'}[ihracatDurumVal]||'—';
     satir('İhracat Durumu', ihracatTxt);
     altBaslik('Üyenin Beklenti ve Talepleri');
-    paragraf((window._ziySeciliTalep.join(', ')||'—')+'\n'+(document.getElementById('ziy-f-talep-metin')?.value||''));
+    paragraf((talepKategorileri.join(', ')||'—')+'\n'+(al('ziy-f-talep-metin','talep_metin')||''));
     altBaslik('Ziyaret Sonucu / Özeti');
-    paragraf(document.getElementById('ziy-f-sonuc-ozet')?.value||'—');
-    satir('Memnuniyet Skoru', (window._ziySeciliPuan||'—')+' / 5');
-    if(window._ziyAksiyonlar.length){
+    paragraf(al('ziy-f-sonuc-ozet','sonuc_ozet')||'—');
+    satir('Memnuniyet Skoru', (memnuniyetSkoru||'—')+' / 5');
+    if(aksiyonlar.length){
       altBaslik('Aksiyonlar');
-      window._ziyAksiyonlar.forEach(a=>{
+      aksiyonlar.forEach(a=>{
         paragraf('• '+a.metin+' (Birim: '+a.birim+', Termin: '+(a.termin||'—')+')');
       });
     }
     crmGecmisiEkle();
-    doc.save('Ziyaret_Raporu_'+_ziySecilenFirma.firma.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
+    doc.save('Ziyaret_Raporu_'+firma.firma.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
   }
   if(btn){ btn.innerHTML = eskiHtml; btn.disabled = false; }
 };
