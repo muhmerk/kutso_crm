@@ -15470,7 +15470,7 @@ window.ziyRenderListe = function(){
   liste.innerHTML = kayitlar.map(z=>{
     const aksiyonSayisi = (z.aksiyonlar||[]).length;
     const acikSayisi = (z.aksiyonlar||[]).filter(a=>!a.tamamlandi).length;
-    return `<div class="ch" style="cursor:pointer" onclick="ziyDetayAc('${z.id}')">
+    return `<div class="yk-card" style="cursor:pointer" onclick="ziyDetayAc('${z.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
           <div style="font-size:13px;font-weight:600">${z.firma_adi||'—'}</div>
@@ -15997,7 +15997,7 @@ window.crmRenderZiyaret = function(firmaId){
   const durumBadge = { planlandi:'b-blue', tamamlandi:'b-green' };
   const durumTxt = { planlandi:'Planlandı', tamamlandi:'Tamamlandı' };
   liste.innerHTML = kayitlar.map(z=>`
-    <div class="ch" style="cursor:pointer" onclick="ziyDetayAc('${z.id}', true)">
+    <div class="yk-card" style="cursor:pointer" onclick="ziyDetayAc('${z.id}', true)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
           <div style="font-size:13px;font-weight:600">${z.ziyaret_tarihi||''} ${z.ziyaret_saati||''}</div>
