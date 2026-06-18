@@ -2390,7 +2390,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--purple);margin-right:4px"></span>Meslek Komitesi</span>
       <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--teal);margin-right:4px"></span>Meclis</span>
       <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:4px"></span>Üye Ziyareti</span>
-      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px"></span>Eğitim/Etkinlik</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px"></span>Eğitim/Etkinlik (Üye)</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7c3aed;margin-right:4px"></span>Personel Eğitimi</span>
       <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#6b7280;margin-right:4px"></span>Genel Etkinlik</span>
       <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px"></span>Benim Terminim</span>
     </div>
@@ -15736,15 +15737,47 @@ function takvimTumEtkinlikler(){
     });
   });
   Object.values(egitimMap).forEach(e=>{
-    liste.push({ ...e, detay:e.personeller.join(', ')+' · '+e.kurum });
+    liste.push({ ...e, katilimcilar:e.personeller, detay:e.personeller.join(', ')+' · '+e.kurum });
   });
 
-  [...(window.ETK_DATA?.etkinlikler||[]), ...(window.ETK_PRS_DATA?.etkinlikler||[])].forEach(e=>{
+  /* Üye Eğitim & Etkinlik (ETK_DATA) */
+  (window.ETK_DATA?.etkinlikler||[]).forEach(e=>{
     if(!e.tarihIso) return;
     let bas='', bit='';
     if(e.saat && e.saat.includes('–')){ const p=e.saat.split('–').map(s=>s.trim()); bas=p[0]||''; bit=p[1]||''; }
     else if(e.saat){ bas=e.saat.trim(); }
-    liste.push({ tarihIso:e.tarihIso, saat:bas, bitisSaat:bit, tip:'etkinlik', renk:'var(--green)', baslik:e.ad, detay:(e.tur||'Etkinlik')+(e.yer?' · '+e.yer:''), kaynakId:e.id });
+    liste.push({ tarihIso:e.tarihIso, saat:bas, bitisSaat:bit, tip:'etkinlik', renk:'var(--green)',
+      baslik:e.ad, detay:(e.tur||'Etkinlik')+(e.yer?' · '+e.yer:''), kaynakId:e.id });
+  });
+
+  /* Personel Eğitim & Etkinlik (ETK_PRS_DATA) — katılımcı isimleriyle, aynı ad+tarih birleştirilmiş */
+  const prsEtkMap={};
+  (window.ETK_PRS_DATA?.etkinlikler||[]).forEach(e=>{
+    if(!e.tarihIso) return;
+    const key=e.tarihIso+'|'+e.ad;
+    if(!prsEtkMap[key]){
+      let bas='', bit='';
+      if(e.saat && e.saat.includes('–')){ const p=e.saat.split('–').map(s=>s.trim()); bas=p[0]||''; bit=p[1]||''; }
+      else if(e.saat){ bas=e.saat.trim(); }
+      prsEtkMap[key]={ tarihIso:e.tarihIso, saat:bas, bitisSaat:bit, tip:'etkinlik-prs',
+        renk:'#7c3aed', baslik:e.ad, kaynakId:e.id, tur:e.tur||'Personel Eğitimi',
+        yer:e.yer||'', katilimcilar:[] };
+    }
+    /* Katılımcı isimlerini ekle */
+    (e.katilimcilar||[]).forEach(k=>{
+      const isim = k.kullanici || k.yetkili || k.ad || '';
+      /* PERSONEL listesinden tam adı bul */
+      const prs = isim ? (window.PERSONEL||[]).find(p=>p.kullanici===isim||p.kullanici_adi===isim) : null;
+      const gosterilenAd = prs ? prs.ad+' '+prs.soyad : isim;
+      if(gosterilenAd && !prsEtkMap[key].katilimcilar.includes(gosterilenAd)){
+        prsEtkMap[key].katilimcilar.push(gosterilenAd);
+      }
+    });
+  });
+  Object.values(prsEtkMap).forEach(e=>{
+    const katilimciStr = e.katilimcilar.length ? e.katilimcilar.join(', ') : '';
+    e.detay = e.tur + (e.yer?' · '+e.yer:'') + (katilimciStr?' · '+katilimciStr:'');
+    liste.push(e);
   });
   /* Serbest takvim etkinlikleri (herkese açık) */
   Object.values(window.TAKVIM_DB||{}).forEach(t=>{
@@ -16223,7 +16256,8 @@ window.takvimEtkinlikDetayGoster = function(idx){
 
   const tipEtiketler = {
     yk:'YK Toplantısı', mk:'Meslek Komitesi Toplantısı', meclis:'Meclis Toplantısı',
-    ziyaret:'Üye Ziyareti', etkinlik:'Eğitim / Etkinlik', egitim_prs:'Personel Eğitimi',
+    ziyaret:'Üye Ziyareti', etkinlik:'Eğitim / Etkinlik (Üye)', 'etkinlik-prs':'Personel Eğitimi',
+    egitim_prs:'Personel Eğitimi',
     'egitim-prs':'Personel Eğitimi', genel:'Genel Etkinlik', kisisel:'Benim Terminim'
   };
 
@@ -16238,7 +16272,12 @@ window.takvimEtkinlikDetayGoster = function(idx){
     <div style="font-size:16px;font-weight:600;margin-bottom:4px">${e.baslik}</div>
     ${satir('Tarih', e.tarihIso ? new Date(e.tarihIso+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'}) : '')}
     ${satir('Saat', saatStr)}
-    ${satir('Detay', e.detay)}
+    ${(e.tip==='etkinlik-prs'||e.tip==='egitim-prs'||e.tip==='egitim_prs') && e.katilimcilar?.length ?
+      `<div><div style="font-size:10px;color:var(--text2);margin-bottom:6px">Katılan Personel</div>
+       <div style="display:flex;flex-wrap:wrap;gap:5px">${e.katilimcilar.map(k=>`<span class="badge b-blue" style="font-size:11px">${k}</span>`).join('')}</div></div>` : ''}
+    ${e.tip==='etkinlik-prs'&&e.tur ? satir('Tür', e.tur) : ''}
+    ${e.yer ? satir('Yer', e.yer) : ''}
+    ${e.tip!=='etkinlik-prs'&&e.tip!=='egitim-prs'&&e.tip!=='egitim_prs' ? satir('Detay', e.detay) : ''}
     ${satir('Açıklama', e.aciklama||'')}
     ${satir('Ekleyen', e.ekleyenAd||'')}
     ${e.tip==='genel' ? `<div style="margin-top:6px"><button class="btn btn-sm" style="color:var(--red)" onclick="document.getElementById('takvim-detay-overlay').style.display='none';takvimEtkinlikSil('${e.kaynakId}')"><i class="ti ti-trash"></i> Bu Etkinliği Sil</button></div>` : ''}
