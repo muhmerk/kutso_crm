@@ -16012,21 +16012,16 @@ window.crmRenderZiyaret = function(firmaId){
 
 window.crmZiyaretEkle = function(){
   if(!currentFirm){ return; }
-  /* Üye ziyareti modülündeki formu, firma önceden seçili olarak aç */
-  crmNavSec('ziyaret', document.getElementById('nav-crm-ziyaret'));
+  ziyaretYeniModal();
   setTimeout(()=>{
-    ziyaretYeniModal();
-    setTimeout(()=>{
-      _ziySecilenFirma = { id: currentFirm.id, _uye_oid: currentFirm.uye_oid, firma: currentFirm.firma, no: currentFirm.no, nace: currentFirm.nace, sektor: currentFirm.sektor, dereceTanimi: currentFirm.dereceTanimi, durum: currentFirm.durum };
-      const inp = document.getElementById('ziy-f-firma-ara'); if(inp) inp.value = currentFirm.firma+' ('+currentFirm.no+')';
-      ziyOtomatikAlanlariDoldur(_ziySecilenFirma);
-    }, 80);
+    _ziySecilenFirma = { id: currentFirm.id, _uye_oid: currentFirm.uye_oid, firma: currentFirm.firma, no: currentFirm.no, nace: currentFirm.nace, sektor: currentFirm.sektor, dereceTanimi: currentFirm.dereceTanimi, durum: currentFirm.durum };
+    const inp = document.getElementById('ziy-f-firma-ara'); if(inp) inp.value = currentFirm.firma+' ('+currentFirm.no+')';
+    ziyOtomatikAlanlariDoldur(_ziySecilenFirma);
   }, 80);
 };
 
 window.crmZiyaretDuzenle = function(id){
-  crmNavSec('ziyaret', document.getElementById('nav-crm-ziyaret'));
-  setTimeout(()=>ziyaretYeniModal(id), 80);
+  ziyaretYeniModal(id);
 };
 
 window.ziyDetayAc = function(id, sadeceGoruntule){
