@@ -15557,9 +15557,21 @@ window.ziyAksiyonEkle = function(){
   window._ziyAksiyonlar.push({id:'ax'+Date.now(), metin:'', birim:ZIY_BIRIMLER[0], personel:'', termin:'', tamamlandi:false, gorev_id:null});
   ziyAksiyonListRender();
 };
-window.ziyAksiyonSil = function(id){
-  window._ziyAksiyonlar = window._ziyAksiyonlar.filter(a=>a.id!==id);
+window.ziyAksiyonSil = async function(id){
+  const a = window._ziyAksiyonlar.find(x=>x.id===id);
+  if(a?.gorev_id){
+    if(!confirm('Bu aksiyona bağlı bir görev oluşturulmuş. Aksiyonu silmek, atanan kişinin görev listesinden de bu görevi kaldıracak. Onaylıyor musunuz?')) return;
+    try{
+      await _supa.from('gorevler').delete().eq('id', a.gorev_id);
+      if(window.supaYukleGorevler) window.supaYukleGorevler();
+    }catch(e){ console.warn('Görev silme hatası:', e); }
+  }
+  window._ziyAksiyonlar = window._ziyAksiyonlar.filter(x=>x.id!==id);
   ziyAksiyonListRender();
+  /* Eğer ziyaret zaten kaydedilmişse (düzenleme modu), DB'deki aksiyonlar alanını da hemen güncelle */
+  if(_ziyAktifId){
+    await _supa.from('uye_ziyaretler').update({ aksiyonlar: window._ziyAksiyonlar }).eq('id', _ziyAktifId);
+  }
 };
 window.ziyAksiyonGuncelle = function(id, alan, val){
   const a = window._ziyAksiyonlar.find(x=>x.id===id);
@@ -15898,8 +15910,19 @@ window.ziyaretKaydet = async function(){
 };
 
 window.ziyaretSil = async function(id){
-  if(!confirm('Bu ziyaret kaydını silmek istiyor musunuz?')) return;
+  const z = window.ZIY_DB[id];
+  const gorevSayisi = (z?.aksiyonlar||[]).filter(a=>a.gorev_id).length;
+  const uyariMetin = gorevSayisi
+    ? `Bu ziyaret kaydını silmek istiyor musunuz? Bu ziyarete bağlı ${gorevSayisi} görev de personelin görev listesinden kaldırılacak.`
+    : 'Bu ziyaret kaydını silmek istiyor musunuz?';
+  if(!confirm(uyariMetin)) return;
   try{
+    /* Bağlı görevleri sil */
+    const gorevIdler = (z?.aksiyonlar||[]).map(a=>a.gorev_id).filter(Boolean);
+    if(gorevIdler.length){
+      await _supa.from('gorevler').delete().in('id', gorevIdler);
+      if(window.supaYukleGorevler) window.supaYukleGorevler();
+    }
     const { error } = await _supa.from('uye_ziyaretler').delete().eq('id', id);
     if(error) throw error;
     await supaYukleZiyaretler();
@@ -15996,26 +16019,75 @@ window.ziyDetayAc = function(id){
   document.getElementById('ziy-detay-title').textContent = z.firma_adi + ' — Ziyaret Detayı';
   const body = document.getElementById('ziy-detay-body');
   const ihracatTxt = {yapiyor:'İhracat Yapıyor', potansiyel:'Potansiyeli Var', yapmiyor:'Yapmıyor'}[z.ihracat_durum]||'—';
+  const durumBadge = { planlandi:'b-blue', tamamlandi:'b-green' };
+  const durumTxt = { planlandi:'Planlandı', tamamlandi:'Tamamlandı' };
+
+  function blok(baslik, html){
+    return `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">${baslik}</div>${html}</div>`;
+  }
+  function ikili(label,val){
+    return `<div><div style="font-size:10px;color:var(--text2)">${label}</div><div style="font-size:13px">${val||'—'}</div></div>`;
+  }
+
   body.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div><div style="font-size:10px;color:var(--text2)">Ziyaret Tarihi</div><div style="font-size:13px">${z.ziyaret_tarihi||''} ${z.ziyaret_saati||''}</div></div>
-      <div><div style="font-size:10px;color:var(--text2)">Tür</div><div style="font-size:13px">${z.ziyaret_turu||''}</div></div>
-      <div><div style="font-size:10px;color:var(--text2)">Heyet</div><div style="font-size:13px">${(z.personel_listesi||[]).map(p=>p.ad).join(', ')||'—'}</div></div>
-      <div><div style="font-size:10px;color:var(--text2)">Görüşülen</div><div style="font-size:13px">${z.gorusulen_ad||'—'} ${z.gorusulen_unvan?'('+z.gorusulen_unvan+')':''}</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span class="badge ${durumBadge[z.durum]||'b-gray'}" style="font-size:12px">${durumTxt[z.durum]||z.durum||''}</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="document.getElementById('ziy-detay-overlay').style.display='none';ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>
+      </div>
     </div>
-    ${z.sonuc_ozet?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Ziyaret Özeti</div><div style="font-size:13px;line-height:1.6">${z.sonuc_ozet}</div></div>`:''}
-    ${z.durum_tespit?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">İşletme Durum Tespiti</div><div style="font-size:13px;line-height:1.6">${z.durum_tespit}</div></div>`:''}
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
-      <div><div style="font-size:10px;color:var(--text2)">Mavi/Beyaz Yaka</div><div style="font-size:13px">${z.mavi_yaka||0} / ${z.beyaz_yaka||0}</div></div>
-      <div><div style="font-size:10px;color:var(--text2)">Faaliyet Alanı</div><div style="font-size:13px">${z.metrekare?z.metrekare+' m²':'—'}</div></div>
-      <div><div style="font-size:10px;color:var(--text2)">İhracat</div><div style="font-size:13px">${ihracatTxt}</div></div>
+
+    ${blok('Firma Bilgileri', `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      ${ikili('Sicil No', z.uye_sicil_no)}
+      ${ikili('NACE Kodu', z.nace_kod)}
+      ${ikili('Sektör', z.sektor)}
+      ${ikili('Üye Derecesi', z.uye_derecesi)}
+      ${ikili('Üyelik Durumu', z.uye_durumu)}
+    </div>`)}
+
+    ${blok('Ziyaret Bilgileri', `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${ikili('Tarih / Saat', (z.ziyaret_tarihi||'')+' '+(z.ziyaret_saati||''))}
+      ${ikili('Ziyaret Türü', z.ziyaret_turu)}
+      ${ikili('Heyet', (z.personel_listesi||[]).map(p=>p.ad).join(', '))}
+      ${ikili('Görüşülen Kişi', (z.gorusulen_ad||'—')+(z.gorusulen_unvan?' ('+z.gorusulen_unvan+')':''))}
+    </div>`)}
+
+    ${z.on_notlar ? blok('Görüşme Öncesi Notlar', `<div style="font-size:13px;line-height:1.6">${z.on_notlar}</div>`) : ''}
+
+    ${z.durum_tespit ? blok('İşletme Güncel Durum Tespiti', `<div style="font-size:13px;line-height:1.6">${z.durum_tespit}</div>`) : ''}
+
+    ${blok('İşletme Verileri', `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      ${ikili('Mavi Yaka', z.mavi_yaka)}
+      ${ikili('Beyaz Yaka', z.beyaz_yaka)}
+      ${ikili('Faaliyet Alanı', z.metrekare?z.metrekare+' m²':'—')}
     </div>
-    ${z.memnuniyet_skoru?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Memnuniyet Skoru</div><div>${'★'.repeat(z.memnuniyet_skoru)}${'☆'.repeat(5-z.memnuniyet_skoru)}</div></div>`:''}
-    ${(z.aksiyonlar||[]).length?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Aksiyonlar</div>${z.aksiyonlar.map(a=>`<div style="font-size:12px;padding:6px 0;border-bottom:0.5px solid var(--border)">${a.metin} — <span style="color:var(--text2)">${a.birim}, termin: ${a.termin||'—'}</span></div>`).join('')}</div>`:''}
-    ${(z.dosyalar||[]).length?`<div><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Dosyalar</div>${z.dosyalar.map(d=>`<a href="${d.url}" target="_blank" style="display:block;font-size:12px;color:var(--blue);margin-bottom:4px">${d.ad}</a>`).join('')}</div>`:''}
+    <div style="margin-top:8px">${ikili('İhracat Durumu', ihracatTxt+(z.ihracat_ulkeler?' — '+z.ihracat_ulkeler:''))}</div>`)}
+
+    ${(z.talep_kategorileri?.length || z.talep_metin) ? blok('Üyenin Beklenti ve Talepleri', `
+      ${z.talep_kategorileri?.length ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">${z.talep_kategorileri.map(k=>`<span class="badge b-blue" style="font-size:10px">${k}</span>`).join('')}</div>` : ''}
+      ${z.talep_metin ? `<div style="font-size:13px;line-height:1.6">${z.talep_metin}</div>` : ''}
+    `) : ''}
+
+    ${z.sonuc_ozet ? blok('Ziyaret Sonucu / Özeti', `<div style="font-size:13px;line-height:1.6">${z.sonuc_ozet}</div>`) : ''}
+
+    ${z.memnuniyet_skoru ? blok('Memnuniyet Skoru', `<div style="font-size:16px;color:var(--amber)">${'★'.repeat(z.memnuniyet_skoru)}${'☆'.repeat(5-z.memnuniyet_skoru)}</div>`) : ''}
+
+    ${(z.aksiyonlar||[]).length ? blok('Aksiyonlar', z.aksiyonlar.map(a=>`
+      <div style="font-size:12px;padding:8px 0;border-bottom:0.5px solid var(--border)">
+        <div style="font-weight:500">${a.metin}</div>
+        <div style="color:var(--text2);margin-top:2px">${a.birim} ${a.personel?'· '+((window.PERSONEL||[]).find(p=>p.kullanici===a.personel)?.ad||a.personel):''} · Termin: ${a.termin||'—'} ${a.gorev_id?'· <span style="color:var(--teal)">Görev oluşturuldu</span>':''}</div>
+      </div>`).join('')) : ''}
+
+    ${(z.dosyalar||[]).length ? blok('Medya ve Dosyalar', z.dosyalar.map(d=>`
+      <a href="${d.url}" target="_blank" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue);text-decoration:none;margin-bottom:6px">
+        <i class="ti ${ziyDosyaIkonGlobal(d.ad)}" style="font-size:15px"></i>${d.ad}
+      </a>`).join('')) : blok('Medya ve Dosyalar', '<div style="font-size:12px;color:var(--text2)">Dosya eklenmedi</div>')}
+
+    ${blok('Kayıt Bilgisi', `<div style="font-size:11px;color:var(--text2)">Giren: ${z.giren_ad||z.giren_kul||'—'}</div>`)}
   `;
   document.getElementById('ziy-detay-overlay').style.display='flex';
 };
+function ziyDosyaIkonGlobal(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(['jpg','jpeg','png','gif','webp'].includes(e)) return 'ti-photo'; if(e==='pdf') return 'ti-file-type-pdf'; return 'ti-file'; }
 
 /* ───────────────── PDF OLUŞTURMA ───────────────── */
 window.ziyPdfOlustur = async function(tip){
