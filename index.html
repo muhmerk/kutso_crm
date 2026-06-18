@@ -38,7 +38,7 @@ async function supaYukleYK() {
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
-    const mappedT = toplantılar.map(t=>({ id:t.id, no:t.no||'', ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', yil:t.tarih_iso?new Date(t.tarih_iso).getFullYear():0, durum:t.durum||'planlandi', aciklama:t.aciklama||'' }));
+    const mappedT = toplantılar.map(t=>({ id:t.id, no:t.no||'', ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', yil:t.tarih_iso?new Date(t.tarih_iso).getFullYear():0, durum:t.durum||'planlandi', aciklama:t.aciklama||'' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.YK_DB) {
@@ -66,7 +66,7 @@ async function supaYukleMK() {
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
-    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', komite:t.komite||'', durum:t.durum||'planlandi' }));
+    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', komite:t.komite||'', durum:t.durum||'planlandi' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MK_DB) {
@@ -91,7 +91,7 @@ async function supaYukleMeclis() {
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
-    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', durum:t.durum||'planlandi' }));
+    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', durum:t.durum||'planlandi' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MECLIS_DB) {
@@ -2369,6 +2369,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--purple);margin-right:4px"></span>Meslek Komitesi</span>
           <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--teal);margin-right:4px"></span>Meclis</span>
           <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:4px"></span>Üye Ziyareti</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px"></span>Eğitim/Etkinlik</span>
           <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#6b7280;margin-right:4px"></span>Genel Etkinlik</span>
           <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px"></span>Benim Görev/Termin</span>
         </div>
@@ -2380,12 +2381,12 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
     <!-- Gün detay overlay -->
     <div id="takvim-gun-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+      <div style="background:var(--surface);border-radius:16px;width:640px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
         <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
           <div style="font-size:15px;font-weight:500" id="takvim-gun-baslik">Gün Detayı</div>
           <button onclick="document.getElementById('takvim-gun-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
         </div>
-        <div id="takvim-gun-body" style="padding:18px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px"></div>
+        <div id="takvim-gun-body" style="padding:18px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column"></div>
       </div>
     </div>
 
@@ -2398,9 +2399,10 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         </div>
         <div style="padding:20px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
           <div><label class="yk-lbl">Başlık *</label><input id="tk-f-baslik" class="yk-inp" placeholder="ör: YK Kabulü — Sanayi Heyeti"></div>
+          <div><label class="yk-lbl">Tarih *</label><input id="tk-f-tarih" type="date" class="yk-inp"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><label class="yk-lbl">Tarih *</label><input id="tk-f-tarih" type="date" class="yk-inp"></div>
-            <div><label class="yk-lbl">Saat</label><input id="tk-f-saat" type="time" class="yk-inp"></div>
+            <div><label class="yk-lbl">Başlangıç Saati</label><input id="tk-f-saat" type="time" class="yk-inp"></div>
+            <div><label class="yk-lbl">Bitiş Saati</label><input id="tk-f-bitis-saat" type="time" class="yk-inp"></div>
           </div>
           <div><label class="yk-lbl">Tür</label>
             <select id="tk-f-tip" class="yk-inp">
@@ -10005,9 +10007,9 @@ window.ykToplantıEkleModal = function(){
         <label class="yk-lbl">Tarih</label>
         <input id="yf-toplanti-tarih" type="date" class="yk-inp">
       </div>
-      <div>
-        <label class="yk-lbl">Saat</label>
-        <input id="yf-toplanti-saat" type="time" class="yk-inp">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Başlangıç Saati</label><input id="yf-toplanti-saat" type="time" class="yk-inp"></div>
+        <div><label class="yk-lbl">Bitiş Saati</label><input id="yf-toplanti-bitis-saat" type="time" class="yk-inp"></div>
       </div>
       <div>
         <label class="yk-lbl">Toplantı Türü</label>
@@ -10029,6 +10031,7 @@ function ykToplantıKaydet(){
   const ad       = document.getElementById('yf-toplanti-ad').value.trim();
   const tarihVal = document.getElementById('yf-toplanti-tarih').value;
   const saat     = document.getElementById('yf-toplanti-saat')?.value||'';
+  const bitisSaat = document.getElementById('yf-toplanti-bitis-saat')?.value||'';
   const tur      = document.getElementById('yf-toplanti-tur').value;
   const aciklama = document.getElementById('yf-toplanti-aciklama').value.trim();
   if(!ad || !tarihVal){ alert('Toplantı adı ve tarih zorunludur.'); return; }
@@ -10037,9 +10040,9 @@ function ykToplantıKaydet(){
   const olagan = YK_DB.toplantılar.filter(t=>!t.ad.includes('Olağanüstü')).length;
   const no = tur==='olaganustu' ? 'OÜ' : olagan+1;
   const id = genUUID();
-  YK_DB.toplantılar.push({ id, no, ad, tarih:tarihStr, tarihIso:tarihVal, saat, yil, durum:'planlandi', aciklama });
+  YK_DB.toplantılar.push({ id, no, ad, tarih:tarihStr, tarihIso:tarihVal, saat, bitisSaat, yil, durum:'planlandi', aciklama });
   /* Supabase'e kaydet */
-  _supa.from('karar_toplantilari').insert([{ id, tur:'yk', ad, tarih:tarihStr, tarih_iso:tarihVal, saat, durum:'planlandi' }])
+  _supa.from('karar_toplantilari').insert([{ id, tur:'yk', ad, tarih:tarihStr, tarih_iso:tarihVal, saat, bitis_saat:bitisSaat, durum:'planlandi' }])
     .then(({error})=>{ if(error) console.error('YK toplantı kaydetme hatası:',error.message); });
   ykModalKapat();
   ykRender();
@@ -10476,7 +10479,10 @@ window.mkToplantıEkle = function(){
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Toplantı Adı</label><input id="mk-f-ad" class="yk-inp" placeholder="Komite toplantısı adı..."></div>
       <div><label class="yk-lbl">Tarih</label><input id="mk-f-tarih" type="date" class="yk-inp"></div>
-      <div><label class="yk-lbl">Saat</label><input id="mk-f-saat" type="time" class="yk-inp"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Başlangıç Saati</label><input id="mk-f-saat" type="time" class="yk-inp"></div>
+        <div><label class="yk-lbl">Bitiş Saati</label><input id="mk-f-bitis-saat" type="time" class="yk-inp"></div>
+      </div>
       <div><label class="yk-lbl">Meslek Komitesi</label><input id="mk-f-komite" class="yk-inp" placeholder="İlgili meslek komitesi..."></div>
       <div><label class="yk-lbl">Tür</label>
         <select id="mk-f-tur" class="yk-inp"><option value="olagan">Olağan</option><option value="olaganustu">Olağanüstü</option></select>
@@ -10486,12 +10492,13 @@ window.mkToplantıEkle = function(){
     const ad=document.getElementById('mk-f-ad').value.trim();
     const tarihVal=document.getElementById('mk-f-tarih').value;
     const saat=document.getElementById('mk-f-saat')?.value||'';
+    const bitisSaat=document.getElementById('mk-f-bitis-saat')?.value||'';
     if(!ad||!tarihVal){alert('Ad ve tarih zorunludur.');return;}
     const tarih=new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
     const mkId = genUUID();
     const komite=document.getElementById('mk-f-komite').value.trim();
-    MK_DB.toplantılar.push({id:mkId,ad,tarih,saat,komite,durum:'planlandi'});
-    _supa.from('karar_toplantilari').insert([{id:mkId,tur:'mk',ad,tarih,tarih_iso:tarihVal,saat,komite,durum:'planlandi'}])
+    MK_DB.toplantılar.push({id:mkId,ad,tarih,saat,bitisSaat,komite,durum:'planlandi'});
+    _supa.from('karar_toplantilari').insert([{id:mkId,tur:'mk',ad,tarih,tarih_iso:tarihVal,saat,bitis_saat:bitisSaat,komite,durum:'planlandi'}])
       .then(({error})=>{if(error) console.error('MK toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); mkRender();
   };
@@ -10870,23 +10877,25 @@ window.meclisToplantıEkle=function(){
       <div><label class="yk-lbl">Toplantı Adı</label><input id="meclis-f-ad" class="yk-inp" placeholder="Meclis toplantısı adı..."></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Tarih</label><input id="meclis-f-tarih" type="date" class="yk-inp"></div>
-        <div><label class="yk-lbl">Saat</label><input id="meclis-f-saat" type="time" class="yk-inp"></div>
+        <div><label class="yk-lbl">Başlangıç Saati</label><input id="meclis-f-saat" type="time" class="yk-inp"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Bitiş Saati</label><input id="meclis-f-bitis-saat" type="time" class="yk-inp"></div>
         <div><label class="yk-lbl">Dönem</label><input id="meclis-f-donem" class="yk-inp" placeholder="Kaçıncı dönem..."></div>
-        <div><label class="yk-lbl">Tür</label><select id="meclis-f-tur" class="yk-inp"><option value="olagan">Olağan</option><option value="olaganustu">Olağanüstü</option></select></div>
       </div>
+      <div><label class="yk-lbl">Tür</label><select id="meclis-f-tur" class="yk-inp"><option value="olagan">Olağan</option><option value="olaganustu">Olağanüstü</option></select></div>
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick=()=>{
     const ad=document.getElementById('meclis-f-ad').value.trim();
     const tarihVal=document.getElementById('meclis-f-tarih').value;
     const saat=document.getElementById('meclis-f-saat')?.value||'';
+    const bitisSaat=document.getElementById('meclis-f-bitis-saat')?.value||'';
     if(!ad||!tarihVal){alert('Ad ve tarih zorunludur.');return;}
     const tarih=new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
     const mtId = genUUID();
     const donem=document.getElementById('meclis-f-donem').value.trim();
-    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,saat,donem,durum:'planlandi'});
-    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,saat,durum:'planlandi'}])
+    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,saat,bitisSaat,donem,durum:'planlandi'});
+    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,saat,bitis_saat:bitisSaat,durum:'planlandi'}])
       .then(({error})=>{if(error) console.error('Meclis toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); meclisRender();
   };
@@ -15528,37 +15537,45 @@ function turkceTarihParse(turkceStr){
 
 /* ───────────────── GÜNE GÖRE ETKİNLİK TOPLAMA ───────────────── */
 function takvimTumEtkinlikler(){
-  /* Her etkinlik: {tarihIso, saat, tip, baslik, detay, renk, kaynakId} */
+  /* Her etkinlik: {tarihIso, saat, bitisSaat, tip, baslik, detay, renk, kaynakId} */
   const liste = [];
 
   /* YK toplantıları */
   (window.YK_DB?.toplantılar||[]).forEach(t=>{
     const iso = t.tarihIso || turkceTarihParse(t.tarih);
     if(!iso) return;
-    liste.push({ tarihIso:iso, saat:t.saat||'', tip:'yk', renk:'var(--blue)', baslik:t.ad, detay:(t.saat?t.saat+' · ':'')+'Yönetim Kurulu Toplantısı', kaynakId:t.id });
+    liste.push({ tarihIso:iso, saat:t.saat||'', bitisSaat:t.bitisSaat||'', tip:'yk', renk:'var(--blue)', baslik:t.ad, detay:'Yönetim Kurulu Toplantısı', kaynakId:t.id });
   });
   /* MK toplantıları */
   (window.MK_DB?.toplantılar||[]).forEach(t=>{
     const iso = t.tarihIso || turkceTarihParse(t.tarih);
     if(!iso) return;
-    liste.push({ tarihIso:iso, saat:t.saat||'', tip:'mk', renk:'var(--purple)', baslik:t.ad, detay:(t.saat?t.saat+' · ':'')+'Meslek Komitesi'+(t.komite?' — '+t.komite:''), kaynakId:t.id });
+    liste.push({ tarihIso:iso, saat:t.saat||'', bitisSaat:t.bitisSaat||'', tip:'mk', renk:'var(--purple)', baslik:t.ad, detay:'Meslek Komitesi'+(t.komite?' — '+t.komite:''), kaynakId:t.id });
   });
   /* Meclis toplantıları */
   (window.MECLIS_DB?.toplantılar||[]).forEach(t=>{
     const iso = t.tarihIso || turkceTarihParse(t.tarih);
     if(!iso) return;
-    liste.push({ tarihIso:iso, saat:t.saat||'', tip:'meclis', renk:'var(--teal)', baslik:t.ad, detay:(t.saat?t.saat+' · ':'')+'Meclis Toplantısı', kaynakId:t.id });
+    liste.push({ tarihIso:iso, saat:t.saat||'', bitisSaat:t.bitisSaat||'', tip:'meclis', renk:'var(--teal)', baslik:t.ad, detay:'Meclis Toplantısı', kaynakId:t.id });
   });
   /* Üye Ziyaretleri */
   Object.values(window.ZIY_DB||{}).forEach(z=>{
     if(!z.ziyaret_tarihi) return;
-    liste.push({ tarihIso:z.ziyaret_tarihi, saat:z.ziyaret_saati||'', tip:'ziyaret', renk:'var(--amber)', baslik:'Üye Ziyareti: '+(z.firma_adi||'—'), detay:(z.ziyaret_saati?z.ziyaret_saati+' · ':'')+(z.ziyaret_turu||''), kaynakId:z.id });
+    liste.push({ tarihIso:z.ziyaret_tarihi, saat:z.ziyaret_saati||'', bitisSaat:z.bitis_saat||'', tip:'ziyaret', renk:'var(--amber)', baslik:'Üye Ziyareti: '+(z.firma_adi||'—'), detay:z.ziyaret_turu||'', kaynakId:z.id });
+  });
+  /* Eğitim & Etkinlik (saat alanı "09:00 – 17:00" formatında birleşik string) */
+  [...(window.ETK_DATA?.etkinlikler||[]), ...(window.ETK_PRS_DATA?.etkinlikler||[])].forEach(e=>{
+    if(!e.tarihIso) return;
+    let bas='', bit='';
+    if(e.saat && e.saat.includes('–')){ const p=e.saat.split('–').map(s=>s.trim()); bas=p[0]||''; bit=p[1]||''; }
+    else if(e.saat){ bas=e.saat.trim(); }
+    liste.push({ tarihIso:e.tarihIso, saat:bas, bitisSaat:bit, tip:'etkinlik', renk:'var(--green)', baslik:e.ad, detay:(e.tur||'Etkinlik')+(e.yer?' · '+e.yer:''), kaynakId:e.id });
   });
   /* Serbest takvim etkinlikleri (herkese açık) */
   Object.values(window.TAKVIM_DB||{}).forEach(t=>{
     const tipRenk = { kabul:'#6b7280', personel_toplantisi:'#6b7280', diger:'#6b7280' };
     const tipEtiket = { kabul:'Kabul', personel_toplantisi:'Personel Toplantısı', diger:'Genel Etkinlik' };
-    liste.push({ tarihIso:t.tarih, saat:t.saat||'', tip:'genel', renk:tipRenk[t.tip]||'#6b7280', baslik:t.baslik, detay:(t.saat?t.saat+' · ':'')+(tipEtiket[t.tip]||'Etkinlik')+(t.yer?' · '+t.yer:''), aciklama:t.aciklama, kaynakId:t.id, ekleyenAd:t.ekleyen_ad });
+    liste.push({ tarihIso:t.tarih, saat:t.saat||'', bitisSaat:t.bitis_saat||'', tip:'genel', renk:tipRenk[t.tip]||'#6b7280', baslik:t.baslik, detay:(tipEtiket[t.tip]||'Etkinlik')+(t.yer?' · '+t.yer:''), aciklama:t.aciklama, kaynakId:t.id, ekleyenAd:t.ekleyen_ad });
   });
   /* Kullanıcının KENDİ görevleri (termin tarihi olanlar) — sadece bana görünür */
   if(currentUser){
@@ -15567,7 +15584,7 @@ function takvimTumEtkinlikler(){
       if(!g.sonTarih && !g.son_tarih) return;
       const iso = g.sonTarih || g.son_tarih;
       if(g.durum==='tamamlandi') return;
-      liste.push({ tarihIso:iso, saat:'', tip:'kisisel', renk:'var(--red)', baslik:'Termin: '+(g.baslik||'Görev'), detay:'Benim görevim · '+(g.oncelik||''), kaynakId:g.id });
+      liste.push({ tarihIso:iso, saat:'', bitisSaat:'', tip:'kisisel', renk:'var(--red)', baslik:'Termin: '+(g.baslik||'Görev'), detay:'Benim görevim · '+(g.oncelik||''), kaynakId:g.id });
     });
   }
   /* Kullanıcının KENDİ gündem maddeleri (YK/MK/Meclis'te kendine atanmış, son tarihi olan) */
@@ -15577,7 +15594,7 @@ function takvimTumEtkinlikler(){
       if(g.durum==='tamamlandi') return;
       const benimMi = (g.atananlar||[]).some(a=>a.kullanici===currentUser.kullanici && a.durum!=='tamamlandi');
       if(!benimMi) return;
-      liste.push({ tarihIso:g.sonTarih, saat:'', tip:'kisisel', renk:'var(--red)', baslik:'Termin: '+(g.konu||'Karar maddesi'), detay:'Bana atanan karar maddesi', kaynakId:g.id });
+      liste.push({ tarihIso:g.sonTarih, saat:'', bitisSaat:'', tip:'kisisel', renk:'var(--red)', baslik:'Termin: '+(g.konu||'Karar maddesi'), detay:'Bana atanan karar maddesi', kaynakId:g.id });
     });
   }
 
@@ -15646,29 +15663,110 @@ window.takvimBugun = function(){
 };
 
 /* ───────────────── GÜN DETAY ───────────────── */
+/* Saat string'ini ("09:30") dakikaya çevirir */
+function saatToDakika(s){
+  if(!s) return null;
+  const p = s.split(':');
+  if(p.length<2) return null;
+  const h = parseInt(p[0]), m = parseInt(p[1]);
+  if(isNaN(h)||isNaN(m)) return null;
+  return h*60+m;
+}
+
 window.takvimGunAc = function(iso){
   const tumEtkinlikler = takvimTumEtkinlikler().filter(e=>e.tarihIso===iso);
-  tumEtkinlikler.sort((a,b)=>(a.saat||'99:99').localeCompare(b.saat||'99:99'));
   const tarihObj = new Date(iso+'T00:00:00');
   document.getElementById('takvim-gun-baslik').textContent = tarihObj.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'});
   const body = document.getElementById('takvim-gun-body');
+
+  /* Saati olan / olmayan etkinlikleri ayır */
+  const saatliEtkinlikler = tumEtkinlikler.filter(e=>saatToDakika(e.saat)!==null);
+  const saatsizEtkinlikler = tumEtkinlikler.filter(e=>saatToDakika(e.saat)===null);
+
+  const eklemeBtn = `<button class="btn btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEtkinlikEkleModal('${iso}')" style="align-self:center;margin-top:10px;width:100%"><i class="ti ti-plus"></i> Bu Güne Etkinlik Ekle</button>`;
+
   if(!tumEtkinlikler.length){
-    body.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Bu güne ait etkinlik bulunmuyor.</div>
-      <button class="btn btn-p btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEtkinlikEkleModal('${iso}')" style="align-self:center"><i class="ti ti-plus"></i> Bu Güne Etkinlik Ekle</button>`;
-  } else {
-    body.innerHTML = tumEtkinlikler.map(e=>`
-      <div style="border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
-        <div style="width:8px;height:8px;border-radius:50%;background:${e.renk};margin-top:5px;flex-shrink:0"></div>
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:600">${e.baslik}</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">${e.detay||''}</div>
-          ${e.aciklama?`<div style="font-size:12px;color:var(--text2);margin-top:6px">${e.aciklama}</div>`:''}
-          ${e.ekleyenAd?`<div style="font-size:10px;color:var(--text3);margin-top:6px">Ekleyen: ${e.ekleyenAd}</div>`:''}
-        </div>
-        ${e.tip==='genel'?`<button class="btn btn-sm" style="color:var(--red);flex-shrink:0" onclick="takvimEtkinlikSil('${e.kaynakId}')"><i class="ti ti-trash"></i></button>`:''}
-      </div>`).join('') + `<button class="btn btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEtkinlikEkleModal('${iso}')" style="align-self:center;margin-top:4px"><i class="ti ti-plus"></i> Bu Güne Etkinlik Ekle</button>`;
+    body.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Bu güne ait etkinlik bulunmuyor.</div>` + eklemeBtn;
+    document.getElementById('takvim-gun-overlay').style.display='flex';
+    return;
   }
+
+  /* Saatsiz (tüm gün) etkinlikler — üstte kart listesi */
+  let saatsizHtml = '';
+  if(saatsizEtkinlikler.length){
+    saatsizHtml = `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">` +
+      saatsizEtkinlikler.map(e=>`
+        <div style="border:0.5px solid var(--border);border-radius:8px;padding:9px 12px;display:flex;gap:9px;align-items:flex-start;background:var(--surface2)">
+          <div style="width:7px;height:7px;border-radius:50%;background:${e.renk};margin-top:5px;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600">${e.baslik}</div>
+            <div style="font-size:10px;color:var(--text2);margin-top:1px">${e.detay||''} · Saat belirtilmemiş</div>
+          </div>
+          ${e.tip==='genel'?`<button class="btn btn-sm" style="color:var(--red);flex-shrink:0;padding:2px 6px" onclick="takvimEtkinlikSil('${e.kaynakId}')"><i class="ti ti-trash"></i></button>`:''}
+        </div>`).join('') + `</div>`;
+  }
+
+  /* 24 saatlik zaman çizelgesi */
+  const SAAT_PX = 52; /* her saat dilimi yüksekliği */
+  const GUN_BAS = 7;  /* görünümün başladığı saat (07:00) — mesai odaklı, ama gerekirse 0'a kaydırılabilir */
+  const GUN_BIT = 21; /* görünümün bittiği saat (21:00) */
+  const toplamSaat = GUN_BIT - GUN_BAS;
+  const gridYukseklik = toplamSaat * SAAT_PX;
+
+  /* Çakışan etkinlikleri yan yana dizmek için basit sütun ataması */
+  const sirali = saatliEtkinlikler.slice().sort((a,b)=>saatToDakika(a.saat)-saatToDakika(b.saat));
+  const sutunlar = []; /* her sütun: en son biten dakika */
+  sirali.forEach(e=>{
+    const bas = saatToDakika(e.saat);
+    const bit = saatToDakika(e.bitisSaat) ?? (bas+60);
+    e._bas = bas; e._bit = Math.max(bit, bas+20);
+    let atandi = false;
+    for(let i=0;i<sutunlar.length;i++){
+      if(sutunlar[i] <= bas){ e._sutun = i; sutunlar[i] = e._bit; atandi = true; break; }
+    }
+    if(!atandi){ e._sutun = sutunlar.length; sutunlar.push(e._bit); }
+  });
+  const sutunSayisi = Math.max(1, sutunlar.length);
+
+  let saatCizgileri = '';
+  for(let h=GUN_BAS; h<=GUN_BIT; h++){
+    const top = (h-GUN_BAS)*SAAT_PX;
+    saatCizgileri += `<div style="position:absolute;top:${top}px;left:0;right:0;border-top:0.5px solid var(--border);font-size:10px;color:var(--text3);padding-left:2px">${String(h).padStart(2,'0')}:00</div>`;
+  }
+
+  const blokGenislikYuzde = 100/sutunSayisi;
+  let bloklar = '';
+  window._takvimGunEtkinlikleri = sirali;
+  sirali.forEach((e,idx)=>{
+    const dakikaGosterimBas = Math.max(e._bas, GUN_BAS*60);
+    const dakikaGosterimBit = Math.min(e._bit, GUN_BIT*60);
+    if(dakikaGosterimBit<=dakikaGosterimBas) return;
+    const top = (dakikaGosterimBas - GUN_BAS*60) / 60 * SAAT_PX;
+    const yukseklik = Math.max((dakikaGosterimBit - dakikaGosterimBas) / 60 * SAAT_PX, 22);
+    bloklar += `<div onclick="event.stopPropagation();takvimEtkinlikDetayGoster(${idx})"
+        style="position:absolute;top:${top}px;height:${yukseklik}px;left:calc(42px + ${e._sutun}*(100% - 42px)/${sutunSayisi});width:calc((100% - 42px)/${sutunSayisi} - 4px);
+        background:${e.renk};opacity:.16;border-left:3px solid ${e.renk};border-radius:6px;padding:3px 7px;overflow:hidden;cursor:pointer;box-sizing:border-box">
+      <div style="font-size:10.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.saat}${e.bitisSaat?'–'+e.bitisSaat:''} ${e.baslik}</div>
+      ${yukseklik>34?`<div style="font-size:9.5px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.detay||''}</div>`:''}
+    </div>`;
+  });
+
+  body.innerHTML = saatsizHtml + `
+    <div style="position:relative;height:${gridYukseklik}px;margin-left:4px;border-bottom:0.5px solid var(--border)">
+      ${saatCizgileri}
+      ${bloklar}
+    </div>` + eklemeBtn;
+
   document.getElementById('takvim-gun-overlay').style.display='flex';
+};
+
+window.takvimEtkinlikDetayGoster = function(idx){
+  const e = window._takvimGunEtkinlikleri?.[idx];
+  if(!e) return;
+  let mesaj = e.baslik+'\n'+(e.saat?e.saat+(e.bitisSaat?' – '+e.bitisSaat:'')+'\n':'')+(e.detay||'');
+  if(e.aciklama) mesaj += '\n\n'+e.aciklama;
+  if(e.ekleyenAd) mesaj += '\n\nEkleyen: '+e.ekleyenAd;
+  alert(mesaj);
 };
 
 /* ───────────────── ETKİNLİK EKLE/SİL ───────────────── */
@@ -15677,6 +15775,7 @@ window.takvimEtkinlikEkleModal = function(onIso){
   document.getElementById('tk-f-baslik').value='';
   document.getElementById('tk-f-tarih').value = onIso || gunIso(_takvimYil,_takvimAy,new Date().getDate());
   document.getElementById('tk-f-saat').value='';
+  document.getElementById('tk-f-bitis-saat').value='';
   document.getElementById('tk-f-tip').value='kabul';
   document.getElementById('tk-f-yer').value='';
   document.getElementById('tk-f-aciklama').value='';
@@ -15692,6 +15791,7 @@ window.takvimEtkinlikKaydet = async function(){
     tip: document.getElementById('tk-f-tip').value,
     tarih,
     saat: document.getElementById('tk-f-saat').value||null,
+    bitis_saat: document.getElementById('tk-f-bitis-saat').value||null,
     yer: document.getElementById('tk-f-yer').value.trim()||null,
     aciklama: document.getElementById('tk-f-aciklama').value.trim()||null,
     ekleyen_kul: currentUser?.kullanici||'',
@@ -16006,9 +16106,10 @@ window.ziyaretYeniModal = function(duzenleId){
       <div><div style="font-size:10px;color:var(--text2)">Üyelik Durumu</div><div id="ziy-oto-durum" style="font-size:12px;font-weight:500">—</div></div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Ziyaret Tarihi *</label><input id="ziy-f-tarih" type="date" class="yk-inp"></div>
-      <div><label class="yk-lbl">Ziyaret Saati</label><input id="ziy-f-saat" type="time" class="yk-inp"></div>
+      <div><label class="yk-lbl">Başlangıç Saati</label><input id="ziy-f-saat" type="time" class="yk-inp"></div>
+      <div><label class="yk-lbl">Bitiş Saati</label><input id="ziy-f-bitis-saat" type="time" class="yk-inp"></div>
     </div>
 
     <div>
@@ -16111,6 +16212,7 @@ window.ziyaretYeniModal = function(duzenleId){
     ziyOtomatikAlanlariDoldur({firma:mevcut.firma_adi, no:mevcut.uye_sicil_no, nace:mevcut.nace_kod, sektor:mevcut.sektor, dereceTanimi:mevcut.uye_derecesi, durum:mevcut.uye_durumu});
     setVal('ziy-f-tarih', mevcut.ziyaret_tarihi);
     setVal('ziy-f-saat', mevcut.ziyaret_saati);
+    setVal('ziy-f-bitis-saat', mevcut.bitis_saat);
     setVal('ziy-f-tur', mevcut.ziyaret_turu);
     setVal('ziy-f-gorusulen-ad', mevcut.gorusulen_ad);
     setVal('ziy-f-gorusulen-unvan', mevcut.gorusulen_unvan);
@@ -16186,6 +16288,7 @@ window.ziyaretKaydet = async function(){
     uye_durumu: _ziySecilenFirma.durum,
     ziyaret_tarihi: tarih,
     ziyaret_saati: document.getElementById('ziy-f-saat')?.value||'',
+    bitis_saat: document.getElementById('ziy-f-bitis-saat')?.value||'',
     personel_listesi: window._ziySeciliPersonel,
     ziyaret_turu: document.getElementById('ziy-f-tur')?.value,
     gorusulen_ad: document.getElementById('ziy-f-gorusulen-ad')?.value||'',
@@ -16391,7 +16494,7 @@ window.ziyDetayAc = function(id, sadeceGoruntule){
     </div>`)}
 
     ${blok('Ziyaret Bilgileri', `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      ${ikili('Tarih / Saat', (z.ziyaret_tarihi||'')+' '+(z.ziyaret_saati||''))}
+      ${ikili('Tarih / Saat', (z.ziyaret_tarihi||'')+' '+(z.ziyaret_saati||'')+(z.bitis_saat?' — '+z.bitis_saat:''))}
       ${ikili('Ziyaret Türü', z.ziyaret_turu)}
       ${ikili('Heyet', (z.personel_listesi||[]).map(p=>p.ad).join(', '))}
       ${ikili('Görüşülen Kişi', (z.gorusulen_ad||'—')+(z.gorusulen_unvan?' ('+z.gorusulen_unvan+')':''))}
