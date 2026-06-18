@@ -772,7 +772,7 @@ function supaRealtimeBaslat() {
       if(!window.EGITIMLER[pid].find(x=>String(x.id)===String(e.id))){
         window.EGITIMLER[pid].unshift({
           id:e.id, ad:e.ad, tarih:e.tarih, tarihIso:e.tarih_iso,
-          sure:e.sure||'—', kurum:e.kurum||'—', konu:e.konu||'',
+          kurum:e.kurum||'—', konu:e.konu||'',
           sertifika:!!e.sertifika, certNo:e.cert_no||''
         });
       }
@@ -787,7 +787,7 @@ function supaRealtimeBaslat() {
         const idx = list.findIndex(x=>String(x.id)===String(e.id));
         if(idx>-1) list[idx] = {
           id:e.id, ad:e.ad, tarih:e.tarih, tarihIso:e.tarih_iso,
-          sure:e.sure||'—', kurum:e.kurum||'—', konu:e.konu||'',
+          kurum:e.kurum||'—', konu:e.konu||'',
           sertifika:!!e.sertifika, certNo:e.cert_no||''
         };
       }
@@ -879,7 +879,7 @@ async function supaYuklePersonelEgitimler() {
       if(!window.EGITIMLER[pid]) window.EGITIMLER[pid] = [];
       window.EGITIMLER[pid].push({
         id: e.id, ad: e.ad, tarih: e.tarih, tarihIso: e.tarih_iso,
-        sure: e.sure||'—', kurum: e.kurum||'—', konu: e.konu||'',
+        kurum: e.kurum||'—', konu: e.konu||'',
         sertifika: !!e.sertifika, certNo: e.cert_no||'',
         basSaat: e.bas_saat||'', bitisSaat: e.bitis_saat||''
       });
@@ -2437,15 +2437,9 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
             <label class="yk-lbl">Eğitim / Kurs Adı <span style="color:var(--red)">*</span></label>
             <input id="tk-eg-ad" class="yk-inp" placeholder="Eğitim adı...">
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
-              <input id="tk-eg-tarih" type="date" class="yk-inp">
-            </div>
-            <div>
-              <label class="yk-lbl">Süre</label>
-              <input id="tk-eg-sure" class="yk-inp" placeholder="1 gün / 8 saat...">
-            </div>
+          <div>
+            <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
+            <input id="tk-eg-tarih" type="date" class="yk-inp">
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
@@ -4048,15 +4042,9 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
               <label class="yk-lbl">Eğitim / Kurs Adı <span style="color:var(--red)">*</span></label>
               <input id="prs-eg-ad" class="yk-inp" placeholder="Eğitim adı...">
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <div>
-                <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
-                <input id="prs-eg-tarih" type="date" class="yk-inp">
-              </div>
-              <div>
-                <label class="yk-lbl">Süre</label>
-                <input id="prs-eg-sure" class="yk-inp" placeholder="1 gün / 8 saat...">
-              </div>
+            <div>
+              <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
+              <input id="prs-eg-tarih" type="date" class="yk-inp">
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
               <div>
@@ -9513,7 +9501,7 @@ window.prsEgitimLoad = function(id) {
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:500;margin-bottom:2px">${e.ad}</div>
-            <div style="font-size:11px;color:var(--text2);margin-bottom:6px">${e.kurum} · ${e.tarih}${e.basSaat?' · '+e.basSaat+(e.bitisSaat?' – '+e.bitisSaat:''):''} · ${e.sure}</div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:6px">${e.kurum} · ${e.tarih}${e.basSaat?' · '+e.basSaat+(e.bitisSaat?' – '+e.bitisSaat:''):''}</div>
             ${e.konu?`<div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:4px">${e.konu}</div>`:''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
@@ -14962,7 +14950,7 @@ window.prsEgitimEkleModal = function(){
   const kaydetBtn = document.querySelector('#prs-egitim-modal button.btn-p');
   if(kaydetBtn) kaydetBtn.innerHTML = '<i class="ti ti-check"></i> Kaydet';
   /* Formu temizle */
-  ['prs-eg-ad','prs-eg-sure','prs-eg-kurum','prs-eg-konu','prs-eg-cert-no','prs-eg-bas-saat','prs-eg-bitis-saat'].forEach(elId=>{
+  ['prs-eg-ad','prs-eg-kurum','prs-eg-konu','prs-eg-cert-no','prs-eg-bas-saat','prs-eg-bitis-saat'].forEach(elId=>{
     const el=document.getElementById(elId); if(el) el.value='';
   });
   /* Tarih: bugün */
@@ -14996,7 +14984,6 @@ window.prsEgitimDuzenleModal = function(egitimId, pid){
   if(kaydetBtn) kaydetBtn.innerHTML = '<i class="ti ti-check"></i> Güncelle';
 
   document.getElementById('prs-eg-ad').value = kayit.ad||'';
-  document.getElementById('prs-eg-sure').value = kayit.sure||'';
   document.getElementById('prs-eg-kurum').value = kayit.kurum||'';
   document.getElementById('prs-eg-konu').value = kayit.konu||'';
   document.getElementById('prs-eg-cert-no').value = kayit.certNo||'';
@@ -15032,7 +15019,6 @@ window.prsEgitimKaydet = async function(){
   const tarihVal = document.getElementById('prs-eg-tarih')?.value;
   if(!ad || !kurum){ alert('Eğitim adı ve kurum zorunludur.'); return; }
   if(!tarihVal){ alert('Tarih seçiniz.'); return; }
-  const sure     = (document.getElementById('prs-eg-sure')?.value||'').trim() || '—';
   const konu     = (document.getElementById('prs-eg-konu')?.value||'').trim();
   const basSaat  = document.getElementById('prs-eg-bas-saat')?.value||'';
   const bitisSaat= document.getElementById('prs-eg-bitis-saat')?.value||'';
@@ -15047,13 +15033,13 @@ window.prsEgitimKaydet = async function(){
     /* Güncelleme */
     try{
       await supaPrsEgitimGuncelle(_prsEgitimEditId, {
-        ad, tarih, tarih_iso: tarihVal, sure, kurum, konu,
+        ad, tarih, tarih_iso: tarihVal, kurum, konu,
         sertifika, cert_no: certNo||null,
         bas_saat: basSaat||null, bitis_saat: bitisSaat||null
       });
       const list = EGITIMLER[pid]||[];
       const kayit = list.find(e=>String(e.id)===String(_prsEgitimEditId));
-      if(kayit){ kayit.ad=ad; kayit.tarih=tarih; kayit.tarihIso=tarihVal; kayit.sure=sure; kayit.kurum=kurum; kayit.konu=konu; kayit.sertifika=sertifika; kayit.certNo=certNo; kayit.basSaat=basSaat; kayit.bitisSaat=bitisSaat; }
+      if(kayit){ kayit.ad=ad; kayit.tarih=tarih; kayit.tarihIso=tarihVal; kayit.kurum=kurum; kayit.konu=konu; kayit.sertifika=sertifika; kayit.certNo=certNo; kayit.basSaat=basSaat; kayit.bitisSaat=bitisSaat; }
       _prsEgitimEditId = null;
       prsEgitimModalKapat();
       prsEgitimLoad(pid);
@@ -15065,12 +15051,12 @@ window.prsEgitimKaydet = async function(){
   }
 
   /* Yeni kayıt */
-  const yeniKayit = { ad, tarih, tarihIso: tarihVal, sure, kurum, konu, sertifika, certNo, basSaat, bitisSaat };
+  const yeniKayit = { ad, tarih, tarihIso: tarihVal, kurum, konu, sertifika, certNo, basSaat, bitisSaat };
   if(!EGITIMLER[pid]) EGITIMLER[pid]=[];
   EGITIMLER[pid].unshift(yeniKayit);
   const dbId = await supaPrsEgitimEkle({
     personel_id: pid, ad, tarih,
-    tarih_iso: tarihVal, sure, kurum, konu,
+    tarih_iso: tarihVal, kurum, konu,
     sertifika, cert_no: certNo||null,
     bas_saat: basSaat||null, bitis_saat: bitisSaat||null
   });
@@ -15658,20 +15644,30 @@ function takvimTumEtkinlikler(){
     if(!z.ziyaret_tarihi) return;
     liste.push({ tarihIso:z.ziyaret_tarihi, saat:z.ziyaret_saati||'', bitisSaat:z.bitis_saat||'', tip:'ziyaret', renk:'var(--amber)', baslik:'Üye Ziyareti: '+(z.firma_adi||'—'), detay:z.ziyaret_turu||'', kaynakId:z.id });
   });
-  /* Personel Eğitimleri (personel_egitimler tablosu — basSaat/bitisSaat ile) */
+  /* Personel Eğitimleri — aynı eğitime birden fazla personel varsa tek blokta birleştir */
+  const egitimMap = {}; /* key: tarihIso+ad+basSaat → {liste bilgileri, personeller:[]} */
   Object.entries(window.EGITIMLER||{}).forEach(([pid, egList])=>{
     if(pid==='default') return;
     const prs = (window.PERSONEL||[]).find(p=>String(p.id)===String(pid));
     const prsAd = prs ? prs.ad+' '+prs.soyad : 'Personel';
     (egList||[]).forEach(e=>{
       if(!e.tarihIso) return;
-      liste.push({ tarihIso:e.tarihIso, saat:e.basSaat||'', bitisSaat:e.bitisSaat||'',
-        tip:'egitim-prs', renk:'var(--purple)',
-        baslik:'Eğitim: '+e.ad,
-        detay:prsAd+' · '+e.kurum,
-        kaynakId:e.id });
+      const key = e.tarihIso + '|' + (e.ad||'') + '|' + (e.basSaat||'');
+      if(!egitimMap[key]){
+        egitimMap[key] = { tarihIso:e.tarihIso, saat:e.basSaat||'', bitisSaat:e.bitisSaat||'',
+          tip:'egitim-prs', renk:'var(--purple)',
+          baslik:'Eğitim: '+e.ad, kurum:e.kurum,
+          personeller:[], kaynakId:e.id };
+      }
+      if(!egitimMap[key].personeller.includes(prsAd)){
+        egitimMap[key].personeller.push(prsAd);
+      }
     });
   });
+  Object.values(egitimMap).forEach(e=>{
+    liste.push({ ...e, detay:e.personeller.join(', ')+' · '+e.kurum });
+  });
+
   [...(window.ETK_DATA?.etkinlikler||[]), ...(window.ETK_PRS_DATA?.etkinlikler||[])].forEach(e=>{
     if(!e.tarihIso) return;
     let bas='', bit='';
@@ -15792,12 +15788,6 @@ window.takvimGunAc = function(iso){
     <button class="btn btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEgitimModalAc('${iso}')" style="flex:1"><i class="ti ti-school"></i> Personel Eğitimi Ekle</button>
   </div>`;
 
-  if(!tumEtkinlikler.length){
-    body.innerHTML = `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text2);font-size:13px;padding:24px">Bu güne ait etkinlik bulunmuyor.</div>` + eklemeBtn;
-    document.getElementById('takvim-gun-overlay').style.display='flex';
-    return;
-  }
-
   /* Saati olan / olmayan etkinlikleri ayır */
   const saatliEtkinlikler = tumEtkinlikler.filter(e=>saatToDakika(e.saat)!==null);
   const saatsizEtkinlikler = tumEtkinlikler.filter(e=>saatToDakika(e.saat)===null);
@@ -15907,7 +15897,7 @@ window._tkEgSeciliPersonel = [];
 window.takvimEgitimModalAc = function(onIso){
   window._tkEgSeciliPersonel = [];
   /* Form temizle */
-  ['tk-eg-ad','tk-eg-sure','tk-eg-kurum','tk-eg-konu','tk-eg-cert-no','tk-eg-bas-saat','tk-eg-bitis-saat'].forEach(id=>{
+  ['tk-eg-ad','tk-eg-kurum','tk-eg-konu','tk-eg-cert-no','tk-eg-bas-saat','tk-eg-bitis-saat'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   const tarihEl = document.getElementById('tk-eg-tarih');
@@ -15962,7 +15952,6 @@ window.takvimEgitimKaydet = async function(){
   if(!ad || !kurum){ alert('Eğitim adı ve kurum zorunludur.'); return; }
   if(!tarihVal){ alert('Tarih seçiniz.'); return; }
   if(!window._tkEgSeciliPersonel.length){ alert('En az bir personel seçiniz.'); return; }
-  const sure     = (document.getElementById('tk-eg-sure')?.value||'').trim() || '—';
   const konu     = (document.getElementById('tk-eg-konu')?.value||'').trim();
   const basSaat  = document.getElementById('tk-eg-bas-saat')?.value||'';
   const bitisSaat= document.getElementById('tk-eg-bitis-saat')?.value||'';
@@ -15973,13 +15962,13 @@ window.takvimEgitimKaydet = async function(){
 
   let basari = 0, hata = 0;
   for(const prs of window._tkEgSeciliPersonel){
-    const yeniKayit = { ad, tarih, tarihIso:tarihVal, sure, kurum, konu, sertifika, certNo, basSaat, bitisSaat };
+    const yeniKayit = { ad, tarih, tarihIso:tarihVal, kurum, konu, sertifika, certNo, basSaat, bitisSaat };
     if(!window.EGITIMLER) window.EGITIMLER = {};
     if(!window.EGITIMLER[prs.id]) window.EGITIMLER[prs.id] = [];
     window.EGITIMLER[prs.id].unshift(yeniKayit);
     const dbId = await supaPrsEgitimEkle({
       personel_id: prs.id, ad, tarih, tarih_iso: tarihVal,
-      sure, kurum, konu, sertifika, cert_no: certNo||null,
+      kurum, konu, sertifika, cert_no: certNo||null,
       bas_saat: basSaat||null, bitis_saat: bitisSaat||null
     });
     if(dbId){ yeniKayit.id = dbId; basari++; }
