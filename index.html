@@ -2420,6 +2420,74 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         </div>
       </div>
     </div>
+
+    <!-- Takvimden Personel Eğitimi Ekleme Modalı -->
+    <div id="takvim-egitim-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:302;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:520px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+        <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div>
+            <div style="font-size:15px;font-weight:500">Personel Eğitimi Ekle</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">Seçilen personellerin eğitim kaydına eklenir</div>
+          </div>
+          <button onclick="document.getElementById('takvim-egitim-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+        </div>
+        <div style="padding:18px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:13px">
+          <div>
+            <label class="yk-lbl">Eğitim / Kurs Adı <span style="color:var(--red)">*</span></label>
+            <input id="tk-eg-ad" class="yk-inp" placeholder="Eğitim adı...">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
+              <input id="tk-eg-tarih" type="date" class="yk-inp">
+            </div>
+            <div>
+              <label class="yk-lbl">Süre</label>
+              <input id="tk-eg-sure" class="yk-inp" placeholder="1 gün / 8 saat...">
+            </div>
+          </div>
+          <div>
+            <label class="yk-lbl">Düzenleyen Kurum / Kuruluş <span style="color:var(--red)">*</span></label>
+            <input id="tk-eg-kurum" class="yk-inp" placeholder="TOBB Akademi, Bakanlık...">
+          </div>
+          <div>
+            <label class="yk-lbl">Eğitim Konuları / Açıklama</label>
+            <textarea id="tk-eg-konu" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Eğitimde işlenen konular..."></textarea>
+          </div>
+          <div>
+            <label class="yk-lbl">Sertifika</label>
+            <div style="display:flex;gap:10px;margin-top:4px">
+              <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;padding:8px 14px;border-radius:8px;border:0.5px solid var(--border2);flex:1;justify-content:center" id="tk-eg-cert-evet-lbl">
+                <input type="radio" name="tk-eg-cert" value="evet" id="tk-eg-cert-evet" style="accent-color:var(--teal)" onchange="tkEgCertChange()">
+                <i class="ti ti-certificate" style="font-size:15px;color:var(--teal)"></i> Sertifika Alındı
+              </label>
+              <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;padding:8px 14px;border-radius:8px;border:0.5px solid var(--border2);flex:1;justify-content:center" id="tk-eg-cert-hayir-lbl">
+                <input type="radio" name="tk-eg-cert" value="hayir" id="tk-eg-cert-hayir" style="accent-color:var(--text2)" onchange="tkEgCertChange()">
+                <i class="ti ti-x" style="font-size:15px;color:var(--text2)"></i> Sertifikasız
+              </label>
+            </div>
+          </div>
+          <div id="tk-eg-cert-no-row" style="display:none">
+            <label class="yk-lbl">Sertifika No (opsiyonel)</label>
+            <input id="tk-eg-cert-no" class="yk-inp" placeholder="Sertifika numarası...">
+          </div>
+          <div>
+            <label class="yk-lbl">Katılan Personel <span style="color:var(--red)">*</span></label>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <select id="tk-eg-personel-sec" class="yk-inp" style="flex:1">
+                <option value="">Personel seçin...</option>
+              </select>
+              <button class="btn btn-sm" onclick="tkEgPersonelEkle()"><i class="ti ti-plus"></i> Ekle</button>
+            </div>
+            <div id="tk-eg-personel-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:20px"></div>
+          </div>
+        </div>
+        <div style="padding:12px 22px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+          <button class="btn btn-sm" onclick="document.getElementById('takvim-egitim-overlay').style.display='none'">İptal</button>
+          <button class="btn btn-p btn-sm" onclick="takvimEgitimKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ══════════ ÜYE MODÜLÜ ══════════ -->
@@ -15679,8 +15747,9 @@ window.takvimGunAc = function(iso){
   document.getElementById('takvim-gun-baslik').textContent = tarihObj.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'});
   const body = document.getElementById('takvim-gun-body');
 
-  const eklemeBtn = `<div style="flex-shrink:0;padding:12px 0 0 0">
-    <button class="btn btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEtkinlikEkleModal('${iso}')" style="width:100%"><i class="ti ti-plus"></i> Bu Güne Etkinlik Ekle</button>
+  const eklemeBtn = `<div style="flex-shrink:0;padding:12px 0 0 0;display:flex;gap:8px">
+    <button class="btn btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEtkinlikEkleModal('${iso}')" style="flex:1"><i class="ti ti-calendar-plus"></i> Genel Etkinlik Ekle</button>
+    <button class="btn btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEgitimModalAc('${iso}')" style="flex:1"><i class="ti ti-school"></i> Personel Eğitimi Ekle</button>
   </div>`;
 
   if(!tumEtkinlikler.length){
@@ -15786,6 +15855,97 @@ window.takvimEtkinlikDetayGoster = function(idx){
   if(e.aciklama) mesaj += '\n\n'+e.aciklama;
   if(e.ekleyenAd) mesaj += '\n\nEkleyen: '+e.ekleyenAd;
   alert(mesaj);
+};
+
+/* ───────────────── TAKVİMDEN PERSONELe EĞİTİM EKLEME ───────────────── */
+window._tkEgSeciliPersonel = [];
+
+window.takvimEgitimModalAc = function(onIso){
+  window._tkEgSeciliPersonel = [];
+  /* Form temizle */
+  ['tk-eg-ad','tk-eg-sure','tk-eg-kurum','tk-eg-konu','tk-eg-cert-no'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const tarihEl = document.getElementById('tk-eg-tarih');
+  if(tarihEl) tarihEl.value = onIso || new Date().toISOString().slice(0,10);
+  document.querySelectorAll('input[name="tk-eg-cert"]').forEach(r=>r.checked=false);
+  document.getElementById('tk-eg-cert-no-row').style.display='none';
+  /* Personel select doldur */
+  const sel = document.getElementById('tk-eg-personel-sec');
+  if(sel){
+    sel.innerHTML = '<option value="">Personel seçin...</option>' +
+      (window.PERSONEL||[]).map(p=>`<option value="${p.id}">${p.ad} ${p.soyad} — ${p.unvan||''}</option>`).join('');
+  }
+  tkEgPersonelListRender();
+  document.getElementById('takvim-egitim-overlay').style.display='flex';
+};
+
+window.tkEgCertChange = function(){
+  const evet = document.getElementById('tk-eg-cert-evet')?.checked;
+  document.getElementById('tk-eg-cert-no-row').style.display = evet ? 'block' : 'none';
+};
+
+window.tkEgPersonelEkle = function(){
+  const sel = document.getElementById('tk-eg-personel-sec');
+  if(!sel || !sel.value) return;
+  const pid = parseInt(sel.value);
+  const p = (window.PERSONEL||[]).find(x=>x.id===pid);
+  if(!p) return;
+  if(window._tkEgSeciliPersonel.find(x=>x.id===pid)) return;
+  window._tkEgSeciliPersonel.push({id:pid, ad:p.ad+' '+p.soyad});
+  sel.value='';
+  tkEgPersonelListRender();
+};
+
+window.tkEgPersonelCikar = function(pid){
+  window._tkEgSeciliPersonel = window._tkEgSeciliPersonel.filter(x=>x.id!==pid);
+  tkEgPersonelListRender();
+};
+
+function tkEgPersonelListRender(){
+  const el = document.getElementById('tk-eg-personel-list');
+  if(!el) return;
+  el.innerHTML = window._tkEgSeciliPersonel.map(p=>
+    `<span class="badge b-blue" style="display:inline-flex;align-items:center;gap:5px;margin:2px">${p.ad}
+      <i class="ti ti-x" style="cursor:pointer;font-size:12px" onclick="tkEgPersonelCikar(${p.id})"></i></span>`
+  ).join('') || '<span style="font-size:12px;color:var(--text2)">Henüz personel eklenmedi</span>';
+}
+
+window.takvimEgitimKaydet = async function(){
+  const ad    = (document.getElementById('tk-eg-ad')?.value||'').trim();
+  const kurum = (document.getElementById('tk-eg-kurum')?.value||'').trim();
+  const tarihVal = document.getElementById('tk-eg-tarih')?.value;
+  if(!ad || !kurum){ alert('Eğitim adı ve kurum zorunludur.'); return; }
+  if(!tarihVal){ alert('Tarih seçiniz.'); return; }
+  if(!window._tkEgSeciliPersonel.length){ alert('En az bir personel seçiniz.'); return; }
+  const sure   = (document.getElementById('tk-eg-sure')?.value||'').trim() || '—';
+  const konu   = (document.getElementById('tk-eg-konu')?.value||'').trim();
+  const certEl = document.querySelector('input[name="tk-eg-cert"]:checked');
+  const sertifika = certEl?.value === 'evet';
+  const certNo = sertifika ? (document.getElementById('tk-eg-cert-no')?.value||'').trim() : '';
+  const tarih  = new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+
+  let basari = 0, hata = 0;
+  for(const prs of window._tkEgSeciliPersonel){
+    const yeniKayit = { ad, tarih, tarihIso:tarihVal, sure, kurum, konu, sertifika, certNo };
+    if(!window.EGITIMLER) window.EGITIMLER = {};
+    if(!window.EGITIMLER[prs.id]) window.EGITIMLER[prs.id] = [];
+    window.EGITIMLER[prs.id].unshift(yeniKayit);
+    const dbId = await supaPrsEgitimEkle({
+      personel_id: prs.id, ad, tarih, tarih_iso: tarihVal,
+      sure, kurum, konu, sertifika, cert_no: certNo||null
+    });
+    if(dbId){ yeniKayit.id = dbId; basari++; }
+    else { hata++; }
+  }
+
+  document.getElementById('takvim-egitim-overlay').style.display='none';
+  /* Personel sayfası açıksa yenile */
+  const aktifPid = parseInt(document.getElementById('prs-egitim-sec')?.value||'0');
+  if(aktifPid && window._tkEgSeciliPersonel.find(x=>x.id===aktifPid)){
+    if(window.prsEgitimLoad) window.prsEgitimLoad(aktifPid);
+  }
+  alert(`✓ ${basari} personele "${ad}" eğitimi eklendi.${hata?` (${hata} personelde hata oluştu)`:''}`);
 };
 
 /* ───────────────── ETKİNLİK EKLE/SİL ───────────────── */
