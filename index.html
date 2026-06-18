@@ -15785,21 +15785,28 @@ let _takvimSecilenGun = null; /* günlük görünüm için ISO string */
 function takvimYilDropdownDoldur(){
   const sel = document.getElementById('tk-yil-sec');
   if(!sel) return;
-  const buYil = new Date().getFullYear();
+  /* Sınırsız: 1970'den 2099'a kadar tüm yıllar */
   sel.innerHTML = '';
-  for(let y=buYil-3; y<=buYil+3; y++){
+  for(let y=1970; y<=2099; y++){
     const opt = document.createElement('option');
     opt.value = y; opt.textContent = y;
     if(y===_takvimYil) opt.selected = true;
     sel.appendChild(opt);
   }
+  sel.value = _takvimYil;
 }
 
 /* Dropdown'ları mevcut ay/yıl ile senkronize et */
 function takvimDropdownGuncelle(){
   const yilSel = document.getElementById('tk-yil-sec');
   const aySel = document.getElementById('tk-ay-sec');
-  if(yilSel) yilSel.value = _takvimYil;
+  if(yilSel){
+    /* Mevcut yıl dropdown'da yoksa yeniden doldur */
+    if(!yilSel.querySelector(`option[value="${_takvimYil}"]`)){
+      takvimYilDropdownDoldur();
+    }
+    yilSel.value = _takvimYil;
+  }
   if(aySel) aySel.value = _takvimAy;
 }
 
@@ -15809,15 +15816,20 @@ window.takvimYilAyDegistir = function(){
   const aySel = document.getElementById('tk-ay-sec');
   if(yilSel) _takvimYil = parseInt(yilSel.value);
   if(aySel) _takvimAy = parseInt(aySel.value);
-  if(_takvimMod==='gunluk') _takvimSecilenGun = gunIso(_takvimYil, _takvimAy, 1);
+  /* Seçili günü de seçili ay/yıle taşı (görünüm kaybetmesin) */
+  _takvimSecilenGun = gunIso(_takvimYil, _takvimAy, 1);
   takvimRender();
 };
 
-/* Görünüm modu değiştir */
+/* Görünüm modu değiştir — mevcut ay/yıl korunur */
 window.takvimModDegistir = function(mod){
   _takvimMod = mod;
-  if(mod==='gunluk' && !_takvimSecilenGun){
-    _takvimSecilenGun = gunIso(_takvimYil, _takvimAy, new Date().getDate() || 1);
+  /* Seçili günü her zaman mevcut _takvimYil/_takvimAy'dan türet, sıfırlamasın */
+  if(!_takvimSecilenGun || (() => {
+    const d = new Date(_takvimSecilenGun+'T00:00:00');
+    return d.getFullYear()!==_takvimYil || d.getMonth()!==_takvimAy;
+  })()){
+    _takvimSecilenGun = gunIso(_takvimYil, _takvimAy, 1);
   }
   /* Buton stilleri */
   ['aylik','haftalik','gunluk'].forEach(m=>{
@@ -15831,24 +15843,28 @@ window.takvimModDegistir = function(mod){
 
 /* İleri/geri navigasyon — moda göre */
 window.takvimGeri = function(){
-  if(_takvimMod==='aylik'){ _takvimAy--; if(_takvimAy<0){_takvimAy=11;_takvimYil--;} }
+  if(_takvimMod==='aylik'){ _takvimAy--; if(_takvimAy<0){_takvimAy=11;_takvimYil--;} _takvimSecilenGun=gunIso(_takvimYil,_takvimAy,1); }
   else if(_takvimMod==='haftalik'){
-    const d = new Date(_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1));
-    d.setDate(d.getDate()-7); _takvimYil=d.getFullYear(); _takvimAy=d.getMonth(); _takvimSecilenGun=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
+    const baz=_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1);
+    const d=new Date(baz+'T00:00:00'); d.setDate(d.getDate()-7);
+    _takvimYil=d.getFullYear(); _takvimAy=d.getMonth(); _takvimSecilenGun=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
   } else {
-    const d = new Date(_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1));
-    d.setDate(d.getDate()-1); _takvimYil=d.getFullYear(); _takvimAy=d.getMonth(); _takvimSecilenGun=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
+    const baz=_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1);
+    const d=new Date(baz+'T00:00:00'); d.setDate(d.getDate()-1);
+    _takvimYil=d.getFullYear(); _takvimAy=d.getMonth(); _takvimSecilenGun=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
   }
   takvimDropdownGuncelle(); takvimRender();
 };
 window.takvimIleri = function(){
-  if(_takvimMod==='aylik'){ _takvimAy++; if(_takvimAy>11){_takvimAy=0;_takvimYil++;} }
+  if(_takvimMod==='aylik'){ _takvimAy++; if(_takvimAy>11){_takvimAy=0;_takvimYil++;} _takvimSecilenGun=gunIso(_takvimYil,_takvimAy,1); }
   else if(_takvimMod==='haftalik'){
-    const d = new Date(_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1));
-    d.setDate(d.getDate()+7); _takvimYil=d.getFullYear(); _takvimAy=d.getMonth(); _takvimSecilenGun=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
+    const baz=_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1);
+    const d=new Date(baz+'T00:00:00'); d.setDate(d.getDate()+7);
+    _takvimYil=d.getFullYear(); _takvimAy=d.getMonth(); _takvimSecilenGun=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
   } else {
-    const d = new Date(_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1));
-    d.setDate(d.getDate()+1); _takvimYil=d.getFullYear(); _takvimAy=d.getMonth(); _takvimSecilenGun=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
+    const baz=_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1);
+    const d=new Date(baz+'T00:00:00'); d.setDate(d.getDate()+1);
+    _takvimYil=d.getFullYear(); _takvimAy=d.getMonth(); _takvimSecilenGun=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
   }
   takvimDropdownGuncelle(); takvimRender();
 };
