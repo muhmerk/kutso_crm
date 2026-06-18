@@ -15935,22 +15935,26 @@ window.crmZiyaretOzetGuncelle = function(firmaId){
   const card = document.getElementById('crm-ziyaret-ozet-card');
   const fields = document.getElementById('crm-ziyaret-ozet-fields');
   if(!card || !fields) return;
-  /* Bu firmaya ait, tamamlanmış ve veri içeren en güncel ziyareti bul */
+  /* Bu firmaya ait, veri içeren ziyaretleri bul — tamamlanmış olanlar önce, sonra en güncel tarih */
   const kayitlar = Object.values(window.ZIY_DB||{})
-    .filter(z=>String(z.uye_id)===String(firmaId) && z.durum==='tamamlandi')
-    .sort((a,b)=>(b.ziyaret_tarihi||'').localeCompare(a.ziyaret_tarihi||''));
+    .filter(z=>String(z.uye_id)===String(firmaId) && (z.metrekare||z.mavi_yaka||z.beyaz_yaka||z.ihracat_durum))
+    .sort((a,b)=>{
+      if(a.durum!==b.durum) return a.durum==='tamamlandi'?-1:1;
+      return (b.ziyaret_tarihi||'').localeCompare(a.ziyaret_tarihi||'');
+    });
   const son = kayitlar[0];
-  if(!son || (!son.metrekare && !son.mavi_yaka && !son.beyaz_yaka && !son.ihracat_durum)){
+  if(!son){
     card.style.display='none';
     return;
   }
   card.style.display='block';
   const ihracatTxt = {yapiyor:'Yapıyor', potansiyel:'Potansiyeli Var', yapmiyor:'Yapmıyor'}[son.ihracat_durum]||'—';
+  const durumNotu = son.durum!=='tamamlandi' ? ' <span style="color:var(--amber)">(ziyaret henüz tamamlanmadı)</span>' : '';
   const ozetFields = [
     { icon:'ti-ruler-2', label:'Faaliyet Alanı', val: son.metrekare ? son.metrekare+' m²' : '—' },
     { icon:'ti-users', label:'Çalışan (Mavi/Beyaz Yaka)', val: (son.mavi_yaka||0)+' / '+(son.beyaz_yaka||0) },
     { icon:'ti-world', label:'İhracat Durumu', val: ihracatTxt },
-    { icon:'ti-calendar-event', label:'Veri Tarihi', val: son.ziyaret_tarihi||'—' },
+    { icon:'ti-calendar-event', label:'Veri Tarihi', val: (son.ziyaret_tarihi||'—')+durumNotu },
   ];
   fields.innerHTML = ozetFields.map(fld=>
     `<div style="display:flex;align-items:flex-start;gap:9px">
