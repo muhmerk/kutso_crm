@@ -15750,27 +15750,27 @@ window.takvimGunAc = function(iso){
     const dakBit = Math.min(e._bit, GUN_BIT*60);
     if(dakBit<=dakBas) return;
     const top = (dakBas - GUN_BAS*60) / 60 * SAAT_PX;
-    const yukseklik = Math.max((dakBit-dakBas)/60*SAAT_PX, 26);
-    const leftPercent = e._sutun / sutunSayisi * 100;
-    const widthPercent = 100 / sutunSayisi;
-    /* Renk açık arka plan, koyu sol kenar, koyu metin */
+    const yukseklik = Math.max((dakBit-dakBas)/60*SAAT_PX, 28);
+    /* Piksel bazlı pozisyon: çizelge alanı = GRID_W px */
+    const GRID_W = 548; /* 640px overlay - 2*22px padding - 48px saat etiketi */
+    const blokW = Math.floor(GRID_W / sutunSayisi) - 4;
+    const blokL = SOL_PX + e._sutun * Math.floor(GRID_W / sutunSayisi);
     bloklar += `<div onclick="event.stopPropagation();takvimEtkinlikDetayGoster(${idx})"
         style="position:absolute;top:${top}px;height:${yukseklik}px;
-               left:calc(${SOL_PX}px + ${leftPercent}% * (100% - ${SOL_PX}px) / 100);
-               width:calc(${widthPercent}% * (100% - ${SOL_PX}px) / 100 - 4px);
+               left:${blokL}px;width:${blokW}px;
                background:${e.renk}22;border-left:3px solid ${e.renk};border-radius:0 6px 6px 0;
                padding:4px 8px;overflow:hidden;cursor:pointer;box-sizing:border-box;
                box-shadow:inset 0 0 0 0.5px ${e.renk}44">
       <div style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">${e.baslik}</div>
-      ${yukseklik>36?`<div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.saat}${e.bitisSaat?' – '+e.bitisSaat:''} · ${e.detay||''}</div>`:`<div style="font-size:9px;color:var(--text2)">${e.saat}${e.bitisSaat?' – '+e.bitisSaat:''}</div>`}
+      ${yukseklik>38?`<div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.saat}${e.bitisSaat?' – '+e.bitisSaat:''} · ${e.detay||''}</div>`:`<div style="font-size:9px;color:var(--text2)">${e.saat}${e.bitisSaat?' – '+e.bitisSaat:''}</div>`}
     </div>`;
   });
 
   /* body'yi flex column yap: saatsiz üstte, çizelge orta (scroll), buton altta sabit */
-  body.style.cssText = 'padding:18px 22px;overflow-y:hidden;flex:1;display:flex;flex-direction:column;gap:0;scrollbar-width:thick';
+  body.style.cssText = 'padding:18px 22px;overflow-y:hidden;flex:1;display:flex;flex-direction:column;gap:0';
   body.innerHTML = saatsizHtml +
-    `<div style="flex:1;overflow-y:auto;scrollbar-width:thick;position:relative">
-      <div style="position:relative;height:${gridYukseklik}px;overflow:visible">
+    `<div style="flex:1;overflow-y:auto;scrollbar-width:thick;scrollbar-color:var(--border2) transparent">
+      <div style="position:relative;height:${gridYukseklik}px;width:${SOL_PX+548}px">
         ${saatCizgileri}
         ${bloklar}
       </div>
