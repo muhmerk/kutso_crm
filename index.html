@@ -38,7 +38,7 @@ async function supaYukleYK() {
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
-    const mappedT = toplantılar.map(t=>({ id:t.id, no:t.no||'', ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, yil:t.tarih_iso?new Date(t.tarih_iso).getFullYear():0, durum:t.durum||'planlandi', aciklama:t.aciklama||'' }));
+    const mappedT = toplantılar.map(t=>({ id:t.id, no:t.no||'', ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', yil:t.tarih_iso?new Date(t.tarih_iso).getFullYear():0, durum:t.durum||'planlandi', aciklama:t.aciklama||'' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.YK_DB) {
@@ -66,7 +66,7 @@ async function supaYukleMK() {
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
-    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, komite:t.komite||'', durum:t.durum||'planlandi' }));
+    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', komite:t.komite||'', durum:t.durum||'planlandi' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MK_DB) {
@@ -91,7 +91,7 @@ async function supaYukleMeclis() {
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
-    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, durum:t.durum||'planlandi' }));
+    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', durum:t.durum||'planlandi' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MECLIS_DB) {
@@ -472,14 +472,17 @@ function supaRealtimeBaslat() {
     .on('postgres_changes', { event:'*', schema:'public', table:'karar_toplantilari' }, async ()=>{
       await Promise.all([supaYukleYK(), supaYukleMK(), supaYukleMeclis()]);
       supaEkranYenile('karar');
+      if(window.takvimRender) window.takvimRender();
     })
     .on('postgres_changes', { event:'*', schema:'public', table:'karar_gundemler' }, async ()=>{
       await Promise.all([supaYukleYK(), supaYukleMK(), supaYukleMeclis()]);
       supaEkranYenile('karar');
+      if(window.takvimRender) window.takvimRender();
     })
     .on('postgres_changes', { event:'*', schema:'public', table:'karar_atamalar' }, async ()=>{
       await Promise.all([supaYukleYK(), supaYukleMK(), supaYukleMeclis()]);
       supaEkranYenile('karar');
+      if(window.takvimRender) window.takvimRender();
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Kararlar dinleniyor'); });
 
@@ -708,6 +711,13 @@ function supaRealtimeBaslat() {
       await supaYukleZiyaretler();
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Üye ziyaretleri dinleniyor'); });
+
+  /* Takvim */
+  _supa.channel('db-takvim')
+    .on('postgres_changes', { event:'*', schema:'public', table:'takvim_etkinlikler' }, async ()=>{
+      await supaYukleTakvim();
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Takvim dinleniyor'); });
 
   /* Personel */
   _supa.channel('db-personel')
@@ -2211,6 +2221,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
   <div class="sb-section">Genel</div>
   <button class="nav active" onclick="sw('dashboard',this)"><i class="ti ti-layout-dashboard"></i>Genel Bakış</button>
+  <button class="nav" onclick="sw('takvim',this)"><i class="ti ti-calendar"></i>Takvim</button>
 
   <div class="sb-divider"></div>
   <div class="sb-section">Üyeler</div>
@@ -2340,6 +2351,72 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         </div>
       </div>
       <div id="db-isplani-icerik"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ TAKVİM ══════════ -->
+  <div id="s-takvim" class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn btn-sm" onclick="takvimAyDegistir(-1)"><i class="ti ti-chevron-left"></i></button>
+        <div style="font-size:16px;font-weight:600;min-width:170px;text-align:center" id="takvim-ay-baslik"></div>
+        <button class="btn btn-sm" onclick="takvimAyDegistir(1)"><i class="ti ti-chevron-right"></i></button>
+        <button class="btn btn-sm" onclick="takvimBugun()">Bugün</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--text2)" id="takvim-legend">
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:4px"></span>YK</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--purple);margin-right:4px"></span>Meslek Komitesi</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--teal);margin-right:4px"></span>Meclis</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:4px"></span>Üye Ziyareti</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#6b7280;margin-right:4px"></span>Genel Etkinlik</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px"></span>Benim Görev/Termin</span>
+        </div>
+        <button class="btn btn-p btn-sm" onclick="takvimEtkinlikEkleModal()"><i class="ti ti-plus"></i> Etkinlik Ekle</button>
+      </div>
+    </div>
+
+    <div id="takvim-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+
+    <!-- Gün detay overlay -->
+    <div id="takvim-gun-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+        <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div style="font-size:15px;font-weight:500" id="takvim-gun-baslik">Gün Detayı</div>
+          <button onclick="document.getElementById('takvim-gun-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+        </div>
+        <div id="takvim-gun-body" style="padding:18px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+    </div>
+
+    <!-- Etkinlik ekleme modalı -->
+    <div id="takvim-ekle-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:301;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:460px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+        <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div style="font-size:15px;font-weight:500">Takvim Etkinliği Ekle</div>
+          <button onclick="document.getElementById('takvim-ekle-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+        </div>
+        <div style="padding:20px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
+          <div><label class="yk-lbl">Başlık *</label><input id="tk-f-baslik" class="yk-inp" placeholder="ör: YK Kabulü — Sanayi Heyeti"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label class="yk-lbl">Tarih *</label><input id="tk-f-tarih" type="date" class="yk-inp"></div>
+            <div><label class="yk-lbl">Saat</label><input id="tk-f-saat" type="time" class="yk-inp"></div>
+          </div>
+          <div><label class="yk-lbl">Tür</label>
+            <select id="tk-f-tip" class="yk-inp">
+              <option value="kabul">Kabul (YK / Genel Sekreterlik)</option>
+              <option value="personel_toplantisi">Personel Toplantısı</option>
+              <option value="diger">Diğer</option>
+            </select>
+          </div>
+          <div><label class="yk-lbl">Yer (isteğe bağlı)</label><input id="tk-f-yer" class="yk-inp" placeholder="ör: Toplantı Salonu"></div>
+          <div><label class="yk-lbl">Açıklama (isteğe bağlı)</label><textarea id="tk-f-aciklama" class="yk-inp" style="min-height:60px;resize:vertical"></textarea></div>
+        </div>
+        <div style="padding:13px 22px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+          <button class="btn btn-sm" onclick="document.getElementById('takvim-ekle-overlay').style.display='none'">İptal</button>
+          <button class="btn btn-p btn-sm" onclick="takvimEtkinlikKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4102,7 +4179,8 @@ async function doLogin() {
     supaYukleIsPlan(),
     supaYukleMemnuniyet(),
     (window.supaYukleGorevler ? window.supaYukleGorevler() : Promise.resolve()),
-    (window.supaYukleZiyaretler ? window.supaYukleZiyaretler() : Promise.resolve())
+    (window.supaYukleZiyaretler ? window.supaYukleZiyaretler() : Promise.resolve()),
+    (window.supaYukleTakvim ? window.supaYukleTakvim() : Promise.resolve())
   ]);
   /* Realtime dinlemeyi başlat */
   supaRealtimeBaslat();
@@ -4241,6 +4319,7 @@ document.head.appendChild(_style);
 /* ── Topbar meta ── */
 const META = {
   dashboard:    { title: 'Genel Bakış',          sub: (()=>{const n=new Date();return n.toLocaleDateString('tr-TR',{month:'long',year:'numeric'});})(),                                    right: '<div class="sync-chip"><div class="sync-dot"></div>TOBB sync: 08:00</div>' },
+  takvim:       { title: 'Takvim',               sub: 'Toplantılar, ziyaretler ve termin tarihleri',    right: '' },
   uyeler:       { title: 'Üye Modülü',            sub: '5.121 kayıtlı üye · TOBB\'dan otomatik senkronize', right: '<div class="sync-chip"><div class="sync-dot"></div>TOBB sync: 08:00</div>' },
   crm:          { title: 'CRM',                   sub: 'İletişim ve görev takibi',                       right: '' },
   sicil:        { title: 'Ticaret Sicil',         sub: 'Üye ticaret sicil işlemleri kaydı',              right: '' },
@@ -4291,6 +4370,8 @@ function sw(id, btn) {
   } else if (id === 'sicil') {
     /* Sicil modülüne her girişte arama ekranına dön */
     if(window.sicilGeri) window.sicilGeri();
+  } else if (id === 'takvim') {
+    if(window.takvimAcildi) window.takvimAcildi();
   }
 }
 
@@ -9925,6 +10006,10 @@ window.ykToplantıEkleModal = function(){
         <input id="yf-toplanti-tarih" type="date" class="yk-inp">
       </div>
       <div>
+        <label class="yk-lbl">Saat</label>
+        <input id="yf-toplanti-saat" type="time" class="yk-inp">
+      </div>
+      <div>
         <label class="yk-lbl">Toplantı Türü</label>
         <select id="yf-toplanti-tur" class="yk-inp">
           <option value="olagan">Olağan</option>
@@ -9943,6 +10028,7 @@ window.ykToplantıEkleModal = function(){
 function ykToplantıKaydet(){
   const ad       = document.getElementById('yf-toplanti-ad').value.trim();
   const tarihVal = document.getElementById('yf-toplanti-tarih').value;
+  const saat     = document.getElementById('yf-toplanti-saat')?.value||'';
   const tur      = document.getElementById('yf-toplanti-tur').value;
   const aciklama = document.getElementById('yf-toplanti-aciklama').value.trim();
   if(!ad || !tarihVal){ alert('Toplantı adı ve tarih zorunludur.'); return; }
@@ -9951,9 +10037,9 @@ function ykToplantıKaydet(){
   const olagan = YK_DB.toplantılar.filter(t=>!t.ad.includes('Olağanüstü')).length;
   const no = tur==='olaganustu' ? 'OÜ' : olagan+1;
   const id = genUUID();
-  YK_DB.toplantılar.push({ id, no, ad, tarih:tarihStr, tarihIso:tarihVal, yil, durum:'planlandi', aciklama });
+  YK_DB.toplantılar.push({ id, no, ad, tarih:tarihStr, tarihIso:tarihVal, saat, yil, durum:'planlandi', aciklama });
   /* Supabase'e kaydet */
-  _supa.from('karar_toplantilari').insert([{ id, tur:'yk', ad, tarih:tarihStr, tarih_iso:tarihVal, durum:'planlandi' }])
+  _supa.from('karar_toplantilari').insert([{ id, tur:'yk', ad, tarih:tarihStr, tarih_iso:tarihVal, saat, durum:'planlandi' }])
     .then(({error})=>{ if(error) console.error('YK toplantı kaydetme hatası:',error.message); });
   ykModalKapat();
   ykRender();
@@ -10390,6 +10476,7 @@ window.mkToplantıEkle = function(){
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Toplantı Adı</label><input id="mk-f-ad" class="yk-inp" placeholder="Komite toplantısı adı..."></div>
       <div><label class="yk-lbl">Tarih</label><input id="mk-f-tarih" type="date" class="yk-inp"></div>
+      <div><label class="yk-lbl">Saat</label><input id="mk-f-saat" type="time" class="yk-inp"></div>
       <div><label class="yk-lbl">Meslek Komitesi</label><input id="mk-f-komite" class="yk-inp" placeholder="İlgili meslek komitesi..."></div>
       <div><label class="yk-lbl">Tür</label>
         <select id="mk-f-tur" class="yk-inp"><option value="olagan">Olağan</option><option value="olaganustu">Olağanüstü</option></select>
@@ -10398,12 +10485,13 @@ window.mkToplantıEkle = function(){
   document.getElementById('yk-modal-kaydet').onclick=()=>{
     const ad=document.getElementById('mk-f-ad').value.trim();
     const tarihVal=document.getElementById('mk-f-tarih').value;
+    const saat=document.getElementById('mk-f-saat')?.value||'';
     if(!ad||!tarihVal){alert('Ad ve tarih zorunludur.');return;}
     const tarih=new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
     const mkId = genUUID();
     const komite=document.getElementById('mk-f-komite').value.trim();
-    MK_DB.toplantılar.push({id:mkId,ad,tarih,komite,durum:'planlandi'});
-    _supa.from('karar_toplantilari').insert([{id:mkId,tur:'mk',ad,tarih,tarih_iso:tarihVal,komite,durum:'planlandi'}])
+    MK_DB.toplantılar.push({id:mkId,ad,tarih,saat,komite,durum:'planlandi'});
+    _supa.from('karar_toplantilari').insert([{id:mkId,tur:'mk',ad,tarih,tarih_iso:tarihVal,saat,komite,durum:'planlandi'}])
       .then(({error})=>{if(error) console.error('MK toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); mkRender();
   };
@@ -10780,7 +10868,10 @@ window.meclisToplantıEkle=function(){
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Toplantı Adı</label><input id="meclis-f-ad" class="yk-inp" placeholder="Meclis toplantısı adı..."></div>
-      <div><label class="yk-lbl">Tarih</label><input id="meclis-f-tarih" type="date" class="yk-inp"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Tarih</label><input id="meclis-f-tarih" type="date" class="yk-inp"></div>
+        <div><label class="yk-lbl">Saat</label><input id="meclis-f-saat" type="time" class="yk-inp"></div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Dönem</label><input id="meclis-f-donem" class="yk-inp" placeholder="Kaçıncı dönem..."></div>
         <div><label class="yk-lbl">Tür</label><select id="meclis-f-tur" class="yk-inp"><option value="olagan">Olağan</option><option value="olaganustu">Olağanüstü</option></select></div>
@@ -10789,12 +10880,13 @@ window.meclisToplantıEkle=function(){
   document.getElementById('yk-modal-kaydet').onclick=()=>{
     const ad=document.getElementById('meclis-f-ad').value.trim();
     const tarihVal=document.getElementById('meclis-f-tarih').value;
+    const saat=document.getElementById('meclis-f-saat')?.value||'';
     if(!ad||!tarihVal){alert('Ad ve tarih zorunludur.');return;}
     const tarih=new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
     const mtId = genUUID();
     const donem=document.getElementById('meclis-f-donem').value.trim();
-    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,donem,durum:'planlandi'});
-    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,durum:'planlandi'}])
+    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,saat,donem,durum:'planlandi'});
+    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,saat,durum:'planlandi'}])
       .then(({error})=>{if(error) console.error('Meclis toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); meclisRender();
   };
@@ -11066,6 +11158,7 @@ window.supaYukleGorevler = async function supaYukleGorevler() {
         if(window.gorevRender) window.gorevRender();
         if(window.gorevBadgeGuncelle) window.gorevBadgeGuncelle();
         if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+        if(window.takvimRender) window.takvimRender();
         console.log('✓ Görevler yüklendi:', mapped.length);
       } else { setTimeout(trySet, 300); }
     };
@@ -15391,6 +15484,244 @@ window.sikSurecKaydet = function(kartId, domKart){
   alert('✓ Kaydedildi.');
 };
 
+/* ══ TAKVİM MODÜLÜ ══ */
+(function(){
+
+window.TAKVIM_DB = {}; /* id -> serbest etkinlik kaydı */
+let _takvimAy = new Date().getMonth(); /* 0-11 */
+let _takvimYil = new Date().getFullYear();
+let _takvimSecilenTarih = null; /* etkinlik ekle modalı için ön-doldurma */
+
+const AY_ADLARI = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const GUN_ADLARI = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+
+/* ───────────────── DB YÜKLEME ───────────────── */
+async function supaYukleTakvim(){
+  try{
+    const { data, error } = await _supa.from('takvim_etkinlikler').select('*').order('tarih',{ascending:true});
+    if(error){ console.warn('Takvim yükleme hatası:', error.message); return; }
+    window.TAKVIM_DB = {};
+    (data||[]).forEach(t=>{ window.TAKVIM_DB[t.id] = t; });
+    if(window.takvimRender) window.takvimRender();
+  }catch(e){ console.warn('Takvim yükleme hatası:', e); }
+}
+window.supaYukleTakvim = supaYukleTakvim;
+
+/* ───────────────── TARİH YARDIMCILARI ───────────────── */
+function gunIso(y, m, d){
+  const mm = String(m+1).padStart(2,'0');
+  const dd = String(d).padStart(2,'0');
+  return `${y}-${mm}-${dd}`;
+}
+function turkceTarihParse(turkceStr){
+  /* "6 Haziran 2026" formatını ISO'ya çevirir (YK/MK/Meclis kayıtlarının bazıları sadece bu formatta olabilir) */
+  if(!turkceStr) return null;
+  const aylar = {'ocak':1,'şubat':2,'mart':3,'nisan':4,'mayıs':5,'haziran':6,'temmuz':7,'ağustos':8,'eylül':9,'ekim':10,'kasım':11,'aralık':12};
+  const parts = turkceStr.trim().toLowerCase().split(' ');
+  if(parts.length<3) return null;
+  const gun = parseInt(parts[0]);
+  const ay = aylar[parts[1]];
+  const yil = parseInt(parts[2]);
+  if(!gun||!ay||!yil) return null;
+  return `${yil}-${String(ay).padStart(2,'0')}-${String(gun).padStart(2,'0')}`;
+}
+
+/* ───────────────── GÜNE GÖRE ETKİNLİK TOPLAMA ───────────────── */
+function takvimTumEtkinlikler(){
+  /* Her etkinlik: {tarihIso, saat, tip, baslik, detay, renk, kaynakId} */
+  const liste = [];
+
+  /* YK toplantıları */
+  (window.YK_DB?.toplantılar||[]).forEach(t=>{
+    const iso = t.tarihIso || turkceTarihParse(t.tarih);
+    if(!iso) return;
+    liste.push({ tarihIso:iso, saat:t.saat||'', tip:'yk', renk:'var(--blue)', baslik:t.ad, detay:(t.saat?t.saat+' · ':'')+'Yönetim Kurulu Toplantısı', kaynakId:t.id });
+  });
+  /* MK toplantıları */
+  (window.MK_DB?.toplantılar||[]).forEach(t=>{
+    const iso = t.tarihIso || turkceTarihParse(t.tarih);
+    if(!iso) return;
+    liste.push({ tarihIso:iso, saat:t.saat||'', tip:'mk', renk:'var(--purple)', baslik:t.ad, detay:(t.saat?t.saat+' · ':'')+'Meslek Komitesi'+(t.komite?' — '+t.komite:''), kaynakId:t.id });
+  });
+  /* Meclis toplantıları */
+  (window.MECLIS_DB?.toplantılar||[]).forEach(t=>{
+    const iso = t.tarihIso || turkceTarihParse(t.tarih);
+    if(!iso) return;
+    liste.push({ tarihIso:iso, saat:t.saat||'', tip:'meclis', renk:'var(--teal)', baslik:t.ad, detay:(t.saat?t.saat+' · ':'')+'Meclis Toplantısı', kaynakId:t.id });
+  });
+  /* Üye Ziyaretleri */
+  Object.values(window.ZIY_DB||{}).forEach(z=>{
+    if(!z.ziyaret_tarihi) return;
+    liste.push({ tarihIso:z.ziyaret_tarihi, saat:z.ziyaret_saati||'', tip:'ziyaret', renk:'var(--amber)', baslik:'Üye Ziyareti: '+(z.firma_adi||'—'), detay:(z.ziyaret_saati?z.ziyaret_saati+' · ':'')+(z.ziyaret_turu||''), kaynakId:z.id });
+  });
+  /* Serbest takvim etkinlikleri (herkese açık) */
+  Object.values(window.TAKVIM_DB||{}).forEach(t=>{
+    const tipRenk = { kabul:'#6b7280', personel_toplantisi:'#6b7280', diger:'#6b7280' };
+    const tipEtiket = { kabul:'Kabul', personel_toplantisi:'Personel Toplantısı', diger:'Genel Etkinlik' };
+    liste.push({ tarihIso:t.tarih, saat:t.saat||'', tip:'genel', renk:tipRenk[t.tip]||'#6b7280', baslik:t.baslik, detay:(t.saat?t.saat+' · ':'')+(tipEtiket[t.tip]||'Etkinlik')+(t.yer?' · '+t.yer:''), aciklama:t.aciklama, kaynakId:t.id, ekleyenAd:t.ekleyen_ad });
+  });
+  /* Kullanıcının KENDİ görevleri (termin tarihi olanlar) — sadece bana görünür */
+  if(currentUser){
+    (window.GOREV_DB||[]).forEach(g=>{
+      if(g.atanan!==currentUser.kullanici) return;
+      if(!g.sonTarih && !g.son_tarih) return;
+      const iso = g.sonTarih || g.son_tarih;
+      if(g.durum==='tamamlandi') return;
+      liste.push({ tarihIso:iso, saat:'', tip:'kisisel', renk:'var(--red)', baslik:'Termin: '+(g.baslik||'Görev'), detay:'Benim görevim · '+(g.oncelik||''), kaynakId:g.id });
+    });
+  }
+  /* Kullanıcının KENDİ gündem maddeleri (YK/MK/Meclis'te kendine atanmış, son tarihi olan) */
+  if(currentUser){
+    [...(window.YK_DB?.gundemler||[]), ...(window.MK_DB?.gundemler||[]), ...(window.MECLIS_DB?.gundemler||[])].forEach(g=>{
+      if(!g.sonTarih) return;
+      if(g.durum==='tamamlandi') return;
+      const benimMi = (g.atananlar||[]).some(a=>a.kullanici===currentUser.kullanici && a.durum!=='tamamlandi');
+      if(!benimMi) return;
+      liste.push({ tarihIso:g.sonTarih, saat:'', tip:'kisisel', renk:'var(--red)', baslik:'Termin: '+(g.konu||'Karar maddesi'), detay:'Bana atanan karar maddesi', kaynakId:g.id });
+    });
+  }
+
+  return liste;
+}
+
+/* ───────────────── TAKVİM RENDER ───────────────── */
+window.takvimRender = function(){
+  const baslikEl = document.getElementById('takvim-ay-baslik');
+  const gridEl = document.getElementById('takvim-grid');
+  if(!gridEl) return;
+  if(baslikEl) baslikEl.textContent = AY_ADLARI[_takvimAy]+' '+_takvimYil;
+
+  const tumEtkinlikler = takvimTumEtkinlikler();
+  /* tarihIso -> [etkinlik,...] */
+  const gunMap = {};
+  tumEtkinlikler.forEach(e=>{
+    if(!gunMap[e.tarihIso]) gunMap[e.tarihIso] = [];
+    gunMap[e.tarihIso].push(e);
+  });
+
+  const ilkGun = new Date(_takvimYil, _takvimAy, 1);
+  const sonGun = new Date(_takvimYil, _takvimAy+1, 0);
+  const gunSayisi = sonGun.getDate();
+  /* Pazartesi=0 olacak şekilde haftanın gününü hesapla */
+  let baslangicBosluk = (ilkGun.getDay()+6)%7;
+
+  const bugun = new Date();
+  const bugunIso = gunIso(bugun.getFullYear(), bugun.getMonth(), bugun.getDate());
+
+  let html = GUN_ADLARI.map(g=>`<div style="text-align:center;font-size:11px;font-weight:600;color:var(--text2);padding:6px 0">${g}</div>`).join('');
+
+  for(let i=0;i<baslangicBosluk;i++){
+    html += `<div></div>`;
+  }
+  for(let d=1; d<=gunSayisi; d++){
+    const iso = gunIso(_takvimYil, _takvimAy, d);
+    const gunEtkinlikleri = gunMap[iso]||[];
+    const isBugun = iso===bugunIso;
+    const noktalar = gunEtkinlikleri.slice(0,4).map(e=>`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${e.renk};margin:1px"></span>`).join('');
+    const fazlaSayi = gunEtkinlikleri.length>4 ? `<div style="font-size:9px;color:var(--text2)">+${gunEtkinlikleri.length-4}</div>` : '';
+    html += `<div onclick="takvimGunAc('${iso}')" style="min-height:78px;border:0.5px solid var(--border);border-radius:8px;padding:6px;cursor:pointer;background:${isBugun?'var(--blue-bg)':'var(--surface)'};transition:background .12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='${isBugun?'var(--blue-bg)':'var(--surface)'}'">
+      <div style="font-size:12px;font-weight:${isBugun?'700':'500'};color:${isBugun?'var(--blue)':'var(--text)'}">${d}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:1px;margin-top:4px">${noktalar}</div>
+      ${fazlaSayi}
+    </div>`;
+  }
+  /* Ayın son haftasını tamamlamak için boş hücreler */
+  const toplamHucre = baslangicBosluk + gunSayisi;
+  const kalanBosluk = (7 - (toplamHucre % 7)) % 7;
+  for(let i=0;i<kalanBosluk;i++){ html += `<div></div>`; }
+
+  gridEl.innerHTML = html;
+};
+
+window.takvimAyDegistir = function(delta){
+  _takvimAy += delta;
+  if(_takvimAy<0){ _takvimAy=11; _takvimYil--; }
+  if(_takvimAy>11){ _takvimAy=0; _takvimYil++; }
+  takvimRender();
+};
+window.takvimBugun = function(){
+  const n = new Date();
+  _takvimAy = n.getMonth(); _takvimYil = n.getFullYear();
+  takvimRender();
+};
+
+/* ───────────────── GÜN DETAY ───────────────── */
+window.takvimGunAc = function(iso){
+  const tumEtkinlikler = takvimTumEtkinlikler().filter(e=>e.tarihIso===iso);
+  tumEtkinlikler.sort((a,b)=>(a.saat||'99:99').localeCompare(b.saat||'99:99'));
+  const tarihObj = new Date(iso+'T00:00:00');
+  document.getElementById('takvim-gun-baslik').textContent = tarihObj.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'});
+  const body = document.getElementById('takvim-gun-body');
+  if(!tumEtkinlikler.length){
+    body.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Bu güne ait etkinlik bulunmuyor.</div>
+      <button class="btn btn-p btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEtkinlikEkleModal('${iso}')" style="align-self:center"><i class="ti ti-plus"></i> Bu Güne Etkinlik Ekle</button>`;
+  } else {
+    body.innerHTML = tumEtkinlikler.map(e=>`
+      <div style="border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+        <div style="width:8px;height:8px;border-radius:50%;background:${e.renk};margin-top:5px;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${e.baslik}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${e.detay||''}</div>
+          ${e.aciklama?`<div style="font-size:12px;color:var(--text2);margin-top:6px">${e.aciklama}</div>`:''}
+          ${e.ekleyenAd?`<div style="font-size:10px;color:var(--text3);margin-top:6px">Ekleyen: ${e.ekleyenAd}</div>`:''}
+        </div>
+        ${e.tip==='genel'?`<button class="btn btn-sm" style="color:var(--red);flex-shrink:0" onclick="takvimEtkinlikSil('${e.kaynakId}')"><i class="ti ti-trash"></i></button>`:''}
+      </div>`).join('') + `<button class="btn btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEtkinlikEkleModal('${iso}')" style="align-self:center;margin-top:4px"><i class="ti ti-plus"></i> Bu Güne Etkinlik Ekle</button>`;
+  }
+  document.getElementById('takvim-gun-overlay').style.display='flex';
+};
+
+/* ───────────────── ETKİNLİK EKLE/SİL ───────────────── */
+window.takvimEtkinlikEkleModal = function(onIso){
+  _takvimSecilenTarih = onIso || null;
+  document.getElementById('tk-f-baslik').value='';
+  document.getElementById('tk-f-tarih').value = onIso || gunIso(_takvimYil,_takvimAy,new Date().getDate());
+  document.getElementById('tk-f-saat').value='';
+  document.getElementById('tk-f-tip').value='kabul';
+  document.getElementById('tk-f-yer').value='';
+  document.getElementById('tk-f-aciklama').value='';
+  document.getElementById('takvim-ekle-overlay').style.display='flex';
+};
+
+window.takvimEtkinlikKaydet = async function(){
+  const baslik = document.getElementById('tk-f-baslik').value.trim();
+  const tarih = document.getElementById('tk-f-tarih').value;
+  if(!baslik || !tarih){ alert('Başlık ve tarih zorunludur.'); return; }
+  const kayit = {
+    baslik,
+    tip: document.getElementById('tk-f-tip').value,
+    tarih,
+    saat: document.getElementById('tk-f-saat').value||null,
+    yer: document.getElementById('tk-f-yer').value.trim()||null,
+    aciklama: document.getElementById('tk-f-aciklama').value.trim()||null,
+    ekleyen_kul: currentUser?.kullanici||'',
+    ekleyen_ad: currentUser?.adSoyad||''
+  };
+  try{
+    const { error } = await _supa.from('takvim_etkinlikler').insert([kayit]);
+    if(error) throw error;
+    document.getElementById('takvim-ekle-overlay').style.display='none';
+    await supaYukleTakvim();
+  }catch(e){ alert('Kaydetme hatası: '+(e.message||e)); }
+};
+
+window.takvimEtkinlikSil = async function(id){
+  if(!confirm('Bu etkinliği silmek istiyor musunuz?')) return;
+  try{
+    const { error } = await _supa.from('takvim_etkinlikler').delete().eq('id', id);
+    if(error) throw error;
+    document.getElementById('takvim-gun-overlay').style.display='none';
+    await supaYukleTakvim();
+  }catch(e){ alert('Silme hatası: '+(e.message||e)); }
+};
+
+/* ───────────────── EKRAN AÇILIŞ TETİKLEYİCİSİ ───────────────── */
+window.takvimAcildi = function(){
+  takvimRender();
+};
+
+})();
+
 /* ══ ÜYE ZİYARETİ MODÜLÜ ══ */
 (function(){
 
@@ -15418,6 +15749,7 @@ async function supaYukleZiyaretler(){
     if(window.currentFirm && window.crmZiyaretOzetGuncelle){
       window.crmZiyaretOzetGuncelle(window.currentFirm.id);
     }
+    if(window.takvimRender) window.takvimRender();
   }catch(e){ console.warn('Ziyaret yükleme hatası:', e); }
 }
 window.supaYukleZiyaretler = supaYukleZiyaretler;
