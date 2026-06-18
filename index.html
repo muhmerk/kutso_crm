@@ -9516,7 +9516,36 @@ window.prsEgitimLoad = function(id) {
   }
   if(ekleBtn) ekleBtn.style.display='inline-flex';
   const p = PERSONEL.find(x=>x.id==id);
-  const list = EGITIMLER[id]||EGITIMLER.default;
+  /* personel_egitimler tablosundan gelen kayıtlar */
+  const listPrsEg = EGITIMLER[id]||EGITIMLER[String(id)]||EGITIMLER[parseInt(id)]||EGITIMLER.default||[];
+  /* ETK_PRS_DATA'dan bu personelin katıldığı eğitimleri bul */
+  const listEtkPrs = [];
+  if(p && window.ETK_PRS_DATA){
+    (window.ETK_PRS_DATA.etkinlikler||[]).forEach(etk=>{
+      const katildi = (etk.katilimcilar||[]).some(k=>
+        k.kullanici === p.kullanici ||
+        k.kullanici_adi === p.kullanici ||
+        String(k.personel_id) === String(p.id)
+      );
+      if(!katildi) return;
+      /* personel_egitimler'de aynı ad+tarih varsa tekrar ekleme */
+      const zatenVar = listPrsEg.some(e=>e.ad===etk.ad && (e.tarihIso||'').slice(0,10)===(etk.tarihIso||'').slice(0,10));
+      if(zatenVar) return;
+      /* Saati parse et */
+      let bas='', bit='';
+      if(etk.saat && etk.saat.includes('–')){ const pts=etk.saat.split('–').map(s=>s.trim()); bas=pts[0]||''; bit=pts[1]||''; }
+      else if(etk.saat){ bas=etk.saat.trim(); }
+      listEtkPrs.push({
+        id: etk.id, ad: etk.ad, tarih: etk.tarih, tarihIso: etk.tarihIso,
+        kurum: etk.sorumlu||etk.egitimciKurum||'Kütahya TSO',
+        konu: '', sertifika: false, certNo: '',
+        basSaat: bas, bitisSaat: bit,
+        _kaynakEtk: true /* bu kayıt düzenlenemez, ETK modülünden geldi */
+      });
+    });
+  }
+  /* İki listeyi birleştir ve tarihe göre sırala */
+  const list = [...listPrsEg, ...listEtkPrs].sort((a,b)=>(b.tarihIso||'').localeCompare(a.tarihIso||''));
   const durumRenk = {'İyi gidiyor':'var(--teal)','Devam ediyor':'var(--amber)','Gecikiyor':'var(--red)'};
   el.innerHTML=`
     <div class="card" style="padding:0;overflow:hidden">
@@ -9542,10 +9571,12 @@ window.prsEgitimLoad = function(id) {
               ? `<span class="badge b-green" style="font-size:10px"><i class="ti ti-certificate" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>Sertifikalı</span>`
               : `<span class="badge b-gray" style="font-size:10px">Sertifikasız</span>`}
             ${e.certNo?`<span style="font-size:10px;color:var(--text2);font-family:var(--mono)">${e.certNo}</span>`:''}
-            ${e.id ? `<div style="display:flex;gap:4px;margin-top:2px">
+            ${e._kaynakEtk
+              ? `<span class="badge b-blue" style="font-size:10px" title="Eğitim&Etkinlik modülünden">ETK</span>`
+              : (e.id ? `<div style="display:flex;gap:4px;margin-top:2px">
               <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" onclick="prsEgitimDuzenleModal('${e.id}',${id})" title="Düzenle"><i class="ti ti-edit"></i></button>
               <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" onclick="prsEgitimSil('${e.id}',${id})" title="Sil"><i class="ti ti-trash"></i></button>
-            </div>` : ''}
+            </div>` : '')}
           </div>
         </div>`).join('')}
     </div>`;
