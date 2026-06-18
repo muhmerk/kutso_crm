@@ -2543,6 +2543,10 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
             <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Resmi Bilgiler</div>
             <div style="display:flex;flex-direction:column;gap:11px" id="crm-resmi-fields"></div>
           </div>
+          <div class="card" id="crm-ziyaret-ozet-card" style="padding:16px;display:none">
+            <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Son Ziyaret Verileri</div>
+            <div style="display:flex;flex-direction:column;gap:11px" id="crm-ziyaret-ozet-fields"></div>
+          </div>
           <div class="card" style="padding:16px">
             <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Etiketler</div>
             <div id="crm-tags" style="display:flex;gap:5px;flex-wrap:wrap"></div>
@@ -2559,6 +2563,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <!-- Tab bar -->
           <div style="display:flex;gap:0;border-bottom:0.5px solid var(--border);overflow-x:auto">
             <button class="crm-tab crm-tab-on" onclick="crmTab('iletisim',this)"><i class="ti ti-messages" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>İletişim</button>
+            <button class="crm-tab" onclick="crmTab('ziyaret',this)"><i class="ti ti-car" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Ziyaretler</button>
             <button class="crm-tab" onclick="crmTab('gorevler',this)"><i class="ti ti-checklist" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Görevler</button>
             <button class="crm-tab" onclick="crmTab('sikayet',this)"><i class="ti ti-alert-circle" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Şikayet</button>
             <button class="crm-tab" onclick="crmTab('memnuniyet',this)"><i class="ti ti-mood-smile" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Memnuniyet</button>
@@ -2602,6 +2607,17 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           </div>
 
           <!-- Görevler -->
+          <div id="crm-pane-ziyaret" class="crm-pane">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+              <button class="btn btn-p btn-sm" onclick="crmZiyaretEkle()"><i class="ti ti-plus"></i> Ziyaret Planla</button>
+            </div>
+            <div id="crm-ziyaret-bos" style="display:none;text-align:center;padding:32px;color:var(--text2)">
+              <i class="ti ti-car" style="font-size:28px;display:block;margin-bottom:8px;opacity:.4"></i>
+              Bu firmaya ait ziyaret kaydı bulunmuyor
+            </div>
+            <div id="crm-ziyaret-liste"></div>
+          </div>
+
           <div id="crm-pane-gorevler" class="crm-pane">
             <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
               <button class="btn btn-p btn-sm" onclick="crmGorevEkle()"><i class="ti ti-plus"></i> Görev Ekle</button>
@@ -3207,8 +3223,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         <div id="ziy-modal-body" style="padding:20px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px"></div>
         <div style="padding:13px 22px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:space-between;align-items:center;flex-shrink:0">
           <div style="display:flex;gap:8px">
-            <button class="btn btn-sm" onclick="ziyPdfOlustur('once')"><i class="ti ti-file-text"></i> Ziyaret Öncesi Brief (PDF)</button>
-            <button class="btn btn-sm" onclick="ziyPdfOlustur('sonra')"><i class="ti ti-file-check"></i> Tamamlandı Raporu (PDF)</button>
+            <button class="btn btn-sm" id="ziy-pdf-once-btn" onclick="ziyPdfOlustur('once')"><i class="ti ti-file-text"></i> Ziyaret Öncesi Brief (PDF)</button>
+            <button class="btn btn-sm" id="ziy-pdf-sonra-btn" onclick="ziyPdfOlustur('sonra')"><i class="ti ti-file-check"></i> Tamamlandı Raporu (PDF)</button>
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-sm" onclick="ziyModalKapat()">İptal</button>
@@ -4731,6 +4747,9 @@ function toggleTpl(header) {
       </div>`
     ).join('');
 
+    /* Son ziyaret verilerini göster */
+    if(window.crmZiyaretOzetGuncelle) window.crmZiyaretOzetGuncelle(f.id);
+
     /* Etiketler */
     const tagColors = {'Stratejik Üye':'b-blue','İhracatçı':'b-purple','Faal':'b-green','Aidat Borçlu':'b-amber','Terk':'b-red','Askıda':'b-amber','Yeni Üye':'b-blue'};
     const tags = f.tags && f.tags.length > 0 ? f.tags : [dLabel];
@@ -5452,6 +5471,9 @@ function toggleTpl(header) {
     }
     if(pane === 'ticaretsicil') {
       crmTicaretSicilYukle();
+    }
+    if(pane === 'ziyaret') {
+      if(window.crmRenderZiyaret) window.crmRenderZiyaret(currentFirm?.id);
     }
   };
 
@@ -15384,6 +15406,13 @@ async function supaYukleZiyaretler(){
     window.ZIY_DB = {};
     (data||[]).forEach(z=>{ window.ZIY_DB[z.id] = z; });
     if(window.ziyRenderListe) window.ziyRenderListe();
+    /* CRM Ziyaretler sekmesi açıksa yenile */
+    if(window.currentFirm && window.crmRenderZiyaret){
+      window.crmRenderZiyaret(window.currentFirm.id);
+    }
+    if(window.currentFirm && window.crmZiyaretOzetGuncelle){
+      window.crmZiyaretOzetGuncelle(window.currentFirm.id);
+    }
   }catch(e){ console.warn('Ziyaret yükleme hatası:', e); }
 }
 window.supaYukleZiyaretler = supaYukleZiyaretler;
@@ -15525,7 +15554,7 @@ window.ziyTalepToggle = function(kategori, el){
 /* ───────────────── AKSİYON LİSTESİ ───────────────── */
 window._ziyAksiyonlar = [];
 window.ziyAksiyonEkle = function(){
-  window._ziyAksiyonlar.push({id:'ax'+Date.now(), metin:'', birim:ZIY_BIRIMLER[0], personel:'', termin:'', tamamlandi:false});
+  window._ziyAksiyonlar.push({id:'ax'+Date.now(), metin:'', birim:ZIY_BIRIMLER[0], personel:'', termin:'', tamamlandi:false, gorev_id:null});
   ziyAksiyonListRender();
 };
 window.ziyAksiyonSil = function(id){
@@ -15832,21 +15861,32 @@ window.ziyaretKaydet = async function(){
       kayitId = data.id;
     }
 
-    /* Aksiyonları görev olarak işle — sadece termin/personel/metin dolu olanlar */
+    /* Aksiyonları görev olarak işle — gorev_id varsa UPDATE, yoksa INSERT (duplicate önleme) */
     for(const a of window._ziyAksiyonlar){
-      if(a.metin && a.personel && !a._gorevOlusturuldu){
-        const p = (window.PERSONEL||[]).find(x=>x.kullanici===a.personel);
-        await _supa.from('gorevler').insert([{
-          baslik: 'Üye Ziyareti Aksiyonu: '+_ziySecilenFirma.firma,
-          aciklama: a.metin+' (Birim: '+a.birim+')',
-          atanan: a.personel, atanan_ad: p?(p.ad+' '+p.soyad):a.personel,
-          atayan: currentUser?.kullanici||'', son_tarih: a.termin||null,
+      if(!a.metin || !a.personel) continue;
+      const p = (window.PERSONEL||[]).find(x=>x.kullanici===a.personel);
+      const gorevVerisi = {
+        baslik: 'Üye Ziyareti Aksiyonu: '+_ziySecilenFirma.firma,
+        aciklama: a.metin+' (Birim: '+a.birim+')',
+        atanan: a.personel, atanan_ad: p?(p.ad+' '+p.soyad):a.personel,
+        son_tarih: a.termin||null,
+        kaynak: 'Üye Ziyareti', oncelik: 'normal'
+      };
+      if(a.gorev_id){
+        /* Mevcut görevi güncelle — yeni görev oluşturma */
+        await _supa.from('gorevler').update(gorevVerisi).eq('id', a.gorev_id);
+      } else {
+        const { data: gData, error: gErr } = await _supa.from('gorevler').insert([{
+          ...gorevVerisi,
+          atayan: currentUser?.kullanici||'',
           atama_tarihi: new Date().toISOString().slice(0,10),
-          kaynak: 'Üye Ziyareti', oncelik: 'normal', durum: 'planlandi'
-        }]);
-        a._gorevOlusturuldu = true;
+          durum: 'planlandi'
+        }]).select().single();
+        if(!gErr && gData) a.gorev_id = gData.id;
       }
     }
+    /* Aksiyonlardaki güncel gorev_id'leri ziyaret kaydına geri yaz */
+    await _supa.from('uye_ziyaretler').update({ aksiyonlar: window._ziyAksiyonlar }).eq('id', kayitId);
 
     ziyModalKapat();
     await supaYukleZiyaretler();
@@ -15867,6 +15907,89 @@ window.ziyaretSil = async function(id){
 };
 
 /* ───────────────── DETAY GÖRÜNTÜLEME ───────────────── */
+/* ───────────────── CRM ENTEGRASYONU ───────────────── */
+window.crmZiyaretOzetGuncelle = function(firmaId){
+  const card = document.getElementById('crm-ziyaret-ozet-card');
+  const fields = document.getElementById('crm-ziyaret-ozet-fields');
+  if(!card || !fields) return;
+  /* Bu firmaya ait, tamamlanmış ve veri içeren en güncel ziyareti bul */
+  const kayitlar = Object.values(window.ZIY_DB||{})
+    .filter(z=>String(z.uye_id)===String(firmaId) && z.durum==='tamamlandi')
+    .sort((a,b)=>(b.ziyaret_tarihi||'').localeCompare(a.ziyaret_tarihi||''));
+  const son = kayitlar[0];
+  if(!son || (!son.metrekare && !son.mavi_yaka && !son.beyaz_yaka && !son.ihracat_durum)){
+    card.style.display='none';
+    return;
+  }
+  card.style.display='block';
+  const ihracatTxt = {yapiyor:'Yapıyor', potansiyel:'Potansiyeli Var', yapmiyor:'Yapmıyor'}[son.ihracat_durum]||'—';
+  const ozetFields = [
+    { icon:'ti-ruler-2', label:'Faaliyet Alanı', val: son.metrekare ? son.metrekare+' m²' : '—' },
+    { icon:'ti-users', label:'Çalışan (Mavi/Beyaz Yaka)', val: (son.mavi_yaka||0)+' / '+(son.beyaz_yaka||0) },
+    { icon:'ti-world', label:'İhracat Durumu', val: ihracatTxt },
+    { icon:'ti-calendar-event', label:'Veri Tarihi', val: son.ziyaret_tarihi||'—' },
+  ];
+  fields.innerHTML = ozetFields.map(fld=>
+    `<div style="display:flex;align-items:flex-start;gap:9px">
+      <div style="width:26px;height:26px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ${fld.icon}" style="font-size:13px;color:var(--text2)"></i>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text2);margin-bottom:1px">${fld.label}</div>
+        <div style="font-size:12px;font-weight:500">${fld.val}</div>
+      </div>
+    </div>`
+  ).join('');
+};
+
+window.crmRenderZiyaret = function(firmaId){
+  const liste = document.getElementById('crm-ziyaret-liste');
+  const bos = document.getElementById('crm-ziyaret-bos');
+  if(!liste) return;
+  const kayitlar = Object.values(window.ZIY_DB||{}).filter(z=>String(z.uye_id)===String(firmaId));
+  kayitlar.sort((a,b)=>(b.ziyaret_tarihi||'').localeCompare(a.ziyaret_tarihi||''));
+  if(!kayitlar.length){
+    liste.innerHTML=''; if(bos) bos.style.display='block';
+    return;
+  }
+  if(bos) bos.style.display='none';
+  const durumBadge = { planlandi:'b-blue', tamamlandi:'b-green' };
+  const durumTxt = { planlandi:'Planlandı', tamamlandi:'Tamamlandı' };
+  liste.innerHTML = kayitlar.map(z=>`
+    <div class="ch" style="cursor:pointer" onclick="ziyDetayAc('${z.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <div style="font-size:13px;font-weight:600">${z.ziyaret_tarihi||''} ${z.ziyaret_saati||''}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${z.ziyaret_turu||''} · ${(z.personel_listesi||[]).map(p=>p.ad).join(', ')||'—'}</div>
+        </div>
+        <span class="badge ${durumBadge[z.durum]||'b-gray'}">${durumTxt[z.durum]||z.durum||''}</span>
+      </div>
+      ${z.sonuc_ozet?`<div style="font-size:12px;color:var(--text2);margin-top:6px">${z.sonuc_ozet.slice(0,120)}${z.sonuc_ozet.length>120?'...':''}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:10px" onclick="event.stopPropagation()">
+        <button class="btn btn-sm" onclick="crmZiyaretDuzenle('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>
+      </div>
+    </div>`).join('');
+};
+
+window.crmZiyaretEkle = function(){
+  if(!currentFirm){ return; }
+  /* Üye ziyareti modülündeki formu, firma önceden seçili olarak aç */
+  crmNavSec('ziyaret', document.getElementById('nav-crm-ziyaret'));
+  setTimeout(()=>{
+    ziyaretYeniModal();
+    setTimeout(()=>{
+      _ziySecilenFirma = { id: currentFirm.id, _uye_oid: currentFirm.uye_oid, firma: currentFirm.firma, no: currentFirm.no, nace: currentFirm.nace, sektor: currentFirm.sektor, dereceTanimi: currentFirm.dereceTanimi, durum: currentFirm.durum };
+      const inp = document.getElementById('ziy-f-firma-ara'); if(inp) inp.value = currentFirm.firma+' ('+currentFirm.no+')';
+      ziyOtomatikAlanlariDoldur(_ziySecilenFirma);
+    }, 80);
+  }, 80);
+};
+
+window.crmZiyaretDuzenle = function(id){
+  crmNavSec('ziyaret', document.getElementById('nav-crm-ziyaret'));
+  setTimeout(()=>ziyaretYeniModal(id), 80);
+};
+
 window.ziyDetayAc = function(id){
   const z = window.ZIY_DB[id];
   if(!z) return;
@@ -15895,9 +16018,36 @@ window.ziyDetayAc = function(id){
 };
 
 /* ───────────────── PDF OLUŞTURMA ───────────────── */
-window.ziyPdfOlustur = function(tip){
+window.ziyPdfOlustur = async function(tip){
   if(!_ziySecilenFirma){ alert('Önce firma seçin.'); return; }
   if(typeof window.jspdf === 'undefined'){ alert('PDF kütüphanesi yüklenemedi.'); return; }
+
+  const btnId = tip==='once' ? 'ziy-pdf-once-btn' : 'ziy-pdf-sonra-btn';
+  const btn = document.getElementById(btnId);
+  const eskiHtml = btn?.innerHTML;
+  if(btn){ btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Hazırlanıyor...'; btn.disabled = true; }
+
+  /* Üyenin CRM geçmişini çek: şikayet, memnuniyet, iletişim, etkinlik */
+  let sikayetler=[], anketler=[], iletisim=[], etkinlikKatilim=[];
+  try{
+    const firmaAdi = _ziySecilenFirma.firma||'';
+    const sicilNo = String(_ziySecilenFirma.no||'');
+    const [sikRes, memRes, iletRes] = await Promise.all([
+      _supa.from('sikayetler').select('*').ilike('firma_adi', `%${firmaAdi}%`).order('created_at',{ascending:false}).limit(10),
+      _supa.from('mem_anketler').select('*').ilike('firma', `%${firmaAdi}%`).order('created_at',{ascending:false}).limit(10),
+      _supa.from('crm_iletisim').select('*').eq('uye_id', sicilNo).order('created_at',{ascending:false}).limit(10)
+    ]);
+    sikayetler = sikRes.data||[];
+    anketler = memRes.data||[];
+    iletisim = iletRes.data||[];
+    /* Etkinlik katılımı — local veriden */
+    const tumEtkinlikler = [...(window.ETK_DATA?.etkinlikler||[]), ...(window.ETK_PRS_DATA?.etkinlikler||[])];
+    tumEtkinlikler.forEach(etk=>{
+      const k=(etk.katilimcilar||[]).find(c=>String(c.firmaId)===String(_ziySecilenFirma.id)||(c.firma&&c.firma===firmaAdi));
+      if(k) etkinlikKatilim.push(etk);
+    });
+  }catch(e){ console.warn('CRM geçmişi çekme hatası:', e); }
+
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   let y = 20;
@@ -15927,6 +16077,29 @@ window.ziyPdfOlustur = function(tip){
     if(y + lines.length*5 > 280){ doc.addPage(); y = 20; }
     doc.text(lines, left, y); y += lines.length*5 + 3;
   }
+  function crmGecmisiEkle(){
+    altBaslik('— CRM GEÇMİŞİ —');
+    /* Şikayetler */
+    if(sikayetler.length){
+      altBaslik('Şikayet Kayıtları ('+sikayetler.length+')');
+      sikayetler.forEach(s=>paragraf('• ['+(s.tarih||'')+'] '+(s.konu||'')+' — Durum: '+(s.durum||'—')));
+    } else { altBaslik('Şikayet Kayıtları'); paragraf('Kayıtlı şikayet bulunmuyor.'); }
+    /* Memnuniyet */
+    if(anketler.length){
+      altBaslik('Memnuniyet Anketleri ('+anketler.length+')');
+      anketler.forEach(a=>paragraf('• ['+(a.tarih||'')+'] Ortalama puan: '+(a.ort_puan||'—')+'/5'));
+    } else { altBaslik('Memnuniyet Anketleri'); paragraf('Kayıtlı anket bulunmuyor.'); }
+    /* İletişim geçmişi */
+    if(iletisim.length){
+      altBaslik('İletişim Geçmişi ('+iletisim.length+')');
+      iletisim.forEach(i=>paragraf('• ['+(i.tarih||'')+'] '+(i.tip||'')+' — '+(i.ozet||'').slice(0,100)));
+    } else { altBaslik('İletişim Geçmişi'); paragraf('Kayıtlı iletişim notu bulunmuyor.'); }
+    /* Etkinlik katılımı */
+    if(etkinlikKatilim.length){
+      altBaslik('Etkinlik/Eğitim Katılımı ('+etkinlikKatilim.length+')');
+      etkinlikKatilim.forEach(e=>paragraf('• ['+(e.tarih||'')+'] '+(e.ad||'')+' ('+(e.tur||'')+')'));
+    } else { altBaslik('Etkinlik/Eğitim Katılımı'); paragraf('Kayıtlı etkinlik katılımı bulunmuyor.'); }
+  }
 
   if(tip==='once'){
     baslik('ÜYE ZİYARETİ — ÖN BİLGİ FORMU (BRIEF)');
@@ -15944,6 +16117,7 @@ window.ziyPdfOlustur = function(tip){
     satir('Görüşülecek Kişi', (document.getElementById('ziy-f-gorusulen-ad')?.value||'')+' — '+(document.getElementById('ziy-f-gorusulen-unvan')?.value||''));
     altBaslik('Görüşme Öncesi Notlar');
     paragraf(document.getElementById('ziy-f-on-notlar')?.value||'—');
+    crmGecmisiEkle();
     doc.save('Ziyaret_Brief_'+_ziySecilenFirma.firma.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
   } else {
     baslik('ÜYE ZİYARETİ — TAMAMLANDI RAPORU');
@@ -15971,8 +16145,10 @@ window.ziyPdfOlustur = function(tip){
         paragraf('• '+a.metin+' (Birim: '+a.birim+', Termin: '+(a.termin||'—')+')');
       });
     }
+    crmGecmisiEkle();
     doc.save('Ziyaret_Raporu_'+_ziySecilenFirma.firma.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
   }
+  if(btn){ btn.innerHTML = eskiHtml; btn.disabled = false; }
 };
 
 })();
