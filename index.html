@@ -15716,7 +15716,11 @@ function takvimTumEtkinlikler(){
     if(!z.ziyaret_tarihi) return;
     liste.push({ tarihIso:z.ziyaret_tarihi, saat:z.ziyaret_saati||'', bitisSaat:z.bitis_saat||'', tip:'ziyaret', renk:'var(--amber)', baslik:'Üye Ziyareti: '+(z.firma_adi||'—'), detay:z.ziyaret_turu||'', kaynakId:z.id });
   });
-  /* Personel Eğitimleri — aynı eğitime birden fazla personel varsa tek blokta birleştir */
+  /* Personel Eğitimleri — aynı eğitime birden fazla personel varsa tek blokta birleştir.
+     ETK_PRS_DATA'da zaten olan eğitimleri atla (çift gösterim engellemek için) */
+  const prsEtkAdTarihSet = new Set(
+    (window.ETK_PRS_DATA?.etkinlikler||[]).map(e=>e.tarihIso+'|'+e.ad)
+  );
   const egitimMap = {}; /* key: tarihIso+ad+basSaat → {liste bilgileri, personeller:[]} */
   Object.entries(window.EGITIMLER||{}).forEach(([pid, egList])=>{
     if(pid==='default') return;
@@ -15724,11 +15728,13 @@ function takvimTumEtkinlikler(){
     const prsAd = prs ? prs.ad+' '+prs.soyad : 'Personel';
     (egList||[]).forEach(e=>{
       if(!e.tarihIso) return;
+      /* ETK_PRS_DATA'da aynı eğitim varsa atla — o taraf daha eksiksiz veri taşıyor */
+      if(prsEtkAdTarihSet.has(e.tarihIso+'|'+e.ad)) return;
       const key = e.tarihIso + '|' + (e.ad||'') + '|' + (e.basSaat||'');
       if(!egitimMap[key]){
         egitimMap[key] = { tarihIso:e.tarihIso, saat:e.basSaat||'', bitisSaat:e.bitisSaat||'',
-          tip:'egitim-prs', renk:'var(--purple)',
-          baslik:'Eğitim: '+e.ad, kurum:e.kurum,
+          tip:'egitim-prs', renk:'#7c3aed',
+          baslik:e.ad, kurum:e.kurum,
           personeller:[], kaynakId:e.id };
       }
       if(!egitimMap[key].personeller.includes(prsAd)){
@@ -15737,7 +15743,7 @@ function takvimTumEtkinlikler(){
     });
   });
   Object.values(egitimMap).forEach(e=>{
-    liste.push({ ...e, katilimcilar:e.personeller, detay:e.personeller.join(', ')+' · '+e.kurum });
+    liste.push({ ...e, katilimcilar:e.personeller, detay:e.personeller.join(', ')+' · '+(e.kurum||'') });
   });
 
   /* Üye Eğitim & Etkinlik (ETK_DATA) */
@@ -15765,10 +15771,14 @@ function takvimTumEtkinlikler(){
     }
     /* Katılımcı isimlerini ekle */
     (e.katilimcilar||[]).forEach(k=>{
-      const isim = k.kullanici || k.yetkili || k.ad || '';
-      /* PERSONEL listesinden tam adı bul */
-      const prs = isim ? (window.PERSONEL||[]).find(p=>p.kullanici===isim||p.kullanici_adi===isim) : null;
-      const gosterilenAd = prs ? prs.ad+' '+prs.soyad : isim;
+      const kullanici = k.kullanici || '';
+      const yetkili = k.yetkili || k.ad || '';
+      /* PERSONEL listesinden eşleştir: kullanici_adi veya id ile */
+      const prs = (window.PERSONEL||[]).find(p=>
+        (kullanici && (p.kullanici_adi===kullanici || p.kullanici===kullanici)) ||
+        (k.personel_id && String(p.id)===String(k.personel_id))
+      );
+      const gosterilenAd = prs ? prs.ad+' '+prs.soyad : (yetkili||kullanici);
       if(gosterilenAd && !prsEtkMap[key].katilimcilar.includes(gosterilenAd)){
         prsEtkMap[key].katilimcilar.push(gosterilenAd);
       }
