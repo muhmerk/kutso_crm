@@ -15679,82 +15679,101 @@ window.takvimGunAc = function(iso){
   document.getElementById('takvim-gun-baslik').textContent = tarihObj.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'});
   const body = document.getElementById('takvim-gun-body');
 
-  /* Saati olan / olmayan etkinlikleri ayır */
-  const saatliEtkinlikler = tumEtkinlikler.filter(e=>saatToDakika(e.saat)!==null);
-  const saatsizEtkinlikler = tumEtkinlikler.filter(e=>saatToDakika(e.saat)===null);
-
-  const eklemeBtn = `<button class="btn btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEtkinlikEkleModal('${iso}')" style="align-self:center;margin-top:10px;width:100%"><i class="ti ti-plus"></i> Bu Güne Etkinlik Ekle</button>`;
+  const eklemeBtn = `<div style="flex-shrink:0;padding:12px 0 0 0">
+    <button class="btn btn-sm" onclick="document.getElementById('takvim-gun-overlay').style.display='none';takvimEtkinlikEkleModal('${iso}')" style="width:100%"><i class="ti ti-plus"></i> Bu Güne Etkinlik Ekle</button>
+  </div>`;
 
   if(!tumEtkinlikler.length){
-    body.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">Bu güne ait etkinlik bulunmuyor.</div>` + eklemeBtn;
+    body.innerHTML = `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text2);font-size:13px;padding:24px">Bu güne ait etkinlik bulunmuyor.</div>` + eklemeBtn;
     document.getElementById('takvim-gun-overlay').style.display='flex';
     return;
   }
 
-  /* Saatsiz (tüm gün) etkinlikler — üstte kart listesi */
+  /* Saati olan / olmayan etkinlikleri ayır */
+  const saatliEtkinlikler = tumEtkinlikler.filter(e=>saatToDakika(e.saat)!==null);
+  const saatsizEtkinlikler = tumEtkinlikler.filter(e=>saatToDakika(e.saat)===null);
+
+  /* Saatsiz etkinlikler — üstte kart listesi */
   let saatsizHtml = '';
   if(saatsizEtkinlikler.length){
-    saatsizHtml = `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">` +
+    saatsizHtml = `<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Tüm Gün</div>` +
       saatsizEtkinlikler.map(e=>`
-        <div style="border:0.5px solid var(--border);border-radius:8px;padding:9px 12px;display:flex;gap:9px;align-items:flex-start;background:var(--surface2)">
-          <div style="width:7px;height:7px;border-radius:50%;background:${e.renk};margin-top:5px;flex-shrink:0"></div>
+        <div style="border:0.5px solid var(--border);border-left:3px solid ${e.renk};border-radius:8px;padding:8px 12px;display:flex;gap:9px;align-items:center;background:var(--surface2)">
           <div style="flex:1">
             <div style="font-size:12px;font-weight:600">${e.baslik}</div>
-            <div style="font-size:10px;color:var(--text2);margin-top:1px">${e.detay||''} · Saat belirtilmemiş</div>
+            <div style="font-size:10px;color:var(--text2);margin-top:1px">${e.detay||''}</div>
           </div>
           ${e.tip==='genel'?`<button class="btn btn-sm" style="color:var(--red);flex-shrink:0;padding:2px 6px" onclick="takvimEtkinlikSil('${e.kaynakId}')"><i class="ti ti-trash"></i></button>`:''}
         </div>`).join('') + `</div>`;
   }
 
   /* 24 saatlik zaman çizelgesi */
-  const SAAT_PX = 52; /* her saat dilimi yüksekliği */
-  const GUN_BAS = 7;  /* görünümün başladığı saat (07:00) — mesai odaklı, ama gerekirse 0'a kaydırılabilir */
-  const GUN_BIT = 21; /* görünümün bittiği saat (21:00) */
+  const SAAT_PX = 60;
+  const GUN_BAS = 7;
+  const GUN_BIT = 21;
   const toplamSaat = GUN_BIT - GUN_BAS;
   const gridYukseklik = toplamSaat * SAAT_PX;
+  const SOL_PX = 48; /* saat etiketi genişliği */
 
-  /* Çakışan etkinlikleri yan yana dizmek için basit sütun ataması */
+  /* Çakışma çözümü */
   const sirali = saatliEtkinlikler.slice().sort((a,b)=>saatToDakika(a.saat)-saatToDakika(b.saat));
-  const sutunlar = []; /* her sütun: en son biten dakika */
+  const sutunlar = [];
   sirali.forEach(e=>{
     const bas = saatToDakika(e.saat);
     const bit = saatToDakika(e.bitisSaat) ?? (bas+60);
-    e._bas = bas; e._bit = Math.max(bit, bas+20);
+    e._bas = bas; e._bit = Math.max(bit, bas+30);
     let atandi = false;
     for(let i=0;i<sutunlar.length;i++){
-      if(sutunlar[i] <= bas){ e._sutun = i; sutunlar[i] = e._bit; atandi = true; break; }
+      if(sutunlar[i]<=bas){ e._sutun=i; sutunlar[i]=e._bit; atandi=true; break; }
     }
-    if(!atandi){ e._sutun = sutunlar.length; sutunlar.push(e._bit); }
+    if(!atandi){ e._sutun=sutunlar.length; sutunlar.push(e._bit); }
   });
   const sutunSayisi = Math.max(1, sutunlar.length);
 
+  /* Saat çizgileri */
   let saatCizgileri = '';
   for(let h=GUN_BAS; h<=GUN_BIT; h++){
     const top = (h-GUN_BAS)*SAAT_PX;
-    saatCizgileri += `<div style="position:absolute;top:${top}px;left:0;right:0;border-top:0.5px solid var(--border);font-size:10px;color:var(--text3);padding-left:2px">${String(h).padStart(2,'0')}:00</div>`;
+    const isBaslik = h%2===0 || h===GUN_BAS;
+    saatCizgileri += `<div style="position:absolute;top:${top}px;left:0;right:0;display:flex;align-items:flex-start;pointer-events:none">
+      <div style="width:${SOL_PX}px;flex-shrink:0;font-size:10px;color:var(--text3);padding-right:8px;text-align:right;margin-top:-7px;font-weight:${isBaslik?'600':'400'}">${isBaslik?String(h).padStart(2,'0')+':00':''}</div>
+      <div style="flex:1;border-top:${h===GUN_BAS?'0':'0.5px'} solid var(--border)"></div>
+    </div>`;
   }
 
-  const blokGenislikYuzde = 100/sutunSayisi;
+  /* Etkinlik blokları */
   let bloklar = '';
   window._takvimGunEtkinlikleri = sirali;
   sirali.forEach((e,idx)=>{
-    const dakikaGosterimBas = Math.max(e._bas, GUN_BAS*60);
-    const dakikaGosterimBit = Math.min(e._bit, GUN_BIT*60);
-    if(dakikaGosterimBit<=dakikaGosterimBas) return;
-    const top = (dakikaGosterimBas - GUN_BAS*60) / 60 * SAAT_PX;
-    const yukseklik = Math.max((dakikaGosterimBit - dakikaGosterimBas) / 60 * SAAT_PX, 22);
+    const dakBas = Math.max(e._bas, GUN_BAS*60);
+    const dakBit = Math.min(e._bit, GUN_BIT*60);
+    if(dakBit<=dakBas) return;
+    const top = (dakBas - GUN_BAS*60) / 60 * SAAT_PX;
+    const yukseklik = Math.max((dakBit-dakBas)/60*SAAT_PX, 26);
+    const leftPercent = e._sutun / sutunSayisi * 100;
+    const widthPercent = 100 / sutunSayisi;
+    /* Renk açık arka plan, koyu sol kenar, koyu metin */
     bloklar += `<div onclick="event.stopPropagation();takvimEtkinlikDetayGoster(${idx})"
-        style="position:absolute;top:${top}px;height:${yukseklik}px;left:calc(42px + ${e._sutun}*(100% - 42px)/${sutunSayisi});width:calc((100% - 42px)/${sutunSayisi} - 4px);
-        background:${e.renk};opacity:.16;border-left:3px solid ${e.renk};border-radius:6px;padding:3px 7px;overflow:hidden;cursor:pointer;box-sizing:border-box">
-      <div style="font-size:10.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.saat}${e.bitisSaat?'–'+e.bitisSaat:''} ${e.baslik}</div>
-      ${yukseklik>34?`<div style="font-size:9.5px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.detay||''}</div>`:''}
+        style="position:absolute;top:${top}px;height:${yukseklik}px;
+               left:calc(${SOL_PX}px + ${leftPercent}% * (100% - ${SOL_PX}px) / 100);
+               width:calc(${widthPercent}% * (100% - ${SOL_PX}px) / 100 - 4px);
+               background:${e.renk}22;border-left:3px solid ${e.renk};border-radius:0 6px 6px 0;
+               padding:4px 8px;overflow:hidden;cursor:pointer;box-sizing:border-box;
+               box-shadow:inset 0 0 0 0.5px ${e.renk}44">
+      <div style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">${e.baslik}</div>
+      ${yukseklik>36?`<div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.saat}${e.bitisSaat?' – '+e.bitisSaat:''} · ${e.detay||''}</div>`:`<div style="font-size:9px;color:var(--text2)">${e.saat}${e.bitisSaat?' – '+e.bitisSaat:''}</div>`}
     </div>`;
   });
 
-  body.innerHTML = saatsizHtml + `
-    <div style="position:relative;height:${gridYukseklik}px;margin-left:4px;border-bottom:0.5px solid var(--border)">
-      ${saatCizgileri}
-      ${bloklar}
+  /* body'yi flex column yap: saatsiz üstte, çizelge orta (scroll), buton altta sabit */
+  body.style.cssText = 'padding:18px 22px;overflow-y:hidden;flex:1;display:flex;flex-direction:column;gap:0;scrollbar-width:thick';
+  body.innerHTML = saatsizHtml +
+    `<div style="flex:1;overflow-y:auto;scrollbar-width:thick;position:relative">
+      <div style="position:relative;height:${gridYukseklik}px;overflow:visible">
+        ${saatCizgileri}
+        ${bloklar}
+      </div>
     </div>` + eklemeBtn;
 
   document.getElementById('takvim-gun-overlay').style.display='flex';
