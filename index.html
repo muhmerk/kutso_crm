@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <!-- ══ SUPABASE ══ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const SUPA_URL = 'https://ffuvxptvwwhcifsrucjs.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmdXZ4cHR2d3doY2lmc3J1Y2pzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NzQzMjQsImV4cCI6MjA5NjQ1MDMyNH0.mwDSqc0t96TgdoOoSXoRi6JOZcLjseHbmnk_suCJDtM';
@@ -699,6 +700,13 @@ function supaRealtimeBaslat() {
       supaEkranYenile('akreditasyon');
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Akreditasyon dinleniyor'); });
+
+  /* Üye Ziyaretleri */
+  _supa.channel('db-uye-ziyaret')
+    .on('postgres_changes', { event:'*', schema:'public', table:'uye_ziyaretler' }, async ()=>{
+      await supaYukleZiyaretler();
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Üye ziyaretleri dinleniyor'); });
 
   /* Personel */
   _supa.channel('db-personel')
@@ -1465,6 +1473,10 @@ body {
 .b-purple { background: var(--purple-bg); color: #3C3489; }
 .b-gray   { background: var(--surface2);  color: var(--text2); }
 
+/* ─── ÜYE ZİYARETİ MODÜLÜ ─── */
+.ziy-chip-on { background: var(--blue) !important; color: #fff !important; border-color: var(--blue) !important; }
+.ziy-filtre-on { background: var(--blue) !important; color: #fff !important; }
+
 /* ─── FILTER PILLS ─── */
 .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
 .fp {
@@ -2201,7 +2213,11 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   <div class="sb-divider"></div>
   <div class="sb-section">Üyeler</div>
   <button class="nav" onclick="sw('uyeler',this)"><i class="ti ti-building-store"></i>Üye Modülü</button>
-  <button class="nav" onclick="sw('crm',this)"><i class="ti ti-user-circle"></i>CRM</button>
+  <button class="nav" id="nav-crm" onclick="crmNavToggle(this)"><i class="ti ti-user-circle"></i>CRM<i class="ti ti-chevron-right" id="crm-nav-chev" style="margin-left:auto;font-size:12px;transition:transform .2s"></i></button>
+  <div id="crm-nav-sub" style="display:none;margin-left:16px;border-left:2px solid var(--border);padding-left:8px;margin-bottom:4px">
+    <button class="nav nav-sub" id="nav-crm-profil" onclick="crmNavSec('profil',this)"><i class="ti ti-user-circle" style="font-size:14px"></i>Üye Profili</button>
+    <button class="nav nav-sub" id="nav-crm-ziyaret" onclick="crmNavSec('ziyaret',this)"><i class="ti ti-car" style="font-size:14px"></i>Üye Ziyareti</button>
+  </div>
   <button class="nav" id="nav-sicil" onclick="sw('sicil',this)" style="display:none"><i class="ti ti-building-bank"></i>Ticaret Sicili</button>
   <button class="nav" id="nav-mem" onclick="memNavToggle(this)"><i class="ti ti-mood-smile"></i>Memnuniyet<i class="ti ti-chevron-right" id="mem-nav-chev" style="margin-left:auto;font-size:12px;transition:transform .2s"></i></button>
   <div id="mem-nav-sub" style="display:none;margin-left:16px;border-left:2px solid var(--border);padding-left:8px;margin-bottom:4px">
@@ -3158,6 +3174,61 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
     <div id="etk-prs-list"></div>
   </div>
+  <div id="s-uye-ziyaret" class="section">
+    <!-- Liste görünümü -->
+    <div id="ziy-list-view">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="ziy-filtre-bar">
+          <button class="btn btn-sm ziy-filtre-on" onclick="ziyFiltrele('tum',this)">Tümü</button>
+          <button class="btn btn-sm" onclick="ziyFiltrele('planlandi',this)">Planlandı</button>
+          <button class="btn btn-sm" onclick="ziyFiltrele('tamamlandi',this)">Tamamlandı</button>
+        </div>
+        <button class="btn btn-p btn-sm" onclick="ziyaretYeniModal()"><i class="ti ti-plus"></i> Yeni Ziyaret Planla</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:18px" id="ziy-metrikler">
+        <div class="mc"><div class="mc-ico" style="background:var(--blue-bg)"><i class="ti ti-calendar-event" style="color:var(--blue)"></i></div><div class="mc-lbl">Planlanan</div><div class="mc-val" id="ziy-metrik-planlanan">—</div></div>
+        <div class="mc"><div class="mc-ico" style="background:var(--green-bg)"><i class="ti ti-check" style="color:var(--teal)"></i></div><div class="mc-lbl">Tamamlanan</div><div class="mc-val" id="ziy-metrik-tamamlanan">—</div></div>
+        <div class="mc"><div class="mc-ico" style="background:var(--amber-bg)"><i class="ti ti-clipboard-list" style="color:var(--amber)"></i></div><div class="mc-lbl">Açık Aksiyon</div><div class="mc-val" id="ziy-metrik-aksiyon">—</div></div>
+        <div class="mc"><div class="mc-ico" style="background:var(--purple-bg)"><i class="ti ti-star" style="color:var(--purple)"></i></div><div class="mc-lbl">Ort. Memnuniyet</div><div class="mc-val" id="ziy-metrik-skor">—</div></div>
+      </div>
+      <div id="ziy-liste"></div>
+    </div>
+
+    <!-- ══ ZİYARET FORM MODALI ══ -->
+    <div id="ziy-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:760px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+        <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div>
+            <div style="font-size:15px;font-weight:500" id="ziy-modal-title">Yeni Üye Ziyareti</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">Ziyaret öncesi bilgileri doldurun, ziyaret sonrası tekrar açıp tamamlayın</div>
+          </div>
+          <button onclick="ziyModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+        </div>
+        <div id="ziy-modal-body" style="padding:20px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px"></div>
+        <div style="padding:13px 22px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="ziyPdfOlustur('once')"><i class="ti ti-file-text"></i> Ziyaret Öncesi Brief (PDF)</button>
+            <button class="btn btn-sm" onclick="ziyPdfOlustur('sonra')"><i class="ti ti-file-check"></i> Tamamlandı Raporu (PDF)</button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="ziyModalKapat()">İptal</button>
+            <button class="btn btn-p btn-sm" onclick="ziyaretKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detay görüntüleme overlay -->
+    <div id="ziy-detay-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:720px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+        <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div style="font-size:15px;font-weight:500" id="ziy-detay-title">Ziyaret Detayı</div>
+          <button onclick="document.getElementById('ziy-detay-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+        </div>
+        <div id="ziy-detay-body" style="padding:20px 22px;overflow-y:auto;flex:1"></div>
+      </div>
+    </div>
+  </div>
   <div id="s-akreditasyon" class="section">
     <!-- Başlık -->
     <div style="text-align:center;padding-bottom:16px;border-bottom:0.5px solid var(--border);margin-bottom:20px">
@@ -4012,7 +4083,8 @@ async function doLogin() {
     supaYukleAkreditasyon(),
     supaYukleIsPlan(),
     supaYukleMemnuniyet(),
-    (window.supaYukleGorevler ? window.supaYukleGorevler() : Promise.resolve())
+    (window.supaYukleGorevler ? window.supaYukleGorevler() : Promise.resolve()),
+    (window.supaYukleZiyaretler ? window.supaYukleZiyaretler() : Promise.resolve())
   ]);
   /* Realtime dinlemeyi başlat */
   supaRealtimeBaslat();
@@ -4206,8 +4278,7 @@ function sw(id, btn) {
 
 window.crmGit = function(firmaId) {
   window._crmAutoSelect = firmaId;
-  const navBtn = document.querySelector('.nav[onclick*="crm"]');
-  if(navBtn) sw('crm', navBtn);
+  crmNavSec('profil', document.getElementById('nav-crm-profil'));
 };
 
 function setFilter(btn) {
@@ -5393,6 +5464,45 @@ function toggleTpl(header) {
   });
 
 })();
+
+/* ══ CRM ÜST MENÜ — Üye Profili / Üye Ziyareti geçişi ══ */
+let _aktifCrmSekme = null;
+window.crmNavToggle = function(btn){
+  const sub=document.getElementById('crm-nav-sub');
+  const chev=document.getElementById('crm-nav-chev');
+  const isOpen=sub&&sub.style.display!=='none';
+  if(isOpen){
+    sub.style.display='none'; if(chev) chev.style.transform='rotate(0deg)';
+    document.querySelectorAll('#crm-nav-sub .nav-sub').forEach(b=>b.classList.remove('active'));
+    btn.classList.remove('active'); _aktifCrmSekme=null;
+  } else {
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));
+    btn.classList.add('active'); if(sub) sub.style.display='block'; if(chev) chev.style.transform='rotate(90deg)';
+    document.querySelector('.main').scrollTop=0;
+    crmNavSec(_aktifCrmSekme||'profil', document.getElementById('nav-crm-profil'));
+  }
+};
+window.crmNavSec = function(sekme, btn){
+  _aktifCrmSekme=sekme;
+  document.querySelectorAll('#crm-nav-sub .nav-sub').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const sub=document.getElementById('crm-nav-sub'); if(sub) sub.style.display='block';
+  const chev=document.getElementById('crm-nav-chev'); if(chev) chev.style.transform='rotate(90deg)';
+  document.getElementById('nav-crm')?.classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelector('.main').scrollTop=0;
+  if(sekme==='profil'){
+    document.getElementById('s-crm')?.classList.add('active');
+    document.getElementById('tb-title').textContent='CRM — Üye Profili';
+    document.getElementById('tb-sub').textContent='Firma arayın, iletişim geçmişi ve detayları görüntüleyin';
+  } else {
+    document.getElementById('s-uye-ziyaret')?.classList.add('active');
+    document.getElementById('tb-title').textContent='CRM — Üye Ziyareti';
+    document.getElementById('tb-sub').textContent='Saha ziyaretleri planlama ve raporlama';
+    if(window.ziyRenderListe) window.ziyRenderListe();
+  }
+};
 
 /* ══ EĞİTİM & ETKİNLİK JS ══ */
 (function(){
@@ -7949,8 +8059,7 @@ window.sw = function(id, btn) {
 
   window.rpOpenCrm = function(id) {
     /* CRM sayfasına geç, firmayı otomatik seç */
-    const navBtn = document.querySelector('[onclick*="sw(\'crm\'"]');
-    if (navBtn) { sw('crm', navBtn); }
+    crmNavSec('profil', document.getElementById('nav-crm-profil'));
     setTimeout(() => {
       if (window.crmSelect) window.crmSelect(id > 8 ? (id % 8) + 1 : id);
     }, 50);
@@ -11059,7 +11168,7 @@ window.gorevDuzenle = function(id){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Kaynak</label>
           <select id="gr-d-kaynak" class="yk-inp">
-            ${['Diğer','YK','MK','Meclis'].map(k=>`<option value="${k}" ${g.kaynak===k?'selected':''}>${k==='Diğer'?'Genel':k}</option>`).join('')}
+            ${['Diğer','YK','MK','Meclis','Üye Ziyareti'].map(k=>`<option value="${k}" ${g.kaynak===k?'selected':''}>${k==='Diğer'?'Genel':k}</option>`).join('')}
           </select></div>
         <div><label class="yk-lbl">Öncelik</label>
           <select id="gr-d-oncelik" class="yk-inp">
@@ -15254,6 +15363,619 @@ window.sikSurecKaydet = function(kartId, domKart){
   sikSurecKapat();
   alert('✓ Kaydedildi.');
 };
+
+/* ══ ÜYE ZİYARETİ MODÜLÜ ══ */
+(function(){
+
+window.ZIY_DB = {}; /* id -> ziyaret kaydı */
+let _ziyAktifId = null;
+let _ziySecilenFirma = null; /* {id, firma, no, _uye_oid, nace, sektor, dereceTanimi, durum, ticaretSicilNo} */
+let _ziyAktifFiltre = 'tum';
+
+const ZIY_TUR = ['Rutin Ziyaret','Yeni Üye Hoş Geldin','Talep/Şikayet Çözümü','Sektörel Ar-Ge/Proje Tanıtımı','Akreditasyon/Memnuniyet Anketi','Protokol Ziyareti','Diğer'];
+const ZIY_TALEP_KATEGORI = ['Eğitim Talepleri','Danışmanlık (Teşvik/Devlet Destekleri)','Vize/Belgelendirme Kolaylıkları','Sektörel Kümelenme/Ar-Ge İsteği','Üniversite-Sanayi İş Birliği Talebi','Mevzuat/Mali Konular'];
+const ZIY_BIRIMLER = ['Proje ve Akademik İlişkiler','Ticaret Sicil','Akreditasyon Sorumlusu','Üye İşleri','Dış Ticaret','Eğitim Birimi','Genel Sekreterlik','Diğer'];
+
+/* ───────────────── DB YÜKLEME ───────────────── */
+async function supaYukleZiyaretler(){
+  try{
+    const { data, error } = await _supa.from('uye_ziyaretler').select('*').order('ziyaret_tarihi',{ascending:false});
+    if(error){ console.warn('Ziyaret yükleme hatası:', error.message); return; }
+    window.ZIY_DB = {};
+    (data||[]).forEach(z=>{ window.ZIY_DB[z.id] = z; });
+    if(window.ziyRenderListe) window.ziyRenderListe();
+  }catch(e){ console.warn('Ziyaret yükleme hatası:', e); }
+}
+window.supaYukleZiyaretler = supaYukleZiyaretler;
+
+/* ───────────────── LİSTE GÖRÜNÜMÜ ───────────────── */
+window.ziyFiltrele = function(f, btn){
+  _ziyAktifFiltre = f;
+  document.querySelectorAll('#ziy-filtre-bar .btn').forEach(b=>b.classList.remove('ziy-filtre-on'));
+  if(btn) btn.classList.add('ziy-filtre-on');
+  ziyRenderListe();
+};
+
+window.ziyRenderListe = function(){
+  const liste = document.getElementById('ziy-liste');
+  if(!liste) return;
+  let kayitlar = Object.values(window.ZIY_DB||{});
+  /* Metrikler */
+  const planlanan = kayitlar.filter(z=>z.durum==='planlandi').length;
+  const tamamlanan = kayitlar.filter(z=>z.durum==='tamamlandi').length;
+  let acikAksiyon = 0;
+  kayitlar.forEach(z=>{ (z.aksiyonlar||[]).forEach(a=>{ if(!a.tamamlandi) acikAksiyon++; }); });
+  const skorlu = kayitlar.filter(z=>z.memnuniyet_skoru>0);
+  const ortSkor = skorlu.length ? (skorlu.reduce((s,z)=>s+Number(z.memnuniyet_skoru||0),0)/skorlu.length).toFixed(1) : '—';
+  const elP=document.getElementById('ziy-metrik-planlanan'); if(elP) elP.textContent=planlanan;
+  const elT=document.getElementById('ziy-metrik-tamamlanan'); if(elT) elT.textContent=tamamlanan;
+  const elA=document.getElementById('ziy-metrik-aksiyon'); if(elA) elA.textContent=acikAksiyon;
+  const elS=document.getElementById('ziy-metrik-skor'); if(elS) elS.textContent=ortSkor;
+
+  if(_ziyAktifFiltre!=='tum') kayitlar = kayitlar.filter(z=>z.durum===_ziyAktifFiltre);
+  kayitlar.sort((a,b)=> (b.ziyaret_tarihi||'').localeCompare(a.ziyaret_tarihi||''));
+
+  if(!kayitlar.length){
+    liste.innerHTML = `<div style="text-align:center;padding:48px 20px;color:var(--text2)">
+      <i class="ti ti-car" style="font-size:28px;display:block;margin-bottom:10px"></i>
+      <div style="font-size:13px">Kayıtlı ziyaret bulunmuyor</div></div>`;
+    return;
+  }
+
+  const durumBadge = { planlandi:'b-blue', tamamlandi:'b-green' };
+  const durumTxt = { planlandi:'Planlandı', tamamlandi:'Tamamlandı' };
+
+  liste.innerHTML = kayitlar.map(z=>{
+    const aksiyonSayisi = (z.aksiyonlar||[]).length;
+    const acikSayisi = (z.aksiyonlar||[]).filter(a=>!a.tamamlandi).length;
+    return `<div class="ch" style="cursor:pointer" onclick="ziyDetayAc('${z.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <div style="font-size:13px;font-weight:600">${z.firma_adi||'—'}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${z.ziyaret_tarihi||''} ${z.ziyaret_saati||''} · ${z.ziyaret_turu||''}</div>
+        </div>
+        <span class="badge ${durumBadge[z.durum]||'b-gray'}">${durumTxt[z.durum]||z.durum||''}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);display:flex;gap:14px;flex-wrap:wrap;margin-top:6px">
+        <span><i class="ti ti-users" style="font-size:13px;vertical-align:-1px"></i> ${(z.personel_listesi||[]).map(p=>p.ad).join(', ')||'—'}</span>
+        ${aksiyonSayisi?`<span><i class="ti ti-clipboard-list" style="font-size:13px;vertical-align:-1px"></i> ${acikSayisi}/${aksiyonSayisi} aksiyon açık</span>`:''}
+        ${z.memnuniyet_skoru?`<span><i class="ti ti-star" style="font-size:13px;vertical-align:-1px;color:var(--amber)"></i> ${z.memnuniyet_skoru}/5</span>`:''}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px" onclick="event.stopPropagation()">
+        <button class="btn btn-sm" onclick="ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>
+        <button class="btn btn-sm" style="color:var(--red)" onclick="ziyaretSil('${z.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+/* ───────────────── FİRMA ARAMA ───────────────── */
+window.ziyFirmaAra = function(q){
+  const box = document.getElementById('ziy-firma-sonuclar');
+  if(!box) return;
+  if(!q || q.length < 2){ box.style.display='none'; return; }
+  const kaynak = (window.DA||[]).concat(window.DS||[]);
+  const ql = q.toLowerCase();
+  const hits = kaynak.filter(f=> (f.firma||'').toLowerCase().includes(ql) || String(f.no).includes(ql)).slice(0,8);
+  if(!hits.length){ box.style.display='none'; return; }
+  box.style.display='block';
+  box.innerHTML = hits.map(f=>`
+    <div onclick='ziyFirmaSec(${JSON.stringify(f.id)})' style="padding:8px 14px;cursor:pointer;border-bottom:0.5px solid var(--border);font-size:13px"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div style="font-weight:500">${f.firma}</div>
+      <div style="font-size:11px;color:var(--text2)">Üye No: ${f.no} · ${f.sektor||''}</div>
+    </div>`).join('');
+  window._ziyAramaSonuclari = hits;
+};
+
+window.ziyFirmaSec = function(id){
+  const f = (window._ziyAramaSonuclari||[]).find(x=>String(x.id)===String(id));
+  if(!f) return;
+  _ziySecilenFirma = f;
+  const inp = document.getElementById('ziy-f-firma-ara'); if(inp) inp.value = f.firma+' ('+f.no+')';
+  const box = document.getElementById('ziy-firma-sonuclar'); if(box) box.style.display='none';
+  ziyOtomatikAlanlariDoldur(f);
+};
+
+function ziyOtomatikAlanlariDoldur(f){
+  const setTxt=(id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val||'—'; };
+  setTxt('ziy-oto-unvan', f.firma);
+  setTxt('ziy-oto-sicil', f.no);
+  setTxt('ziy-oto-nace', f.nace);
+  setTxt('ziy-oto-sektor', f.sektor);
+  setTxt('ziy-oto-derece', f.dereceTanimi);
+  const durumTxt = f.durum==='aktif'||f.durum==='faal' ? 'Faal' : f.durum==='askida'?'Askıda':f.durum==='terk'?'Terk':(f.durum||'—');
+  setTxt('ziy-oto-durum', durumTxt);
+  const blok = document.getElementById('ziy-oto-blok'); if(blok) blok.style.display='grid';
+}
+
+/* ───────────────── PERSONEL ÇOKLU SEÇİM ───────────────── */
+window._ziySeciliPersonel = [];
+window.ziyPersonelEkle = function(){
+  const sel = document.getElementById('ziy-f-personel-sec');
+  if(!sel || !sel.value) return;
+  const p = (window.PERSONEL||[]).find(x=>x.kullanici===sel.value);
+  if(!p) return;
+  if(window._ziySeciliPersonel.find(x=>x.kullanici===p.kullanici)) return;
+  window._ziySeciliPersonel.push({kullanici:p.kullanici, ad:p.ad+' '+p.soyad});
+  ziyPersonelListRender();
+  sel.value='';
+};
+window.ziyPersonelCikar = function(kullanici){
+  window._ziySeciliPersonel = window._ziySeciliPersonel.filter(x=>x.kullanici!==kullanici);
+  ziyPersonelListRender();
+};
+function ziyPersonelListRender(){
+  const el = document.getElementById('ziy-personel-list');
+  if(!el) return;
+  el.innerHTML = window._ziySeciliPersonel.map(p=>
+    `<span class="badge b-blue" style="display:inline-flex;align-items:center;gap:5px;margin:2px">${p.ad}
+      <i class="ti ti-x" style="cursor:pointer;font-size:12px" onclick="ziyPersonelCikar('${p.kullanici}')"></i></span>`
+  ).join('') || '<span style="font-size:12px;color:var(--text2)">Henüz personel eklenmedi</span>';
+}
+
+/* ───────────────── TALEP KATEGORİ ÇOKLU SEÇİM ───────────────── */
+window._ziySeciliTalep = [];
+window.ziyTalepToggle = function(kategori, el){
+  const idx = window._ziySeciliTalep.indexOf(kategori);
+  if(idx>-1){ window._ziySeciliTalep.splice(idx,1); el.classList.remove('ziy-chip-on'); }
+  else { window._ziySeciliTalep.push(kategori); el.classList.add('ziy-chip-on'); }
+};
+
+/* ───────────────── AKSİYON LİSTESİ ───────────────── */
+window._ziyAksiyonlar = [];
+window.ziyAksiyonEkle = function(){
+  window._ziyAksiyonlar.push({id:'ax'+Date.now(), metin:'', birim:ZIY_BIRIMLER[0], personel:'', termin:'', tamamlandi:false});
+  ziyAksiyonListRender();
+};
+window.ziyAksiyonSil = function(id){
+  window._ziyAksiyonlar = window._ziyAksiyonlar.filter(a=>a.id!==id);
+  ziyAksiyonListRender();
+};
+window.ziyAksiyonGuncelle = function(id, alan, val){
+  const a = window._ziyAksiyonlar.find(x=>x.id===id);
+  if(a) a[alan]=val;
+};
+function ziyAksiyonListRender(){
+  const el = document.getElementById('ziy-aksiyon-list');
+  if(!el) return;
+  const personelOpts = (window.PERSONEL||[]).map(p=>`<option value="${p.kullanici}">${p.ad} ${p.soyad}</option>`).join('');
+  el.innerHTML = window._ziyAksiyonlar.map(a=>`
+    <div style="border:0.5px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--surface2)">
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <input class="yk-inp" style="flex:1" placeholder="Alınacak aksiyon / verilen söz..." value="${(a.metin||'').replace(/"/g,'&quot;')}"
+          oninput="ziyAksiyonGuncelle('${a.id}','metin',this.value)">
+        <button class="btn btn-sm" style="color:var(--red);flex-shrink:0" onclick="ziyAksiyonSil('${a.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <select class="yk-inp" onchange="ziyAksiyonGuncelle('${a.id}','birim',this.value)">
+          ${ZIY_BIRIMLER.map(b=>`<option ${a.birim===b?'selected':''}>${b}</option>`).join('')}
+        </select>
+        <select class="yk-inp" onchange="ziyAksiyonGuncelle('${a.id}','personel',this.value)">
+          <option value="">Personel seçin...</option>${personelOpts.replace(`value="${a.personel}"`, `value="${a.personel}" selected`)}
+        </select>
+        <input type="date" class="yk-inp" value="${a.termin||''}" onchange="ziyAksiyonGuncelle('${a.id}','termin',this.value)">
+      </div>
+    </div>`).join('') || '<div style="font-size:12px;color:var(--text2);padding:6px 0">Henüz aksiyon eklenmedi</div>';
+}
+
+/* ───────────────── DOSYA YÜKLEME ───────────────── */
+window._ziyDosyalar = [];
+function ziyDosyaIkon(ad){ const e=ad.split('.').pop().toLowerCase(); if(['jpg','jpeg','png','gif','webp'].includes(e)) return 'ti-photo'; if(e==='pdf') return 'ti-file-type-pdf'; return 'ti-file'; }
+window.ziyDosyaDrop = async function(files){
+  if(!files||!files.length) return;
+  const list = document.getElementById('ziy-dosya-list');
+  if(!list) return;
+  for(const file of Array.from(files)){
+    if(file.size>10*1024*1024){ alert(file.name+' 10MB sınırını aşıyor.'); continue; }
+    const satir = document.createElement('div');
+    satir.className='ziy-dosya-satir';
+    satir.style.cssText='display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--surface);border:0.5px solid var(--border);border-radius:6px;margin-bottom:5px';
+    satir.innerHTML = `<i class="ti ${ziyDosyaIkon(file.name)}" style="font-size:16px;flex-shrink:0"></i><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</div><div style="font-size:10px;color:var(--blue)">Yükleniyor...</div></div>`;
+    list.appendChild(satir);
+    try{
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path = 'ziyaret/'+(_ziyAktifId||'gecici')+'/'+Date.now()+'_'+safeName;
+      const r = await _supa.storage.from('ziyaret-evraklar').upload(path, file, {upsert:true});
+      if(r.error) throw r.error;
+      const ud = _supa.storage.from('ziyaret-evraklar').getPublicUrl(path);
+      const url = ud.data?.publicUrl||'';
+      satir.dataset.ad = file.name; satir.dataset.url = url;
+      const boyut = file.size>1024*1024 ? (file.size/1024/1024).toFixed(1)+' MB' : (file.size/1024).toFixed(0)+' KB';
+      satir.innerHTML = `<i class="ti ${ziyDosyaIkon(file.name)}" style="font-size:16px;flex-shrink:0"></i><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</div><div style="font-size:10px;color:var(--teal)">${boyut} ✓ Yüklendi</div></div><button type="button" onclick="this.closest('.ziy-dosya-satir').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:3px;font-size:16px;flex-shrink:0">×</button>`;
+    }catch(err){
+      satir.innerHTML = `<i class="ti ti-alert-circle" style="font-size:16px;color:var(--red);flex-shrink:0"></i><div style="flex:1;font-size:12px;color:var(--red)">${file.name} — Yükleme başarısız</div><button type="button" onclick="this.closest('.ziy-dosya-satir').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:3px;font-size:16px;flex-shrink:0">×</button>`;
+      console.error('Ziyaret dosya yükleme hatası:', err);
+    }
+  }
+  const inp = document.getElementById('ziy-dosya-input'); if(inp) inp.value='';
+};
+
+/* ───────────────── MODAL AÇ/KAPAT ───────────────── */
+window.ziyaretYeniModal = function(duzenleId){
+  _ziyAktifId = duzenleId || null;
+  _ziySecilenFirma = null;
+  window._ziySeciliPersonel = [];
+  window._ziySeciliTalep = [];
+  window._ziyAksiyonlar = [];
+
+  const mevcut = duzenleId ? window.ZIY_DB[duzenleId] : null;
+  document.getElementById('ziy-modal-title').textContent = duzenleId ? 'Ziyareti Düzenle / Tamamla' : 'Yeni Üye Ziyareti';
+
+  const body = document.getElementById('ziy-modal-body');
+  body.innerHTML = `
+    <div style="position:relative">
+      <label class="yk-lbl">Ziyaret Edilecek Firma *</label>
+      <input id="ziy-f-firma-ara" class="yk-inp" placeholder="Firma adı veya üye no ile arayın..." autocomplete="off" oninput="ziyFirmaAra(this.value)">
+      <div id="ziy-firma-sonuclar" style="display:none;position:absolute;z-index:50;background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);max-height:220px;overflow-y:auto;width:100%;margin-top:2px"></div>
+    </div>
+
+    <div id="ziy-oto-blok" style="display:none;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface2);border-radius:10px;padding:12px 14px">
+      <div><div style="font-size:10px;color:var(--text2)">Kurumsal Unvan</div><div id="ziy-oto-unvan" style="font-size:12px;font-weight:500">—</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">Sicil No</div><div id="ziy-oto-sicil" style="font-size:12px;font-weight:500">—</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">NACE Kodu</div><div id="ziy-oto-nace" style="font-size:12px;font-weight:500">—</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">Sektör</div><div id="ziy-oto-sektor" style="font-size:12px;font-weight:500">—</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">Üye Derecesi</div><div id="ziy-oto-derece" style="font-size:12px;font-weight:500">—</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">Üyelik Durumu</div><div id="ziy-oto-durum" style="font-size:12px;font-weight:500">—</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label class="yk-lbl">Ziyaret Tarihi *</label><input id="ziy-f-tarih" type="date" class="yk-inp"></div>
+      <div><label class="yk-lbl">Ziyaret Saati</label><input id="ziy-f-saat" type="time" class="yk-inp"></div>
+    </div>
+
+    <div>
+      <label class="yk-lbl">Ziyareti Gerçekleştirecek Personel/Heyet *</label>
+      <div style="display:flex;gap:8px">
+        <select id="ziy-f-personel-sec" class="yk-inp" style="flex:1"><option value="">Personel seçin...</option>${(window.PERSONEL||[]).map(p=>`<option value="${p.kullanici}">${p.ad} ${p.soyad} — ${p.unvan}</option>`).join('')}</select>
+        <button class="btn btn-sm" onclick="ziyPersonelEkle()"><i class="ti ti-plus"></i> Ekle</button>
+      </div>
+      <div id="ziy-personel-list" style="margin-top:8px"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label class="yk-lbl">Ziyaret Nedeni/Türü *</label>
+        <select id="ziy-f-tur" class="yk-inp">${ZIY_TUR.map(t=>`<option>${t}</option>`).join('')}</select></div>
+      <div><label class="yk-lbl">Görüşülecek Kişi — Unvan</label><input id="ziy-f-gorusulen-unvan" class="yk-inp" placeholder="Genel Müdür, vb."></div>
+    </div>
+    <div><label class="yk-lbl">Görüşülecek Kişi — Adı Soyadı</label><input id="ziy-f-gorusulen-ad" class="yk-inp" placeholder="Ad Soyad"></div>
+
+    <div><label class="yk-lbl">Görüşme Öncesi Notlar</label><textarea id="ziy-f-on-notlar" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Ziyaret öncesi hazırlık notları, gündem maddeleri..."></textarea></div>
+
+    <div style="border-top:1.5px dashed var(--border2);padding-top:14px;margin-top:4px">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">⬇ ZİYARET SONRASI DOLDURULACAK ⬇</div>
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><label class="yk-lbl">İşletme Güncel Durum Tespitleri</label><textarea id="ziy-f-durum-tespit" class="yk-inp" style="min-height:55px;resize:vertical"></textarea></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div><label class="yk-lbl">Çalışan — Mavi Yaka</label><input id="ziy-f-mavi-yaka" type="number" min="0" class="yk-inp"></div>
+          <div><label class="yk-lbl">Çalışan — Beyaz Yaka</label><input id="ziy-f-beyaz-yaka" type="number" min="0" class="yk-inp"></div>
+          <div><label class="yk-lbl">Faaliyet Alanı (m²)</label><input id="ziy-f-metrekare" type="number" min="0" class="yk-inp"></div>
+        </div>
+
+        <div>
+          <label class="yk-lbl">İhracat Durumu</label>
+          <select id="ziy-f-ihracat-durum" class="yk-inp" onchange="document.getElementById('ziy-f-ihracat-ulke-wrap').style.display=this.value==='yapiyor'?'block':'none'">
+            <option value="yapiyor">Yapıyor</option>
+            <option value="potansiyel">Yapmıyor ama Potansiyeli Var</option>
+            <option value="yapmiyor">Yapmıyor</option>
+          </select>
+          <div id="ziy-f-ihracat-ulke-wrap" style="margin-top:6px">
+            <input id="ziy-f-ihracat-ulkeler" class="yk-inp" placeholder="İhracat yapılan ülkeler (virgülle ayırın)">
+          </div>
+        </div>
+
+        <div>
+          <label class="yk-lbl">Üyenin Kurumdan Beklentileri ve Talepleri</label>
+          <div id="ziy-talep-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            ${ZIY_TALEP_KATEGORI.map(k=>`<span class="ziy-chip" onclick="ziyTalepToggle('${k}',this)" style="padding:5px 10px;border:1px solid var(--border2);border-radius:16px;font-size:11px;cursor:pointer">${k}</span>`).join('')}
+          </div>
+          <textarea id="ziy-f-talep-metin" class="yk-inp" style="min-height:50px;resize:vertical" placeholder="Talep ile ilgili ek açıklama..."></textarea>
+        </div>
+
+        <div style="border-top:0.5px solid var(--border);padding-top:12px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">Ziyaret Genel Değerlendirmesi</div>
+          <label class="yk-lbl">Ziyaret Sonucu/Özeti</label>
+          <textarea id="ziy-f-sonuc-ozet" class="yk-inp" style="min-height:70px;resize:vertical" placeholder="Görüşmenin kısa analizi..."></textarea>
+          <label class="yk-lbl" style="margin-top:10px;display:block">Üye Memnuniyet/Bağlılık Skoru</label>
+          <div id="ziy-yildiz-sec" style="display:flex;gap:4px;margin-top:4px">
+            ${[1,2,3,4,5].map(n=>`<i class="ti ti-star" data-puan="${n}" onclick="ziyYildizSec(${n})" style="font-size:24px;cursor:pointer;color:var(--border2)"></i>`).join('')}
+          </div>
+        </div>
+
+        <div style="border-top:0.5px solid var(--border);padding-top:12px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:4px">Aksiyon ve Görev Atama</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px">Her aksiyon, belirtilen personele otomatik görev olarak atanır</div>
+          <div id="ziy-aksiyon-list"></div>
+          <button class="btn btn-sm" onclick="ziyAksiyonEkle()"><i class="ti ti-plus"></i> Aksiyon Ekle</button>
+        </div>
+
+        <div style="border-top:0.5px solid var(--border);padding-top:12px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">Medya ve Dosya Yükleme</div>
+          <div id="ziy-dosya-drop" onclick="document.getElementById('ziy-dosya-input').click()" ondrop="event.preventDefault();ziyDosyaDrop(event.dataTransfer.files)" ondragover="event.preventDefault()"
+            style="border:1.5px dashed var(--border2);border-radius:10px;padding:18px;text-align:center;cursor:pointer;color:var(--text2);font-size:12px">
+            <i class="ti ti-cloud-upload" style="font-size:22px;display:block;margin-bottom:6px"></i>
+            Fotoğraf, dilekçe, kartvizit vb. dosyaları sürükleyin veya tıklayın
+          </div>
+          <input type="file" id="ziy-dosya-input" multiple style="display:none" onchange="ziyDosyaDrop(this.files)">
+          <div id="ziy-dosya-list" style="margin-top:8px"></div>
+        </div>
+
+        <div>
+          <label class="yk-lbl">Ziyaret Durumu</label>
+          <select id="ziy-f-durum" class="yk-inp">
+            <option value="planlandi">Planlandı (henüz gerçekleşmedi)</option>
+            <option value="tamamlandi">Tamamlandı</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  `;
+
+  ziyPersonelListRender();
+  ziyAksiyonListRender();
+
+  /* Düzenleme modu — mevcut veriyi doldur */
+  if(mevcut){
+    _ziySecilenFirma = { id:mevcut.uye_id, firma:mevcut.firma_adi, no:mevcut.uye_sicil_no, nace:mevcut.nace_kod, sektor:mevcut.sektor, dereceTanimi:mevcut.uye_derecesi, durum:mevcut.uye_durumu };
+    const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val||''; };
+    setVal('ziy-f-firma-ara', (mevcut.firma_adi||'')+' ('+(mevcut.uye_sicil_no||'')+')');
+    ziyOtomatikAlanlariDoldur({firma:mevcut.firma_adi, no:mevcut.uye_sicil_no, nace:mevcut.nace_kod, sektor:mevcut.sektor, dereceTanimi:mevcut.uye_derecesi, durum:mevcut.uye_durumu});
+    setVal('ziy-f-tarih', mevcut.ziyaret_tarihi);
+    setVal('ziy-f-saat', mevcut.ziyaret_saati);
+    setVal('ziy-f-tur', mevcut.ziyaret_turu);
+    setVal('ziy-f-gorusulen-ad', mevcut.gorusulen_ad);
+    setVal('ziy-f-gorusulen-unvan', mevcut.gorusulen_unvan);
+    setVal('ziy-f-on-notlar', mevcut.on_notlar);
+    setVal('ziy-f-durum-tespit', mevcut.durum_tespit);
+    setVal('ziy-f-mavi-yaka', mevcut.mavi_yaka);
+    setVal('ziy-f-beyaz-yaka', mevcut.beyaz_yaka);
+    setVal('ziy-f-metrekare', mevcut.metrekare);
+    setVal('ziy-f-ihracat-durum', mevcut.ihracat_durum||'yapiyor');
+    setVal('ziy-f-ihracat-ulkeler', mevcut.ihracat_ulkeler);
+    const ihrWrap=document.getElementById('ziy-f-ihracat-ulke-wrap'); if(ihrWrap) ihrWrap.style.display = (mevcut.ihracat_durum==='yapiyor')?'block':'none';
+    setVal('ziy-f-talep-metin', mevcut.talep_metin);
+    setVal('ziy-f-sonuc-ozet', mevcut.sonuc_ozet);
+    setVal('ziy-f-durum', mevcut.durum||'planlandi');
+    window._ziySeciliPersonel = (mevcut.personel_listesi||[]).slice();
+    ziyPersonelListRender();
+    window._ziySeciliTalep = (mevcut.talep_kategorileri||[]).slice();
+    document.querySelectorAll('#ziy-talep-chips .ziy-chip').forEach(chip=>{
+      if(window._ziySeciliTalep.includes(chip.textContent.trim())) chip.classList.add('ziy-chip-on');
+    });
+    window._ziyAksiyonlar = (mevcut.aksiyonlar||[]).slice();
+    ziyAksiyonListRender();
+    if(mevcut.memnuniyet_skoru) ziyYildizSec(mevcut.memnuniyet_skoru);
+    /* Mevcut dosyaları göster */
+    const dosyaList = document.getElementById('ziy-dosya-list');
+    if(dosyaList && mevcut.dosyalar?.length){
+      dosyaList.innerHTML = mevcut.dosyalar.map(d=>`
+        <div class="ziy-dosya-satir" data-ad="${d.ad}" data-url="${d.url}" style="display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--surface);border:0.5px solid var(--border);border-radius:6px;margin-bottom:5px">
+          <i class="ti ${ziyDosyaIkon(d.ad)}" style="font-size:16px;flex-shrink:0"></i>
+          <div style="flex:1;min-width:0"><a href="${d.url}" target="_blank" style="font-size:12px;font-weight:500;color:var(--blue);text-decoration:none">${d.ad}</a></div>
+          <button type="button" onclick="this.closest('.ziy-dosya-satir').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);padding:3px;font-size:16px;flex-shrink:0">×</button>
+        </div>`).join('');
+    }
+  } else {
+    document.getElementById('ziy-f-tarih').value = new Date().toISOString().slice(0,10);
+    document.getElementById('ziy-f-ihracat-durum').value = 'yapiyor';
+  }
+
+  document.getElementById('ziy-modal-overlay').style.display='flex';
+};
+
+window.ziyYildizSec = function(puan){
+  window._ziySeciliPuan = puan;
+  document.querySelectorAll('#ziy-yildiz-sec .ti-star').forEach(s=>{
+    const p = parseInt(s.dataset.puan);
+    s.style.color = p<=puan ? 'var(--amber)' : 'var(--border2)';
+  });
+};
+
+window.ziyModalKapat = function(){
+  document.getElementById('ziy-modal-overlay').style.display='none';
+  _ziyAktifId = null; _ziySecilenFirma = null;
+};
+
+/* ───────────────── KAYDET ───────────────── */
+window.ziyaretKaydet = async function(){
+  if(!_ziySecilenFirma){ alert('Lütfen ziyaret edilecek firmayı seçin.'); return; }
+  const tarih = document.getElementById('ziy-f-tarih')?.value;
+  if(!tarih){ alert('Ziyaret tarihi zorunludur.'); return; }
+  if(!window._ziySeciliPersonel.length){ alert('En az bir personel/heyet üyesi ekleyin.'); return; }
+
+  /* Dosyaları DOM'dan topla */
+  const dosyalar = Array.from(document.querySelectorAll('#ziy-dosya-list .ziy-dosya-satir')).map(el=>({ad:el.dataset.ad, url:el.dataset.url})).filter(d=>d.ad);
+
+  const kayit = {
+    uye_id: _ziySecilenFirma.id ?? null,
+    uye_oid: _ziySecilenFirma._uye_oid ?? null,
+    firma_adi: _ziySecilenFirma.firma,
+    uye_sicil_no: String(_ziySecilenFirma.no||''),
+    nace_kod: _ziySecilenFirma.nace,
+    sektor: _ziySecilenFirma.sektor,
+    uye_derecesi: _ziySecilenFirma.dereceTanimi,
+    uye_durumu: _ziySecilenFirma.durum,
+    ziyaret_tarihi: tarih,
+    ziyaret_saati: document.getElementById('ziy-f-saat')?.value||'',
+    personel_listesi: window._ziySeciliPersonel,
+    ziyaret_turu: document.getElementById('ziy-f-tur')?.value,
+    gorusulen_ad: document.getElementById('ziy-f-gorusulen-ad')?.value||'',
+    gorusulen_unvan: document.getElementById('ziy-f-gorusulen-unvan')?.value||'',
+    on_notlar: document.getElementById('ziy-f-on-notlar')?.value||'',
+    durum_tespit: document.getElementById('ziy-f-durum-tespit')?.value||'',
+    mavi_yaka: parseInt(document.getElementById('ziy-f-mavi-yaka')?.value)||null,
+    beyaz_yaka: parseInt(document.getElementById('ziy-f-beyaz-yaka')?.value)||null,
+    metrekare: parseFloat(document.getElementById('ziy-f-metrekare')?.value)||null,
+    ihracat_durum: document.getElementById('ziy-f-ihracat-durum')?.value||'',
+    ihracat_ulkeler: document.getElementById('ziy-f-ihracat-ulkeler')?.value||'',
+    talep_kategorileri: window._ziySeciliTalep,
+    talep_metin: document.getElementById('ziy-f-talep-metin')?.value||'',
+    sonuc_ozet: document.getElementById('ziy-f-sonuc-ozet')?.value||'',
+    memnuniyet_skoru: window._ziySeciliPuan||null,
+    aksiyonlar: window._ziyAksiyonlar,
+    dosyalar: dosyalar,
+    durum: document.getElementById('ziy-f-durum')?.value||'planlandi',
+    giren_kul: currentUser?.kullanici||'',
+    giren_ad: currentUser?.adSoyad||''
+  };
+
+  try{
+    let kayitId = _ziyAktifId;
+    if(_ziyAktifId){
+      const { error } = await _supa.from('uye_ziyaretler').update(kayit).eq('id', _ziyAktifId);
+      if(error) throw error;
+    } else {
+      const { data, error } = await _supa.from('uye_ziyaretler').insert([kayit]).select().single();
+      if(error) throw error;
+      kayitId = data.id;
+    }
+
+    /* Aksiyonları görev olarak işle — sadece termin/personel/metin dolu olanlar */
+    for(const a of window._ziyAksiyonlar){
+      if(a.metin && a.personel && !a._gorevOlusturuldu){
+        const p = (window.PERSONEL||[]).find(x=>x.kullanici===a.personel);
+        await _supa.from('gorevler').insert([{
+          baslik: 'Üye Ziyareti Aksiyonu: '+_ziySecilenFirma.firma,
+          aciklama: a.metin+' (Birim: '+a.birim+')',
+          atanan: a.personel, atanan_ad: p?(p.ad+' '+p.soyad):a.personel,
+          atayan: currentUser?.kullanici||'', son_tarih: a.termin||null,
+          atama_tarihi: new Date().toISOString().slice(0,10),
+          kaynak: 'Üye Ziyareti', oncelik: 'normal', durum: 'planlandi'
+        }]);
+        a._gorevOlusturuldu = true;
+      }
+    }
+
+    ziyModalKapat();
+    await supaYukleZiyaretler();
+    if(window.supaYukleGorevler) window.supaYukleGorevler();
+    alert('✓ Ziyaret kaydedildi.');
+  }catch(e){
+    alert('Kaydetme hatası: '+(e.message||e));
+  }
+};
+
+window.ziyaretSil = async function(id){
+  if(!confirm('Bu ziyaret kaydını silmek istiyor musunuz?')) return;
+  try{
+    const { error } = await _supa.from('uye_ziyaretler').delete().eq('id', id);
+    if(error) throw error;
+    await supaYukleZiyaretler();
+  }catch(e){ alert('Silme hatası: '+(e.message||e)); }
+};
+
+/* ───────────────── DETAY GÖRÜNTÜLEME ───────────────── */
+window.ziyDetayAc = function(id){
+  const z = window.ZIY_DB[id];
+  if(!z) return;
+  document.getElementById('ziy-detay-title').textContent = z.firma_adi + ' — Ziyaret Detayı';
+  const body = document.getElementById('ziy-detay-body');
+  const ihracatTxt = {yapiyor:'İhracat Yapıyor', potansiyel:'Potansiyeli Var', yapmiyor:'Yapmıyor'}[z.ihracat_durum]||'—';
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div><div style="font-size:10px;color:var(--text2)">Ziyaret Tarihi</div><div style="font-size:13px">${z.ziyaret_tarihi||''} ${z.ziyaret_saati||''}</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">Tür</div><div style="font-size:13px">${z.ziyaret_turu||''}</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">Heyet</div><div style="font-size:13px">${(z.personel_listesi||[]).map(p=>p.ad).join(', ')||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">Görüşülen</div><div style="font-size:13px">${z.gorusulen_ad||'—'} ${z.gorusulen_unvan?'('+z.gorusulen_unvan+')':''}</div></div>
+    </div>
+    ${z.sonuc_ozet?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Ziyaret Özeti</div><div style="font-size:13px;line-height:1.6">${z.sonuc_ozet}</div></div>`:''}
+    ${z.durum_tespit?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">İşletme Durum Tespiti</div><div style="font-size:13px;line-height:1.6">${z.durum_tespit}</div></div>`:''}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><div style="font-size:10px;color:var(--text2)">Mavi/Beyaz Yaka</div><div style="font-size:13px">${z.mavi_yaka||0} / ${z.beyaz_yaka||0}</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">Faaliyet Alanı</div><div style="font-size:13px">${z.metrekare?z.metrekare+' m²':'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--text2)">İhracat</div><div style="font-size:13px">${ihracatTxt}</div></div>
+    </div>
+    ${z.memnuniyet_skoru?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Memnuniyet Skoru</div><div>${'★'.repeat(z.memnuniyet_skoru)}${'☆'.repeat(5-z.memnuniyet_skoru)}</div></div>`:''}
+    ${(z.aksiyonlar||[]).length?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Aksiyonlar</div>${z.aksiyonlar.map(a=>`<div style="font-size:12px;padding:6px 0;border-bottom:0.5px solid var(--border)">${a.metin} — <span style="color:var(--text2)">${a.birim}, termin: ${a.termin||'—'}</span></div>`).join('')}</div>`:''}
+    ${(z.dosyalar||[]).length?`<div><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Dosyalar</div>${z.dosyalar.map(d=>`<a href="${d.url}" target="_blank" style="display:block;font-size:12px;color:var(--blue);margin-bottom:4px">${d.ad}</a>`).join('')}</div>`:''}
+  `;
+  document.getElementById('ziy-detay-overlay').style.display='flex';
+};
+
+/* ───────────────── PDF OLUŞTURMA ───────────────── */
+window.ziyPdfOlustur = function(tip){
+  if(!_ziySecilenFirma){ alert('Önce firma seçin.'); return; }
+  if(typeof window.jspdf === 'undefined'){ alert('PDF kütüphanesi yüklenemedi.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 20;
+  const left = 15;
+  const lineH = 7;
+  const pageW = 210;
+
+  function baslik(txt, size=14){
+    doc.setFontSize(size); doc.setFont(undefined,'bold');
+    doc.text(txt, left, y); y += lineH+2; doc.setFont(undefined,'normal'); doc.setFontSize(10);
+  }
+  function satir(label, val){
+    if(y > 275){ doc.addPage(); y = 20; }
+    doc.setFont(undefined,'bold'); doc.text(label+':', left, y);
+    doc.setFont(undefined,'normal');
+    const lines = doc.splitTextToSize(String(val||'—'), pageW-left-60);
+    doc.text(lines, left+55, y);
+    y += lineH * Math.max(1, lines.length);
+  }
+  function altBaslik(txt){
+    if(y > 270){ doc.addPage(); y = 20; }
+    y += 3; doc.setFont(undefined,'bold'); doc.setFontSize(11); doc.text(txt, left, y); y += lineH; doc.setFont(undefined,'normal'); doc.setFontSize(10);
+  }
+  function paragraf(txt){
+    if(!txt) return;
+    const lines = doc.splitTextToSize(txt, pageW-left*2);
+    if(y + lines.length*5 > 280){ doc.addPage(); y = 20; }
+    doc.text(lines, left, y); y += lines.length*5 + 3;
+  }
+
+  if(tip==='once'){
+    baslik('ÜYE ZİYARETİ — ÖN BİLGİ FORMU (BRIEF)');
+    satir('Firma', _ziySecilenFirma.firma);
+    satir('Sicil No', _ziySecilenFirma.no);
+    satir('NACE Kodu', _ziySecilenFirma.nace);
+    satir('Sektör', _ziySecilenFirma.sektor);
+    satir('Üye Derecesi', _ziySecilenFirma.dereceTanimi);
+    satir('Üyelik Durumu', _ziySecilenFirma.durum);
+    y+=3;
+    satir('Ziyaret Tarihi', document.getElementById('ziy-f-tarih')?.value);
+    satir('Ziyaret Saati', document.getElementById('ziy-f-saat')?.value);
+    satir('Heyet', window._ziySeciliPersonel.map(p=>p.ad).join(', '));
+    satir('Ziyaret Türü', document.getElementById('ziy-f-tur')?.value);
+    satir('Görüşülecek Kişi', (document.getElementById('ziy-f-gorusulen-ad')?.value||'')+' — '+(document.getElementById('ziy-f-gorusulen-unvan')?.value||''));
+    altBaslik('Görüşme Öncesi Notlar');
+    paragraf(document.getElementById('ziy-f-on-notlar')?.value||'—');
+    doc.save('Ziyaret_Brief_'+_ziySecilenFirma.firma.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
+  } else {
+    baslik('ÜYE ZİYARETİ — TAMAMLANDI RAPORU');
+    satir('Firma', _ziySecilenFirma.firma);
+    satir('Sicil No', _ziySecilenFirma.no);
+    satir('NACE / Sektör', (_ziySecilenFirma.nace||'—')+' / '+(_ziySecilenFirma.sektor||'—'));
+    satir('Ziyaret Tarihi', document.getElementById('ziy-f-tarih')?.value);
+    satir('Heyet', window._ziySeciliPersonel.map(p=>p.ad).join(', '));
+    satir('Görüşülen', (document.getElementById('ziy-f-gorusulen-ad')?.value||'')+' — '+(document.getElementById('ziy-f-gorusulen-unvan')?.value||''));
+    y+=2;
+    altBaslik('İşletme Güncel Durum Tespiti');
+    paragraf(document.getElementById('ziy-f-durum-tespit')?.value||'—');
+    satir('Çalışan (Mavi/Beyaz Yaka)', (document.getElementById('ziy-f-mavi-yaka')?.value||'0')+' / '+(document.getElementById('ziy-f-beyaz-yaka')?.value||'0'));
+    satir('Faaliyet Alanı', (document.getElementById('ziy-f-metrekare')?.value||'—')+' m²');
+    const ihracatTxt = {yapiyor:'Yapıyor',potansiyel:'Potansiyeli Var',yapmiyor:'Yapmıyor'}[document.getElementById('ziy-f-ihracat-durum')?.value]||'—';
+    satir('İhracat Durumu', ihracatTxt);
+    altBaslik('Üyenin Beklenti ve Talepleri');
+    paragraf((window._ziySeciliTalep.join(', ')||'—')+'\n'+(document.getElementById('ziy-f-talep-metin')?.value||''));
+    altBaslik('Ziyaret Sonucu / Özeti');
+    paragraf(document.getElementById('ziy-f-sonuc-ozet')?.value||'—');
+    satir('Memnuniyet Skoru', (window._ziySeciliPuan||'—')+' / 5');
+    if(window._ziyAksiyonlar.length){
+      altBaslik('Aksiyonlar');
+      window._ziyAksiyonlar.forEach(a=>{
+        paragraf('• '+a.metin+' (Birim: '+a.birim+', Termin: '+(a.termin||'—')+')');
+      });
+    }
+    doc.save('Ziyaret_Raporu_'+_ziySecilenFirma.firma.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
+  }
+};
+
+})();
 
 /* ══ AKREDİTASYON SİSTEMİ ══ */
 (function(){
