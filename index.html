@@ -92,7 +92,7 @@ async function supaYukleMeclis() {
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
     const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', durum:t.durum||'planlandi' }));
-    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
+    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', komiteNo:g.komite_no||0, atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MECLIS_DB) {
         window.MECLIS_DB.toplantılar = mappedT;
@@ -3186,12 +3186,14 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div id="yk-yonetici-view" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="yk-karar-baslik">Toplantılar</div>
-          <div style="display:flex;gap:6px" id="yk-header-btn">
+          <div style="display:flex;gap:6px;align-items:center">
             <button class="btn btn-sm" onclick="katilimOzetAc('yk','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
             <button class="btn btn-sm" onclick="katilimOzetAc('yk','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
-            <button class="btn btn-p btn-sm" onclick="ykToplantıEkleModal()">
-              <i class="ti ti-plus"></i> Toplantı Ekle
-            </button>
+            <div id="yk-header-btn" style="display:inline-flex">
+              <button class="btn btn-p btn-sm" onclick="ykToplantıEkleModal()">
+                <i class="ti ti-plus"></i> Toplantı Ekle
+              </button>
+            </div>
           </div>
         </div>
         <div id="yk-karar-list"></div>
@@ -3208,12 +3210,14 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div id="mk-yonetici-view" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="mk-karar-baslik">Toplantılar</div>
-          <div style="display:flex;gap:6px" id="mk-header-btn">
+          <div style="display:flex;gap:6px;align-items:center">
             <button class="btn btn-sm" onclick="katilimOzetAc('mk','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
             <button class="btn btn-sm" onclick="katilimOzetAc('mk','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
-            <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()">
-              <i class="ti ti-plus"></i> Toplantı Ekle
-            </button>
+            <div id="mk-header-btn" style="display:inline-flex">
+              <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()">
+                <i class="ti ti-plus"></i> Toplantı Ekle
+              </button>
+            </div>
           </div>
         </div>
         <div id="mk-karar-list"></div>
@@ -3230,12 +3234,14 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div id="meclis-yonetici-view" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="meclis-karar-baslik">Toplantılar</div>
-          <div style="display:flex;gap:6px" id="meclis-header-btn">
+          <div style="display:flex;gap:6px;align-items:center">
             <button class="btn btn-sm" onclick="katilimOzetAc('meclis','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
             <button class="btn btn-sm" onclick="katilimOzetAc('meclis','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
-            <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()">
-              <i class="ti ti-plus"></i> Toplantı Ekle
-            </button>
+            <div id="meclis-header-btn" style="display:inline-flex">
+              <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()">
+                <i class="ti ti-plus"></i> Toplantı Ekle
+              </button>
+            </div>
           </div>
         </div>
         <div id="meclis-karar-list"></div>
@@ -10685,46 +10691,101 @@ window.mkAcToplantı = function(id){
   const t=MK_DB.toplantılar.find(x=>x.id===id);
   const el=document.getElementById('mk-karar-list');
   const hd=document.getElementById('mk-karar-baslik');
-  const hb=document.getElementById('mk-header-btn');
-  const tG=MK_DB.gundemler.filter(g=>g.toplantıId===id);
-  hd.innerHTML=`<button class="btn btn-sm" onclick="mkGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span><button class="btn btn-sm" onclick="katilimAc('${id}','mk',${parseInt(t?.komite||0)})" style="margin-left:8px"><i class="ti ti-clipboard-check"></i> Katılım Takibi</button>`;
-  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm" onclick="mkGundemEkle('${id}')"><i class="ti ti-plus"></i> Gündem Ekle</button>`;
-  el.innerHTML=tG.length===0?
-    `<div style="text-align:center;padding:32px;color:var(--text2)"><i class="ti ti-clipboard-list" style="font-size:24px;display:block;margin-bottom:8px"></i>Gündem eklenmedi</div>`:
-    tG.map((g,i)=>{
-      const pr={acil:{bg:'var(--red-bg)',dot:'#E24B4A',txt:'#A32D2D'},normal:{bg:'var(--amber-bg)',dot:'#EF9F27',txt:'#854F0B'},dusuk:{bg:'var(--blue-bg)',dot:'#185FA5',txt:'#0C447C'},tamamlandi:{bg:'var(--green-bg)',dot:'#1D9E75',txt:'var(--green)'}}[g.durum==='tamamlandi'?'tamamlandi':g.oncelik||'normal'];
-      return `<div class="yk-card" style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <div><div class="yk-no">${i+1}. Gündem</div><div style="font-size:14px;font-weight:500;margin-top:3px">${g.konu}</div></div>
-          <span class="badge ${g.durum==='tamamlandi'?'b-green':g.oncelik==='acil'?'b-red':'b-amber'}">${g.durum==='tamamlandi'?'Tamamlandı':g.oncelik==='acil'?'Acil':'Devam'}</span>
+
+  hd.innerHTML=`
+    <button class="btn btn-sm" onclick="mkGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button>
+    <span style="font-size:14px;font-weight:500">${t?.ad||''}</span>
+    <span style="font-size:12px;color:var(--text2)">${t?.tarih||''}</span>`;
+
+  /* 14 komite kartı */
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">` +
+    Array.from({length:14}, (_,i)=>{
+      const kNo = i+1;
+      const komiteUyeleri = (window.MK_UYELER||[]).filter(u=>u.komite_no===kNo);
+      const uyeSayisi = komiteUyeleri.length;
+      return `<div class="yk-card" id="mk-komite-kart-${kNo}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--purple)">${kNo}. Meslek Komitesi</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">${uyeSayisi} üye</div>
+          </div>
+          <button class="btn btn-sm" onclick="mkKomiteKatilimAc('${id}',${kNo})" style="gap:4px">
+            <i class="ti ti-clipboard-check"></i> Katılım Takibi
+          </button>
         </div>
-        ${g.ozet?`<div class="yk-body">${g.ozet}</div>`:''}
-        ${g.atananlar.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:${a.durum==='tamamlandi'?'var(--green-bg)':pr.bg};border-radius:7px;margin-top:6px">
-          <div style="width:6px;height:6px;border-radius:50%;background:${a.durum==='tamamlandi'?'#1D9E75':pr.dot}"></div>
-          <div style="flex:1;font-size:12px"><strong>${a.ad}</strong>${a.gorev&&a.gorev!=='—'?' — '+a.gorev:''}</div>
-          <span style="font-size:10px;color:${a.durum==='tamamlandi'?'var(--green)':pr.txt}">${a.durum==='tamamlandi'?'✓ Tamam':'Devam'}</span>
-          ${mkYoneticiMi()&&a.durum!=='tamamlandi'?`<button class="btn btn-sm" style="font-size:10px;padding:2px 6px" onclick="mkAtamaTam('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>`:''}
-        </div>`).join('')}
-        ${mkYoneticiMi()&&g.durum!=='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
-          <button class="btn btn-sm" style="font-size:11px" onclick="mkGundemEkle('${id}','${g.id}')"><i class="ti ti-user-plus"></i> Atama</button>
-      <button class="btn btn-sm" style="font-size:11px" onclick="mkGundemDuzenle('${id}','${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-          <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="mkGundemSil('${g.id}','${id}')"><i class="ti ti-trash"></i> Sil</button>
-          <button class="btn btn-p btn-sm" style="font-size:11px" onclick="mkGundemTam('${g.id}')"><i class="ti ti-check"></i> Tamamlandı</button>
-        </div>`:''}
+        <!-- Katılım özet satırı — doldurulacak -->
+        <div id="mk-katilim-ozet-${id}-${kNo}" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
+        <!-- YK'ya intikal kararlar -->
+        <div style="border-top:0.5px solid var(--border);padding-top:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:600;color:var(--text2)">YK'ya İntikal Eden Kararlar</div>
+            ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="mkKomiteKararEkle('${id}',${kNo})"><i class="ti ti-plus"></i> Karar Ekle</button>`:''}
+          </div>
+          <div id="mk-komite-kararlar-${id}-${kNo}">
+            ${MK_DB.gundemler.filter(g=>g.toplantıId===id && parseInt(g.komiteNo||0)===kNo).length === 0
+              ? `<div style="font-size:11px;color:var(--text2);padding:6px 0">Henüz karar girilmedi</div>`
+              : MK_DB.gundemler.filter(g=>g.toplantıId===id && parseInt(g.komiteNo||0)===kNo).map(g=>`
+                  <div style="padding:7px 10px;background:var(--surface2);border-radius:7px;margin-bottom:4px;font-size:12px;display:flex;justify-content:space-between;align-items:center">
+                    <span>${g.konu}</span>
+                    <span class="badge ${g.durum==='tamamlandi'?'b-green':'b-amber'}">${g.durum==='tamamlandi'?'Uygulandı':'Bekliyor'}</span>
+                  </div>`).join('')}
+          </div>
+        </div>
       </div>`;
-    }).join('');
+    }).join('') + `</div>`;
+
+  /* Katılım özetlerini async yükle */
+  mkKomiteKatilimOzetleriYukle(id);
+};
+
+/* Her komitenin katılım özetini göster */
+async function mkKomiteKatilimOzetleriYukle(toplantıId){
+  try{
+    const { data } = await _supa.from('toplanti_katilim')
+      .select('uye_id,katildi').eq('toplanti_id', toplantıId).eq('tur','mk');
+    if(!data) return;
+
+    /* uye_id -> komite_no eşleştir */
+    for(let kNo=1; kNo<=14; kNo++){
+      const komiteUyeleri = (window.MK_UYELER||[]).filter(u=>u.komite_no===kNo);
+      const komiteUyeIds = new Set(komiteUyeleri.map(u=>u.id));
+      const komiteKatilim = data.filter(k=>komiteUyeIds.has(k.uye_id));
+      const katildi = komiteKatilim.filter(k=>k.katildi===true).length;
+      const katilmadi = komiteKatilim.filter(k=>k.katildi===false).length;
+      const belirsiz = komiteUyeleri.length - komiteKatilim.length;
+      const el = document.getElementById(`mk-katilim-ozet-${toplantıId}-${kNo}`);
+      if(!el) continue;
+      if(komiteKatilim.length === 0){
+        el.innerHTML = `<span style="font-size:11px;color:var(--text2)">Katılım henüz girilmedi</span>`;
+      } else {
+        el.innerHTML = `
+          <span class="badge b-green" style="font-size:11px"><i class="ti ti-check"></i> ${katildi} Katıldı</span>
+          ${katilmadi>0?`<span class="badge b-red" style="font-size:11px"><i class="ti ti-x"></i> ${katilmadi} Katılmadı</span>`:''}
+          ${belirsiz>0?`<span class="badge b-gray" style="font-size:11px">? ${belirsiz} Belirsiz</span>`:''}`;
+      }
+    }
+  }catch(e){ console.warn('MK katılım özet yükleme hatası:', e); }
+}
+
+/* Komite katılım modalını aç */
+window.mkKomiteKatilimAc = function(toplantıId, kNo){
+  window.katilimAc(toplantıId, 'mk', kNo);
+  /* Kapandıktan sonra özetleri güncelle */
+  const origKapat = window.katilimKaydet;
+  window._mkKatilimSonrasiCb = ()=>{ mkKomiteKatilimOzetleriYukle(toplantıId); };
+};
+
+/* Komite karar ekle */
+window.mkKomiteKararEkle = function(toplantıId, kNo){
+  mkGundemEkle(toplantıId, null, kNo);
 };
 
 window.mkGeriListe = function(){ mkAktifToplantı=null; mkRenderListe(); };
 
 window.mkToplantıEkle = function(){
-  const komiteOpts = Array.from({length:14},(_,i)=>`<option value="${i+1}">${i+1}. Meslek Komitesi</option>`).join('');
-  document.getElementById('yk-modal-title').textContent='Komite Toplantısı Ekle';
+  document.getElementById('yk-modal-title').textContent='Meslek Komitesi Toplantısı Ekle';
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div><label class="yk-lbl">Meslek Komitesi <span style="color:var(--red)">*</span></label>
-        <select id="mk-f-komite" class="yk-inp"><option value="">Seçin...</option>${komiteOpts}</select>
-      </div>
       <div><label class="yk-lbl">Toplantı Adı</label><input id="mk-f-ad" class="yk-inp" placeholder="Boş bırakılırsa otomatik oluşur"></div>
       <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="mk-f-tarih" type="date" class="yk-inp"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -10734,20 +10795,22 @@ window.mkToplantıEkle = function(){
       <div><label class="yk-lbl">Tür</label>
         <select id="mk-f-tur" class="yk-inp"><option value="olagan">Olağan</option><option value="olaganustu">Olağanüstü</option></select>
       </div>
+      <div style="padding:10px;background:var(--blue-bg);border-radius:8px;font-size:12px;color:var(--text2)">
+        <i class="ti ti-info-circle" style="color:var(--blue)"></i>
+        Toplantı oluşturulunca 14 meslek komitesinin katılım takip kartları otomatik açılır.
+      </div>
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick=()=>{
-    const komiteNo = parseInt(document.getElementById('mk-f-komite').value||'0');
     const tarihVal = document.getElementById('mk-f-tarih').value;
-    if(!komiteNo || !tarihVal){alert('Komite ve tarih zorunludur.');return;}
+    if(!tarihVal){alert('Tarih zorunludur.');return;}
     const saat     = document.getElementById('mk-f-saat')?.value||'';
     const bitisSaat= document.getElementById('mk-f-bitis-saat')?.value||'';
     const adGiris  = document.getElementById('mk-f-ad').value.trim();
     const tarih    = new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-    const ad       = adGiris || `${komiteNo}. Meslek Komitesi Toplantısı`;
-    const komite   = `${komiteNo}`; /* komite_no integer olarak sakla string'e çevrilmiş */
+    const ad       = adGiris || `Meslek Komitesi Toplantısı — ${tarih}`;
     const mkId     = genUUID();
-    MK_DB.toplantılar.push({id:mkId,ad,tarih,tarihIso:tarihVal,saat,bitisSaat,komite,komiteNo,durum:'planlandi'});
-    _supa.from('karar_toplantilari').insert([{id:mkId,tur:'mk',ad,tarih,tarih_iso:tarihVal,saat,bitis_saat:bitisSaat,komite,durum:'planlandi'}])
+    MK_DB.toplantılar.push({id:mkId, ad, tarih, tarihIso:tarihVal, saat, bitisSaat, komite:'', komiteNo:0, durum:'planlandi'});
+    _supa.from('karar_toplantilari').insert([{id:mkId, tur:'mk', ad, tarih, tarih_iso:tarihVal, saat, bitis_saat:bitisSaat, durum:'planlandi'}])
       .then(({error})=>{if(error) console.error('MK toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); mkRender();
   };
@@ -10755,13 +10818,14 @@ window.mkToplantıEkle = function(){
   document.getElementById('yk-modal-overlay').classList.add('yk-modal-visible');
 };
 
-window.mkGundemEkle = function(toplantıId, mevcutId){
+window.mkGundemEkle = function(toplantıId, mevcutId, komiteNo){
+  komiteNo = parseInt(komiteNo||0);
   const personelOpts=(window.PERSONEL||[]).map(p=>`<option value="${p.kullanici}">${p.ad} ${p.soyad} — ${p.unvan}</option>`).join('');
-  document.getElementById('yk-modal-title').textContent=mevcutId?'Atama Ekle':'Gündem Ekle';
+  document.getElementById('yk-modal-title').textContent=mevcutId?'Atama Ekle':`${komiteNo?komiteNo+'. Komite — ':''}YK'ya İntikal Kararı Ekle`;
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
       ${mevcutId?'':`
-      <div><label class="yk-lbl">Gündem Konusu</label><input id="mk-f-konu" class="yk-inp" placeholder="Karar konusu..."></div>
+      <div><label class="yk-lbl">Karar Konusu</label><input id="mk-f-konu" class="yk-inp" placeholder="YK'ya intikal edecek karar..."></div>
       <div><label class="yk-lbl">Karar Özeti</label><textarea id="mk-f-ozet" class="yk-inp" style="min-height:60px;resize:vertical"></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Son Tarih</label><input id="mk-f-tarih" type="date" class="yk-inp"></div>
@@ -10805,21 +10869,20 @@ window.mkGundemEkle = function(toplantıId, mevcutId){
       }
     } else {
       const konu=document.getElementById('mk-f-konu')?.value.trim();
-      if(!konu){ alert('Gündem konusu zorunludur.'); return; }
+      if(!konu){ alert('Karar konusu zorunludur.'); return; }
       const mkgId=genUUID();
       const ozet=document.getElementById('mk-f-ozet')?.value.trim()||'';
       const oncelik=document.getElementById('mk-f-oncelik')?.value||'normal';
-      const {error:gErr}=await _supa.from('karar_gundemler').insert([{id:mkgId,toplanti_id:toplantıId,konu,ozet,oncelik,durum:'planlandi'}]);
+      const {error:gErr}=await _supa.from('karar_gundemler').insert([{id:mkgId,toplanti_id:toplantıId,konu,ozet,oncelik,durum:'planlandi',komite_no:komiteNo||null}]);
       if(gErr){ console.error('MK gündem kaydetme hatası:',gErr.message); alert('Kaydetme hatası: '+gErr.message); return; }
       for(const a of atananlar){
         const {error:aErr}=await _supa.from('karar_atamalar').insert([{gundem_id:mkgId,kullanici:a.kullanici,ad:a.ad,gorev:a.gorev,durum:'planlandi'}]);
         if(aErr) console.error('MK atama kaydetme hatası:',aErr.message);
       }
-      MK_DB.gundemler.push({id:mkgId,toplantıId,konu,ozet,oncelik,durum:'planlandi',atananlar});
+      MK_DB.gundemler.push({id:mkgId,toplantıId,konu,ozet,oncelik,durum:'planlandi',atananlar,komiteNo});
     }
     ykModalKapat();
     await supaYukleMK();
-    /* Liste sayfasına gitmesin — mevcut toplantıda kal */
     const hedefIdMk = toplantıId || (mevcutId ? (MK_DB.gundemler.find(x=>x.id===mevcutId)?.toplantıId||'') : '');
     if(hedefIdMk) mkAcToplantı(hedefIdMk);
     else { mkRenderMetrik(); mkRenderListe(); }
@@ -16001,6 +16064,7 @@ window.katilimKaydet = async function(){
       }
     }
     document.getElementById('katilim-overlay').style.display='none';
+    if(window._mkKatilimSonrasiCb){ window._mkKatilimSonrasiCb(); window._mkKatilimSonrasiCb=null; }
     alert('✓ Katılım kayıtları kaydedildi.');
   }catch(e){
     alert('Kaydetme hatası: '+(e.message||e));
