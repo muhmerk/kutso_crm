@@ -2436,38 +2436,6 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
     </div>
 
-    <!-- Eğitim Silme Seçenek Modalı -->
-    <div id="egitim-sil-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:420px;box-shadow:0 8px 40px rgba(0,0,0,.3);overflow:hidden">
-        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-size:15px;font-weight:600">Eğitimi Sil</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px" id="egitim-sil-baslik"></div>
-          </div>
-          <button onclick="document.getElementById('egitim-sil-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-        </div>
-        <div style="padding:20px">
-          <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Bu eğitim kaydı için nasıl bir işlem yapmak istiyorsunuz?</div>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <button onclick="egitimSilSadeceBen()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--border);border-radius:10px;background:var(--surface2);cursor:pointer;text-align:left;width:100%">
-              <i class="ti ti-user-minus" style="font-size:20px;color:var(--amber);flex-shrink:0;margin-top:1px"></i>
-              <div>
-                <div style="font-size:13px;font-weight:600;color:var(--text)">Sadece beni listeden çıkar</div>
-                <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Diğer katılımcılar etkilenmez. Sadece bu personelin kaydı silinir.</div>
-              </div>
-            </button>
-            <button onclick="egitimSilTumunuSil()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--red);border-radius:10px;background:var(--red-bg);cursor:pointer;text-align:left;width:100%">
-              <i class="ti ti-trash" style="font-size:20px;color:var(--red);flex-shrink:0;margin-top:1px"></i>
-              <div>
-                <div style="font-size:13px;font-weight:600;color:var(--red)">Eğitimi tamamen sil</div>
-                <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Tüm katılımcıların eğitim kaydı silinir. Eğitim iptal edildi.</div>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Etkinlik ekleme modalı -->
     <div id="takvim-ekle-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:301;align-items:center;justify-content:center">
       <div style="background:var(--surface);border-radius:16px;width:460px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
@@ -3442,6 +3410,38 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   </div>
 
   <!-- ══ ZİYARET FORM MODALI (section dışında — hangi ekran aktif olursa olsun çalışmalı) ══ -->
+  <!-- ══ EĞİTİM SİLME SEÇENEK MODALI (global — hangi ekranda olunursa olsun çalışır) ══ -->
+  <div id="egitim-sil-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:420px;box-shadow:0 8px 40px rgba(0,0,0,.3);overflow:hidden">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:15px;font-weight:600">Eğitimi Sil</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="egitim-sil-baslik"></div>
+        </div>
+        <button onclick="document.getElementById('egitim-sil-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:20px">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Bu eğitim kaydı için nasıl bir işlem yapmak istiyorsunuz?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button onclick="egitimSilSadeceBen()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--border);border-radius:10px;background:var(--surface2);cursor:pointer;text-align:left;width:100%">
+            <i class="ti ti-user-minus" style="font-size:20px;color:var(--amber);flex-shrink:0;margin-top:1px"></i>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Sadece beni listeden çıkar</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Diğer katılımcılar etkilenmez. Sadece bu personelin kaydı silinir.</div>
+            </div>
+          </button>
+          <button onclick="egitimSilTumunuSil()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--red);border-radius:10px;background:var(--red-bg);cursor:pointer;text-align:left;width:100%">
+            <i class="ti ti-trash" style="font-size:20px;color:var(--red);flex-shrink:0;margin-top:1px"></i>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--red)">Eğitimi tamamen sil</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Tüm katılımcıların eğitim kaydı silinir. Eğitim iptal edildi.</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="ziy-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
     <div style="background:var(--surface);border-radius:16px;width:760px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
       <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
