@@ -3188,6 +3188,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="yk-karar-baslik">Toplantılar</div>
           <div style="display:flex;gap:6px;align-items:center">
             <button class="btn btn-sm" onclick="katilimOzetAc('yk','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
+            <button class="btn btn-sm" onclick="katilimOzetAc('yk','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
             <button class="btn btn-sm" onclick="katilimOzetAc('yk','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
             <div id="yk-header-btn" style="display:inline-flex">
               <button class="btn btn-p btn-sm" onclick="ykToplantıEkleModal()">
@@ -3456,13 +3457,24 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
   <!-- ══ KATILIM ÖZET MODALI ══ -->
   <div id="katilim-ozet-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:700px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+    <div style="background:var(--surface);border-radius:16px;width:780px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;flex-wrap:wrap;gap:8px">
         <div>
           <div style="font-size:15px;font-weight:600" id="katilim-ozet-baslik">Katılım Özeti</div>
           <div style="font-size:11px;color:var(--text2);margin-top:2px" id="katilim-ozet-alt"></div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- MK komite seçici — sadece MK'da görünür -->
+          <select id="katilim-ozet-komite" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:180px;display:none">
+            <option value="">Tüm komiteler</option>
+            <option value="1">1. Meslek Komitesi</option><option value="2">2. Meslek Komitesi</option>
+            <option value="3">3. Meslek Komitesi</option><option value="4">4. Meslek Komitesi</option>
+            <option value="5">5. Meslek Komitesi</option><option value="6">6. Meslek Komitesi</option>
+            <option value="7">7. Meslek Komitesi</option><option value="8">8. Meslek Komitesi</option>
+            <option value="9">9. Meslek Komitesi</option><option value="10">10. Meslek Komitesi</option>
+            <option value="11">11. Meslek Komitesi</option><option value="12">12. Meslek Komitesi</option>
+            <option value="13">13. Meslek Komitesi</option><option value="14">14. Meslek Komitesi</option>
+          </select>
           <select id="katilim-ozet-yil" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:90px"></select>
           <select id="katilim-ozet-ay" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:110px;display:none">
             <option value="">Tüm yıl</option>
@@ -16084,10 +16096,10 @@ window.katilimOzetAc = function(tur, mod){
   _ozetTur = tur;
   _ozetMod = mod;
   const turAd = {yk:'Yönetim Kurulu', mk:'Meslek Komitesi', meclis:'Meclis'}[tur]||'';
+  const modAd = {aylik:'Aylık Görünüm', yillik:'Yıllık Görünüm', '6aylik':'Son 6 Aylık Görünüm'}[mod]||'';
   document.getElementById('katilim-ozet-baslik').textContent = turAd + ' — Katılım Özeti';
-  document.getElementById('katilim-ozet-alt').textContent = mod === 'aylik' ? 'Aylık görünüm' : 'Yıllık görünüm';
+  document.getElementById('katilim-ozet-alt').textContent = modAd;
 
-  /* Yıl dropdown doldur */
   const yilSel = document.getElementById('katilim-ozet-yil');
   const buYil = new Date().getFullYear();
   yilSel.innerHTML = '';
@@ -16097,11 +16109,15 @@ window.katilimOzetAc = function(tur, mod){
     if(y===buYil) o.selected=true;
     yilSel.appendChild(o);
   }
+  yilSel.style.display = mod==='6aylik' ? 'none' : '';
 
-  /* Ay dropdown — aylık modda göster */
   const aySel = document.getElementById('katilim-ozet-ay');
   aySel.style.display = mod==='aylik' ? '' : 'none';
   if(mod==='aylik') aySel.value = String(new Date().getMonth()+1);
+
+  const komiteSel = document.getElementById('katilim-ozet-komite');
+  komiteSel.style.display = tur==='mk' ? '' : 'none';
+  if(tur==='mk' && !komiteSel.value) komiteSel.value = '1';
 
   document.getElementById('katilim-ozet-modal').style.display='flex';
   katilimOzetYenile();
@@ -16112,75 +16128,73 @@ window.katilimOzetYenile = async function(){
   const mod = _ozetMod;
   const yil = parseInt(document.getElementById('katilim-ozet-yil')?.value || new Date().getFullYear());
   const ay  = parseInt(document.getElementById('katilim-ozet-ay')?.value || 0);
+  const komiteNo = tur==='mk' ? parseInt(document.getElementById('katilim-ozet-komite')?.value||0) : 0;
   const icerik = document.getElementById('katilim-ozet-icerik');
   if(!icerik) return;
   icerik.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i><div style="margin-top:8px;font-size:12px">Yükleniyor...</div></div>';
 
   try{
-    /* İlgili toplantıları filtrele */
-    let toplantılar = [];
-    if(tur==='yk') toplantılar = window.YK_DB?.toplantılar||[];
-    else if(tur==='mk') toplantılar = window.MK_DB?.toplantılar||[];
-    else if(tur==='meclis') toplantılar = window.MECLIS_DB?.toplantılar||[];
+    let tumToplantılar = [];
+    if(tur==='yk') tumToplantılar = window.YK_DB?.toplantılar||[];
+    else if(tur==='mk') tumToplantılar = window.MK_DB?.toplantılar||[];
+    else if(tur==='meclis') tumToplantılar = window.MECLIS_DB?.toplantılar||[];
 
-    /* Yıl/ay filtresi */
-    const filtrelenmis = toplantılar.filter(t=>{
-      if(!t.tarihIso) return false;
-      const d = new Date(t.tarihIso+'T00:00:00');
-      if(d.getFullYear()!==yil) return false;
-      if(mod==='aylik' && ay && (d.getMonth()+1)!==ay) return false;
-      return true;
-    });
+    let filtrelenmis = [];
+    if(mod==='6aylik'){
+      const simdi = new Date();
+      const altiAyOnce = new Date(simdi.getFullYear(), simdi.getMonth()-5, 1);
+      filtrelenmis = tumToplantılar.filter(t=>{
+        if(!t.tarihIso) return false;
+        const d = new Date(t.tarihIso+'T00:00:00');
+        return d >= altiAyOnce && d <= simdi;
+      });
+    } else if(mod==='aylik'){
+      filtrelenmis = tumToplantılar.filter(t=>{
+        if(!t.tarihIso) return false;
+        const d = new Date(t.tarihIso+'T00:00:00');
+        return d.getFullYear()===yil && (!ay || d.getMonth()+1===ay);
+      });
+    } else {
+      filtrelenmis = tumToplantılar.filter(t=>{
+        if(!t.tarihIso) return false;
+        return new Date(t.tarihIso+'T00:00:00').getFullYear()===yil;
+      });
+    }
 
     if(!filtrelenmis.length){
-      icerik.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2)">Bu dönemde toplantı kaydı bulunmuyor.</div>`;
+      icerik.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2)">Bu dönemde toplantı kaydı bulunmuyor.</div>';
       return;
     }
 
-    /* Katılım kayıtlarını çek */
     const toplantıIds = filtrelenmis.map(t=>t.id);
     const { data: katilimlar } = await _supa.from('toplanti_katilim')
-      .select('*').in('toplanti_id', toplantıIds).eq('tur', tur);
+      .select('uye_id,katildi,toplanti_id').in('toplanti_id', toplantıIds).eq('tur', tur);
 
-    /* Üye listesi */
-    let uyeler = [];
-    if(tur==='yk') uyeler = window.YK_UYELER;
-    else if(tur==='meclis') uyeler = window.MECLIS_UYELER;
-    else if(tur==='mk') uyeler = window.MK_UYELER;
-
-    /* MK için: toplantıya göre komite numarasını bul, sadece o komitenin üyeleri */
-    const katilimMap = {}; /* uye_id -> {toplanti_id -> katildi} */
+    const katilimMap = {};
     (katilimlar||[]).forEach(k=>{
       if(!katilimMap[k.uye_id]) katilimMap[k.uye_id]={};
       katilimMap[k.uye_id][k.toplanti_id] = k.katildi;
     });
 
-    /* Özet tablosu oluştur */
+    let uyeler = [];
+    if(tur==='yk') uyeler = window.YK_UYELER||[];
+    else if(tur==='meclis') uyeler = window.MECLIS_UYELER||[];
+    else if(tur==='mk'){
+      if(komiteNo) uyeler = (window.MK_UYELER||[]).filter(u=>u.komite_no===komiteNo);
+      else uyeler = window.MK_UYELER||[];
+    }
+
     let html = '';
-
-    if(tur==='mk'){
-      /* MK için: her toplantı kendi komitesini gösterir */
-      /* Toplantıları komite no'ya göre grupla */
-      const komiteGruplari = {};
-      filtrelenmis.forEach(t=>{
-        const kNo = parseInt(t.komite)||0;
-        if(!komiteGruplari[kNo]) komiteGruplari[kNo]=[];
-        komiteGruplari[kNo].push(t);
-      });
-
-      Object.keys(komiteGruplari).sort((a,b)=>+a-+b).forEach(kNoStr=>{
-        const kNo = parseInt(kNoStr);
-        const komiteToplantilari = komiteGruplari[kNoStr];
-        const komiteUyeleri = uyeler.filter(u=>u.komite_no===kNo);
-        if(!komiteUyeleri.length) return;
-
-        html += `<div style="margin-bottom:20px">
+    if(tur==='mk' && !komiteNo){
+      for(let kNo=1; kNo<=14; kNo++){
+        const kUyeler = uyeler.filter(u=>u.komite_no===kNo);
+        if(!kUyeler.length) continue;
+        html += `<div style="margin-bottom:24px">
           <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:8px;padding:6px 10px;background:var(--purple)15;border-radius:8px;border-left:3px solid var(--purple)">${kNo}. Meslek Komitesi</div>
-          ${katilimTabloOlustur(komiteUyeleri, komiteToplantilari, katilimMap)}
+          ${katilimTabloOlustur(kUyeler, filtrelenmis, katilimMap)}
         </div>`;
-      });
+      }
     } else {
-      /* YK ve Meclis: tüm üyeler × tüm toplantılar */
       html = katilimTabloOlustur(uyeler, filtrelenmis, katilimMap);
     }
 
@@ -16190,6 +16204,7 @@ window.katilimOzetYenile = async function(){
     console.error('Katılım özet hatası:', e);
   }
 };
+
 
 function katilimTabloOlustur(uyeler, toplantılar, katilimMap){
   if(!uyeler.length || !toplantılar.length) return '';
