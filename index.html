@@ -16086,8 +16086,10 @@ function takvimRenderAylik(gridEl){
     const bugun=iso===bugunIso;
     const gorunenEtks=etks.slice(0,3);
     const fazla=etks.length-3;
-    html+=`<div onclick="takvimGunTikla('${iso}')" style="min-height:90px;border:1px solid ${bugun?'var(--blue)':'var(--border)'};border-radius:10px;padding:6px 8px;cursor:pointer;background:${bugun?'var(--blue-bg)':'var(--surface)'};transition:all .1s;box-shadow:${bugun?'0 0 0 1px var(--blue)':''}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='${bugun?'var(--blue-bg)':'var(--surface)'}'">
-      <div style="font-size:13px;font-weight:${bugun?'800':'600'};color:${bugun?'#fff':'var(--text)'};background:${bugun?'var(--blue)':''};width:${bugun?'24px':''};height:${bugun?'24px':''};border-radius:${bugun?'50%':''};display:${bugun?'flex':''};align-items:${bugun?'center':''};justify-content:${bugun?'center':''};margin-bottom:4px">${d}</div>
+    html+=`<div onclick="takvimGunTikla('${iso}')" style="min-height:90px;border:1px solid var(--border);border-radius:10px;padding:6px 8px;cursor:pointer;background:var(--surface);transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='var(--surface)'">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;margin-bottom:4px;${bugun?'background:var(--blue);':''}">
+        <span style="font-size:13px;font-weight:${bugun?'700':'600'};color:${bugun?'#fff':'var(--text)'}">${d}</span>
+      </div>
       ${gorunenEtks.map(e=>`<div style="font-size:10px;background:${e.renk}22;border-left:2.5px solid ${e.renk};border-radius:3px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)">${e.saat?e.saat+' ':' '}${e.baslik}</div>`).join('')}
       ${fazla>0?`<div style="font-size:10px;color:var(--text2);margin-top:1px">+${fazla} daha</div>`:''}
     </div>`;
