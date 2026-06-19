@@ -16070,7 +16070,7 @@ window.takvimRender = function(){
 
 /* ── AYLIK GÖRÜNÜM ── */
 function takvimRenderAylik(gridEl){
-  gridEl.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:5px';
+  gridEl.style.cssText = 'display:flex;flex-direction:column;gap:5px';
   const tumEtk = takvimTumEtkinlikler();
   const gunMap = {};
   tumEtk.forEach(e=>{ if(!gunMap[e.tarihIso]) gunMap[e.tarihIso]=[]; gunMap[e.tarihIso].push(e); });
@@ -16078,25 +16078,43 @@ function takvimRenderAylik(gridEl){
   const sonGun = new Date(_takvimYil,_takvimAy+1,0);
   const bosluk = (ilkGun.getDay()+6)%7;
   const bugunIso = gunIso(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
-  let html = GUN_ADLARI.map(g=>`<div style="text-align:center;font-size:11px;font-weight:600;color:var(--text2);padding:7px 0;border-bottom:1px solid var(--border)">${g}</div>`).join('');
-  for(let i=0;i<bosluk;i++) html+=`<div style="min-height:90px"></div>`;
-  for(let d=1;d<=sonGun.getDate();d++){
-    const iso=gunIso(_takvimYil,_takvimAy,d);
-    const etks=gunMap[iso]||[];
-    const bugun=iso===bugunIso;
-    const gorunenEtks=etks.slice(0,3);
-    const fazla=etks.length-3;
-    html+=`<div onclick="takvimGunTikla('${iso}')" style="min-height:90px;border:1px solid var(--border);border-radius:10px;padding:6px 8px;cursor:pointer;background:var(--surface);transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='var(--surface)'">
-      <div style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;margin-bottom:4px;${bugun?'background:var(--blue);':''}">
-        <span style="font-size:13px;font-weight:${bugun?'700':'600'};color:${bugun?'#fff':'var(--text)'}">${d}</span>
-      </div>
-      ${gorunenEtks.map(e=>`<div style="font-size:10px;background:${e.renk}22;border-left:2.5px solid ${e.renk};border-radius:3px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)">${e.saat?e.saat+' ':' '}${e.baslik}</div>`).join('')}
-      ${fazla>0?`<div style="font-size:10px;color:var(--text2);margin-top:1px">+${fazla} daha</div>`:''}
-    </div>`;
+
+  /* Başlık satırı — ayrı flex row */
+  const baslikHtml = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">
+    ${GUN_ADLARI.map(g=>`<div style="text-align:center;font-size:11px;font-weight:600;color:var(--text2);padding:7px 0;border-bottom:1px solid var(--border)">${g}</div>`).join('')}
+  </div>`;
+
+  /* Tüm günleri haftalar halinde grupla */
+  const toplamGun = bosluk + sonGun.getDate();
+  const satirSayisi = Math.ceil(toplamGun / 7);
+  let satirlarHtml = '';
+
+  for(let satir=0; satir<satirSayisi; satir++){
+    satirlarHtml += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;flex:1">`;
+    for(let sutun=0; sutun<7; sutun++){
+      const idx = satir*7 + sutun;
+      const gunNo = idx - bosluk + 1;
+      if(gunNo < 1 || gunNo > sonGun.getDate()){
+        satirlarHtml += `<div style="border-radius:10px;background:var(--surface2);opacity:.3"></div>`;
+      } else {
+        const iso = gunIso(_takvimYil,_takvimAy,gunNo);
+        const etks = gunMap[iso]||[];
+        const bugun = iso===bugunIso;
+        const gorunenEtks = etks.slice(0,3);
+        const fazla = etks.length-3;
+        satirlarHtml += `<div onclick="takvimGunTikla('${iso}')" style="border:1px solid var(--border);border-radius:10px;padding:6px 8px;cursor:pointer;background:var(--surface);overflow:hidden;transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='var(--surface)'">
+          <div style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;margin-bottom:4px;${bugun?'background:var(--blue);':''}">
+            <span style="font-size:12px;font-weight:${bugun?'700':'600'};color:${bugun?'#fff':'var(--text)'}">${gunNo}</span>
+          </div>
+          ${gorunenEtks.map(e=>`<div style="font-size:10px;background:${e.renk}22;border-left:2.5px solid ${e.renk};border-radius:3px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)">${e.saat?e.saat+' ':' '}${e.baslik}</div>`).join('')}
+          ${fazla>0?`<div style="font-size:10px;color:var(--text2);margin-top:1px">+${fazla} daha</div>`:''}
+        </div>`;
+      }
+    }
+    satirlarHtml += `</div>`;
   }
-  const toplamHucre=bosluk+sonGun.getDate();
-  for(let i=0;i<(7-(toplamHucre%7))%7;i++) html+=`<div style="min-height:90px"></div>`;
-  gridEl.innerHTML=html;
+
+  gridEl.innerHTML = baslikHtml + satirlarHtml;
 }
 
 /* ── HAFTALIK GÖRÜNÜM ── */
