@@ -773,25 +773,35 @@ function supaRealtimeBaslat() {
         window.EGITIMLER[pid].unshift({
           id:e.id, ad:e.ad, tarih:e.tarih, tarihIso:e.tarih_iso,
           kurum:e.kurum||'—', konu:e.konu||'',
-          sertifika:!!e.sertifika, certNo:e.cert_no||''
+          sertifika:!!e.sertifika, certNo:e.cert_no||'',
+          basSaat:e.bas_saat||'', bitisSaat:e.bitis_saat||''
         });
       }
+      console.log('🔄 Realtime: Personel eğitimi eklendi, takvim yenileniyor');
       prsEgitimEkraniYenile(pid);
+      if(window.takvimRender) window.takvimRender();
     })
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'personel_egitimler' }, (payload)=>{
       const e = payload.new;
       if(!e) return;
       const pid = e.personel_id;
       const list = window.EGITIMLER[pid];
+      const guncellenmisKayit = {
+        id:e.id, ad:e.ad, tarih:e.tarih, tarihIso:e.tarih_iso,
+        kurum:e.kurum||'—', konu:e.konu||'',
+        sertifika:!!e.sertifika, certNo:e.cert_no||'',
+        basSaat:e.bas_saat||'', bitisSaat:e.bitis_saat||''
+      };
       if(list){
         const idx = list.findIndex(x=>String(x.id)===String(e.id));
-        if(idx>-1) list[idx] = {
-          id:e.id, ad:e.ad, tarih:e.tarih, tarihIso:e.tarih_iso,
-          kurum:e.kurum||'—', konu:e.konu||'',
-          sertifika:!!e.sertifika, certNo:e.cert_no||''
-        };
+        if(idx>-1) list[idx] = guncellenmisKayit;
+        else list.unshift(guncellenmisKayit);
+      } else {
+        window.EGITIMLER[pid] = [guncellenmisKayit];
       }
+      console.log('🔄 Realtime: Personel eğitimi güncellendi, takvim yenileniyor');
       prsEgitimEkraniYenile(pid);
+      if(window.takvimRender) window.takvimRender();
     })
     .on('postgres_changes', { event:'DELETE', schema:'public', table:'personel_egitimler' }, (payload)=>{
       const e = payload.old;
@@ -800,7 +810,9 @@ function supaRealtimeBaslat() {
       if(window.EGITIMLER[pid]){
         window.EGITIMLER[pid] = window.EGITIMLER[pid].filter(x=>String(x.id)!==String(e.id));
       }
+      console.log('🔄 Realtime: Personel eğitimi silindi, takvim yenileniyor');
       prsEgitimEkraniYenile(pid);
+      if(window.takvimRender) window.takvimRender();
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Personel eğitimleri dinleniyor'); });
 
