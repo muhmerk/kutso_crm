@@ -16070,7 +16070,6 @@ window.takvimRender = function(){
 
 /* ── AYLIK GÖRÜNÜM ── */
 function takvimRenderAylik(gridEl){
-  gridEl.style.cssText = 'display:flex;flex-direction:column;gap:5px';
   const tumEtk = takvimTumEtkinlikler();
   const gunMap = {};
   tumEtk.forEach(e=>{ if(!gunMap[e.tarihIso]) gunMap[e.tarihIso]=[]; gunMap[e.tarihIso].push(e); });
@@ -16078,42 +16077,45 @@ function takvimRenderAylik(gridEl){
   const sonGun = new Date(_takvimYil,_takvimAy+1,0);
   const bosluk = (ilkGun.getDay()+6)%7;
   const bugunIso = gunIso(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
-
-  /* Başlık satırı — ayrı flex row */
-  const baslikHtml = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">
-    ${GUN_ADLARI.map(g=>`<div style="text-align:center;font-size:11px;font-weight:600;color:var(--text2);padding:7px 0;border-bottom:1px solid var(--border)">${g}</div>`).join('')}
-  </div>`;
-
-  /* Tüm günleri haftalar halinde grupla */
   const toplamGun = bosluk + sonGun.getDate();
   const satirSayisi = Math.ceil(toplamGun / 7);
-  let satirlarHtml = '';
+  const satirH = `calc((100vh - 320px) / ${satirSayisi})`;
 
+  gridEl.style.cssText = 'display:flex;flex-direction:column;gap:4px';
+
+  const baslikHtml = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;flex-shrink:0">
+    ${GUN_ADLARI.map(g=>`<div style="text-align:center;font-size:11px;font-weight:600;color:var(--text2);padding:6px 0;border-bottom:2px solid var(--border)">${g}</div>`).join('')}
+  </div>`;
+
+  let satirlarHtml = '';
   for(let satir=0; satir<satirSayisi; satir++){
-    satirlarHtml += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;flex:1">`;
+    satirlarHtml += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;height:${satirH};flex-shrink:0">`;
     for(let sutun=0; sutun<7; sutun++){
       const idx = satir*7 + sutun;
       const gunNo = idx - bosluk + 1;
       if(gunNo < 1 || gunNo > sonGun.getDate()){
-        satirlarHtml += `<div style="border-radius:10px;background:var(--surface2);opacity:.3"></div>`;
+        satirlarHtml += `<div style="border-radius:10px;background:var(--surface2);opacity:.2"></div>`;
       } else {
         const iso = gunIso(_takvimYil,_takvimAy,gunNo);
         const etks = gunMap[iso]||[];
         const bugun = iso===bugunIso;
         const gorunenEtks = etks.slice(0,3);
         const fazla = etks.length-3;
-        satirlarHtml += `<div onclick="takvimGunTikla('${iso}')" style="border:1px solid var(--border);border-radius:10px;padding:6px 8px;cursor:pointer;background:var(--surface);overflow:hidden;transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='var(--surface)'">
-          <div style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;margin-bottom:4px;${bugun?'background:var(--blue);':''}">
-            <span style="font-size:12px;font-weight:${bugun?'700':'600'};color:${bugun?'#fff':'var(--text)'}">${gunNo}</span>
+        const numStyle = bugun ? 'background:var(--blue);' : '';
+        const numColor = bugun ? '#fff' : 'var(--text)';
+        satirlarHtml += `<div onclick="takvimGunTikla('${iso}')" style="border:1px solid var(--border);border-radius:10px;padding:6px 7px;cursor:pointer;background:var(--surface);overflow:hidden;display:flex;flex-direction:column;transition:background .12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='var(--surface)'">
+          <div style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;margin-bottom:3px;${numStyle}">
+            <span style="font-size:12px;font-weight:600;color:${numColor}">${gunNo}</span>
           </div>
-          ${gorunenEtks.map(e=>`<div style="font-size:10px;background:${e.renk}22;border-left:2.5px solid ${e.renk};border-radius:3px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)">${e.saat?e.saat+' ':' '}${e.baslik}</div>`).join('')}
-          ${fazla>0?`<div style="font-size:10px;color:var(--text2);margin-top:1px">+${fazla} daha</div>`:''}
+          <div style="overflow:hidden;flex:1;display:flex;flex-direction:column;gap:1px">
+            ${gorunenEtks.map(e=>`<div style="font-size:9.5px;background:${e.renk}20;border-left:2px solid ${e.renk};border-radius:2px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);flex-shrink:0">${e.saat?e.saat+' ':''}${e.baslik}</div>`).join('')}
+            ${fazla>0?`<div style="font-size:9px;color:var(--text2)">+${fazla} daha</div>`:''}
+          </div>
         </div>`;
       }
     }
     satirlarHtml += `</div>`;
   }
-
   gridEl.innerHTML = baslikHtml + satirlarHtml;
 }
 
@@ -16129,61 +16131,77 @@ function takvimRenderHaftalik(gridEl){
   const gunMap={};
   tumEtk.forEach(e=>{if(!gunMap[e.tarihIso])gunMap[e.tarihIso]=[]; gunMap[e.tarihIso].push(e);});
 
-  const SAAT_PX=52, GUN_BAS=0, GUN_BIT=24;
-  const SOL=48;
-  const gridYukseklik=(GUN_BIT-GUN_BAS)*SAAT_PX;
+  const SAAT_PX=52, GUN_BIT=24, SOL=48;
+  const gridYukseklik=GUN_BIT*SAAT_PX;
 
-  /* Başlık */
   const baslikHtml=`<div style="display:grid;grid-template-columns:${SOL}px repeat(7,1fr);border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
     <div></div>
     ${gunler.map(d=>{
       const iso=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
       const bugun=iso===bugunIso;
       const label=d.toLocaleDateString('tr-TR',{weekday:'short',day:'numeric',month:'short'});
-      return `<div onclick="takvimGunTiklaHaftalik('${iso}')" style="text-align:center;padding:9px 4px;cursor:pointer;font-size:12px;font-weight:${bugun?700:500};color:${bugun?'var(--blue)':'var(--text)'};border-left:0.5px solid var(--border)">${label}</div>`;
+      const renk=bugun?'var(--blue)':'var(--text)';
+      const fw=bugun?700:500;
+      return `<div onclick="takvimGunTiklaHaftalik('${iso}')" style="text-align:center;padding:9px 4px;cursor:pointer;font-size:12px;font-weight:${fw};color:${renk};border-left:0.5px solid var(--border)">${label}</div>`;
     }).join('')}
   </div>`;
 
-  /* Saat çizgileri + gün sütunları */
-  let ızgaraHtml='';
+  let izgaraHtml='';
   for(let h=0;h<=GUN_BIT;h++){
     const isBaslik=h%2===0||h===0;
-    ızgaraHtml+=`<div style="font-size:10px;color:var(--text3);text-align:right;padding-right:8px;height:${SAAT_PX}px;display:flex;align-items:flex-start;padding-top:3px;flex-shrink:0">${isBaslik?String(h).padStart(2,'0')+':00':''}</div>`;
+    const saatLabel=isBaslik?String(h).padStart(2,'0')+':00':'';
+    izgaraHtml+=`<div style="font-size:10px;color:var(--text3);text-align:right;padding-right:8px;height:${SAAT_PX}px;display:flex;align-items:flex-start;padding-top:3px;flex-shrink:0">${saatLabel}</div>`;
     gunler.forEach(d=>{
       const iso=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
       const bugun=iso===bugunIso;
-      ızgaraHtml+=`<div style="height:${SAAT_PX}px;border-top:${h===0?'none':'0.5px solid var(--border)'};border-left:0.5px solid var(--border);background:${bugun?'rgba(26,58,107,.03)':''}" onclick="takvimGunSaatTikla('${iso}',${h})"></div>`;
+      const bg=bugun?'rgba(26,58,107,.03)':'';
+      const bt=h===0?'none':'0.5px solid var(--border)';
+      izgaraHtml+=`<div style="height:${SAAT_PX}px;border-top:${bt};border-left:0.5px solid var(--border);background:${bg}" onclick="takvimGunSaatTikla('${iso}',${h})"></div>`;
     });
   }
 
   gridEl.style.cssText='display:flex;flex-direction:column;height:calc(100vh - 260px)';
   gridEl.innerHTML=baslikHtml+`<div id="tk-haftalik-scroll" style="flex:1;overflow-y:auto;scrollbar-width:thick;scrollbar-color:var(--border2) transparent;position:relative">
     <div id="tk-haftalik-inner" style="display:grid;grid-template-columns:${SOL}px repeat(7,1fr);position:relative;height:${gridYukseklik}px">
-      ${ızgaraHtml}
+      ${izgaraHtml}
     </div>
   </div>`;
 
-  /* Etkinlik bloklarını iç div'e ekle */
   requestAnimationFrame(()=>{
     const scrollEl=document.getElementById('tk-haftalik-scroll');
     const innerEl=document.getElementById('tk-haftalik-inner');
     if(!innerEl||!scrollEl) return;
     const colW=(innerEl.offsetWidth-SOL)/7;
+
     gunler.forEach((d,gIdx)=>{
       const iso=gunIso(d.getFullYear(),d.getMonth(),d.getDate());
       const etks=(gunMap[iso]||[]).filter(e=>saatToDakika(e.saat)!==null);
       etks.sort((a,b)=>saatToDakika(a.saat)-saatToDakika(b.saat));
+
+      /* Çakışma çözümü: sütun ata */
+      const sutunlar=[];
       etks.forEach(e=>{
         const bas=saatToDakika(e.saat);
         const bit=saatToDakika(e.bitisSaat)??(bas+60);
-        const dakBas=Math.max(bas,0), dakBit=Math.min(bit,GUN_BIT*60);
+        e._hBas=bas; e._hBit=Math.max(bit,bas+30);
+        let atandi=false;
+        for(let i=0;i<sutunlar.length;i++){
+          if(sutunlar[i]<=bas){ e._hSutun=i; sutunlar[i]=e._hBit; atandi=true; break; }
+        }
+        if(!atandi){ e._hSutun=sutunlar.length; sutunlar.push(e._hBit); }
+      });
+      const sutunSayisi=Math.max(1,sutunlar.length);
+
+      etks.forEach(e=>{
+        const dakBas=Math.max(e._hBas,0), dakBit=Math.min(e._hBit,GUN_BIT*60);
         if(dakBit<=dakBas) return;
         const top=dakBas/60*SAAT_PX;
         const yukseklik=Math.max((dakBit-dakBas)/60*SAAT_PX,24);
-        const left=SOL+gIdx*colW+2;
+        const blokW=Math.floor((colW-4)/sutunSayisi);
+        const left=SOL+gIdx*colW+e._hSutun*blokW+2;
         const blok=document.createElement('div');
-        blok.style.cssText=`position:absolute;top:${top}px;left:${left}px;width:${colW-4}px;height:${yukseklik}px;background:${e.renk}22;border-left:3px solid ${e.renk};border-radius:0 6px 6px 0;padding:3px 6px;overflow:hidden;cursor:pointer;box-sizing:border-box;z-index:4`;
-        blok.innerHTML=`<div style="font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.saat} ${e.baslik}</div>${yukseklik>34?`<div style="font-size:9px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.detay||''}</div>`:''}`;
+        blok.style.cssText=`position:absolute;top:${top}px;left:${left}px;width:${blokW-2}px;height:${yukseklik}px;background:${e.renk}22;border-left:3px solid ${e.renk};border-radius:0 5px 5px 0;padding:3px 5px;overflow:hidden;cursor:pointer;box-sizing:border-box;z-index:4`;
+        blok.innerHTML=`<div style="font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">${e.saat} ${e.baslik}</div>${yukseklik>36?`<div style="font-size:9px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.detay||''}</div>`:''}`;
         const allForDay=tumEtk.filter(x=>x.tarihIso===iso);
         const eRef=e;
         blok.onclick=()=>{
@@ -16198,7 +16216,7 @@ function takvimRenderHaftalik(gridEl){
   });
 }
 
-/* ── GÜNLÜK GÖRÜNÜM — doğrudan grid'e render, tek scrollbar ── */
+
 window.takvimRenderGunluk = function takvimRenderGunluk(gridEl){
   const iso=_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1);
   const tarihObj=new Date(iso+'T00:00:00');
