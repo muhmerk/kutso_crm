@@ -839,6 +839,36 @@ function supaRealtimeBaslat() {
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Görevler dinleniyor'); });
 
+  /* Üye listeleri (YK/Meclis/MK) — Genel Sekreterlik değişikliklerini diğer kullanıcılara anlık yansıt */
+  _supa.channel('db-uye-listeleri')
+    .on('postgres_changes', { event:'*', schema:'public', table:'yk_uyeler' }, async ()=>{
+      await supaYukleKatilimUyeler();
+      /* GS ekranı açıksa yenile */
+      if(document.getElementById('s-gs')?.classList.contains('active') && window.gsTab && window._gsAktifTab){
+        window.gsTab(window._gsAktifTab);
+      }
+      console.log('🔄 Realtime: YK üyeleri güncellendi');
+    })
+    .on('postgres_changes', { event:'*', schema:'public', table:'meclis_uyeler' }, async ()=>{
+      await supaYukleKatilimUyeler();
+      if(document.getElementById('s-gs')?.classList.contains('active') && window.gsTab && window._gsAktifTab){
+        window.gsTab(window._gsAktifTab);
+      }
+      console.log('🔄 Realtime: Meclis üyeleri güncellendi');
+    })
+    .on('postgres_changes', { event:'*', schema:'public', table:'mk_uyeler' }, async ()=>{
+      await supaYukleKatilimUyeler();
+      /* MK toplantı detayı açıksa kartları yenile */
+      if(window.mkAktifToplantı && window.mkAcToplantı){
+        window.mkAcToplantı(window.mkAktifToplantı);
+      }
+      if(document.getElementById('s-gs')?.classList.contains('active') && window.gsTab && window._gsAktifTab){
+        window.gsTab(window._gsAktifTab);
+      }
+      console.log('🔄 Realtime: MK üyeleri güncellendi');
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Üye listeleri dinleniyor'); });
+
   console.log('✓ Realtime bağlantısı kuruldu');
 }
 
@@ -10748,10 +10778,12 @@ window.mkAcToplantı = function(id){
     <span style="font-size:14px;font-weight:500">${t?.ad||''}</span>
     <span style="font-size:12px;color:var(--text2)">${t?.tarih||''}</span>`;
 
-  /* 14 komite kartı */
+  /* Komite kartları — MK_UYELER'den gelen komite numaralarına göre dinamik */
+  const komiteNolar = [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+  if(!komiteNolar.length){ komiteNolar.push(...Array.from({length:14},(_,i)=>i+1)); }
+
   el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">` +
-    Array.from({length:14}, (_,i)=>{
-      const kNo = i+1;
+    komiteNolar.map(kNo=>{
       const komiteUyeleri = (window.MK_UYELER||[]).filter(u=>u.komite_no===kNo);
       const uyeSayisi = komiteUyeleri.length;
       return `<div class="yk-card" id="mk-komite-kart-${kNo}">
@@ -10796,8 +10828,11 @@ async function mkKomiteKatilimOzetleriYukle(toplantıId){
       .select('uye_id,katildi').eq('toplanti_id', toplantıId).eq('tur','mk');
     if(!data) return;
 
-    /* uye_id -> komite_no eşleştir */
-    for(let kNo=1; kNo<=14; kNo++){
+    /* Dinamik komite numaraları */
+    const komiteNolar = [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+    if(!komiteNolar.length) for(let i=1;i<=14;i++) komiteNolar.push(i);
+
+    for(const kNo of komiteNolar){
       const komiteUyeleri = (window.MK_UYELER||[]).filter(u=>u.komite_no===kNo);
       const komiteUyeIds = new Set(komiteUyeleri.map(u=>u.id));
       const komiteKatilim = data.filter(k=>komiteUyeIds.has(k.uye_id));
@@ -16549,7 +16584,8 @@ window.katilimOzetYenile = async function(){
 
     let html = '';
     if(tur==='mk' && !komiteNo){
-      for(let kNo=1; kNo<=14; kNo++){
+      const mkKomiteNolar = [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+      for(const kNo of mkKomiteNolar){
         const kUyeler = uyeler.filter(u=>u.komite_no===kNo);
         if(!kUyeler.length) continue;
         html += `<div style="margin-bottom:24px">
