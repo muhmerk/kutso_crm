@@ -3442,6 +3442,31 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
   </div>
 
+  <!-- ══ KATILIM TAKİBİ MODALI ══ -->
+  <div id="katilim-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:580px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div>
+          <div style="font-size:15px;font-weight:600" id="katilim-baslik">Katılım Takibi</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="katilim-alt-baslik"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:12px;color:var(--text2)" id="katilim-ozet"></div>
+          <button onclick="katilimKaydet()" class="btn btn-p btn-sm"><i class="ti ti-check"></i> Kaydet</button>
+          <button onclick="document.getElementById('katilim-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+      <!-- Hızlı işlem -->
+      <div style="padding:10px 22px;border-bottom:0.5px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;background:var(--surface2)">
+        <span style="font-size:11px;color:var(--text2)">Toplu:</span>
+        <button class="btn btn-sm" style="font-size:11px" onclick="katilimTopluSec('katildi')"><i class="ti ti-circle-check" style="color:var(--teal)"></i> Hepsi Katıldı</button>
+        <button class="btn btn-sm" style="font-size:11px" onclick="katilimTopluSec('katilmadi')"><i class="ti ti-circle-x" style="color:var(--red)"></i> Hepsi Katılmadı</button>
+        <button class="btn btn-sm" style="font-size:11px" onclick="katilimTopluSec(null)"><i class="ti ti-circle-dashed" style="color:var(--text2)"></i> Temizle</button>
+      </div>
+      <div id="katilim-liste" style="padding:16px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
+
   <div id="ziy-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
     <div style="background:var(--surface);border-radius:16px;width:760px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
       <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
@@ -4336,7 +4361,8 @@ async function doLogin() {
     supaYukleMemnuniyet(),
     (window.supaYukleGorevler ? window.supaYukleGorevler() : Promise.resolve()),
     (window.supaYukleZiyaretler ? window.supaYukleZiyaretler() : Promise.resolve()),
-    (window.supaYukleTakvim ? window.supaYukleTakvim() : Promise.resolve())
+    (window.supaYukleTakvim ? window.supaYukleTakvim() : Promise.resolve()),
+    (window.supaYukleKatilimUyeler ? window.supaYukleKatilimUyeler() : Promise.resolve())
   ]);
   /* Realtime dinlemeyi başlat */
   supaRealtimeBaslat();
@@ -9898,7 +9924,10 @@ function ykRenderToplantıDetay(){
       <i class="ti ti-arrow-left"></i> Geri
     </button>
     <span style="font-size:14px;font-weight:500">${t.ad}</span>
-    <span style="font-size:12px;font-weight:400;color:var(--text2)">${t.tarih}</span>`;
+    <span style="font-size:12px;font-weight:400;color:var(--text2)">${t.tarih}</span>
+    <button class="btn btn-sm" onclick="katilimAc('${t.id}','yk')" style="margin-left:8px">
+      <i class="ti ti-clipboard-check"></i> Katılım Takibi
+    </button>`;
 
   if(headerBtn) headerBtn.innerHTML = `<button class="btn btn-p btn-sm" onclick="ykGundemEkleModal('${t.id}')">
     <i class="ti ti-plus"></i> Gündem & Atama Ekle
@@ -10628,7 +10657,7 @@ window.mkAcToplantı = function(id){
   const hd=document.getElementById('mk-karar-baslik');
   const hb=document.getElementById('mk-header-btn');
   const tG=MK_DB.gundemler.filter(g=>g.toplantıId===id);
-  hd.innerHTML=`<button class="btn btn-sm" onclick="mkGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span>`;
+  hd.innerHTML=`<button class="btn btn-sm" onclick="mkGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span><button class="btn btn-sm" onclick="katilimAc('${id}','mk',${t?.komite||0})" style="margin-left:8px"><i class="ti ti-clipboard-check"></i> Katılım Takibi</button>`;
   if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm" onclick="mkGundemEkle('${id}')"><i class="ti ti-plus"></i> Gündem Ekle</button>`;
   el.innerHTML=tG.length===0?
     `<div style="text-align:center;padding:32px;color:var(--text2)"><i class="ti ti-clipboard-list" style="font-size:24px;display:block;margin-bottom:8px"></i>Gündem eklenmedi</div>`:
@@ -11029,7 +11058,7 @@ window.meclisAcToplantı = function(id){
   const hd=document.getElementById('meclis-karar-baslik');
   const hb=document.getElementById('meclis-header-btn');
   const tG=MECLIS_DB.gundemler.filter(g=>g.toplantıId===id);
-  hd.innerHTML=`<button class="btn btn-sm" onclick="meclisGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span>`;
+  hd.innerHTML=`<button class="btn btn-sm" onclick="meclisGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span><button class="btn btn-sm" onclick="katilimAc('${id}','meclis')" style="margin-left:8px"><i class="ti ti-clipboard-check"></i> Katılım Takibi</button>`;
   if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm" onclick="meclisKararEkle('${id}')"><i class="ti ti-plus"></i> Karar Ekle</button>`;
   el.innerHTML=tG.length===0?`<div style="text-align:center;padding:32px;color:var(--text2)"><i class="ti ti-clipboard-list" style="font-size:24px;display:block;margin-bottom:8px"></i>Karar eklenmedi</div>`:
     tG.map((g,i)=>`<div class="yk-card" style="margin-bottom:10px">
@@ -15785,6 +15814,170 @@ window.sikSurecKaydet = function(kartId, domKart){
   sikSurecKapat();
   alert('✓ Kaydedildi.');
 };
+
+/* ══ KATILIM TAKİBİ MODÜLÜ ══ */
+(function(){
+
+/* State */
+let _katilimToplantıId = null;
+let _katilimTur = null; /* 'yk' | 'meclis' | 'mk' */
+let _katilimKomiteNo = null;
+let _katilimUyeler = []; /* [{id, ad_soyad, unvan, katildi:null/true/false, mazeret:''}] */
+let _katilimMevcut = {}; /* uye_id -> {katildi, mazeret, db_id} — DB'den yüklenen */
+
+/* DB'deki üye listelerini cache'le */
+window.YK_UYELER = [];
+window.MECLIS_UYELER = [];
+window.MK_UYELER = []; /* tüm komiteler */
+
+async function supaYukleKatilimUyeler(){
+  try{
+    const [yk, meclis, mk] = await Promise.all([
+      _supa.from('yk_uyeler').select('*').eq('aktif',true).order('sira_no'),
+      _supa.from('meclis_uyeler').select('*').eq('aktif',true).order('sira_no'),
+      _supa.from('mk_uyeler').select('*').eq('aktif',true).order('komite_no,id')
+    ]);
+    if(yk.data) window.YK_UYELER = yk.data;
+    if(meclis.data) window.MECLIS_UYELER = meclis.data;
+    if(mk.data) window.MK_UYELER = mk.data;
+    console.log('✓ Katılım üye listeleri yüklendi:', window.YK_UYELER.length, window.MECLIS_UYELER.length, window.MK_UYELER.length);
+  }catch(e){ console.warn('Katılım üye yükleme hatası:', e); }
+}
+window.supaYukleKatilimUyeler = supaYukleKatilimUyeler;
+
+/* Toplantıya ait mevcut katılım kayıtlarını çek */
+async function supaYukleKatilimKayitlar(toplantıId){
+  try{
+    const { data } = await _supa.from('toplanti_katilim').select('*').eq('toplanti_id', toplantıId);
+    _katilimMevcut = {};
+    (data||[]).forEach(k=>{ _katilimMevcut[k.uye_id] = { katildi:k.katildi, mazeret:k.mazeret||'', db_id:k.id }; });
+  }catch(e){ console.warn('Katılım kayıt yükleme hatası:', e); }
+}
+
+/* Katılım modalını aç */
+window.katilimAc = async function(toplantıId, tur, komiteNo){
+  _katilimToplantıId = toplantıId;
+  _katilimTur = tur;
+  _katilimKomiteNo = komiteNo || null;
+
+  /* Üye listesini belirle */
+  if(tur === 'yk') _katilimUyeler = window.YK_UYELER.map(u=>({...u}));
+  else if(tur === 'meclis') _katilimUyeler = window.MECLIS_UYELER.map(u=>({...u}));
+  else if(tur === 'mk' && komiteNo) _katilimUyeler = window.MK_UYELER.filter(u=>u.komite_no===komiteNo).map(u=>({...u}));
+
+  if(!_katilimUyeler.length){
+    alert('Üye listesi bulunamadı. Lütfen SQL kurulum dosyasını Supabase\'de çalıştırın.');
+    return;
+  }
+
+  /* Başlık */
+  const turAd = {yk:'Yönetim Kurulu', meclis:'Meclis', mk:(komiteNo?komiteNo+'. Meslek Komitesi':'')}[tur]||'';
+  document.getElementById('katilim-baslik').textContent = turAd + ' — Katılım Takibi';
+  document.getElementById('katilim-alt-baslik').textContent = 'Toplantı ID: ' + toplantıId.slice(0,8) + '...';
+
+  /* Mevcut kayıtları yükle */
+  await supaYukleKatilimKayitlar(toplantıId);
+
+  /* _katilimUyeler'e mevcut durumları uygula */
+  _katilimUyeler.forEach(u=>{
+    const mevcut = _katilimMevcut[u.id];
+    u.katildi = mevcut ? mevcut.katildi : null;
+    u.mazeret = mevcut ? mevcut.mazeret : '';
+  });
+
+  katilimListeRender();
+  document.getElementById('katilim-overlay').style.display='flex';
+};
+
+function katilimListeRender(){
+  const liste = document.getElementById('katilim-liste');
+  if(!liste) return;
+
+  const katildiSayisi = _katilimUyeler.filter(u=>u.katildi===true).length;
+  const katilmadiSayisi = _katilimUyeler.filter(u=>u.katildi===false).length;
+  const belirsizSayisi = _katilimUyeler.filter(u=>u.katildi===null).length;
+  const ozet = document.getElementById('katilim-ozet');
+  if(ozet) ozet.innerHTML = `<span style="color:var(--teal)">✓ ${katildiSayisi}</span> &nbsp; <span style="color:var(--red)">✗ ${katilmadiSayisi}</span> &nbsp; <span style="color:var(--text2)">? ${belirsizSayisi}</span>`;
+
+  liste.innerHTML = _katilimUyeler.map((u,idx)=>{
+    const durumRenk = u.katildi===true ? 'var(--teal)' : u.katildi===false ? 'var(--red)' : 'var(--border2)';
+    const durumBg = u.katildi===true ? 'var(--green-bg)' : u.katildi===false ? 'var(--red-bg)' : 'var(--surface2)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:${durumBg};transition:background .15s">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${u.ad_soyad}</div>
+        <div style="font-size:11px;color:var(--text2)">${u.unvan||''}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button onclick="katilimSec(${idx},true)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid ${u.katildi===true?'var(--teal)':'var(--border2)'};background:${u.katildi===true?'var(--teal)':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s" title="Katıldı">
+          <i class="ti ti-check" style="font-size:15px;color:${u.katildi===true?'#fff':'var(--text2)'}"></i>
+        </button>
+        <button onclick="katilimSec(${idx},false)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid ${u.katildi===false?'var(--red)':'var(--border2)'};background:${u.katildi===false?'var(--red)':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s" title="Katılmadı">
+          <i class="ti ti-x" style="font-size:15px;color:${u.katildi===false?'#fff':'var(--text2)'}"></i>
+        </button>
+        ${u.katildi===false?`<input placeholder="Mazeret..." value="${u.mazeret||''}" onchange="katilimMazeret(${idx},this.value)" style="height:32px;padding:0 8px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text);font-size:11px;font-family:var(--font);width:110px">`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.katilimSec = function(idx, deger){
+  if(_katilimUyeler[idx].katildi === deger){
+    _katilimUyeler[idx].katildi = null; /* tekrar tıklayınca sıfırla */
+  } else {
+    _katilimUyeler[idx].katildi = deger;
+  }
+  katilimListeRender();
+};
+
+window.katilimMazeret = function(idx, deger){
+  _katilimUyeler[idx].mazeret = deger;
+};
+
+window.katilimTopluSec = function(deger){
+  _katilimUyeler.forEach(u=>{ u.katildi=deger; if(deger!==false) u.mazeret=''; });
+  katilimListeRender();
+};
+
+window.katilimKaydet = async function(){
+  if(!_katilimToplantıId) return;
+  const kaydetBtn = document.querySelector('#katilim-overlay .btn-p');
+  const eskiHtml = kaydetBtn?.innerHTML;
+  if(kaydetBtn){ kaydetBtn.innerHTML='<i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Kaydediliyor...'; kaydetBtn.disabled=true; }
+
+  try{
+    for(const u of _katilimUyeler){
+      const mevcut = _katilimMevcut[u.id];
+      if(u.katildi === null && !mevcut) continue; /* değişmemiş, boş kayıt */
+
+      const kayit = {
+        toplanti_id: _katilimToplantıId,
+        tur: _katilimTur,
+        uye_id: u.id,
+        katildi: u.katildi,
+        mazeret: u.mazeret || null
+      };
+
+      if(mevcut){
+        /* Güncelle */
+        await _supa.from('toplanti_katilim').update({katildi:u.katildi, mazeret:u.mazeret||null}).eq('id', mevcut.db_id);
+      } else if(u.katildi !== null){
+        /* Ekle */
+        await _supa.from('toplanti_katilim').insert([kayit]);
+      }
+    }
+    document.getElementById('katilim-overlay').style.display='none';
+    alert('✓ Katılım kayıtları kaydedildi.');
+  }catch(e){
+    alert('Kaydetme hatası: '+(e.message||e));
+  } finally {
+    if(kaydetBtn){ kaydetBtn.innerHTML=eskiHtml; kaydetBtn.disabled=false; }
+  }
+};
+
+/* Sayfa açılışında üye listelerini yükle */
+window._katilimYuklendi = false;
+
+})();
 
 /* ══ TAKVİM MODÜLÜ ══ */
 (function(){
