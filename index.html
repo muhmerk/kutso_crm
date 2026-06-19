@@ -2436,6 +2436,38 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
     </div>
 
+    <!-- Eğitim Silme Seçenek Modalı -->
+    <div id="egitim-sil-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:420px;box-shadow:0 8px 40px rgba(0,0,0,.3);overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:15px;font-weight:600">Eğitimi Sil</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px" id="egitim-sil-baslik"></div>
+          </div>
+          <button onclick="document.getElementById('egitim-sil-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+        </div>
+        <div style="padding:20px">
+          <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Bu eğitim kaydı için nasıl bir işlem yapmak istiyorsunuz?</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button onclick="egitimSilSadeceBen()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--border);border-radius:10px;background:var(--surface2);cursor:pointer;text-align:left;width:100%">
+              <i class="ti ti-user-minus" style="font-size:20px;color:var(--amber);flex-shrink:0;margin-top:1px"></i>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)">Sadece beni listeden çıkar</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Diğer katılımcılar etkilenmez. Sadece bu personelin kaydı silinir.</div>
+              </div>
+            </button>
+            <button onclick="egitimSilTumunuSil()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--red);border-radius:10px;background:var(--red-bg);cursor:pointer;text-align:left;width:100%">
+              <i class="ti ti-trash" style="font-size:20px;color:var(--red);flex-shrink:0;margin-top:1px"></i>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--red)">Eğitimi tamamen sil</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Tüm katılımcıların eğitim kaydı silinir. Eğitim iptal edildi.</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Etkinlik ekleme modalı -->
     <div id="takvim-ekle-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:301;align-items:center;justify-content:center">
       <div style="background:var(--surface);border-radius:16px;width:460px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
@@ -15189,17 +15221,75 @@ window.prsEgitimKaydet = async function(){
 };
 
 /* Eğitim kaydını sil */
-window.prsEgitimSil = async function(egitimId, pid){
-  if(!confirm('Bu eğitim kaydını silmek istiyor musunuz?')) return;
+/* Eğitim silme state'i */
+let _egitimSilId = null;
+let _egitimSilPid = null;
+let _egitimSilAd = null;
+let _egitimSilTarih = null;
+
+window.prsEgitimSil = function(egitimId, pid){
+  /* Eğitimin adını ve tarihini bul */
+  let ad='', tarih='';
+  for(const key of Object.keys(EGITIMLER)){
+    if(key==='default') continue;
+    const e=(EGITIMLER[key]||[]).find(x=>String(x.id)===String(egitimId));
+    if(e){ ad=e.ad||''; tarih=e.tarihIso||''; break; }
+  }
+  _egitimSilId = egitimId;
+  _egitimSilPid = pid;
+  _egitimSilAd = ad;
+  _egitimSilTarih = tarih;
+  const baslikEl = document.getElementById('egitim-sil-baslik');
+  if(baslikEl) baslikEl.textContent = ad + (tarih ? ' · ' + tarih : '');
+  document.getElementById('egitim-sil-modal').style.display='flex';
+};
+
+/* Sadece bu personeli sil */
+window.egitimSilSadeceBen = async function(){
+  document.getElementById('egitim-sil-modal').style.display='none';
   try{
-    await supaPrsEgitimSil(egitimId);
-    if(EGITIMLER[pid]){
-      EGITIMLER[pid] = EGITIMLER[pid].filter(e=>String(e.id)!==String(egitimId));
+    await supaPrsEgitimSil(_egitimSilId);
+    const pid = _egitimSilPid;
+    for(const key of Object.keys(EGITIMLER)){
+      if(EGITIMLER[key]) EGITIMLER[key]=EGITIMLER[key].filter(e=>String(e.id)!==String(_egitimSilId));
     }
     prsEgitimLoad(pid);
-  }catch(err){
-    alert('Silme hatası: '+(err.message||err));
-  }
+    if(window.takvimRender) window.takvimRender();
+  }catch(err){ alert('Silme hatası: '+(err.message||err)); }
+};
+
+/* Eğitimi tamamen sil — aynı ad+tarih olan tüm katılımcıların kaydını sil */
+window.egitimSilTumunuSil = async function(){
+  if(!confirm(`"${_egitimSilAd}" eğitimi TÜM katılımcıların listesinden silinecek. Emin misiniz?`)) return;
+  document.getElementById('egitim-sil-modal').style.display='none';
+  try{
+    /* Aynı ad+tarih ile eşleşen tüm kayıtları bul ve sil */
+    const silId = _egitimSilId;
+    const silAd = _egitimSilAd;
+    const silTarih = _egitimSilTarih;
+    const pid = _egitimSilPid;
+    const silinecekler = [];
+    for(const key of Object.keys(EGITIMLER)){
+      if(key==='default') continue;
+      (EGITIMLER[key]||[]).forEach(e=>{
+        if(e.ad===silAd && e.tarihIso===silTarih) silinecekler.push({id:e.id, key});
+      });
+    }
+    /* Bu kayıt listede yoksa da ekle */
+    if(!silinecekler.find(x=>String(x.id)===String(silId))){
+      silinecekler.push({id:silId, key:String(pid)});
+    }
+    for(const kayit of silinecekler){
+      await supaPrsEgitimSil(kayit.id);
+    }
+    /* Local state'i temizle */
+    for(const key of Object.keys(EGITIMLER)){
+      if(EGITIMLER[key]) EGITIMLER[key]=EGITIMLER[key].filter(e=>!(e.ad===silAd && e.tarihIso===silTarih));
+    }
+    prsEgitimLoad(pid);
+    if(window.takvimRender) window.takvimRender();
+    alert(`✓ "${silAd}" eğitimi tüm katılımcıların listesinden silindi.`);
+  }catch(err){ alert('Silme hatası: '+(err.message||err)); }
 };
 
 /* Dashboard iş planı yıl seçici */
