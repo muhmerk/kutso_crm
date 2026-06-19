@@ -2275,6 +2275,9 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   <div class="sb-divider"></div>
   <div class="sb-section">Personel</div>
   <button class="nav" onclick="sw('personel',this)"><i class="ti ti-id-badge-2"></i>Personel</button>
+  <!-- Genel Sekreterlik — sadece yetkililere görünür -->
+  <div class="sb-section" id="gs-nav-section" style="display:none">Genel Sekreterlik</div>
+  <button class="nav" id="gs-nav-btn" onclick="sw('gs',this)" style="display:none"><i class="ti ti-settings-2"></i>Üye Yönetimi</button>
 
   <div class="sb-divider"></div>
   <div class="sb-section">İletişim</div>
@@ -3276,6 +3279,18 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
   </div>
 
+  <!-- ══════════ GENEL SEKRETERLİK — ÜYE YÖNETİMİ ══════════ -->
+  <div id="s-gs" class="section">
+    <!-- Sekme başlıkları -->
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px">
+      <button id="gs-tab-yk" onclick="gsTab('yk')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;font-family:var(--font)">Yönetim Kurulu</button>
+      <button id="gs-tab-meclis" onclick="gsTab('meclis')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Meclis</button>
+      <button id="gs-tab-mk" onclick="gsTab('mk')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Meslek Komitesi</button>
+    </div>
+    <!-- İçerik alanı -->
+    <div id="gs-icerik"></div>
+  </div>
+
   <!-- ══════════ AKREDİTASYON ══════════ -->
   <div id="s-egitim-prs" class="section">
     <!-- Personel Eğitim Ekle Modalı -->
@@ -3451,6 +3466,21 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
             </div>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GENEL SEKRETERLİK MODAL ══ -->
+  <div id="gs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:440px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div style="font-size:15px;font-weight:600" id="gs-modal-baslik"></div>
+        <button onclick="gsModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="gs-modal-icerik" style="padding:20px;overflow-y:auto;flex:1"></div>
+      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-sm" onclick="gsModalKapat()">İptal</button>
+        <button class="btn btn-p btn-sm" onclick="gsModalKaydet()"><i class="ti ti-check"></i> Kaydet</button>
       </div>
     </div>
   </div>
@@ -4415,6 +4445,12 @@ async function doLogin() {
   /* Realtime dinlemeyi başlat */
   supaRealtimeBaslat();
 
+  /* Genel Sekreterlik menüsü yetkisi */
+  const GS_YETKILI = ['admin','feyyaz','umran','orhan'];
+  const gsYetkili = GS_YETKILI.includes(currentUser.kullanici);
+  document.getElementById('gs-nav-section').style.display = gsYetkili ? '' : 'none';
+  document.getElementById('gs-nav-btn').style.display = gsYetkili ? '' : 'none';
+
   /* Animasyonlu geçiş */
   setTimeout(() => {
     const loginEl = document.getElementById('login-screen');
@@ -4550,6 +4586,7 @@ document.head.appendChild(_style);
 const META = {
   dashboard:    { title: 'Genel Bakış',          sub: (()=>{const n=new Date();return n.toLocaleDateString('tr-TR',{month:'long',year:'numeric'});})(),                                    right: '<div class="sync-chip"><div class="sync-dot"></div>TOBB sync: 08:00</div>' },
   takvim:       { title: 'Takvim',               sub: 'Toplantılar, ziyaretler ve termin tarihleri',    right: '' },
+  gs:           { title: 'Genel Sekreterlik',    sub: 'YK, Meclis ve Meslek Komitesi üye yönetimi',     right: '' },
   uyeler:       { title: 'Üye Modülü',            sub: '5.121 kayıtlı üye · TOBB\'dan otomatik senkronize', right: '<div class="sync-chip"><div class="sync-dot"></div>TOBB sync: 08:00</div>' },
   crm:          { title: 'CRM',                   sub: 'İletişim ve görev takibi',                       right: '' },
   sicil:        { title: 'Ticaret Sicil',         sub: 'Üye ticaret sicil işlemleri kaydı',              right: '' },
@@ -4602,6 +4639,8 @@ function sw(id, btn) {
     if(window.sicilGeri) window.sicilGeri();
   } else if (id === 'takvim') {
     if(window.takvimAcildi) window.takvimAcildi();
+  } else if (id === 'gs') {
+    if(window.gsAcildi) window.gsAcildi();
   }
 }
 
@@ -15924,6 +15963,330 @@ window.sikSurecKaydet = function(kartId, domKart){
   sikSurecKapat();
   alert('✓ Kaydedildi.');
 };
+
+/* ══ GENEL SEKRETERLİK — ÜYE YÖNETİMİ MODÜLÜ ══ */
+(function(){
+
+let _gsAktifTab = 'yk';
+
+window.gsAcildi = function(){ gsTab(_gsAktifTab); };
+
+window.gsTab = function(tab){
+  _gsAktifTab = tab;
+  ['yk','meclis','mk'].forEach(t=>{
+    const btn = document.getElementById('gs-tab-'+t);
+    if(!btn) return;
+    const aktif = t===tab;
+    btn.style.color = aktif ? 'var(--blue)' : 'var(--text2)';
+    btn.style.fontWeight = aktif ? '600' : '500';
+    btn.style.borderBottom = aktif ? '2px solid var(--blue)' : '2px solid transparent';
+  });
+  if(tab==='yk') gsRenderYK();
+  else if(tab==='meclis') gsRenderMeclis();
+  else if(tab==='mk') gsRenderMK();
+};
+
+/* ── YK ÜYELERİ ── */
+function gsRenderYK(){
+  const el = document.getElementById('gs-icerik');
+  const uyeler = window.YK_UYELER||[];
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--text2)">${uyeler.length} üye</div>
+      <button class="btn btn-p btn-sm" onclick="gsYKEkleModal()"><i class="ti ti-plus"></i> Üye Ekle</button>
+    </div>
+    <div class="card" style="overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:var(--surface2)">
+          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">#</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ad Soyad</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ünvan</th>
+          <th style="padding:10px 14px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead>
+        <tbody>
+          ${uyeler.map((u,i)=>`<tr style="border-bottom:0.5px solid var(--border)">
+            <td style="padding:10px 14px;color:var(--text2)">${u.sira_no||i+1}</td>
+            <td style="padding:10px 14px;font-weight:500">${u.ad_soyad}</td>
+            <td style="padding:10px 14px;color:var(--text2)">${u.unvan||'—'}</td>
+            <td style="padding:10px 14px;text-align:right">
+              <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsYKDuzenleModal(${u.id})"><i class="ti ti-edit"></i></button>
+              <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsUyeSil('yk_uyeler',${u.id},'yk')"><i class="ti ti-trash"></i></button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+/* ── MECLİS ÜYELERİ ── */
+function gsRenderMeclis(){
+  const el = document.getElementById('gs-icerik');
+  const uyeler = window.MECLIS_UYELER||[];
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--text2)">${uyeler.length} üye</div>
+      <button class="btn btn-p btn-sm" onclick="gsMeclisEkleModal()"><i class="ti ti-plus"></i> Üye Ekle</button>
+    </div>
+    <div class="card" style="overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:var(--surface2)">
+          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">#</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ad Soyad</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ünvan</th>
+          <th style="padding:10px 14px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead>
+        <tbody>
+          ${uyeler.map((u,i)=>`<tr style="border-bottom:0.5px solid var(--border)">
+            <td style="padding:10px 14px;color:var(--text2)">${u.sira_no||i+1}</td>
+            <td style="padding:10px 14px;font-weight:500">${u.ad_soyad}</td>
+            <td style="padding:10px 14px;color:var(--text2)">${u.unvan||'—'}</td>
+            <td style="padding:10px 14px;text-align:right">
+              <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMeclisDuzenleModal(${u.id})"><i class="ti ti-edit"></i></button>
+              <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsUyeSil('meclis_uyeler',${u.id},'meclis')"><i class="ti ti-trash"></i></button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+/* ── MESLEK KOMİTESİ ÜYELERİ ── */
+let _gsMkSeciliKomite = 1;
+function gsRenderMK(){
+  const el = document.getElementById('gs-icerik');
+  const tumUyeler = window.MK_UYELER||[];
+  const komiteNolar = [...new Set(tumUyeler.map(u=>u.komite_no))].sort((a,b)=>a-b);
+  const seciliUyeler = tumUyeler.filter(u=>u.komite_no===_gsMkSeciliKomite);
+
+  const komiteTabs = komiteNolar.map(kNo=>`
+    <button onclick="gsMkKomiteSec(${kNo})" style="padding:5px 12px;border-radius:20px;border:1px solid ${kNo===_gsMkSeciliKomite?'var(--purple)':'var(--border)'};background:${kNo===_gsMkSeciliKomite?'var(--purple)':'transparent'};color:${kNo===_gsMkSeciliKomite?'#fff':'var(--text2)'};cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)">${kNo}. Komite</button>`).join('');
+
+  el.innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      ${komiteTabs}
+      <button class="btn btn-sm" style="margin-left:auto" onclick="gsMkKomiteEkle()"><i class="ti ti-plus"></i> Yeni Komite</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:600;color:var(--purple)">${_gsMkSeciliKomite}. Meslek Komitesi — <span style="color:var(--text2);font-weight:400">${seciliUyeler.length} üye</span></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" style="color:var(--red);border-color:var(--red)" onclick="gsMkKomiteSil(${_gsMkSeciliKomite})"><i class="ti ti-trash"></i> Bu Komiteyi Sil</button>
+        <button class="btn btn-p btn-sm" onclick="gsMkUyeEkleModal(${_gsMkSeciliKomite})"><i class="ti ti-plus"></i> Üye Ekle</button>
+      </div>
+    </div>
+    <div class="card" style="overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:var(--surface2)">
+          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ad Soyad</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ünvan</th>
+          <th style="padding:10px 14px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead>
+        <tbody>
+          ${seciliUyeler.map(u=>`<tr style="border-bottom:0.5px solid var(--border)">
+            <td style="padding:10px 14px;font-weight:500">${u.ad_soyad}</td>
+            <td style="padding:10px 14px;color:var(--text2)">${u.unvan||'—'}</td>
+            <td style="padding:10px 14px;text-align:right">
+              <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMkUyeDuzenle(${u.id})"><i class="ti ti-edit"></i></button>
+              <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsUyeSil('mk_uyeler',${u.id},'mk')"><i class="ti ti-trash"></i></button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+window.gsMkKomiteSec = function(kNo){ _gsMkSeciliKomite=kNo; gsRenderMK(); };
+
+/* ── GENEL: ÜYE SİL ── */
+window.gsUyeSil = async function(tablo, id, tur){
+  if(!confirm('Bu üyeyi silmek istiyor musunuz?')) return;
+  try{
+    await _supa.from(tablo).update({aktif:false}).eq('id',id);
+    await supaYukleKatilimUyeler();
+    if(tur==='yk') gsRenderYK();
+    else if(tur==='meclis') gsRenderMeclis();
+    else gsRenderMK();
+  }catch(e){ alert('Silme hatası: '+(e.message||e)); }
+};
+
+/* ── YARDIMCI: Modal Aç/Kapat ── */
+let _gsModalKaydetFn = null;
+function gsModalAc(baslik, icerikHtml, kaydetFn){
+  _gsModalKaydetFn = kaydetFn;
+  document.getElementById('gs-modal-baslik').textContent = baslik;
+  document.getElementById('gs-modal-icerik').innerHTML = icerikHtml;
+  document.getElementById('gs-modal').style.display = 'flex';
+}
+window.gsModalKapat = function(){
+  document.getElementById('gs-modal').style.display = 'none';
+};
+window.gsModalKaydet = async function(){
+  if(!_gsModalKaydetFn) return;
+  try{ await _gsModalKaydetFn(); }
+  catch(e){ alert('Hata: '+(e.message||e)); }
+};
+
+/* ── YK EKLE / DÜZENLE ── */
+window.gsYKEkleModal = function(){
+  gsModalAc('YK Üyesi Ekle',
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-f-ad" class="yk-inp" placeholder="Adı ve Soyadı..."></div>
+      <div><label class="yk-lbl">Ünvan</label><input id="gs-f-unvan" class="yk-inp" placeholder="Yönetim Kurulu Üyesi..."></div>
+      <div><label class="yk-lbl">Sıra No</label><input id="gs-f-sira" class="yk-inp" type="number" min="1" value="${(window.YK_UYELER||[]).length+1}"></div>
+    </div>`,
+    async ()=>{
+      const adSoyad = document.getElementById('gs-f-ad')?.value.trim();
+      const unvan = document.getElementById('gs-f-unvan')?.value.trim()||'';
+      const siraNo = parseInt(document.getElementById('gs-f-sira')?.value||'0');
+      if(!adSoyad){ alert('Ad Soyad zorunludur.'); return; }
+      await _supa.from('yk_uyeler').insert([{ad_soyad:adSoyad, unvan, sira_no:siraNo, aktif:true}]);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderYK();
+    }
+  );
+};
+
+window.gsYKDuzenleModal = function(id){
+  const u = (window.YK_UYELER||[]).find(x=>x.id===id);
+  if(!u) return;
+  gsModalAc('YK Üyesi Düzenle',
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-f-ad" class="yk-inp" value="${u.ad_soyad}"></div>
+      <div><label class="yk-lbl">Ünvan</label><input id="gs-f-unvan" class="yk-inp" value="${u.unvan||''}"></div>
+      <div><label class="yk-lbl">Sıra No</label><input id="gs-f-sira" class="yk-inp" type="number" value="${u.sira_no||''}"></div>
+    </div>`,
+    async ()=>{
+      const adSoyad = document.getElementById('gs-f-ad')?.value.trim();
+      const unvan = document.getElementById('gs-f-unvan')?.value.trim()||'';
+      const siraNo = parseInt(document.getElementById('gs-f-sira')?.value||'0');
+      if(!adSoyad){ alert('Ad Soyad zorunludur.'); return; }
+      await _supa.from('yk_uyeler').update({ad_soyad:adSoyad, unvan, sira_no:siraNo}).eq('id',id);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderYK();
+    }
+  );
+};
+
+/* ── MECLİS EKLE / DÜZENLE ── */
+window.gsMeclisEkleModal = function(){
+  gsModalAc('Meclis Üyesi Ekle',
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-f-ad" class="yk-inp" placeholder="Adı ve Soyadı..."></div>
+      <div><label class="yk-lbl">Ünvan</label><input id="gs-f-unvan" class="yk-inp" placeholder="Meclis Üyesi..."></div>
+      <div><label class="yk-lbl">Sıra No</label><input id="gs-f-sira" class="yk-inp" type="number" value="${(window.MECLIS_UYELER||[]).length+1}"></div>
+    </div>`,
+    async ()=>{
+      const adSoyad = document.getElementById('gs-f-ad')?.value.trim();
+      const unvan = document.getElementById('gs-f-unvan')?.value.trim()||'';
+      const siraNo = parseInt(document.getElementById('gs-f-sira')?.value||'0');
+      if(!adSoyad){ alert('Ad Soyad zorunludur.'); return; }
+      await _supa.from('meclis_uyeler').insert([{ad_soyad:adSoyad, unvan, sira_no:siraNo, aktif:true}]);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderMeclis();
+    }
+  );
+};
+
+window.gsMeclisDuzenleModal = function(id){
+  const u = (window.MECLIS_UYELER||[]).find(x=>x.id===id);
+  if(!u) return;
+  gsModalAc('Meclis Üyesi Düzenle',
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-f-ad" class="yk-inp" value="${u.ad_soyad}"></div>
+      <div><label class="yk-lbl">Ünvan</label><input id="gs-f-unvan" class="yk-inp" value="${u.unvan||''}"></div>
+      <div><label class="yk-lbl">Sıra No</label><input id="gs-f-sira" class="yk-inp" type="number" value="${u.sira_no||''}"></div>
+    </div>`,
+    async ()=>{
+      const adSoyad = document.getElementById('gs-f-ad')?.value.trim();
+      const unvan = document.getElementById('gs-f-unvan')?.value.trim()||'';
+      const siraNo = parseInt(document.getElementById('gs-f-sira')?.value||'0');
+      if(!adSoyad){ alert('Ad Soyad zorunludur.'); return; }
+      await _supa.from('meclis_uyeler').update({ad_soyad:adSoyad, unvan, sira_no:siraNo}).eq('id',id);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderMeclis();
+    }
+  );
+};
+
+/* ── MESLEK KOMİTESİ EKLE / DÜZENLE ── */
+window.gsMkUyeEkleModal = function(komiteNo){
+  gsModalAc(`${komiteNo}. Komite — Üye Ekle`,
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-f-ad" class="yk-inp" placeholder="Adı ve Soyadı..."></div>
+      <div><label class="yk-lbl">Ünvan</label>
+        <select id="gs-f-unvan" class="yk-inp">
+          <option value="Başkanı">Başkanı</option>
+          <option value="Başkan Yardımcısı">Başkan Yardımcısı</option>
+          <option value="Üyesi" selected>Üyesi</option>
+          <option value="Yedek Üyesi">Yedek Üyesi</option>
+        </select>
+      </div>
+    </div>`,
+    async ()=>{
+      const adSoyad = document.getElementById('gs-f-ad')?.value.trim();
+      const unvan = document.getElementById('gs-f-unvan')?.value||'Üyesi';
+      if(!adSoyad){ alert('Ad Soyad zorunludur.'); return; }
+      await _supa.from('mk_uyeler').insert([{komite_no:komiteNo, ad_soyad:adSoyad, unvan, aktif:true}]);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderMK();
+    }
+  );
+};
+
+window.gsMkUyeDuzenle = function(id){
+  const u = (window.MK_UYELER||[]).find(x=>x.id===id);
+  if(!u) return;
+  gsModalAc(`${u.komite_no}. Komite — Üye Düzenle`,
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-f-ad" class="yk-inp" value="${u.ad_soyad}"></div>
+      <div><label class="yk-lbl">Ünvan</label>
+        <select id="gs-f-unvan" class="yk-inp">
+          <option value="Başkanı" ${u.unvan==='Başkanı'?'selected':''}>Başkanı</option>
+          <option value="Başkan Yardımcısı" ${u.unvan==='Başkan Yardımcısı'?'selected':''}>Başkan Yardımcısı</option>
+          <option value="Üyesi" ${u.unvan==='Üyesi'?'selected':''}>Üyesi</option>
+          <option value="Yedek Üyesi" ${u.unvan==='Yedek Üyesi'?'selected':''}>Yedek Üyesi</option>
+        </select>
+      </div>
+    </div>`,
+    async ()=>{
+      const adSoyad = document.getElementById('gs-f-ad')?.value.trim();
+      const unvan = document.getElementById('gs-f-unvan')?.value||'Üyesi';
+      if(!adSoyad){ alert('Ad Soyad zorunludur.'); return; }
+      await _supa.from('mk_uyeler').update({ad_soyad:adSoyad, unvan}).eq('id',id);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderMK();
+    }
+  );
+};
+
+/* ── KOMİTE EKLE / SİL ── */
+window.gsMkKomiteEkle = async function(){
+  const tumUyeler = window.MK_UYELER||[];
+  const maxKomite = tumUyeler.length ? Math.max(...tumUyeler.map(u=>u.komite_no)) : 0;
+  const yeniNo = maxKomite + 1;
+  if(!confirm(`${yeniNo}. Meslek Komitesi oluşturulsun mu? Üyeleri daha sonra ekleyebilirsiniz.`)) return;
+  /* Boş komite oluşturmak için placeholder üye ekle, sonra silinebilir */
+  alert(`${yeniNo}. Komite oluşturuldu. "Üye Ekle" butonuyla üye ekleyebilirsiniz.`);
+  _gsMkSeciliKomite = yeniNo;
+  /* Komiteyi local'de oluştur — ilk üye eklenince DB'ye yazılacak */
+  if(!window.MK_UYELER) window.MK_UYELER = [];
+  gsRenderMK();
+};
+
+window.gsMkKomiteSil = async function(kNo){
+  const uyeler = (window.MK_UYELER||[]).filter(u=>u.komite_no===kNo);
+  if(!confirm(`${kNo}. Meslek Komitesi ve ${uyeler.length} üyesi silinecek. Emin misiniz?`)) return;
+  try{
+    for(const u of uyeler){
+      await _supa.from('mk_uyeler').update({aktif:false}).eq('id',u.id);
+    }
+    await supaYukleKatilimUyeler();
+    _gsMkSeciliKomite = (window.MK_UYELER||[]).length ? Math.min(...(window.MK_UYELER||[]).map(u=>u.komite_no)) : 1;
+    gsRenderMK();
+    alert(`✓ ${kNo}. Komite kaldırıldı.`);
+  }catch(e){ alert('Hata: '+(e.message||e)); }
+};
+
+})();
 
 /* ══ KATILIM TAKİBİ MODÜLÜ ══ */
 (function(){
