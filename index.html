@@ -867,7 +867,7 @@ async function supaYuklePersonelBelgeler() {
 }
 
 /* Personel eğitim kayıtları — DB'den yükle */
-async function supaYuklePersonelEgitimler() {
+window.supaYuklePersonelEgitimler = async function supaYuklePersonelEgitimler() {
   try {
     const { data, error } = await _supa.from('personel_egitimler').select('*').order('tarih_iso',{ascending:false});
     if (error) { console.warn('Personel eğitimler DB hatası:', error.message); return; }
@@ -15142,9 +15142,12 @@ window.prsEgitimKaydet = async function(){
       _prsEgitimEditId = null;
       _prsEgitimEditPid = null;
       prsEgitimModalKapat();
-      /* Ekrandaki personeli yenile */
+      /* DB'den güncel veriyi çek, sonra takvimi yenile */
+      try{ await supaYuklePersonelEgitimler(); }catch(e){}
       const gorunenPid = parseInt(document.getElementById('prs-egitim-sec')?.value||'0') || pid;
       prsEgitimLoad(gorunenPid);
+      /* Açık takvim overlay'ini kapat ve takvimi yeniden render et */
+      document.getElementById('takvim-gun-overlay')?.style && (document.getElementById('takvim-gun-overlay').style.display='none');
       if(window.takvimRender) window.takvimRender();
       alert(`✓ "${ad}" eğitim kaydı güncellendi.`);
     }catch(err){
@@ -16412,11 +16415,15 @@ window.takvimEgitimKaydet = async function(){
   }
 
   document.getElementById('takvim-egitim-overlay').style.display='none';
+  /* DB'den güncel veriyi çek */
+  try{ await supaYuklePersonelEgitimler(); }catch(e){}
   /* Personel sayfası açıksa yenile */
   const aktifPid = parseInt(document.getElementById('prs-egitim-sec')?.value||'0');
   if(aktifPid && window._tkEgSeciliPersonel.find(x=>x.id===aktifPid)){
     if(window.prsEgitimLoad) window.prsEgitimLoad(aktifPid);
   }
+  /* Takvimi yenile — günlük modda seçili güne git */
+  if(window.takvimRender) window.takvimRender();
   alert(`✓ ${basari} personele "${ad}" eğitimi eklendi.${hata?` (${hata} personelde hata oluştu)`:''}`);
 };
 
