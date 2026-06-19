@@ -16445,7 +16445,9 @@ window.katilimMazeret = function(idx, deger){
 };
 
 window.katilimTopluSec = function(deger){
-  _katilimUyeler.forEach(u=>{ u.katildi=deger; if(deger!==false) u.mazeret=''; });
+  /* deger: true=katıldı, false=katılmadı, null=temizle */
+  const gercekDeger = deger==='katildi' ? true : deger==='katilmadi' ? false : null;
+  _katilimUyeler.forEach(u=>{ u.katildi=gercekDeger; if(gercekDeger!==false) u.mazeret=''; });
   katilimListeRender();
 };
 
