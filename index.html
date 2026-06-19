@@ -15142,13 +15142,17 @@ window.prsEgitimKaydet = async function(){
       _prsEgitimEditId = null;
       _prsEgitimEditPid = null;
       prsEgitimModalKapat();
-      /* DB'den güncel veriyi çek, sonra takvimi yenile */
-      try{ await supaYuklePersonelEgitimler(); }catch(e){}
+      /* DB'den güncel veriyi çek */
+      try{ await supaYuklePersonelEgitimler(); }catch(e2){}
+      /* Personel listesini yenile */
       const gorunenPid = parseInt(document.getElementById('prs-egitim-sec')?.value||'0') || pid;
       prsEgitimLoad(gorunenPid);
-      /* Açık takvim overlay'ini kapat ve takvimi yeniden render et */
-      document.getElementById('takvim-gun-overlay')?.style && (document.getElementById('takvim-gun-overlay').style.display='none');
-      if(window.takvimRender) window.takvimRender();
+      /* Takvim ekranı aktifse hemen yenile, değilse dirty flag bırak */
+      window._takvimDirty = true;
+      if(document.getElementById('s-takvim')?.classList.contains('active')){
+        if(window.takvimRender) window.takvimRender();
+        window._takvimDirty = false;
+      }
       alert(`✓ "${ad}" eğitim kaydı güncellendi.`);
     }catch(err){
       alert('Güncelleme hatası: '+(err.message||err));
@@ -16073,7 +16077,7 @@ function takvimRenderHaftalik(gridEl){
 }
 
 /* ── GÜNLÜK GÖRÜNÜM — doğrudan grid'e render, tek scrollbar ── */
-function takvimRenderGunluk(gridEl){
+window.takvimRenderGunluk = function takvimRenderGunluk(gridEl){
   const iso=_takvimSecilenGun||gunIso(_takvimYil,_takvimAy,1);
   const tarihObj=new Date(iso+'T00:00:00');
   const bugunIso=gunIso(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
@@ -16474,9 +16478,12 @@ window.takvimEtkinlikSil = async function(id){
 };
 
 /* ───────────────── EKRAN AÇILIŞ TETİKLEYİCİSİ ───────────────── */
-window.takvimAcildi = function(){
+window.takvimAcildi = async function(){
   takvimYilDropdownDoldur();
   takvimDropdownGuncelle();
+  /* Her açılışta EGITIMLER'i DB'den taze çek */
+  try{ await window.supaYuklePersonelEgitimler(); }catch(e){}
+  window._takvimDirty = false;
   takvimRender();
 };
 
