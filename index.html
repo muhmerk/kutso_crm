@@ -16368,6 +16368,9 @@ window.katilimAc = async function(toplantıId, tur, komiteNo){
   _katilimTur = tur;
   _katilimKomiteNo = komiteNo || null;
 
+  /* Her açılışta DB'den taze üye listesi çek */
+  await supaYukleKatilimUyeler();
+
   /* Üye listesini belirle */
   if(tur === 'yk') _katilimUyeler = window.YK_UYELER.map(u=>({...u}));
   else if(tur === 'meclis') _katilimUyeler = window.MECLIS_UYELER.map(u=>({...u}));
