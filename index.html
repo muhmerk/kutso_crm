@@ -3500,6 +3500,38 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
   </div>
 
+  <!-- ══ TOPLANTI EVRAK MODALI ══ -->
+  <div id="evrak-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:540px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div>
+          <div style="font-size:15px;font-weight:600" id="evrak-modal-baslik">Toplantı Evrakları</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="evrak-modal-alt"></div>
+        </div>
+        <button onclick="document.getElementById('evrak-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <!-- Yükleme alanı -->
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);flex-shrink:0">
+        <div id="evrak-yukle-alan" onclick="document.getElementById('evrak-file-input').click()"
+          style="border:2px dashed var(--border2);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .15s"
+          onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue-bg)'"
+          onmouseout="this.style.borderColor='var(--border2)';this.style.background=''">
+          <i class="ti ti-cloud-upload" style="font-size:28px;color:var(--text2);display:block;margin-bottom:8px"></i>
+          <div style="font-size:13px;font-weight:500">Dosya seç veya buraya sürükle</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">PDF, Word, Excel, Resim — maks. 50MB</div>
+        </div>
+        <input type="file" id="evrak-file-input" multiple style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+          onchange="evrakDosyaSecildi(this.files)">
+        <div id="evrak-yukleme-durumu" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <!-- Mevcut evraklar -->
+      <div style="flex:1;overflow-y:auto;padding:16px 20px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">MEVCUT EVRAKLAR</div>
+        <div id="evrak-liste"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ GENEL SEKRETERLİK MODAL ══ -->
   <div id="gs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
     <div style="background:var(--surface);border-radius:16px;width:440px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
@@ -4462,7 +4494,8 @@ async function doLogin() {
     (window.supaYukleGorevler ? window.supaYukleGorevler() : Promise.resolve()),
     (window.supaYukleZiyaretler ? window.supaYukleZiyaretler() : Promise.resolve()),
     (window.supaYukleTakvim ? window.supaYukleTakvim() : Promise.resolve()),
-    (window.supaYukleKatilimUyeler ? window.supaYukleKatilimUyeler() : Promise.resolve())
+    (window.supaYukleKatilimUyeler ? window.supaYukleKatilimUyeler() : Promise.resolve()),
+    (window.evrakBadgeGuncelle ? window.evrakBadgeGuncelle() : Promise.resolve())
   ]);
   /* Realtime dinlemeyi başlat */
   supaRealtimeBaslat();
@@ -10005,8 +10038,9 @@ function ykRenderToplantıListesi(){
         </div>
         ${acik>0 ? `<div style="margin-top:8px;font-size:11px;color:var(--red)"><i class="ti ti-clock" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>${acik} açık görev</div>` : ''}
         ` : `<div style="font-size:12px;color:var(--text2)">Henüz gündem eklenmedi — <span style="color:var(--blue);cursor:pointer" onclick="event.stopPropagation();ykAcToplantı('${t.id}')">gündem ekle</span></div>`}
-        <div style="margin-top:10px;display:flex;gap:6px">
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();ykAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay & Gündemler</button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','yk','${t.ad.replace(/'/g,'\\&apos;')}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none" class="badge b-blue" style="font-size:9px"></span></button>
           ${ykYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();ykToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();ykToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
@@ -10752,6 +10786,7 @@ function mkRenderListe(){
         </div>`:'<div style="font-size:12px;color:var(--text2)">Henüz gündem eklenmedi</div>'}
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','mk','${t.ad.replace(/'/g,"\\'")}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none" class="badge b-blue"></span></button>
           ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();mkToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
@@ -11220,6 +11255,7 @@ function meclisRenderListe(){
         </div>`:'<div style="font-size:12px;color:var(--text2)">Henüz karar girilmedi</div>'}
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','meclis','${t.ad.replace(/'/g,"\\'")}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none" class="badge b-blue"></span></button>
           ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();meclisToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
@@ -15990,6 +16026,169 @@ window.sikSurecKaydet = function(kartId, domKart){
   sikSurecKapat();
   alert('✓ Kaydedildi.');
 };
+
+/* ══ TOPLANTI EVRAK MODÜLÜ ══ */
+(function(){
+
+const BUCKET = 'toplanti-evraklar';
+let _evrakToplantıId = null;
+let _evrakTur = null;
+
+/* Evrak modalını aç */
+window.evrakAc = async function(toplantıId, tur, toplantıAd){
+  _evrakToplantıId = toplantıId;
+  _evrakTur = tur;
+  document.getElementById('evrak-modal-baslik').textContent = 'Toplantı Evrakları';
+  document.getElementById('evrak-modal-alt').textContent = toplantıAd || '';
+  document.getElementById('evrak-yukleme-durumu').innerHTML = '';
+  document.getElementById('evrak-modal').style.display = 'flex';
+  await evrakListeYukle();
+};
+
+/* Mevcut evrakları listele */
+async function evrakListeYukle(){
+  const listeEl = document.getElementById('evrak-liste');
+  listeEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:12px"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Yükleniyor...</div>';
+  try{
+    const { data, error } = await _supa.from('toplanti_evraklar')
+      .select('*').eq('toplanti_id', _evrakToplantıId).order('created_at', {ascending:false});
+    if(error) throw error;
+    if(!data?.length){
+      listeEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:12px"><i class="ti ti-file-off" style="font-size:20px;display:block;margin-bottom:6px"></i>Henüz evrak eklenmedi</div>';
+      return;
+    }
+    listeEl.innerHTML = data.map(e=>{
+      const ikon = e.dosya_adi.match(/\.pdf$/i) ? 'ti-file-type-pdf' :
+                   e.dosya_adi.match(/\.(doc|docx)$/i) ? 'ti-file-type-doc' :
+                   e.dosya_adi.match(/\.(xls|xlsx)$/i) ? 'ti-file-type-xls' :
+                   e.dosya_adi.match(/\.(jpg|jpeg|png|gif)$/i) ? 'ti-photo' : 'ti-file';
+      const renk = e.dosya_adi.match(/\.pdf$/i) ? 'var(--red)' :
+                   e.dosya_adi.match(/\.(doc|docx)$/i) ? 'var(--blue)' :
+                   e.dosya_adi.match(/\.(xls|xlsx)$/i) ? 'var(--green)' : 'var(--text2)';
+      const boyut = e.dosya_boyut ? (e.dosya_boyut > 1024*1024 ? (e.dosya_boyut/1024/1024).toFixed(1)+' MB' : Math.round(e.dosya_boyut/1024)+' KB') : '';
+      const tarih = new Date(e.created_at).toLocaleDateString('tr-TR', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
+        <i class="ti ${ikon}" style="font-size:22px;color:${renk};flex-shrink:0"></i>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.dosya_adi}</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px">${tarih}${boyut?' · '+boyut:''}${e.yukleyen?' · '+e.yukleyen:''}</div>
+          ${e.aciklama?`<div style="font-size:11px;color:var(--text2);margin-top:2px">${e.aciklama}</div>`:''}
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button onclick="evrakIndir('${e.dosya_url}','${e.dosya_adi}')" class="btn btn-sm" style="padding:4px 8px" title="İndir"><i class="ti ti-download" style="font-size:13px"></i></button>
+          <button onclick="evrakSil('${e.id}','${e.dosya_url}')" class="btn btn-sm" style="padding:4px 8px;color:var(--red)" title="Sil"><i class="ti ti-trash" style="font-size:13px"></i></button>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(err){
+    listeEl.innerHTML = `<div style="color:var(--red);font-size:12px;padding:10px">Hata: ${err.message}</div>`;
+  }
+}
+
+/* Dosya seçilince yükle */
+window.evrakDosyaSecildi = async function(files){
+  if(!files?.length) return;
+  const durumEl = document.getElementById('evrak-yukleme-durumu');
+
+  for(const file of files){
+    const itemId = 'ev-'+Math.random().toString(36).slice(2);
+    durumEl.insertAdjacentHTML('beforeend',
+      `<div id="${itemId}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;font-size:12px">
+        <i class="ti ti-loader" style="animation:spin .7s linear infinite;flex-shrink:0"></i>
+        <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${file.name}</span>
+        <span style="color:var(--text2)">Yükleniyor...</span>
+      </div>`);
+
+    try{
+      /* Storage'a yükle */
+      const path = `${_evrakTur}/${_evrakToplantıId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+      const { data: upData, error: upErr } = await _supa.storage.from(BUCKET).upload(path, file, {upsert:false});
+      if(upErr) throw upErr;
+
+      /* Public URL al */
+      const { data: urlData } = _supa.storage.from(BUCKET).getPublicUrl(path);
+      const url = urlData?.publicUrl || path;
+
+      /* DB'ye kaydet */
+      const { error: dbErr } = await _supa.from('toplanti_evraklar').insert([{
+        toplanti_id: _evrakToplantıId,
+        tur: _evrakTur,
+        dosya_adi: file.name,
+        dosya_url: url,
+        dosya_boyut: file.size,
+        yukleyen: window.currentUser?.kullanici || ''
+      }]);
+      if(dbErr) throw dbErr;
+
+      /* Başarı göster */
+      const item = document.getElementById(itemId);
+      if(item) item.innerHTML = `
+        <i class="ti ti-circle-check" style="color:var(--teal);flex-shrink:0"></i>
+        <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${file.name}</span>
+        <span style="color:var(--teal)">✓ Yüklendi</span>`;
+      setTimeout(()=>{ document.getElementById(itemId)?.remove(); }, 2000);
+    }catch(err){
+      const item = document.getElementById(itemId);
+      if(item) item.innerHTML = `
+        <i class="ti ti-circle-x" style="color:var(--red);flex-shrink:0"></i>
+        <span style="flex:1">${file.name}</span>
+        <span style="color:var(--red)" title="${err.message}">✗ Hata</span>`;
+    }
+  }
+
+  /* Listeyi yenile */
+  await evrakListeYukle();
+  /* Evrak sayısı badge'lerini güncelle */
+  evrakBadgeGuncelle();
+  document.getElementById('evrak-file-input').value = '';
+};
+
+/* Evrak indir */
+window.evrakIndir = function(url, ad){
+  const a = document.createElement('a');
+  a.href = url; a.download = ad; a.target = '_blank';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+};
+
+/* Evrak sil */
+window.evrakSil = async function(id, url){
+  if(!confirm('Bu evrakı silmek istiyor musunuz?')) return;
+  try{
+    /* Storage'dan sil */
+    try{
+      const path = url.split('/'+BUCKET+'/')[1];
+      if(path) await _supa.storage.from(BUCKET).remove([path]);
+    }catch(e){ console.warn('Storage silme hatası:', e); }
+    /* DB'den sil */
+    await _supa.from('toplanti_evraklar').delete().eq('id', id);
+    await evrakListeYukle();
+    evrakBadgeGuncelle();
+  }catch(err){ alert('Silme hatası: '+err.message); }
+};
+
+/* Toplantı evrak sayısını badge olarak göster */
+window._evrakSayilari = {}; /* toplanti_id -> sayı */
+window.evrakBadgeGuncelle = async function(){
+  try{
+    const { data } = await _supa.from('toplanti_evraklar').select('toplanti_id');
+    window._evrakSayilari = {};
+    (data||[]).forEach(e=>{
+      window._evrakSayilari[e.toplanti_id] = (window._evrakSayilari[e.toplanti_id]||0) + 1;
+    });
+    /* Kartlardaki badge'leri güncelle */
+    document.querySelectorAll('[data-evrak-badge]').forEach(el=>{
+      const tid = el.getAttribute('data-evrak-badge');
+      const say = window._evrakSayilari[tid]||0;
+      el.textContent = say ? say+' evrak' : '';
+      el.style.display = say ? '' : 'none';
+    });
+  }catch(e){ console.warn('Evrak badge hatası:', e); }
+};
+
+/* Sayfa yüklenince evrak sayılarını çek */
+window.addEventListener('load', ()=>{ setTimeout(window.evrakBadgeGuncelle, 2000); });
+
+})();
 
 /* ══ GENEL SEKRETERLİK — ÜYE YÖNETİMİ MODÜLÜ ══ */
 (function(){
