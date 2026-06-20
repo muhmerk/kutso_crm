@@ -3526,14 +3526,6 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <!-- MK komite seçici — sadece MK'da görünür -->
           <select id="katilim-ozet-komite" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:180px;display:none">
-            <option value="">Tüm komiteler</option>
-            <option value="1">1. Meslek Komitesi</option><option value="2">2. Meslek Komitesi</option>
-            <option value="3">3. Meslek Komitesi</option><option value="4">4. Meslek Komitesi</option>
-            <option value="5">5. Meslek Komitesi</option><option value="6">6. Meslek Komitesi</option>
-            <option value="7">7. Meslek Komitesi</option><option value="8">8. Meslek Komitesi</option>
-            <option value="9">9. Meslek Komitesi</option><option value="10">10. Meslek Komitesi</option>
-            <option value="11">11. Meslek Komitesi</option><option value="12">12. Meslek Komitesi</option>
-            <option value="13">13. Meslek Komitesi</option><option value="14">14. Meslek Komitesi</option>
           </select>
           <select id="katilim-ozet-yil" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:90px"></select>
           <select id="katilim-ozet-ay" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:110px;display:none">
@@ -16520,7 +16512,13 @@ window.katilimOzetAc = function(tur, mod){
 
   const komiteSel = document.getElementById('katilim-ozet-komite');
   komiteSel.style.display = tur==='mk' ? '' : 'none';
-  if(tur==='mk' && !komiteSel.value) komiteSel.value = '1';
+  if(tur==='mk'){
+    const mevcutDeger = komiteSel.value;
+    const komiteNolar = [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+    komiteSel.innerHTML = '<option value="">Tüm komiteler</option>' +
+      komiteNolar.map(k=>`<option value="${k}">${k}. Meslek Komitesi</option>`).join('');
+    komiteSel.value = mevcutDeger && komiteNolar.includes(parseInt(mevcutDeger)) ? mevcutDeger : String(komiteNolar[0]||1);
+  }
 
   document.getElementById('katilim-ozet-modal').style.display='flex';
   katilimOzetYenile();
