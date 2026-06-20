@@ -3328,29 +3328,51 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div style="background:var(--surface);border-radius:16px;width:560px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
         <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
           <div>
-            <div style="font-size:15px;font-weight:500" id="etk-prs-ekle-title">Yeni Personel Eğitimi Ekle</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px">Personel eğitim bilgilerini doldurun</div>
+            <div style="font-size:15px;font-weight:500" id="etk-prs-ekle-title">Yeni Personel Etkinliği Ekle</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">Personel eğitim/etkinlik bilgilerini doldurun</div>
           </div>
           <button onclick="etkPrsYeniKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
         </div>
         <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
-          <div><label class="yk-lbl">Eğitim Adı <span style="color:var(--red)">*</span></label><input id="etk-prs-f-ad" class="yk-inp" placeholder="Eğitim / Seminer adı..."></div>
-          <div><label class="yk-lbl">Etkinlik Numarası</label><input id="etk-prs-f-no" class="yk-inp" placeholder="ETK-2026-001"></div>
+          <div><label class="yk-lbl">Ad <span style="color:var(--red)">*</span></label><input id="etk-prs-f-ad" class="yk-inp" placeholder="Eğitim / Seminer / Toplantı adı..."></div>
+          <div><label class="yk-lbl">Numara</label><input id="etk-prs-f-no" class="yk-inp" placeholder="ETK-2026-001"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div><label class="yk-lbl">Tür</label>
-              <select id="etk-prs-f-tur" class="yk-inp">
+              <select id="etk-prs-f-tur" class="yk-inp" onchange="etkPrsTurDegisti(this.value)">
                 <option value="Eğitim">Eğitim</option><option value="Seminer">Seminer</option>
                 <option value="Toplantı">Toplantı</option><option value="Etkinlik">Etkinlik</option>
               </select></div>
             <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="etk-prs-f-tarih" type="date" class="yk-inp"></div>
           </div>
-          <div><label class="yk-lbl">Eğitimci / Konuşmacı</label><input id="etk-prs-f-egitimci" class="yk-inp" placeholder="Eğitimi verecek kişi veya kurum..."></div>
-          <div><label class="yk-lbl">Eğitmen Unvan / Görev</label><input id="etk-prs-f-egitimci-unvan" class="yk-inp" placeholder="Dr., Uzman, Müdür..."></div>
-          <div><label class="yk-lbl">Eğitmenin Kuruluşu (Varsa)</label><input id="etk-prs-f-egitimci-kurum" class="yk-inp" placeholder="Üniversite, Şirket adı..."></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <!-- Saat -->
+          <div id="etk-prs-row-saat" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div><label class="yk-lbl">Başlangıç Saati</label><input id="etk-prs-f-saat-bas" type="time" class="yk-inp" value="09:00"></div>
             <div><label class="yk-lbl">Bitiş Saati</label><input id="etk-prs-f-saat-bit" type="time" class="yk-inp" value="17:00"></div>
           </div>
+          <!-- Eğitimci — Eğitim ve Seminer'de görünür -->
+          <div id="etk-prs-row-egitimci">
+            <label class="yk-lbl" id="etk-prs-lbl-egitimci">Eğitimci / Konuşmacı</label>
+            <input id="etk-prs-f-egitimci" class="yk-inp" placeholder="Kişi veya kurum adı...">
+          </div>
+          <div id="etk-prs-row-unvan">
+            <label class="yk-lbl">Ünvan / Görev</label>
+            <input id="etk-prs-f-egitimci-unvan" class="yk-inp" placeholder="Dr., Uzman, Müdür...">
+          </div>
+          <div id="etk-prs-row-kurum">
+            <label class="yk-lbl">Kuruluş</label>
+            <input id="etk-prs-f-egitimci-kurum" class="yk-inp" placeholder="Üniversite, Şirket adı...">
+          </div>
+          <!-- Sertifika — sadece Eğitim'de -->
+          <div id="etk-prs-row-sertifika" style="display:flex;align-items:center;gap:10px">
+            <input type="checkbox" id="etk-prs-f-sertifika" style="width:16px;height:16px;cursor:pointer">
+            <label for="etk-prs-f-sertifika" class="yk-lbl" style="margin:0;cursor:pointer">Sertifika verilecek</label>
+          </div>
+          <!-- Toplantı gündem -->
+          <div id="etk-prs-row-gundem" style="display:none">
+            <label class="yk-lbl">Gündem / Konu</label>
+            <textarea id="etk-prs-f-gundem" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Toplantı gündemi veya konusu..."></textarea>
+          </div>
+          <!-- Yer + Sorumlu -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div><label class="yk-lbl">Yer</label><input id="etk-prs-f-yer" class="yk-inp" placeholder="TSO Konferans Salonu..."></div>
             <div><label class="yk-lbl">Sorumlu Personel</label><select id="etk-prs-f-sorumlu" class="yk-inp"></select></div>
@@ -3710,6 +3732,10 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
             <input id="etk-f-ad" class="yk-inp" placeholder="Eğitim / Seminer / Fuar adı...">
           </div>
           <div>
+            <label class="yk-lbl"><span class="etk-f-baslik-text">Etkinlik</span> Adı <span style="color:var(--red)">*</span></label>
+            <input id="etk-f-ad" class="yk-inp" placeholder="Etkinlik adı...">
+          </div>
+          <div>
             <label class="yk-lbl">Etkinlik Numarası</label>
             <input id="etk-f-no" class="yk-inp" placeholder="ETK-2026-001">
           </div>
@@ -3725,17 +3751,17 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
               </select>
             </div>
             <div>
-              <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
+              <label class="yk-lbl">Başlangıç Tarihi <span style="color:var(--red)">*</span></label>
               <input id="etk-f-tarih" type="date" class="yk-inp">
             </div>
           </div>
-          <div id="etk-egitimci-row" style="display:block">
-            <label class="yk-lbl">Eğitimci / Konuşmacı</label>
-            <input id="etk-f-egitimci" class="yk-inp" placeholder="Eğitimi verecek kişi veya kurum...">
+          <!-- Bitiş tarihi — sadece Fuar'da görünür -->
+          <div id="etk-row-fuar-tarih-bit" style="display:none">
+            <label class="yk-lbl">Bitiş Tarihi</label>
+            <input id="etk-f-tarih-bit" type="date" class="yk-inp">
           </div>
-          <div><label class="yk-lbl">Eğitmen Unvan / Görev</label><input id="etk-f-egitimci-unvan" class="yk-inp" placeholder="Dr., Uzman, Müdür..."></div>
-          <div><label class="yk-lbl">Eğitmenin Kuruluşu (Varsa)</label><input id="etk-f-egitimci-kurum" class="yk-inp" placeholder="Üniversite, Şirket adı..."></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <!-- Saat — Fuar hariç -->
+          <div id="etk-row-saat" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
               <label class="yk-lbl">Başlangıç Saati</label>
               <input id="etk-f-saat-bas" type="time" class="yk-inp" value="09:00">
@@ -3745,8 +3771,36 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
               <input id="etk-f-saat-bit" type="time" class="yk-inp" value="17:00">
             </div>
           </div>
+          <!-- Eğitimci / Konuşmacı / Organizatör -->
+          <div id="etk-row-egitimci" style="display:block">
+            <label class="yk-lbl" id="etk-lbl-egitimci">Eğitimci / Konuşmacı</label>
+            <input id="etk-f-egitimci" class="yk-inp" placeholder="Ad veya kurum adı...">
+          </div>
+          <div id="etk-row-unvan">
+            <label class="yk-lbl">Ünvan / Görev</label>
+            <input id="etk-f-egitimci-unvan" class="yk-inp" placeholder="Dr., Uzman, Müdür...">
+          </div>
+          <div id="etk-row-kurum">
+            <label class="yk-lbl" id="etk-lbl-kurum">Kuruluş</label>
+            <input id="etk-f-egitimci-kurum" class="yk-inp" placeholder="Üniversite, Şirket adı...">
+          </div>
+          <!-- Fuar'a özel -->
+          <div id="etk-row-fuar-sehir" style="display:none">
+            <label class="yk-lbl">Şehir / Ülke</label>
+            <input id="etk-f-fuar-sehir" class="yk-inp" placeholder="İstanbul, Türkiye...">
+          </div>
+          <div id="etk-row-fuar-stand" style="display:none">
+            <label class="yk-lbl">Stand No / Hall</label>
+            <input id="etk-f-fuar-stand" class="yk-inp" placeholder="Hall 3, Stand B-24...">
+          </div>
+          <!-- Toplantı gündem alanı -->
+          <div id="etk-row-gundem" style="display:none">
+            <label class="yk-lbl">Gündem / Konu</label>
+            <textarea id="etk-f-gundem" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Toplantı gündemi..."></textarea>
+          </div>
+          <!-- Kontenjan + Yer -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
+            <div id="etk-row-kontenjan">
               <label class="yk-lbl">Kontenjan</label>
               <input id="etk-f-kontenjan" type="number" class="yk-inp" placeholder="50" min="1">
             </div>
@@ -6335,8 +6389,37 @@ window.crmNavSec = function(sekme, btn){
   };
 
   window.etkTurDegisti = function(val){
-    const row = document.getElementById('etk-egitimci-row');
-    if(row) row.style.display = (val==='Eğitim'||val==='Seminer') ? 'block' : 'none';
+    /* Dinamik alanlar — tür başlığını güncelle */
+    const titleEl = document.querySelector('#etk-ekle-overlay .etk-f-baslik-text');
+    if(titleEl) titleEl.textContent = val || 'Etkinlik';
+
+    /* Tüm dinamik satırları göster/gizle */
+    const show = (...ids) => ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=''; });
+    const hide = (...ids) => ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+    const setLabel = (id, lbl) => { const el=document.getElementById(id); if(el) el.textContent=lbl; };
+
+    /* Önce hepsini gizle */
+    hide('etk-row-egitimci','etk-row-unvan','etk-row-kurum','etk-row-kontenjan',
+         'etk-row-fuar-sehir','etk-row-fuar-stand','etk-row-fuar-tarih-bit','etk-row-gundem','etk-row-saat');
+
+    if(val==='Eğitim'){
+      setLabel('etk-lbl-egitimci','Eğitimci / Konuşmacı');
+      setLabel('etk-lbl-kurum','Eğitmenin Kuruluşu');
+      setLabel('etk-f-ad-placeholder', 'Eğitim adı...');
+      show('etk-row-egitimci','etk-row-unvan','etk-row-kurum','etk-row-kontenjan','etk-row-saat');
+    } else if(val==='Seminer'){
+      setLabel('etk-lbl-egitimci','Konuşmacı');
+      setLabel('etk-lbl-kurum','Konuşmacının Kurumu');
+      show('etk-row-egitimci','etk-row-unvan','etk-row-kurum','etk-row-kontenjan','etk-row-saat');
+    } else if(val==='Fuar'){
+      setLabel('etk-lbl-egitimci','Organizatör Kurum');
+      show('etk-row-egitimci','etk-row-fuar-sehir','etk-row-fuar-stand','etk-row-fuar-tarih-bit');
+      /* Fuar'da kontenjan yok, saat yok */
+    } else if(val==='Toplantı'){
+      show('etk-row-gundem','etk-row-kontenjan','etk-row-saat');
+    } else if(val==='Etkinlik'){
+      show('etk-row-kontenjan','etk-row-saat');
+    }
   };
 
   /* ── Etkinlik Düzenle ── */
@@ -6441,11 +6524,16 @@ window.crmNavSec = function(sekme, btn){
     const tarihVal  = document.getElementById('etk-f-tarih')?.value;
     const saatBas   = document.getElementById('etk-f-saat-bas')?.value || '09:00';
     const saatBit   = document.getElementById('etk-f-saat-bit')?.value || '17:00';
-    const saat      = saatBas + ' – ' + saatBit;
-    const yer       = document.getElementById('etk-f-yer')?.value.trim() || 'TSO';
+    const saat      = tur==='Fuar' ? '' : (saatBas + ' – ' + saatBit);
+    const yer       = document.getElementById('etk-f-yer')?.value.trim() || '';
     const kontenjan = parseInt(document.getElementById('etk-f-kontenjan')?.value) || 50;
     const sorumlu   = document.getElementById('etk-f-sorumlu')?.value || '';
     const egitimci  = document.getElementById('etk-f-egitimci')?.value?.trim() || '';
+    /* Tür'e özel alanlar */
+    const fuarSehir = document.getElementById('etk-f-fuar-sehir')?.value?.trim()||'';
+    const fuarStand = document.getElementById('etk-f-fuar-stand')?.value?.trim()||'';
+    const tarihBitVal = document.getElementById('etk-f-tarih-bit')?.value||'';
+    const gundem    = document.getElementById('etk-f-gundem')?.value?.trim()||'';
 
     const id = genUUID();
 
@@ -6456,15 +6544,25 @@ window.crmNavSec = function(sekme, btn){
     const no       = document.getElementById('etk-f-no')?.value.trim()||'';
     const egitimciUnvan = document.getElementById('etk-f-egitimci-unvan')?.value.trim()||'';
     const egitimciKurum = document.getElementById('etk-f-egitimci-kurum')?.value.trim()||'';
+    /* Fuar için yer alanını şehir bilgisiyle zenginleştir */
+    const yerFinal = tur==='Fuar' && fuarSehir ? (yer ? yer+' / '+fuarSehir : fuarSehir) : yer;
+    /* Gündem/açıklama */
+    const aciklamaFinal = tur==='Toplantı' ? gundem : (tur==='Fuar' ? (fuarStand ? 'Stand: '+fuarStand : '') : '');
+
     ETK_DATA.etkinlikler.unshift({
-      id, ad, no, tur, tarih: tarihStr, tarihIso: tarihVal, saat, yer, sorumlu, egitimci, egitimciUnvan, egitimciKurum,
+      id, ad, no, tur, tarih: tarihStr, tarihIso: tarihVal,
+      tarihBitIso: tarihBitVal||null,
+      saat, yer: yerFinal, sorumlu, egitimci, egitimciUnvan, egitimciKurum,
+      aciklama: aciklamaFinal,
       durum: 'planlandi',
-      kontenjan, katilimcilar: [], evraklar: []
+      kontenjan: tur==='Fuar'?999:kontenjan, katilimcilar: [], evraklar: []
     });
     /* Supabase'e kaydet */
     _supa.from('etkinlikler').insert([{
-      id, hedef:'uye', no, ad, tur, tarih:tarihStr, tarih_iso:tarihVal, saat, yer,
-      kontenjan, sorumlu, egitimci, egitimci_unvan:egitimciUnvan, egitimci_kurum:egitimciKurum, durum:'planlandi'
+      id, hedef:'uye', no, ad, tur, tarih:tarihStr, tarih_iso:tarihVal, saat, yer:yerFinal,
+      kontenjan:tur==='Fuar'?999:kontenjan, sorumlu, egitimci,
+      egitimci_unvan:egitimciUnvan, egitimci_kurum:egitimciKurum,
+      aciklama:aciklamaFinal||null, durum:'planlandi'
     }]).then(({error})=>{if(error) console.error('Etkinlik kaydetme hatası:',error.message);});
 
     etkYeniKapat();
@@ -9196,26 +9294,44 @@ window.etkPrsArama=function(q){ _etkPrsArama=q.toLowerCase().trim(); etkPrsRende
 const _etkPrsAcc=new Set();
 window._etkPrsAcc=_etkPrsAcc;
 window.etkPrsKartToggle=function(id){ if(_etkPrsAcc.has(id)) _etkPrsAcc.delete(id); else _etkPrsAcc.add(id); etkPrsRender(); };
+window.etkPrsTurDegisti = function(val){
+  const show = (...ids) => ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=''; });
+  const hide = (...ids) => ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  const setLabel = (id, lbl) => { const el=document.getElementById(id); if(el) el.textContent=lbl; };
+  /* Önce hepsini gizle */
+  hide('etk-prs-row-egitimci','etk-prs-row-unvan','etk-prs-row-kurum','etk-prs-row-sertifika','etk-prs-row-gundem');
+  if(val==='Eğitim'){
+    setLabel('etk-prs-lbl-egitimci','Eğitimci / Konuşmacı');
+    show('etk-prs-row-egitimci','etk-prs-row-unvan','etk-prs-row-kurum','etk-prs-row-sertifika');
+  } else if(val==='Seminer'){
+    setLabel('etk-prs-lbl-egitimci','Konuşmacı');
+    show('etk-prs-row-egitimci','etk-prs-row-unvan','etk-prs-row-kurum');
+  } else if(val==='Toplantı'){
+    show('etk-prs-row-gundem');
+  } else if(val==='Etkinlik'){
+    /* Sadece temel alanlar */
+  }
+};
+
 window.etkPrsYeniEkle=function(){
   const sel=document.getElementById('etk-prs-f-sorumlu');
   if(sel&&window.PERSONEL) sel.innerHTML=(window.PERSONEL||[]).map(p=>`<option value="${p.ad} ${p.soyad}">${p.ad} ${p.soyad}</option>`).join('');
-  /* Tüm alanları temizle */
-  ['etk-prs-f-ad','etk-prs-f-no','etk-prs-f-egitimci','etk-prs-f-egitimci-unvan','etk-prs-f-egitimci-kurum','etk-prs-f-yer'].forEach(elId=>{const el=document.getElementById(elId);if(el)el.value='';});
+  ['etk-prs-f-ad','etk-prs-f-no','etk-prs-f-egitimci','etk-prs-f-egitimci-unvan','etk-prs-f-egitimci-kurum','etk-prs-f-yer','etk-prs-f-gundem'].forEach(elId=>{const el=document.getElementById(elId);if(el)el.value='';});
   const tEl=document.getElementById('etk-prs-f-tarih'); if(tEl) tEl.value=new Date().toISOString().slice(0,10);
   const bEl=document.getElementById('etk-prs-f-saat-bas'); if(bEl) bEl.value='09:00';
   const bEl2=document.getElementById('etk-prs-f-saat-bit'); if(bEl2) bEl2.value='17:00';
-  const turEl=document.getElementById('etk-prs-f-tur'); if(turEl) turEl.value='Eğitim';
-  const titEl=document.getElementById('etk-prs-ekle-title'); if(titEl) titEl.textContent='Yeni Personel Eğitimi Ekle';
-  /* Kaydet butonunu sıfırla */
-  const btn=document.querySelector('#etk-prs-ekle-overlay [onclick*="etkPrs"]');
-  if(btn&&btn.getAttribute('onclick').includes('Duzenle')) btn.setAttribute('onclick','etkPrsYeniKaydet()');
+  const turEl=document.getElementById('etk-prs-f-tur'); if(turEl){ turEl.value='Eğitim'; etkPrsTurDegisti('Eğitim'); }
+  const sertEl=document.getElementById('etk-prs-f-sertifika'); if(sertEl) sertEl.checked=false;
+  const titEl=document.getElementById('etk-prs-ekle-title'); if(titEl) titEl.textContent='Yeni Personel Etkinliği Ekle';
+  const btn=document.querySelector('#etk-prs-ekle-overlay .btn-p');
+  if(btn) btn.setAttribute('onclick','etkPrsYeniKaydet()');
   document.getElementById('etk-prs-ekle-overlay').style.display='flex';
 };
 window.etkPrsYeniKapat=function(){ document.getElementById('etk-prs-ekle-overlay').style.display='none'; };
 window.etkPrsYeniKaydet=function(){
   const ad=(document.getElementById('etk-prs-f-ad')?.value||'').trim();
   const tarihVal=document.getElementById('etk-prs-f-tarih')?.value;
-  if(!ad||!tarihVal){alert('Eğitim adı ve tarih zorunludur.');return;}
+  if(!ad||!tarihVal){alert('Ad ve tarih zorunludur.');return;}
   const tarihStr=new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
   const bas=document.getElementById('etk-prs-f-saat-bas')?.value||'09:00';
   const bit=document.getElementById('etk-prs-f-saat-bit')?.value||'17:00';
@@ -9223,18 +9339,25 @@ window.etkPrsYeniKaydet=function(){
   const prsUnvan=document.getElementById('etk-prs-f-egitimci-unvan')?.value.trim()||'';
   const prsKurum=document.getElementById('etk-prs-f-egitimci-kurum')?.value.trim()||'';
   const prsEpId = genUUID();
-  const prsAd=document.getElementById('etk-prs-f-ad')?.value.trim();
   const prsTur=document.getElementById('etk-prs-f-tur')?.value||'Eğitim';
   const prsYer=document.getElementById('etk-prs-f-yer')?.value?.trim()||'';
   const prsEgitimci=document.getElementById('etk-prs-f-egitimci')?.value?.trim()||'';
   const prsSorumlu=document.getElementById('etk-prs-f-sorumlu')?.value||'';
-  ETK_PRS_DATA.etkinlikler.unshift({ id:prsEpId, ad:prsAd||ad, no:prsNo, tur:prsTur, tarih:tarihStr, tarihIso:tarihVal, saat:bas+' – '+bit, yer:prsYer, egitimci:prsEgitimci, egitimciUnvan:prsUnvan, egitimciKurum:prsKurum, sorumlu:prsSorumlu, durum:'planlandi', katilimcilar:[], anketler:[], evraklar:[] });
-  /* Supabase'e kaydet */
+  const prsSertifika=document.getElementById('etk-prs-f-sertifika')?.checked||false;
+  const prsGundem=document.getElementById('etk-prs-f-gundem')?.value?.trim()||'';
+  const aciklama = prsTur==='Toplantı' ? prsGundem : '';
+  ETK_PRS_DATA.etkinlikler.unshift({
+    id:prsEpId, ad, no:prsNo, tur:prsTur, tarih:tarihStr, tarihIso:tarihVal,
+    saat:bas+' – '+bit, yer:prsYer, egitimci:prsEgitimci, egitimciUnvan:prsUnvan,
+    egitimciKurum:prsKurum, sorumlu:prsSorumlu, durum:'planlandi',
+    sertifika:prsSertifika, aciklama,
+    katilimcilar:[], anketler:[], evraklar:[]
+  });
   _supa.from('etkinlikler').insert([{
-    id:prsEpId, hedef:'personel', no:prsNo, ad:prsAd||ad, tur:prsTur,
+    id:prsEpId, hedef:'personel', no:prsNo, ad, tur:prsTur,
     tarih:tarihStr, tarih_iso:tarihVal, saat:bas+' – '+bit, yer:prsYer,
     egitimci:prsEgitimci, egitimci_unvan:prsUnvan, egitimci_kurum:prsKurum,
-    sorumlu:prsSorumlu, durum:'planlandi'
+    sorumlu:prsSorumlu, durum:'planlandi', aciklama:aciklama||null
   }]).then(({error})=>{if(error) console.error('Personel etkinlik kaydetme hatası:',error.message);});
   etkPrsYeniKapat(); etkPrsRender(); etkPrsMetrikleriGuncelle();
 };
@@ -9364,30 +9487,43 @@ window.etkPrsDuzenle=function(id){
   window.etkPrsYeniEkle();
   document.getElementById('etk-prs-f-ad').value=etk.ad||'';
   const noElD=document.getElementById('etk-prs-f-no'); if(noElD) noElD.value=etk.no||'';
-  document.getElementById('etk-prs-f-egitimci').value=etk.egitimci||'';
+  const turEl=document.getElementById('etk-prs-f-tur');
+  if(turEl){ turEl.value=etk.tur||'Eğitim'; etkPrsTurDegisti(turEl.value); }
+  const egEl=document.getElementById('etk-prs-f-egitimci'); if(egEl) egEl.value=etk.egitimci||'';
+  const unEl=document.getElementById('etk-prs-f-egitimci-unvan'); if(unEl) unEl.value=etk.egitimciUnvan||'';
+  const kurEl=document.getElementById('etk-prs-f-egitimci-kurum'); if(kurEl) kurEl.value=etk.egitimciKurum||'';
   document.getElementById('etk-prs-f-yer').value=etk.yer||'';
   if(etk.tarihIso) document.getElementById('etk-prs-f-tarih').value=etk.tarihIso;
   const sp=(etk.saat||'09:00 – 17:00').split('–').map(s=>s.trim());
   document.getElementById('etk-prs-f-saat-bas').value=sp[0]||'09:00';
   document.getElementById('etk-prs-f-saat-bit').value=sp[1]||'17:00';
-  document.getElementById('etk-prs-ekle-title').textContent='Eğitimi Düzenle';
-  const btn=document.querySelector('#etk-prs-ekle-overlay [onclick*="etkPrsYeniKaydet"]');
+  const sertEl=document.getElementById('etk-prs-f-sertifika'); if(sertEl) sertEl.checked=!!etk.sertifika;
+  const gnEl=document.getElementById('etk-prs-f-gundem'); if(gnEl) gnEl.value=etk.aciklama||'';
+  document.getElementById('etk-prs-ekle-title').textContent='Etkinliği Düzenle';
+  const btn=document.querySelector('#etk-prs-ekle-overlay .btn-p');
   if(btn) btn.setAttribute('onclick',`etkPrsDuzenleKaydet('${id}')`);
 };
 window.etkPrsDuzenleKaydet=function(id){
   const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===id);
   if(!etk) return;
   etk.ad=document.getElementById('etk-prs-f-ad')?.value.trim()||etk.ad;
+  etk.tur=document.getElementById('etk-prs-f-tur')?.value||etk.tur;
   etk.egitimci=document.getElementById('etk-prs-f-egitimci')?.value.trim()||'';
+  etk.egitimciUnvan=document.getElementById('etk-prs-f-egitimci-unvan')?.value.trim()||'';
+  etk.egitimciKurum=document.getElementById('etk-prs-f-egitimci-kurum')?.value.trim()||'';
   etk.yer=document.getElementById('etk-prs-f-yer')?.value.trim()||'';
+  etk.sertifika=document.getElementById('etk-prs-f-sertifika')?.checked||false;
   const bas=document.getElementById('etk-prs-f-saat-bas')?.value||'09:00';
   const bit=document.getElementById('etk-prs-f-saat-bit')?.value||'17:00';
   etk.saat=bas+' – '+bit;
+  etk.aciklama=document.getElementById('etk-prs-f-gundem')?.value?.trim()||'';
   const tv=document.getElementById('etk-prs-f-tarih')?.value;
   if(tv){ etk.tarih=new Date(tv).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}); etk.tarihIso=tv; if(etk.durum!=='tamamlandi') etk.durum='planlandi'; }
   _supa.from('etkinlikler').update({
-    ad:etk.ad, egitimci:etk.egitimci, yer:etk.yer,
-    saat:etk.saat, tarih:etk.tarih, tarih_iso:etk.tarihIso||null
+    ad:etk.ad, tur:etk.tur, egitimci:etk.egitimci,
+    egitimci_unvan:etk.egitimciUnvan, egitimci_kurum:etk.egitimciKurum,
+    yer:etk.yer, saat:etk.saat, tarih:etk.tarih, tarih_iso:etk.tarihIso||null,
+    aciklama:etk.aciklama||null
   }).eq('id',id).then(({error})=>{if(error) console.error('Personel etkinlik düzenleme hatası:',error.message);});
   etkPrsYeniKapat(); etkPrsRender(); etkPrsMetrikleriGuncelle();
 };
