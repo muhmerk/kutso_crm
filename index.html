@@ -16057,7 +16057,16 @@ async function evrakListeYukle(){
       listeEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:12px"><i class="ti ti-file-off" style="font-size:20px;display:block;margin-bottom:6px"></i>Henüz evrak eklenmedi</div>';
       return;
     }
-    listeEl.innerHTML = data.map(e=>{
+
+    /* Her dosya için signed URL oluştur (1 saatlik) */
+    const evraklarUrl = await Promise.all(data.map(async e=>{
+      try{
+        const path = e.dosya_url.includes('/'+BUCKET+'/') ? e.dosya_url.split('/'+BUCKET+'/')[1] : e.dosya_url;
+        const { data: sd } = await _supa.storage.from(BUCKET).createSignedUrl(path, 3600);
+        return { ...e, signedUrl: sd?.signedUrl || e.dosya_url };
+      }catch(err){ return { ...e, signedUrl: e.dosya_url }; }
+    }));
+    listeEl.innerHTML = evraklarUrl.map(e=>{
       const ikon = e.dosya_adi.match(/\.pdf$/i) ? 'ti-file-type-pdf' :
                    e.dosya_adi.match(/\.(doc|docx)$/i) ? 'ti-file-type-doc' :
                    e.dosya_adi.match(/\.(xls|xlsx)$/i) ? 'ti-file-type-xls' :
@@ -16075,7 +16084,7 @@ async function evrakListeYukle(){
           ${e.aciklama?`<div style="font-size:11px;color:var(--text2);margin-top:2px">${e.aciklama}</div>`:''}
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">
-          <button onclick="evrakIndir('${e.dosya_url}','${e.dosya_adi}')" class="btn btn-sm" style="padding:4px 8px" title="İndir"><i class="ti ti-download" style="font-size:13px"></i></button>
+          <button onclick="evrakIndir('${e.signedUrl}','${e.dosya_adi}')" class="btn btn-sm" style="padding:4px 8px" title="İndir"><i class="ti ti-download" style="font-size:13px"></i></button>
           <button onclick="evrakSil('${e.id}','${e.dosya_url}')" class="btn btn-sm" style="padding:4px 8px;color:var(--red)" title="Sil"><i class="ti ti-trash" style="font-size:13px"></i></button>
         </div>
       </div>`;
@@ -16105,9 +16114,10 @@ window.evrakDosyaSecildi = async function(files){
       const { data: upData, error: upErr } = await _supa.storage.from(BUCKET).upload(path, file, {upsert:false});
       if(upErr) throw upErr;
 
-      /* Public URL al */
-      const { data: urlData } = _supa.storage.from(BUCKET).getPublicUrl(path);
-      const url = urlData?.publicUrl || path;
+      /* Signed URL al (private bucket için) */
+      const { data: urlData, error: urlErr } = await _supa.storage.from(BUCKET).createSignedUrl(path, 3600);
+      if(urlErr) throw urlErr;
+      const url = urlData?.signedUrl || path;
 
       /* DB'ye kaydet */
       const { error: dbErr } = await _supa.from('toplanti_evraklar').insert([{
