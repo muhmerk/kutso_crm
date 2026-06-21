@@ -841,6 +841,19 @@ function supaRealtimeBaslat() {
     })
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Görevler dinleniyor'); });
 
+  /* Etkinlikler (Üye + Personel ETK) — takvime anlık yansısın */
+  _supa.channel('db-etkinlikler')
+    .on('postgres_changes', { event:'*', schema:'public', table:'etkinlikler' }, async ()=>{
+      await supaYukleEtkinlikler();
+      if(window.etkRender) window.etkRender();
+      if(window.etkPrsRender) window.etkPrsRender();
+      if(window.etkMetrikleriGuncelle) window.etkMetrikleriGuncelle();
+      if(window.etkPrsMetrikleriGuncelle) window.etkPrsMetrikleriGuncelle();
+      if(window.takvimRender) window.takvimRender();
+      console.log('🔄 Realtime: Etkinlikler güncellendi');
+    })
+    .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlikler dinleniyor'); });
+
   /* Üye listeleri (YK/Meclis/MK) — Genel Sekreterlik değişikliklerini diğer kullanıcılara anlık yansıt */
   _supa.channel('db-uye-listeleri')
     .on('postgres_changes', { event:'*', schema:'public', table:'yk_uyeler' }, async ()=>{
