@@ -3745,12 +3745,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         </div>
         <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
           <div>
-            <label class="yk-lbl">Etkinlik Adı <span style="color:var(--red)">*</span></label>
-            <input id="etk-f-ad" class="yk-inp" placeholder="Eğitim / Seminer / Fuar adı...">
-          </div>
-          <div>
             <label class="yk-lbl"><span class="etk-f-baslik-text">Etkinlik</span> Adı <span style="color:var(--red)">*</span></label>
-            <input id="etk-f-ad" class="yk-inp" placeholder="Etkinlik adı...">
+            <input id="etk-f-ad" class="yk-inp" placeholder="Etkinlik adı..." autocomplete="new-password">
           </div>
           <div>
             <label class="yk-lbl">Etkinlik Numarası</label>
@@ -6534,10 +6530,14 @@ window.crmNavSec = function(sekme, btn){
     /* Tüm alanları temizle */
     ['etk-f-ad','etk-f-no','etk-f-egitimci','etk-f-egitimci-unvan','etk-f-egitimci-kurum',
      'etk-f-yer','etk-f-gundem','etk-f-fuar-sehir','etk-f-fuar-stand','etk-f-tarih-bit'
-    ].forEach(elId=>{ const el=document.getElementById(elId); if(el) el.value=''; });
-    /* Autocomplete'i engelle */
-    const adEl = document.getElementById('etk-f-ad');
-    if(adEl){ adEl.value=''; adEl.setAttribute('autocomplete','off'); }
+    ].forEach(elId=>{
+      const el=document.getElementById(elId);
+      if(!el) return;
+      /* Input'u clone'la — tarayıcı autocomplete cache'ini temizler */
+      const clone = el.cloneNode(true);
+      clone.value = '';
+      el.parentNode.replaceChild(clone, el);
+    });
     const tarihEl = document.getElementById('etk-f-tarih');
     if(tarihEl) tarihEl.value = new Date().toISOString().slice(0,10);
     const konEl = document.getElementById('etk-f-kontenjan'); if(konEl) konEl.value='';
