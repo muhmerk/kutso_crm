@@ -6532,7 +6532,12 @@ window.crmNavSec = function(sekme, btn){
       sel.innerHTML = (window.PERSONEL||[]).map(p=>`<option value="${p.ad} ${p.soyad}">${p.ad} ${p.soyad}</option>`).join('');
     }
     /* Tüm alanları temizle */
-    ['etk-f-ad','etk-f-no','etk-f-egitimci','etk-f-egitimci-unvan','etk-f-egitimci-kurum','etk-f-yer'].forEach(elId=>{ const el=document.getElementById(elId); if(el) el.value=''; });
+    ['etk-f-ad','etk-f-no','etk-f-egitimci','etk-f-egitimci-unvan','etk-f-egitimci-kurum',
+     'etk-f-yer','etk-f-gundem','etk-f-fuar-sehir','etk-f-fuar-stand','etk-f-tarih-bit'
+    ].forEach(elId=>{ const el=document.getElementById(elId); if(el) el.value=''; });
+    /* Autocomplete'i engelle */
+    const adEl = document.getElementById('etk-f-ad');
+    if(adEl){ adEl.value=''; adEl.setAttribute('autocomplete','off'); }
     const tarihEl = document.getElementById('etk-f-tarih');
     if(tarihEl) tarihEl.value = new Date().toISOString().slice(0,10);
     const konEl = document.getElementById('etk-f-kontenjan'); if(konEl) konEl.value='';
