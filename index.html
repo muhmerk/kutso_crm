@@ -170,7 +170,31 @@ async function supaYukleSikayetler() {
     const trySet = () => {
       window.SIK_DB = {};
       sikayetler.forEach(s=>{
-        window.SIK_DB[s.id] = { id:s.id, no:s.sikayet_no||'', firma:s.firma_adi||'', firmaId:s.uye_id||'', konu:s.konu, detay:s.aciklama||'', kategori:s.kategori||'Diğer', oncelik:s.oncelik||'Normal', yil:s.yil||new Date().getFullYear(), tarih:s.tarih||'', tarihIso:s.tarih_iso||'', durum:s.durum||'İncelemede', girenKullanici:s.sorumlu_kul||'', girenAd:s.sorumlu_kul||'', notlar:(notlar||[]).filter(n=>n.sikayet_id===s.id).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi })), surec:(notlar||[]).filter(n=>n.sikayet_id===s.id && n.yeni_durum).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi, yeniDurum:n.yeni_durum })) };
+        window.SIK_DB[s.id] = {
+          id:s.id, no:s.sikayet_no||'', firma:s.firma_adi||'', firmaId:s.uye_id||'',
+          konu:s.konu, detay:s.aciklama||'', kategori:s.kategori||'Diğer',
+          oncelik:s.oncelik||'Normal', yil:s.yil||new Date().getFullYear(),
+          tarih:s.tarih||'', tarihIso:s.tarih_iso||'', saat:s.saat||'',
+          durum:s.durum||'İncelemede',
+          sikayetciAd:s.sikayetci_ad||'',
+          iletisimTercihi:s.iletisim_tercihi||'',
+          ilgiliBirim:s.ilgili_birim||'',
+          duzeltmeTalebi:!!s.duzeltme_talebi,
+          duzeltmeAciklama:s.duzeltme_aciklama||'',
+          sikayetiAlan:s.sikayeti_alan||'',
+          sorunSinifi:s.sorun_sinifi||0,
+          takipSorumlu:s.takip_sorumlu||'',
+          planlananTarih:s.planlanan_tarih||'',
+          planlananSaat:s.planlanan_saat||'',
+          oncelikSeviyesi:s.oncelik_seviyesi||'Normal',
+          hedeflenenSureGerceklesti:s.hedeflenen_sure_gerceklesti,
+          difGerekli:s.dif_gerekli,
+          kapatmaTarihi:s.kapatma_tarihi||'',
+          cozumTuru:s.cozum_turu||'',
+          girenKullanici:s.sorumlu_kul||'', girenAd:s.sorumlu_kul||'',
+          notlar:(notlar||[]).filter(n=>n.sikayet_id===s.id && !n.yeni_durum).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi })),
+          surec:(notlar||[]).filter(n=>n.sikayet_id===s.id && n.yeni_durum).map(n=>({ metin:n.metin, tarih:n.tarih, kisi:n.kisi, yeniDurum:n.yeni_durum }))
+        };
       });
       /* Şikayet kartlarını DOM'a yeniden çiz */
       const section = document.getElementById('s-sikayet');
@@ -3084,40 +3108,85 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
     <!-- Şikayet Ekle Modal -->
     <!-- Şikayet Ekle Modalı -->
-    <div id="sik-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:540px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div id="sik-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:620px;max-height:93vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
         <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-          <div style="font-size:15px;font-weight:500" id="sik-modal-title">Yeni Şikayet Kaydı</div>
-          <button onclick="sikModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
-        </div>
-        <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
-          <!-- Firma arama -->
           <div>
-            <label class="yk-lbl">Üye / Firma <span style="color:var(--red)">*</span></label>
-            <div style="position:relative">
-              <input id="sik-f-firma" class="yk-inp" placeholder="Firma adı veya üye no ile ara..." autocomplete="off"
-                oninput="sikFirmaAra(this.value)" style="padding-right:32px">
-              <i class="ti ti-search" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text2);pointer-events:none"></i>
-            </div>
-            <div id="sik-firma-sonuclar" style="display:none;position:absolute;z-index:300;background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;width:504px;margin-top:2px"></div>
-            <input type="hidden" id="sik-f-firma-id" value="">
+            <div style="font-size:15px;font-weight:600" id="sik-modal-title">Yeni Şikayet Kaydı</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">FPS 08-01 Şikayet Kayıt Formu</div>
           </div>
+          <button onclick="sikModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+        </div>
+        <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
+
+          <!-- ŞİKAYETÇİYE AİT BİLGİLER -->
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyetçiye Ait Bilgiler</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="yk-lbl">Kuruluş / Firma <span style="color:var(--red)">*</span></label>
+              <div style="position:relative">
+                <input id="sik-f-firma" class="yk-inp" placeholder="Firma adı veya üye no..." autocomplete="off" oninput="sikFirmaAra(this.value)" style="padding-right:32px">
+                <i class="ti ti-search" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text2);pointer-events:none"></i>
+              </div>
+              <div id="sik-firma-sonuclar" style="display:none;position:absolute;z-index:300;background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;width:280px;margin-top:2px"></div>
+              <input type="hidden" id="sik-f-firma-id">
+            </div>
+            <div>
+              <label class="yk-lbl">Şikâyetçi Adı Soyadı</label>
+              <input id="sik-f-sikayetci-ad" class="yk-inp" placeholder="Yetkili kişi adı...">
+            </div>
+          </div>
+
+          <!-- İletişim Tercihi -->
           <div>
-            <label class="yk-lbl">Şikayet Konusu <span style="color:var(--red)">*</span></label>
+            <label class="yk-lbl">Tercih Edilen İletişim Yöntemi</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              ${['Yazışma Adresi','E-Posta','Telefon','SMS'].map(t=>`
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px">
+                <input type="radio" name="sik-iletisim" value="${t}" style="cursor:pointer"> ${t}
+              </label>`).join('')}
+            </div>
+          </div>
+
+          <!-- ŞİKAYET YAPILAN BİRİM -->
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:8px">Şikâyet Yapılan İlgili Birim</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${['Yönetim Kurulu','Genel Sekreterlik','Dış Ticaret','Kapasite ve Ekspertiz','İş Makineleri Tescili','Satın Alma','Muhasebe','Vezne','Ticaret Sicil','Oda Sicil','Bilgi İşlem','K Belgeleri','Sayısal Takograf Belgeleri','Sigorta Acenteliği','Türk Malı - Yerli Malı','Basın Yayın','Eğitim, Toplantı, Seminer','Diğer'].map(b=>`
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap">
+                <input type="radio" name="sik-birim" value="${b}" style="cursor:pointer"> ${b}
+              </label>`).join('')}
+            </div>
+          </div>
+
+          <!-- ŞİKAYET BİLGİLERİ -->
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyet Bilgileri</div>
+          <div>
+            <label class="yk-lbl">Şikâyetin Konusu (Karşılaşılan Sorun) <span style="color:var(--red)">*</span></label>
             <input id="sik-f-konu" class="yk-inp" placeholder="Kısa konu başlığı...">
           </div>
           <div>
-            <label class="yk-lbl">Şikayet Detayı</label>
+            <label class="yk-lbl">Detaylı Açıklama</label>
             <textarea id="sik-f-detay" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Şikayetin ayrıntılı açıklaması..."></textarea>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="yk-lbl">Düzeltme Talebiniz Var Mı?</label>
+            <div style="display:flex;gap:10px;margin-bottom:8px">
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="evet" onchange="document.getElementById('sik-duzeltme-detay').style.display=''"> Evet</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="hayir" checked onchange="document.getElementById('sik-duzeltme-detay').style.display='none'"> Hayır</label>
+            </div>
+            <textarea id="sik-duzeltme-detay" class="yk-inp" style="min-height:60px;resize:vertical;display:none" placeholder="Ne tip bir düzeltme istiyorsunuz?"></textarea>
+          </div>
+
+          <!-- Tarih, Saat, Öncelik -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
             <div>
-              <label class="yk-lbl">Kategori</label>
-              <select id="sik-f-kategori" class="yk-inp">
-                <option>Hizmet Kalitesi</option><option>Bilgilendirme</option>
-                <option>Akreditasyon</option><option>Aidat</option>
-                <option>Etkinlik</option><option>Diğer</option>
-              </select>
+              <label class="yk-lbl">Şikayet Tarihi</label>
+              <input id="sik-f-tarih" type="date" class="yk-inp">
+            </div>
+            <div>
+              <label class="yk-lbl">Saati</label>
+              <input id="sik-f-saat" type="time" class="yk-inp">
             </div>
             <div>
               <label class="yk-lbl">Öncelik</label>
@@ -3128,21 +3197,23 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
               </select>
             </div>
           </div>
-          <div>
-            <label class="yk-lbl">Şikayet Notu (isteğe bağlı)</label>
-            <textarea id="sik-f-not" class="yk-inp" style="min-height:56px;resize:vertical" placeholder="İlk temas notu, ek bilgi..."></textarea>
-          </div>
+
+          <!-- Personel bilgileri -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
-              <label class="yk-lbl">Şikayet Tarihi</label>
-              <input id="sik-f-tarih" type="date" class="yk-inp">
+              <label class="yk-lbl">Şikayeti Alan Personel</label>
+              <select id="sik-f-alan-personel" class="yk-inp"></select>
             </div>
-            <div style="display:flex;align-items:flex-end">
-              <div style="font-size:11px;color:var(--text2);padding:8px;background:var(--surface2);border-radius:8px;line-height:1.5">
-                <i class="ti ti-info-circle" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>
-                Süreç takibi Meriç Keskin tarafından yürütülür
-              </div>
+            <div>
+              <label class="yk-lbl">Takip Sorumlusu</label>
+              <select id="sik-f-takip-sorumlu" class="yk-inp"></select>
             </div>
+          </div>
+
+          <!-- İlk Not -->
+          <div>
+            <label class="yk-lbl">İlk Temas Notu (isteğe bağlı)</label>
+            <textarea id="sik-f-not" class="yk-inp" style="min-height:56px;resize:vertical" placeholder="Ek bilgi, ilk temas notu..."></textarea>
           </div>
         </div>
         <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
@@ -3152,20 +3223,32 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
     </div>
 
-    <!-- Şikayet Süreç Modalı (sadece Meriç Keskin) -->
-    <div id="sik-surec-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:520px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-          <div>
-            <div style="font-size:15px;font-weight:500" id="sik-surec-baslik">Şikayet Süreci</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px" id="sik-surec-no"></div>
+    <!-- Şikayet Detay Modalı — 3 Sekme -->
+    <div id="sik-surec-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:680px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+        <!-- Başlık -->
+        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);flex-shrink:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:15px;font-weight:600" id="sik-surec-baslik"></div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px" id="sik-surec-no"></div>
+            </div>
+            <button onclick="sikSurecKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
           </div>
-          <button onclick="sikSurecKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+          <!-- Sekmeler -->
+          <div style="display:flex;gap:0;margin-top:12px;border-bottom:2px solid var(--border)">
+            <button id="sik-tab-btn-bilgi" onclick="sikTabSec('bilgi')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;font-family:var(--font)">Bilgiler</button>
+            <button id="sik-tab-btn-surec" onclick="sikTabSec('surec')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Süreç Takibi</button>
+            <button id="sik-tab-btn-not" onclick="sikTabSec('not')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Notlar</button>
+          </div>
         </div>
-        <div id="sik-surec-body" style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px"></div>
+        <!-- Sekme içerikleri -->
+        <div id="sik-surec-body" style="overflow-y:auto;flex:1;padding:18px 20px;display:flex;flex-direction:column;gap:12px"></div>
+        <!-- Alt butonlar -->
+        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0" id="sik-surec-footer"></div>
+      </div>
+    </div>
         <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-          <button class="btn btn-sm" onclick="sikSurecKapat()">Kapat</button>
-          <button class="btn btn-p btn-sm" id="sik-surec-kaydet-btn"><i class="ti ti-device-floppy"></i> Kaydet</button>
         </div>
       </div>
     </div>
@@ -16007,101 +16090,116 @@ window.sikModalKapat = function(){
 
 window.sikayetEkleModal = function(duzenleId){
   window._sikDuzenleId = duzenleId||null;
+  /* Personel dropdown'larını doldur */
+  const prsOpts = (window.PERSONEL||[]).map(p=>`<option value="${p.ad+' '+p.soyad}">${p.ad} ${p.soyad}</option>`).join('');
+  const alanEl = document.getElementById('sik-f-alan-personel');
+  const takipEl = document.getElementById('sik-f-takip-sorumlu');
+  if(alanEl) alanEl.innerHTML = '<option value="">Seçin...</option>'+prsOpts;
+  if(takipEl) takipEl.innerHTML = '<option value="">Seçin...</option>'+prsOpts;
+
+  const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val||''; };
+  const setRadio=(name,val)=>{ document.querySelectorAll(`input[name="${name}"]`).forEach(r=>r.checked=r.value===val); };
+
   if(duzenleId && window.SIK_DB[duzenleId]){
     const s = window.SIK_DB[duzenleId];
-    const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val||''; };
-    setVal('sik-f-firma', s.firma);
-    setVal('sik-f-firma-id', s.firmaId);
-    setVal('sik-f-konu', s.konu);
-    setVal('sik-f-detay', s.detay);
-    setVal('sik-f-not', '');
-    const katEl=document.getElementById('sik-f-kategori'); if(katEl) katEl.value=s.kategori||'Diğer';
+    setVal('sik-f-firma', s.firma); setVal('sik-f-firma-id', s.firmaId);
+    setVal('sik-f-sikayetci-ad', s.sikayetciAd);
+    setVal('sik-f-konu', s.konu); setVal('sik-f-detay', s.detay);
+    setVal('sik-f-tarih', s.tarihIso); setVal('sik-f-saat', s.saat);
+    setVal('sik-f-alan-personel', s.sikayetiAlan);
+    setVal('sik-f-takip-sorumlu', s.takipSorumlu);
     const oncEl=document.getElementById('sik-f-oncelik');
-    if(oncEl){
-      const oncMap={'Kritik':'kritik','Normal':'normal','Düşük':'dusuk'};
-      oncEl.value = oncMap[s.oncelik] || 'normal';
-    }
-    const tarihEl = document.getElementById('sik-f-tarih');
-    if(tarihEl) tarihEl.value = s.tarihIso || new Date().toISOString().slice(0,10);
+    if(oncEl){ const oncMap={'Kritik':'kritik','Normal':'normal','Düşük':'dusuk'}; oncEl.value=oncMap[s.oncelik]||'normal'; }
+    if(s.iletisimTercihi) setRadio('sik-iletisim', s.iletisimTercihi);
+    if(s.ilgiliBirim) setRadio('sik-birim', s.ilgiliBirim);
+    if(s.duzeltmeTalebi){
+      setRadio('sik-duzeltme','evet');
+      setVal('sik-duzeltme-detay', s.duzeltmeAciklama);
+      const dd=document.getElementById('sik-duzeltme-detay'); if(dd) dd.style.display='';
+    } else { setRadio('sik-duzeltme','hayir'); }
     document.getElementById('sik-modal-title').textContent = 'Şikayeti Düzenle';
   } else {
-    ['sik-f-firma','sik-f-konu','sik-f-detay','sik-f-not'].forEach(elId=>{
-      const el=document.getElementById(elId); if(el) el.value='';
-    });
-    const fidEl = document.getElementById('sik-f-firma-id'); if(fidEl) fidEl.value='';
-    const katEl=document.getElementById('sik-f-kategori'); if(katEl) katEl.value='Diğer';
+    ['sik-f-firma','sik-f-sikayetci-ad','sik-f-konu','sik-f-detay','sik-f-not','sik-duzeltme-detay'].forEach(id=>setVal(id,''));
+    setVal('sik-f-firma-id','');
+    setVal('sik-f-tarih', new Date().toISOString().slice(0,10));
+    setVal('sik-f-saat', new Date().toTimeString().slice(0,5));
     const oncEl=document.getElementById('sik-f-oncelik'); if(oncEl) oncEl.value='normal';
-    /* Varsayılan tarih: bugün */
-    const tarihEl = document.getElementById('sik-f-tarih');
-    if(tarihEl) tarihEl.value = new Date().toISOString().slice(0,10);
+    document.querySelectorAll('input[name="sik-iletisim"]').forEach(r=>r.checked=false);
+    document.querySelectorAll('input[name="sik-birim"]').forEach(r=>r.checked=false);
+    setRadio('sik-duzeltme','hayir');
+    const dd=document.getElementById('sik-duzeltme-detay'); if(dd) dd.style.display='none';
     document.getElementById('sik-modal-title').textContent = 'Yeni Şikayet Kaydı';
+    /* Oturumu açan personeli varsayılan olarak seç */
+    const mevcutPrs = currentUser?.adSoyad||'';
+    if(alanEl && mevcutPrs){ const opt=[...alanEl.options].find(o=>o.value===mevcutPrs); if(opt) alanEl.value=mevcutPrs; }
   }
   document.getElementById('sik-modal-overlay').style.display='flex';
 };
 
 window.sikayetKaydet = async function(){
-  const firma   = (document.getElementById('sik-f-firma')?.value||'').trim();
-  const firmaId = document.getElementById('sik-f-firma-id')?.value||'';
-  const konu    = (document.getElementById('sik-f-konu')?.value||'').trim();
-  const detay   = (document.getElementById('sik-f-detay')?.value||'').trim();
-  const not_    = (document.getElementById('sik-f-not')?.value||'').trim();
-  const kategori= document.getElementById('sik-f-kategori')?.value||'Diğer';
-  const oncelik = document.getElementById('sik-f-oncelik')?.value||'incelemede';
+  const firma    = (document.getElementById('sik-f-firma')?.value||'').trim();
+  const firmaId  = document.getElementById('sik-f-firma-id')?.value||'';
+  const konu     = (document.getElementById('sik-f-konu')?.value||'').trim();
+  const detay    = (document.getElementById('sik-f-detay')?.value||'').trim();
+  const not_     = (document.getElementById('sik-f-not')?.value||'').trim();
+  const oncelik  = document.getElementById('sik-f-oncelik')?.value||'normal';
   const tarihVal = document.getElementById('sik-f-tarih')?.value;
-  const tarihObj = tarihVal ? new Date(tarihVal) : new Date();
-  const yil  = tarihObj.getFullYear();
+  const saat     = document.getElementById('sik-f-saat')?.value||'';
+  const sikayetciAd = (document.getElementById('sik-f-sikayetci-ad')?.value||'').trim();
+  const alanPersonel = document.getElementById('sik-f-alan-personel')?.value||'';
+  const takipSorumlu = document.getElementById('sik-f-takip-sorumlu')?.value||'';
+  const iletisimTercihi = document.querySelector('input[name="sik-iletisim"]:checked')?.value||'';
+  const ilgiliBirim = document.querySelector('input[name="sik-birim"]:checked')?.value||'';
+  const duzeltmeTalebi = document.querySelector('input[name="sik-duzeltme"]:checked')?.value==='evet';
+  const duzeltmeAciklama = (document.getElementById('sik-duzeltme-detay')?.value||'').trim();
+
   if(!firma || !konu){ alert('Firma ve şikayet konusu zorunludur.'); return; }
+  const tarihObj = tarihVal ? new Date(tarihVal) : new Date();
+  const yil = tarihObj.getFullYear();
   const tarih = tarihObj.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
   const oncelikTxt = {kritik:'Kritik', normal:'Normal', dusuk:'Düşük'}[oncelik]||'Normal';
   const girenAd = currentUser?.adSoyad||'Bilinmiyor';
   const duzenleId = window._sikDuzenleId;
 
+  const guncellemeObj = {
+    uye_id: parseInt(firmaId)||null, firma_adi: firma,
+    konu, aciklama: detay, oncelik: oncelikTxt,
+    tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil, saat,
+    sikayetci_ad: sikayetciAd||null,
+    iletisim_tercihi: iletisimTercihi||null,
+    ilgili_birim: ilgiliBirim||null,
+    duzeltme_talebi: duzeltmeTalebi,
+    duzeltme_aciklama: duzeltmeAciklama||null,
+    sikayeti_alan: alanPersonel||null,
+    takip_sorumlu: takipSorumlu||null
+  };
+
   if(duzenleId){
-    /* DÜZENLEME — mevcut kaydı güncelle. Durum (süreç) alanına dokunmuyoruz, sadece öncelik */
-    const { error } = await _supa.from('sikayetler').update({
-      uye_id: parseInt(firmaId)||null, firma_adi: firma,
-      konu, aciklama: detay, kategori, oncelik: oncelikTxt,
-      tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil
-    }).eq('id', duzenleId);
+    const { error } = await _supa.from('sikayetler').update(guncellemeObj).eq('id', duzenleId);
     if(error){ alert('Güncelleme hatası: '+error.message); return; }
-    if(not_){
-      await _supa.from('sikayet_notlar').insert([{ sikayet_id:duzenleId, metin:not_, tarih, kisi:girenAd }]);
-    }
+    if(not_){ await _supa.from('sikayet_notlar').insert([{ sikayet_id:duzenleId, metin:not_, tarih, kisi:girenAd }]); }
     window._sikDuzenleId = null;
-    sikModalKapat();
-    await supaYukleSikayetler();
-    alert(`✓ Şikayet güncellendi.`);
+    sikModalKapat(); await supaYukleSikayetler();
+    alert('✓ Şikayet güncellendi.');
     return;
   }
 
   /* YENİ KAYIT */
-  const sayac = document.querySelectorAll('#s-sikayet .sk').length + 1;
+  const sayac = Object.keys(window.SIK_DB||{}).length + 1;
   const no = `ŞKY-${yil}-${String(sayac).padStart(4,'0')}`;
-  /* Supabase'e kaydet — gerçek UUID için select().single() kullan */
   const { data: ins, error: insErr } = await _supa.from('sikayetler').insert([{
-    sikayet_no: no, uye_id: parseInt(firmaId)||null, firma_adi: firma,
-    konu, aciklama: detay, kategori, oncelik: oncelikTxt, durum: 'İncelemede',
-    sorumlu_kul: currentUser?.kullanici||'',
-    tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil
+    ...guncellemeObj,
+    sikayet_no: no, sorumlu_kul: currentUser?.kullanici||'', durum: 'İncelemede'
   }]).select().single();
   if(insErr){ alert('Kaydetme hatası: '+insErr.message); return; }
-  if(not_ && ins?.id){
-    await _supa.from('sikayet_notlar').insert([{ sikayet_id:ins.id, metin:not_, tarih, kisi:girenAd }]);
-  }
-
-  /* CRM senkronizasyonu — firma ID'si varsa CRM şikayet sekmesine ekle */
+  if(not_ && ins?.id){ await _supa.from('sikayet_notlar').insert([{ sikayet_id:ins.id, metin:not_, tarih, kisi:girenAd }]); }
   if(firmaId && window.CRM_SIKAYETLER){
     if(!window.CRM_SIKAYETLER[firmaId]) window.CRM_SIKAYETLER[firmaId]=[];
-    window.CRM_SIKAYETLER[firmaId].unshift({
-      no, konu, detay:detay||konu, tarih, kategori,
-      durum: oncelik, sorumlu: currentUser?.adSoyad||girenAd, cevap:null
-    });
-    if(window.crmGetCurrentFirmId && window.crmGetCurrentFirmId()===firmaId && window.crmRenderSik)
-      window.crmRenderSik(firmaId);
+    window.CRM_SIKAYETLER[firmaId].unshift({ no, konu, detay:detay||konu, tarih, durum:'İncelemede', sorumlu:girenAd, cevap:null });
+    if(window.crmGetCurrentFirmId && window.crmGetCurrentFirmId()===firmaId && window.crmRenderSik) window.crmRenderSik(firmaId);
   }
-  sikModalKapat();
-  await supaYukleSikayetler();
-  alert(`✓ "${konu}" şikayeti kaydedildi.\nNo: ${no}\nSüreç takibi: Meriç Keskin`);
+  sikModalKapat(); await supaYukleSikayetler();
+  alert(`✓ "${konu}" şikayeti kaydedildi.\nNo: ${no}`);
 };
 
 /* sikayetSil ve sikayetSilById fonksiyonları dosya sonunda tanımlı (kanonik versiyon) */
@@ -16132,79 +16230,200 @@ window.sikFilter = function(btn, filtre){
   });
 };
 
-/* Süreç modalı */
+/* Sekme seçici */
+window._sikAktifTab = 'bilgi';
+window.sikTabSec = function(tab){
+  window._sikAktifTab = tab;
+  ['bilgi','surec','not'].forEach(t=>{
+    const btn = document.getElementById('sik-tab-btn-'+t);
+    if(!btn) return;
+    const aktif = t===tab;
+    btn.style.color = aktif ? 'var(--blue)' : 'var(--text2)';
+    btn.style.fontWeight = aktif ? '600' : '500';
+    btn.style.borderBottom = aktif ? '2px solid var(--blue)' : '2px solid transparent';
+  });
+  if(window._sikSurecAktifId) sikSurecRenderTab(window._sikSurecAktifId, tab);
+};
+
+function sikSurecRenderTab(kartId, tab){
+  const db = window.SIK_DB[kartId];
+  const body = document.getElementById('sik-surec-body');
+  const footer = document.getElementById('sik-surec-footer');
+  if(!db || !body) return;
+  const kanYetki = sikTakipMi() || sikGirenMi(kartId);
+
+  if(tab==='bilgi'){
+    /* BİLGİLER SEKMESİ */
+    const birim_renk = {'Yönetim Kurulu':'var(--blue)','Genel Sekreterlik':'var(--purple)','Diğer':'var(--text2)'}[db.ilgiliBirim]||'var(--teal)';
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px">ŞİKAYET NO</div><div style="font-size:13px;font-weight:600">${db.no||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px">TARİH / SAAT</div><div style="font-size:13px">${db.tarih||'—'}${db.saat?' · '+db.saat:''}</div></div>
+        <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px">KURULUġ / FİRMA</div><div style="font-size:13px;font-weight:500">${db.firma||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px">ŞİKAYETÇİ</div><div style="font-size:13px">${db.sikayetciAd||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px">İLETİŞİM TERCİHİ</div><div style="font-size:13px">${db.iletisimTercihi||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px">ÖNCELIK</div><div><span class="badge ${{Kritik:'b-red',Normal:'b-blue','Düşük':'b-green'}[db.oncelik]||'b-gray'}">${db.oncelik||'Normal'}</span></div></div>
+      </div>
+      ${db.ilgiliBirim?`<div style="padding:8px 12px;background:${birim_renk}15;border-radius:8px;border-left:3px solid ${birim_renk};font-size:12px;font-weight:600">${db.ilgiliBirim}</div>`:''}
+      <div><div style="font-size:10px;color:var(--text2);margin-bottom:4px">ŞİKAYETİN KONUSU</div><div style="font-size:13px;font-weight:500">${db.konu||'—'}</div></div>
+      ${db.detay?`<div><div style="font-size:10px;color:var(--text2);margin-bottom:4px">DETAYLI AÇIKLAMA</div><div style="font-size:12px;color:var(--text);line-height:1.6">${db.detay}</div></div>`:''}
+      ${db.duzeltmeTalebi?`<div style="padding:10px 12px;background:var(--amber-bg);border-radius:8px;border-left:3px solid var(--amber)"><div style="font-size:10px;font-weight:700;color:var(--amber);margin-bottom:3px">DÜZELTME TALEBİ</div><div style="font-size:12px">${db.duzeltmeAciklama||'Düzeltme talep edilmiştir'}</div></div>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${db.sikayetiAlan?`<div><div style="font-size:10px;color:var(--text2);margin-bottom:3px">ŞİKAYETİ ALAN PERSONEL</div><div style="font-size:13px">${db.sikayetiAlan}</div></div>`:''}
+        ${db.takipSorumlu?`<div><div style="font-size:10px;color:var(--text2);margin-bottom:3px">TAKİP SORUMLUSU</div><div style="font-size:13px">${db.takipSorumlu}</div></div>`:''}
+      </div>`;
+    footer.innerHTML = `<button class="btn btn-sm" onclick="sikSurecKapat()">Kapat</button>
+      ${kanYetki?`<button class="btn btn-sm" onclick="sikayetEkleModal('${kartId}')"><i class="ti ti-edit"></i> Düzenle</button>`:''}`;
+
+  } else if(tab==='surec'){
+    /* SÜREÇ TAKİBİ SEKMESİ — 9 adım */
+    const ADIMLAR = [
+      {no:1, ad:'Şikayetçiye Alındığının Bildirilmesi', icon:'ti-bell'},
+      {no:2, ad:'İlk Değerlendirme', icon:'ti-analyze'},
+      {no:3, ad:'Değerlendirme Sonucunun Bildirilmesi', icon:'ti-message-check'},
+      {no:4, ad:'Şikayetin Araştırılması', icon:'ti-search'},
+      {no:5, ad:'Çözüm Geliştirilmesi', icon:'ti-bulb'},
+      {no:6, ad:'Şikayetçiye Bilgi Verilmesi', icon:'ti-speakerphone'},
+      {no:7, ad:'Düzeltme Yapılması', icon:'ti-tool'},
+      {no:8, ad:'Düzeltmenin Doğrulanması', icon:'ti-check-circle'},
+      {no:9, ad:'Şikayetin Kapatılması', icon:'ti-lock-check'},
+    ];
+    const surec = db.surec||[];
+    const tamamlananAdimlar = new Set(surec.filter(n=>n.adimNo).map(n=>n.adimNo));
+
+    const sorunSiniflari = ['','Eksik Hizmet','Hizmet Sağlamayı Reddetme','Kötü Hizmet','Kısmen Sağlanmayan Hizmet','Kusurlu Hizmet','Hizmetin Gecikmesi','Kötü Muamele','Yanlış Bilgi','Yetersiz Bilgi','İlgisizlik','Diğer (Bilgi Talebi)'];
+    const cozumSecenekleri = ['Hizmetin Tekrarlanması','Taahhütlerin Yerine Getirilmesi','Yerine Eşdeğerini Verme','Özür Dileme','Teknik Yardım','Bilgilendirme','Yönlendirme','Diğer'];
+
+    const surecHtml = ADIMLAR.map(a=>{
+      const tamam = tamamlananAdimlar.has(a.no);
+      const adimNot = surec.find(n=>n.adimNo===a.no);
+      return `<div style="display:flex;gap:10px;padding:10px;border:1px solid ${tamam?'var(--teal)':'var(--border)'};border-radius:10px;background:${tamam?'var(--green-bg)':'var(--surface)'}">
+        <div style="width:28px;height:28px;border-radius:50%;background:${tamam?'var(--teal)':'var(--border2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ${tamam?'ti-check':a.icon}" style="font-size:13px;color:${tamam?'#fff':'var(--text2)'}"></i>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:${tamam?'var(--teal)':'var(--text)'}">${a.no}. ${a.ad}</div>
+          ${adimNot?`<div style="font-size:11px;color:var(--text2);margin-top:3px">${adimNot.metin} · ${adimNot.tarih} · ${adimNot.kisi}</div>`:''}
+          ${(a.no===2 && sikTakipMi())?`
+            <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px"><input type="radio" name="sik-oncelik-seviye" value="Çok Acil"> Çok Acil</label>
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px"><input type="radio" name="sik-oncelik-seviye" value="Acil"> Acil</label>
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px"><input type="radio" name="sik-oncelik-seviye" value="Normal" checked> Normal</label>
+            </div>`:''}
+          ${(a.no===5 && sikTakipMi())?`
+            <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+              ${cozumSecenekleri.map(c=>`<label style="font-size:10px;display:flex;align-items:center;gap:3px;padding:2px 8px;border:1px solid var(--border);border-radius:12px;cursor:pointer"><input type="radio" name="sik-cozum-tur" value="${c}"> ${c}</label>`).join('')}
+            </div>`:''}
+          ${(a.no===9 && sikTakipMi())?`
+            <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sik-hedeflenen-sure"> Hedeflenen sürede çözüldü</label>
+              <label style="font-size:11px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sik-dif-gerekli"> DİF ihtiyacı gerekiyor</label>
+            </div>`:''}
+        </div>
+        ${sikTakipMi()?`<button onclick="sikAdimTamamla('${kartId}',${a.no})" class="btn btn-sm" style="padding:3px 8px;align-self:flex-start;${tamam?'color:var(--teal)':''}"><i class="ti ${tamam?'ti-refresh':'ti-check'}"></i></button>`:''}
+      </div>`;
+    }).join('');
+
+    const sorunSinifiHtml = sikTakipMi() ? `<div>
+      <label class="yk-lbl">Sorun Sınıfı (Takip Formu)</label>
+      <select id="sik-sorun-sinifi" class="yk-inp" value="${db.sorunSinifi||0}">
+        ${sorunSiniflari.map((s,i)=>`<option value="${i}" ${db.sorunSinifi===i?'selected':''}>${i===0?'Seçin...':i+'. '+s}</option>`).join('')}
+      </select>
+    </div>` : (db.sorunSinifi ? `<div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px"><span style="color:var(--text2)">Sorun Sınıfı:</span> ${db.sorunSinifi}. ${sorunSiniflari[db.sorunSinifi]||''}</div>` : '');
+
+    body.innerHTML = sorunSinifiHtml + `<div style="display:flex;flex-direction:column;gap:8px">${surecHtml}</div>`;
+
+    footer.innerHTML = `<button class="btn btn-sm" onclick="sikSurecKapat()">Kapat</button>
+      ${sikTakipMi()?`<select id="sik-surec-durum" class="yk-inp" style="height:32px;font-size:12px">
+        ${['İncelemede','Beklemede','Çözüldü','Tamamlandı'].map(d=>`<option ${db.durum===d?'selected':''}>${d}</option>`).join('')}
+      </select>
+      <button class="btn btn-p btn-sm" onclick="sikSurecKaydetYeni('${kartId}')"><i class="ti ti-device-floppy"></i> Güncelle</button>`:''}`;
+
+  } else {
+    /* NOTLAR SEKMESİ */
+    const notlar = [...(db.notlar||[]), ...(db.surec||[])].sort((a,b)=>b.tarih?.localeCompare(a.tarih||'')||0);
+    const notlarHtml = notlar.length ? notlar.map(n=>`
+      <div style="padding:10px 12px;background:var(--surface2);border-radius:10px;border-left:3px solid var(--blue)">
+        <div style="font-size:10px;font-weight:600;color:var(--blue);margin-bottom:4px">${n.kisi} · ${n.tarih}</div>
+        <div style="font-size:12px;line-height:1.5">${n.metin}</div>
+        ${n.yeniDurum?`<span class="badge b-blue" style="font-size:10px;margin-top:5px;display:inline-block">→ ${n.yeniDurum}</span>`:''}
+      </div>`).join('') :
+      '<div style="text-align:center;padding:24px;color:var(--text2);font-size:12px"><i class="ti ti-notes-off" style="font-size:20px;display:block;margin-bottom:6px"></i>Henüz not yok</div>';
+
+    const notEkleHtml = kanYetki ? `<div>
+      <label class="yk-lbl">Not Ekle</label>
+      <textarea id="sik-surec-not" class="yk-inp" style="min-height:72px;resize:vertical" placeholder="Not, gözlem veya takip bilgisi..."></textarea>
+    </div>` : '';
+
+    body.innerHTML = notEkleHtml + `<div style="display:flex;flex-direction:column;gap:8px">${notlarHtml}</div>`;
+
+    footer.innerHTML = `<button class="btn btn-sm" onclick="sikSurecKapat()">Kapat</button>
+      ${kanYetki?`<button class="btn btn-p btn-sm" onclick="sikNotEkle('${kartId}')"><i class="ti ti-plus"></i> Not Ekle</button>`:''}`;
+  }
+}
+
+/* Adım tamamla */
+window.sikAdimTamamla = function(kartId, adimNo){
+  const tarih = new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  const kisi = currentUser?.adSoyad||'Bilinmiyor';
+  if(!window.SIK_DB[kartId]) return;
+  const db = window.SIK_DB[kartId];
+  if(!db.surec) db.surec=[];
+  const mevcutIdx = db.surec.findIndex(n=>n.adimNo===adimNo);
+  if(mevcutIdx>-1){ db.surec.splice(mevcutIdx,1); }
+  else { db.surec.push({ adimNo, metin:`${adimNo}. adım tamamlandı`, tarih, kisi, yeniDurum:null }); }
+  _supa.from('sikayet_notlar').insert([{ sikayet_id:kartId, metin:`Adım ${adimNo} tamamlandı`, tarih, kisi, yeni_durum:null }])
+    .then(({error})=>{if(error) console.error('Adım kaydetme hatası:',error.message);});
+  sikSurecRenderTab(kartId,'surec');
+};
+
+/* Süreç kaydet (durum güncelle) */
+window.sikSurecKaydetYeni = function(kartId){
+  const yeniDurum = document.getElementById('sik-surec-durum')?.value;
+  const sorunSinifi = parseInt(document.getElementById('sik-sorun-sinifi')?.value||'0');
+  const tarih = new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  const kisi = currentUser?.adSoyad||'Bilinmiyor';
+  if(!window.SIK_DB[kartId]) return;
+  const db = window.SIK_DB[kartId];
+  if(yeniDurum && yeniDurum!==db.durum){
+    db.durum=yeniDurum;
+    db.surec.push({ metin:`Durum güncellendi: ${yeniDurum}`, tarih, kisi, yeniDurum });
+    _supa.from('sikayetler').update({durum:yeniDurum, sorun_sinifi:sorunSinifi||null}).eq('id',kartId)
+      .then(async()=>{ await supaYukleSikayetler(); });
+    _supa.from('sikayet_notlar').insert([{ sikayet_id:kartId, metin:`Durum: ${yeniDurum}`, tarih, kisi, yeni_durum:yeniDurum }]).then(()=>{});
+  } else if(sorunSinifi){
+    _supa.from('sikayetler').update({sorun_sinifi:sorunSinifi}).eq('id',kartId).then(()=>{});
+  }
+  sikSurecRenderTab(kartId,'surec');
+  alert('✓ Süreç güncellendi.');
+};
+
+/* Not ekle */
+window.sikNotEkle = async function(kartId){
+  const not_ = document.getElementById('sik-surec-not')?.value?.trim();
+  if(!not_){ alert('Lütfen bir not girin.'); return; }
+  const tarih = new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  const kisi = currentUser?.adSoyad||'Bilinmiyor';
+  if(!window.SIK_DB[kartId]) return;
+  window.SIK_DB[kartId].notlar = window.SIK_DB[kartId].notlar||[];
+  window.SIK_DB[kartId].notlar.unshift({ metin:not_, tarih, kisi });
+  await _supa.from('sikayet_notlar').insert([{ sikayet_id:kartId, metin:not_, tarih, kisi, yeni_durum:null }]);
+  const el = document.getElementById('sik-surec-not'); if(el) el.value='';
+  sikSurecRenderTab(kartId,'not');
+};
+
+window.sikSurecKapat = function(){ document.getElementById('sik-surec-overlay').style.display='none'; window._sikSurecAktifId=null; };
 window.sikSurecAc = function(kartId){
   window._sikSurecAktifId = kartId;
   const overlay = document.getElementById('sik-surec-overlay');
   if(!overlay) return;
   const db = window.SIK_DB[kartId];
-  const dom = document.querySelector(`.sk[data-id="${kartId}"]`);
-  const no    = db?.no || dom?.querySelector('.sk-no')?.textContent?.split('·')[0].trim()||'';
-  const konu  = db?.konu || dom?.querySelector('.sk-title')?.textContent?.trim()||'';
-  const durum = db?.durum || dom?.querySelector('.badge')?.textContent?.trim()||'İncelemede';
-  const notlar = db?.notlar||[]; const surec = db?.surec||[];
-  const kanYetki = sikTakipMi() || sikGirenMi(kartId);
-  document.getElementById('sik-surec-baslik').textContent = konu;
-  document.getElementById('sik-surec-no').textContent = no;
-  const durumHtml = sikTakipMi() ? `
-    <div><label class="yk-lbl">Durum Güncelle</label>
-    <select id="sik-surec-durum" class="yk-inp">
-      ${['İncelemede','Beklemede','Çözüldü','Tamamlandı'].map(d=>`<option ${durum===d?'selected':''}>${d}</option>`).join('')}
-    </select></div>
-    <div><label class="yk-lbl">Süreç Notu</label>
-    <textarea id="sik-surec-not" class="yk-inp" style="min-height:72px;resize:vertical" placeholder="Yapılan işlem, sonuç, bir sonraki adım..."></textarea></div>` :
-    (kanYetki ? `<div><label class="yk-lbl">Not Ekle</label>
-    <textarea id="sik-surec-not" class="yk-inp" style="min-height:72px;resize:vertical" placeholder="Ek bilgi..."></textarea></div>` : '');
-  const gecmis = [...surec,...notlar].sort((a,b)=>a.tarih<b.tarih?1:-1);
-  const gecmisHtml = gecmis.length ? gecmis.map(n=>`
-    <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--blue)">
-      <div style="font-size:11px;font-weight:500;color:var(--blue)">${n.kisi} · ${n.tarih}</div>
-      <div style="font-size:12px;margin-top:3px">${n.metin}</div>
-      ${n.yeniDurum?`<span class="badge b-blue" style="font-size:10px;margin-top:4px;display:inline-block">→ ${n.yeniDurum}</span>`:''}
-    </div>`).join('') :
-    '<div style="font-size:12px;color:var(--text2);text-align:center;padding:16px">Henüz süreç notu yok</div>';
-  document.getElementById('sik-surec-body').innerHTML = `
-    ${durumHtml}
-    ${kanYetki ? '<hr style="border:0;border-top:0.5px solid var(--border)">' : ''}
-    <div><div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px">Süreç Geçmişi</div>
-    <div style="display:flex;flex-direction:column;gap:8px">${gecmisHtml}</div></div>`;
-  const btn = document.getElementById('sik-surec-kaydet-btn');
-  if(btn){ btn.style.display=kanYetki?'inline-flex':'none'; btn.onclick=()=>sikSurecKaydet(kartId,dom); }
+  if(!db) return;
+  document.getElementById('sik-surec-baslik').textContent = db.konu||'Şikayet Detayı';
+  document.getElementById('sik-surec-no').textContent = (db.no||'')+(db.firma?' · '+db.firma:'')+(db.durum?' · '+db.durum:'');
+  window._sikAktifTab = 'bilgi';
+  sikTabSec('bilgi');
   overlay.style.display='flex';
-};
-window.sikSurecKapat = function(){ document.getElementById('sik-surec-overlay').style.display='none'; window._sikSurecAktifId=null; };
-window.sikSurecKaydet = function(kartId, domKart){
-  const not_ = document.getElementById('sik-surec-not')?.value?.trim();
-  const yeniDurum = sikTakipMi() ? document.getElementById('sik-surec-durum')?.value : null;
-  if(!not_ && !yeniDurum){ alert('Lütfen bir not girin veya durumu güncelleyin.'); return; }
-  const tarih = new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-  const kisi = currentUser?.adSoyad||'Bilinmiyor';
-  if(!window.SIK_DB[kartId]) window.SIK_DB[kartId]={notlar:[],surec:[]};
-  const kayit = window.SIK_DB[kartId];
-  if(not_) kayit.surec.push({ metin:not_, tarih, kisi, yeniDurum });
-  if(yeniDurum) kayit.durum=yeniDurum;
-  /* Supabase'e kaydet */
-  if(not_) _supa.from('sikayet_notlar').insert([{ sikayet_id:kartId, metin:not_, tarih, kisi, yeni_durum:yeniDurum||null }])
-    .then(({error})=>{if(error) console.error('Şikayet not hatası:',error.message);});
-  if(yeniDurum) _supa.from('sikayetler').update({durum:yeniDurum}).eq('id',kartId)
-    .then(({error})=>{if(error) console.error('Şikayet durum hatası:',error.message);});
-  const kart = domKart||document.querySelector(`.sk[data-id="${kartId}"]`);
-  if(kart && yeniDurum){
-    const bMap={'İncelemede':'b-blue','Beklemede':'b-amber','Çözüldü':'b-green','Tamamlandı':'b-purple'};
-    const badges=kart.querySelectorAll('.badge');
-    const badge=badges[badges.length-1]; /* durum badge'i her zaman sonuncu */
-    if(badge){ badge.textContent=yeniDurum; badge.className='badge '+(bMap[yeniDurum]||'b-gray'); }
-    kart.dataset.durum=yeniDurum;
-  }
-  if(window.dashboardGuncelle) window.dashboardGuncelle();
-  /* Şikayet metrikleri ve trend güncelle */
-  const kartYil = parseInt(kart?.dataset?.yil || new Date().getFullYear());
-  if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(kartYil);
-  if(window.sikTrendGuncelle) window.sikTrendGuncelle();
-  if(window.sikKarsilastirmaGuncelle) window.sikKarsilastirmaGuncelle();
-  if(window.sikKategoriGuncelle) window.sikKategoriGuncelle(kartYil);
-  sikSurecKapat();
-  alert('✓ Kaydedildi.');
 };
 
 /* ══ TOPLANTI EVRAK MODÜLÜ ══ */
