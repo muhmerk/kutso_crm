@@ -16494,8 +16494,29 @@ window.sikAdimToggle = function(kartId, adimNo){
   const chev = document.getElementById(`sik-adim-chev-${kartId}-${adimNo}`);
   if(!body) return;
   const open = body.style.display==='none';
-  body.style.display = open ? '' : 'none';
+  body.style.display = open ? 'block' : 'none';
   if(chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+  if(open){
+    /* İçerik tam render edildikten sonra, açılan bölümün tamamı görünür olacak şekilde kaydır */
+    requestAnimationFrame(()=>{
+      setTimeout(()=>{
+        const wrapper = body.parentElement;
+        const scroller = document.getElementById('sik-surec-body');
+        if(wrapper && scroller){
+          const wrapperTop = wrapper.offsetTop;
+          const wrapperBottom = wrapperTop + wrapper.offsetHeight;
+          const viewTop = scroller.scrollTop;
+          const viewBottom = viewTop + scroller.clientHeight;
+          if(wrapperBottom > viewBottom || wrapperTop < viewTop){
+            const targetScroll = wrapperBottom > viewBottom
+              ? wrapperBottom - scroller.clientHeight + 12
+              : wrapperTop - 12;
+            scroller.scrollTo({ top: Math.max(0, targetScroll), behavior:'smooth' });
+          }
+        }
+      }, 30);
+    });
+  }
 };
 
 /* Adım kaydet */
