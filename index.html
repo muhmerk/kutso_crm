@@ -2367,7 +2367,15 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
   <div class="sb-divider"></div>
   <div class="sb-section">Personel</div>
-  <button class="nav" onclick="sw('personel',this)"><i class="ti ti-id-badge-2"></i>Personel</button>
+  <button class="nav" id="nav-personel-toggle" onclick="personelToggle(this)">
+    <i class="ti ti-id-badge-2"></i>Personel
+    <i class="ti ti-chevron-right" id="personel-chevron" style="margin-left:auto;font-size:12px;transition:transform .2s"></i>
+  </button>
+  <div id="personel-sub" style="display:none;padding-left:8px">
+    <button class="nav nav-sub" id="nav-personel-bilgi" onclick="personelSec('bilgi',this)"><i class="ti ti-user-circle" style="font-size:14px"></i>Personel Bilgi</button>
+    <button class="nav nav-sub" id="nav-personel-oneri" onclick="personelSec('oneri',this)"><i class="ti ti-bulb" style="font-size:14px"></i>Personel Öneri</button>
+    <button class="nav nav-sub" id="nav-personel-kurul" onclick="personelSec('kurul',this)"><i class="ti ti-gavel" style="font-size:14px"></i>Personel Kurul Kararları</button>
+  </div>
   <!-- Genel Sekreterlik — sadece yetkililere görünür -->
   <div class="sb-section" id="gs-nav-section" style="display:none">Genel Sekreterlik</div>
   <button class="nav" id="gs-nav-btn" onclick="sw('gs',this)" style="display:none"><i class="ti ti-settings-2"></i>Üye Yönetimi</button>
@@ -4545,6 +4553,24 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
   </div><!-- /s-personel -->
 
+  <!-- ══════════ PERSONEL ÖNERİ ══════════ -->
+  <div id="s-personel-oneri" class="section">
+    <div style="text-align:center;padding:60px 20px;color:var(--text2)">
+      <i class="ti ti-bulb" style="font-size:48px;display:block;margin-bottom:16px;color:var(--amber)"></i>
+      <div style="font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text)">Personel Öneri Sistemi</div>
+      <div style="font-size:13px">Bu bölüm tasarım aşamasındadır.</div>
+    </div>
+  </div>
+
+  <!-- ══════════ PERSONEL KURUL KARARLARI ══════════ -->
+  <div id="s-personel-kurul" class="section">
+    <div style="text-align:center;padding:60px 20px;color:var(--text2)">
+      <i class="ti ti-gavel" style="font-size:48px;display:block;margin-bottom:16px;color:var(--purple)"></i>
+      <div style="font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text)">Personel Kurul Kararları</div>
+      <div style="font-size:13px">Bu bölüm tasarım aşamasındadır.</div>
+    </div>
+  </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /shell -->
@@ -4841,7 +4867,9 @@ const META = {
   egitim:       { title: 'Eğitim & Etkinlik',    sub: (()=>{ const n=new Date(); return n.getFullYear()+' yılı program takvimi'; })(),  right: '' },
   isplani:      { title: 'İş Planı Takibi',       sub: `${new Date().getFullYear()} stratejik hedefler`,  right: '' },
   bildirim:     { title: 'Bildirim Şablonları',  sub: 'E-posta ve SMS şablonları',                      right: '' },
-  personel:     { title: 'Personel',             sub: (window.PERSONEL?window.PERSONEL.length:16)+' personel · özlük, eğitim, sözleşme', right: '' },
+  personel:          { title: 'Personel Bilgi',            sub: (window.PERSONEL?window.PERSONEL.length:16)+' personel · özlük, eğitim, sözleşme', right: '' },
+  'personel-oneri':  { title: 'Personel Öneri',            sub: 'Personel öneri ve görüş sistemi', right: '' },
+  'personel-kurul':  { title: 'Personel Kurul Kararları',  sub: 'Kurul kararları ve yönetim bildirileri', right: '' },
   raporlar:     { title: 'Raporlar',             sub: 'Hazır rapor şablonları',                          right: '' },
   sicil:        { title: 'Ticaret Sicili',       sub: 'Sicil işlemleri ve kayıtlar',                    right: '' },
 };
@@ -4881,6 +4909,10 @@ function sw(id, btn) {
   } else if (id === 'sicil') {
     /* Sicil modülüne her girişte arama ekranına dön */
     if(window.sicilGeri) window.sicilGeri();
+  } else if (id === 'personel') {
+    /* Personel artık accordion — personelSec ile yönetiliyor */
+    if(window.personelSec) window.personelSec('bilgi', document.getElementById('nav-personel-bilgi'));
+    return;
   } else if (id === 'takvim') {
     if(window.takvimAcildi) window.takvimAcildi();
   } else if (id === 'gs') {
@@ -8787,7 +8819,53 @@ window.sw = function(id, btn) {
   closeSidebar();
 };
 
-/* ══ PERSONEL JS ══ */
+/* ══ PERSONEL NAV ACCORDION ══ */
+let _aktifPersonelSekme = 'bilgi';
+
+window.personelToggle = function(btn){
+  const sub = document.getElementById('personel-sub');
+  const chev = document.getElementById('personel-chevron');
+  const isOpen = sub.style.display !== 'none';
+  if(isOpen){
+    sub.style.display = 'none';
+    if(chev) chev.style.transform = '';
+    btn.classList.remove('active');
+  } else {
+    sub.style.display = 'block';
+    if(chev) chev.style.transform = 'rotate(90deg)';
+    btn.classList.add('active');
+    /* Varsayılan sekmeyi aç */
+    personelSec(_aktifPersonelSekme, document.getElementById('nav-personel-'+_aktifPersonelSekme));
+  }
+};
+
+window.personelSec = function(sekme, btn){
+  _aktifPersonelSekme = sekme;
+  document.querySelectorAll('#personel-sub .nav-sub').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('nav-personel-toggle').classList.add('active');
+  const sub = document.getElementById('personel-sub');
+  const chev = document.getElementById('personel-chevron');
+  sub.style.display = 'block';
+  if(chev) chev.style.transform = 'rotate(90deg)';
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav').forEach(n=>{ if(n.id !== 'nav-personel-toggle') n.classList.remove('active'); });
+  document.querySelector('.main').scrollTop = 0;
+  if(sekme === 'bilgi'){
+    document.getElementById('s-personel')?.classList.add('active');
+    document.getElementById('tb-title').textContent = 'Personel Bilgi';
+    document.getElementById('tb-sub').textContent = (window.PERSONEL?.length||16)+' personel · özlük, eğitim, sözleşme';
+  } else if(sekme === 'oneri'){
+    document.getElementById('s-personel-oneri')?.classList.add('active');
+    document.getElementById('tb-title').textContent = 'Personel Öneri';
+    document.getElementById('tb-sub').textContent = 'Personel öneri ve görüş sistemi';
+  } else if(sekme === 'kurul'){
+    document.getElementById('s-personel-kurul')?.classList.add('active');
+    document.getElementById('tb-title').textContent = 'Personel Kurul Kararları';
+    document.getElementById('tb-sub').textContent = 'Kurul kararları ve yönetim bildirileri';
+  }
+  document.getElementById('tb-right-page').innerHTML = '';
+};
 (function(){
 
 const AVCOL_PRS = [
