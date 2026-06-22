@@ -16350,7 +16350,7 @@ function sikSurecRenderTab(kartId, tab){
       ${ADIMLAR.map(a=>{
         const adimVeri = (db._surecAdimlar||{})[a.no]||{};
         const tamam = !!adimVeri.tamamlandi;
-        return `<div style="border:1px solid ${tamam?'var(--teal)':'var(--border)'};border-radius:10px;overflow:hidden">
+        return `<div style="border:1px solid ${tamam?'var(--teal)':'var(--border)'};border-radius:10px;overflow:hidden;flex-shrink:0">
           <div onclick="sikAdimToggle('${kartId}',${a.no})" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;background:${tamam?'var(--green-bg)':'var(--surface)'};user-select:none">
             <div style="width:26px;height:26px;border-radius:50%;background:${tamam?'var(--teal)':'var(--border2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <i class="ti ${tamam?'ti-check':a.icon}" style="font-size:12px;color:${tamam?'#fff':'var(--text2)'}"></i>
