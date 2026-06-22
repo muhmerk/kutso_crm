@@ -3132,164 +3132,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
     <!-- Şikayet Ekle Modal -->
     <!-- Şikayet Ekle Modalı -->
-    <div id="sik-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:620px;max-height:93vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
-        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-          <div>
-            <div style="font-size:15px;font-weight:600" id="sik-modal-title">Yeni Şikayet Kaydı</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px">FPS 08-01 Şikayet Kayıt Formu</div>
-          </div>
-          <button onclick="sikModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-        </div>
-        <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
 
-          <!-- ŞİKAYETÇİYE AİT BİLGİLER -->
-          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyetçiye Ait Bilgiler</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label class="yk-lbl">Kuruluş / Firma</label>
-              <div style="position:relative">
-                <input id="sik-f-firma" class="yk-inp" placeholder="Firma adı veya üye no..." autocomplete="off" oninput="sikFirmaAra(this.value)" style="padding-right:32px">
-                <i class="ti ti-search" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text2);pointer-events:none"></i>
-              </div>
-              <div id="sik-firma-sonuclar" style="display:none;position:absolute;z-index:300;background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;width:280px;margin-top:2px"></div>
-              <input type="hidden" id="sik-f-firma-id">
-            </div>
-            <div>
-              <label class="yk-lbl">Şikâyetçi Adı Soyadı</label>
-              <input id="sik-f-sikayetci-ad" class="yk-inp" placeholder="Yetkili kişi adı...">
-            </div>
-          </div>
-
-          <!-- İletişim Tercihi -->
-          <div>
-            <label class="yk-lbl">Tercih Edilen İletişim Yöntemi</label>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="Yazışma Adresi" style="cursor:pointer"> Yazışma Adresi</label>
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="E-Posta" style="cursor:pointer"> E-Posta</label>
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="Telefon" style="cursor:pointer"> Telefon</label>
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="SMS" style="cursor:pointer"> SMS</label>
-            </div>
-          </div>
-
-          <!-- ŞİKAYET YAPILAN BİRİM -->
-          <div>
-            <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:8px">Şikâyet Yapılan İlgili Birim</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Yönetim Kurulu"> Yönetim Kurulu</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Genel Sekreterlik"> Genel Sekreterlik</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Dış Ticaret"> Dış Ticaret</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Kapasite ve Ekspertiz"> Kapasite ve Ekspertiz</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="İş Makineleri Tescili"> İş Makineleri Tescili</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Satın Alma"> Satın Alma</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Muhasebe"> Muhasebe</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Vezne"> Vezne</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Ticaret Sicil"> Ticaret Sicil</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Oda Sicil"> Oda Sicil</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Bilgi İşlem"> Bilgi İşlem</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="K Belgeleri"> K Belgeleri</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sayısal Takograf Belgeleri"> Sayısal Takograf Belgeleri</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sigorta Acenteliği"> Sigorta Acenteliği</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Türk Malı - Yerli Malı"> Türk Malı - Yerli Malı</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Basın Yayın"> Basın Yayın</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Eğitim, Toplantı, Seminer"> Eğitim, Toplantı, Seminer</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Diğer"> Diğer</label>
-            </div>
-          </div>
-
-          <!-- ŞİKAYET BİLGİLERİ -->
-          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyet Bilgileri</div>
-          <div>
-            <label class="yk-lbl">Şikâyetin Konusu (Karşılaşılan Sorun) <span style="color:var(--red)">*</span></label>
-            <input id="sik-f-konu" class="yk-inp" placeholder="Kısa konu başlığı...">
-          </div>
-          <div>
-            <label class="yk-lbl">Detaylı Açıklama</label>
-            <textarea id="sik-f-detay" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Şikayetin ayrıntılı açıklaması..."></textarea>
-          </div>
-          <div>
-            <label class="yk-lbl">Düzeltme Talebiniz Var Mı?</label>
-            <div style="display:flex;gap:10px;margin-bottom:8px">
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="evet" onchange="document.getElementById('sik-duzeltme-detay').style.display=''"> Evet</label>
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="hayir" checked onchange="document.getElementById('sik-duzeltme-detay').style.display='none'"> Hayır</label>
-            </div>
-            <textarea id="sik-duzeltme-detay" class="yk-inp" style="min-height:60px;resize:vertical;display:none" placeholder="Ne tip bir düzeltme istiyorsunuz?"></textarea>
-          </div>
-
-          <!-- Tarih, Saat, Öncelik -->
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-            <div>
-              <label class="yk-lbl">Şikayet Tarihi</label>
-              <input id="sik-f-tarih" type="date" class="yk-inp">
-            </div>
-            <div>
-              <label class="yk-lbl">Saati</label>
-              <input id="sik-f-saat" type="time" class="yk-inp">
-            </div>
-            <div>
-              <label class="yk-lbl">Öncelik</label>
-              <select id="sik-f-oncelik" class="yk-inp">
-                <option value="kritik">Kritik</option>
-                <option value="normal" selected>Normal</option>
-                <option value="dusuk">Düşük</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Personel bilgileri -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label class="yk-lbl">Şikayeti Alan Personel</label>
-              <select id="sik-f-alan-personel" class="yk-inp"></select>
-            </div>
-            <div>
-              <label class="yk-lbl">Takip Sorumlusu</label>
-              <select id="sik-f-takip-sorumlu" class="yk-inp"></select>
-            </div>
-          </div>
-
-          <!-- İlk Not -->
-          <div>
-            <label class="yk-lbl">İlk Temas Notu (isteğe bağlı)</label>
-            <textarea id="sik-f-not" class="yk-inp" style="min-height:56px;resize:vertical" placeholder="Ek bilgi, ilk temas notu..."></textarea>
-          </div>
-        </div>
-        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-          <button class="btn btn-sm" onclick="sikModalKapat()">İptal</button>
-          <button class="btn btn-p btn-sm" onclick="sikayetKaydet()"><i class="ti ti-check"></i> Şikayet Kaydet</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Şikayet Detay Modalı — 3 Sekme -->
-    <div id="sik-surec-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:680px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
-        <!-- Başlık -->
-        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);flex-shrink:0">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div>
-              <div style="font-size:15px;font-weight:600" id="sik-surec-baslik"></div>
-              <div style="font-size:11px;color:var(--text2);margin-top:2px" id="sik-surec-no"></div>
-            </div>
-            <button onclick="sikSurecKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-          </div>
-          <!-- Sekmeler -->
-          <div style="display:flex;gap:0;margin-top:12px;border-bottom:2px solid var(--border)">
-            <button id="sik-tab-btn-bilgi" onclick="sikTabSec('bilgi')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;font-family:var(--font)">Bilgiler</button>
-            <button id="sik-tab-btn-surec" onclick="sikTabSec('surec')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Süreç Takibi</button>
-            <button id="sik-tab-btn-not" onclick="sikTabSec('not')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Notlar</button>
-          </div>
-        </div>
-        <!-- Sekme içerikleri -->
-        <div id="sik-surec-body" style="overflow-y:auto;flex:1;padding:18px 20px;display:flex;flex-direction:column;gap:12px"></div>
-        <!-- Alt butonlar -->
-        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0" id="sik-surec-footer"></div>
-      </div>
-    </div>
-        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-        </div>
-      </div>
-    </div>
     <div class="mg" id="sik-mg">
       <div class="mc"><div class="mc-lbl">Toplam şikayet</div><div class="mc-val" id="sik-m-toplam">—</div><div class="mc-sub" id="sik-m-toplam-sub">Seçilen yıl</div></div>
       <div class="mc"><div class="mc-lbl">Açık / Kritik</div><div class="mc-val" id="sik-m-acik">—</div><div class="mc-sub dn" id="sik-m-kritik">—</div></div>
@@ -3762,7 +3605,166 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
   </div>
 
-  <div id="ziy-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
+<div id="sik-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:620px;max-height:93vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div>
+            <div style="font-size:15px;font-weight:600" id="sik-modal-title">Yeni Şikayet Kaydı</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">FPS 08-01 Şikayet Kayıt Formu</div>
+          </div>
+          <button onclick="sikModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+        </div>
+        <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
+
+          <!-- ŞİKAYETÇİYE AİT BİLGİLER -->
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyetçiye Ait Bilgiler</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="yk-lbl">Kuruluş / Firma</label>
+              <div style="position:relative">
+                <input id="sik-f-firma" class="yk-inp" placeholder="Firma adı veya üye no..." autocomplete="off" oninput="sikFirmaAra(this.value)" style="padding-right:32px">
+                <i class="ti ti-search" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text2);pointer-events:none"></i>
+              </div>
+            <div id="sik-firma-sonuclar" style="display:none;position:absolute;z-index:300;background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;width:280px;margin-top:2px"></div>
+              <input type="hidden" id="sik-f-firma-id">
+            </div>
+            <div>
+              <label class="yk-lbl">Şikâyetçi Adı Soyadı</label>
+              <input id="sik-f-sikayetci-ad" class="yk-inp" placeholder="Yetkili kişi adı...">
+            </div>
+          </div>
+
+          <!-- İletişim Tercihi -->
+          <div>
+            <label class="yk-lbl">Tercih Edilen İletişim Yöntemi</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="Yazışma Adresi" style="cursor:pointer"> Yazışma Adresi</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="E-Posta" style="cursor:pointer"> E-Posta</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="Telefon" style="cursor:pointer"> Telefon</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="SMS" style="cursor:pointer"> SMS</label>
+            </div>
+          </div>
+
+          <!-- ŞİKAYET YAPILAN BİRİM -->
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:8px">Şikâyet Yapılan İlgili Birim</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Yönetim Kurulu"> Yönetim Kurulu</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Genel Sekreterlik"> Genel Sekreterlik</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Dış Ticaret"> Dış Ticaret</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Kapasite ve Ekspertiz"> Kapasite ve Ekspertiz</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="İş Makineleri Tescili"> İş Makineleri Tescili</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Satın Alma"> Satın Alma</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Muhasebe"> Muhasebe</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Vezne"> Vezne</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Ticaret Sicil"> Ticaret Sicil</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Oda Sicil"> Oda Sicil</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Bilgi İşlem"> Bilgi İşlem</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="K Belgeleri"> K Belgeleri</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sayısal Takograf Belgeleri"> Sayısal Takograf Belgeleri</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sigorta Acenteliği"> Sigorta Acenteliği</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Türk Malı - Yerli Malı"> Türk Malı - Yerli Malı</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Basın Yayın"> Basın Yayın</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Eğitim, Toplantı, Seminer"> Eğitim, Toplantı, Seminer</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Diğer"> Diğer</label>
+            </div>
+          </div>
+
+          <!-- ŞİKAYET BİLGİLERİ -->
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyet Bilgileri</div>
+          <div>
+            <label class="yk-lbl">Şikâyetin Konusu (Karşılaşılan Sorun) <span style="color:var(--red)">*</span></label>
+            <input id="sik-f-konu" class="yk-inp" placeholder="Kısa konu başlığı...">
+          </div>
+          <div>
+            <label class="yk-lbl">Detaylı Açıklama</label>
+            <textarea id="sik-f-detay" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Şikayetin ayrıntılı açıklaması..."></textarea>
+          </div>
+          <div>
+            <label class="yk-lbl">Düzeltme Talebiniz Var Mı?</label>
+            <div style="display:flex;gap:10px;margin-bottom:8px">
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="evet" onchange="document.getElementById('sik-duzeltme-detay').style.display=''"> Evet</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="hayir" checked onchange="document.getElementById('sik-duzeltme-detay').style.display='none'"> Hayır</label>
+            </div>
+            <textarea id="sik-duzeltme-detay" class="yk-inp" style="min-height:60px;resize:vertical;display:none" placeholder="Ne tip bir düzeltme istiyorsunuz?"></textarea>
+          </div>
+
+          <!-- Tarih, Saat, Öncelik -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div>
+              <label class="yk-lbl">Şikayet Tarihi</label>
+              <input id="sik-f-tarih" type="date" class="yk-inp">
+            </div>
+            <div>
+              <label class="yk-lbl">Saati</label>
+              <input id="sik-f-saat" type="time" class="yk-inp">
+            </div>
+            <div>
+              <label class="yk-lbl">Öncelik</label>
+              <select id="sik-f-oncelik" class="yk-inp">
+                <option value="kritik">Kritik</option>
+                <option value="normal" selected>Normal</option>
+                <option value="dusuk">Düşük</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Personel bilgileri -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="yk-lbl">Şikayeti Alan Personel</label>
+              <select id="sik-f-alan-personel" class="yk-inp"></select>
+            </div>
+            <div>
+              <label class="yk-lbl">Takip Sorumlusu</label>
+              <select id="sik-f-takip-sorumlu" class="yk-inp"></select>
+            </div>
+          </div>
+
+          <!-- İlk Not -->
+          <div>
+            <label class="yk-lbl">İlk Temas Notu (isteğe bağlı)</label>
+            <textarea id="sik-f-not" class="yk-inp" style="min-height:56px;resize:vertical" placeholder="Ek bilgi, ilk temas notu..."></textarea>
+          </div>
+        </div>
+        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+          <button class="btn btn-sm" onclick="sikModalKapat()">İptal</button>
+          <button class="btn btn-p btn-sm" onclick="sikayetKaydet()"><i class="ti ti-check"></i> Şikayet Kaydet</button>
+        </div>
+      </div>
+  </div>
+
+  <!-- Şikayet Detay Modalı — 3 Sekme -->
+  <div id="sik-surec-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:680px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+        <!-- Başlık -->
+        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);flex-shrink:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:15px;font-weight:600" id="sik-surec-baslik"></div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px" id="sik-surec-no"></div>
+            </div>
+            <button onclick="sikSurecKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+          </div>
+          <!-- Sekmeler -->
+          <div style="display:flex;gap:0;margin-top:12px;border-bottom:2px solid var(--border)">
+            <button id="sik-tab-btn-bilgi" onclick="sikTabSec('bilgi')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;font-family:var(--font)">Bilgiler</button>
+            <button id="sik-tab-btn-surec" onclick="sikTabSec('surec')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Süreç Takibi</button>
+            <button id="sik-tab-btn-not" onclick="sikTabSec('not')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Notlar</button>
+          </div>
+        </div>
+        <!-- Sekme içerikleri -->
+      <div id="sik-surec-body" style="overflow-y:auto;flex:1;padding:18px 20px;display:flex;flex-direction:column;gap:12px"></div>
+        <!-- Alt butonlar -->
+        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0" id="sik-surec-footer"></div>
+      </div>
+    </div>
+        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        </div>
+      </div>
+    </div>
+
+    <div id="ziy-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
     <div style="background:var(--surface);border-radius:16px;width:760px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
       <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
         <div>
