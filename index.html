@@ -2345,10 +2345,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <button class="nav nav-sub" id="nav-crm-ziyaret" onclick="crmNavSec('ziyaret',this)"><i class="ti ti-car" style="font-size:14px"></i>Üye Ziyareti</button>
   </div>
   <button class="nav" id="nav-sicil" onclick="sw('sicil',this)" style="display:none"><i class="ti ti-building-bank"></i>Ticaret Sicili</button>
-  <button class="nav" id="nav-mem" onclick="memNavToggle(this)"><i class="ti ti-mood-smile"></i>Memnuniyet</button>
-  <div id="mem-nav-sub" style="display:none;margin-left:16px;border-left:2px solid var(--border);padding-left:8px;margin-bottom:4px">
-    <button class="nav nav-sub" id="nav-mem-uye" onclick="memNavSec('uye',this)"><i class="ti ti-building-store" style="font-size:14px"></i>Üye</button>
-  </div>
+  <button class="nav" id="nav-mem" onclick="sw('memnuniyet',this)"><i class="ti ti-mood-smile"></i>Üye Memnuniyet</button>
   <button class="nav" onclick="sw('sikayet',this)"><i class="ti ti-alert-circle"></i>Şikayet</button>
 
   <div class="sb-divider"></div>
@@ -5083,6 +5080,10 @@ function sw(id, btn) {
   } else if (id === 'kararlar') {
     Promise.all([supaYukleYK(), supaYukleMK(), supaYukleMeclis()]);
     if (window.supaYukleGorevler) window.supaYukleGorevler();
+  } else if (id === 'memnuniyet') {
+    const mevcutYil = new Date().getFullYear();
+    if(window.YD_STATE) window.YD_STATE['memnuniyet'] = new Set([mevcutYil]);
+    setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.memSayfaGuncelle) window.memSayfaGuncelle(); }, 30);
   } else if (id === 'sikayet') {
     supaYukleSikayetler();
   } else if (id === 'akreditasyon') {
