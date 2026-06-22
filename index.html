@@ -9038,7 +9038,6 @@ window.oneriRender = function(){
   if(yilFilter) data = data.filter(o=>new Date(o.tarih_iso||o.created_at).getFullYear()===parseInt(yilFilter));
   if(durumFilter) data = data.filter(o=>o.durum===durumFilter);
 
-  /* Sadece kendi önerilerini görsün — GS yetkilileri hepsini */
   const GS = ['admin','feyyaz','umran','orhan'];
   const isGS = GS.includes(currentUser?.kullanici||'');
   if(!isGS) data = data.filter(o=>o.gonderen_kullanici===currentUser?.kullanici);
@@ -9049,33 +9048,58 @@ window.oneriRender = function(){
   }
 
   const durumBadge = { Beklemede:'b-amber', Kabul:'b-green', Red:'b-red' };
+  const durumRenk = { Beklemede:'var(--amber)', Kabul:'var(--teal)', Red:'var(--red)' };
+
   liste.innerHTML = data.map(o=>{
     const nitelikler = (o.nitelikler||[]).join(', ');
     const tarih = o.tarih_iso ? new Date(o.tarih_iso+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '—';
-    return `<div class="card" style="border-left:3px solid ${o.durum==='Kabul'?'var(--teal)':o.durum==='Red'?'var(--red)':'var(--amber)'}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap">
-            <span class="badge ${durumBadge[o.durum]||'b-gray'}" style="font-size:10px">${o.durum||'Beklemede'}</span>
-            <span style="font-size:11px;color:var(--text2);font-weight:600">${o.oneri_no||''}</span>
-            ${nitelikler?`<span style="font-size:10px;color:var(--blue);background:var(--blue-bg);padding:2px 7px;border-radius:10px">${nitelikler}</span>`:''}
-          </div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:4px">${o.konu||''}</div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.5">${(o.gerekce||'').slice(0,120)}${(o.gerekce||'').length>120?'…':''}</div>
-          <div style="display:flex;gap:12px;font-size:11px;color:var(--text2);flex-wrap:wrap">
-            <span><i class="ti ti-user" style="font-size:11px;margin-right:3px"></i>${o.gonderen_ad||''}</span>
-            <span><i class="ti ti-building" style="font-size:11px;margin-right:3px"></i>${o.birim||''}</span>
-            <span><i class="ti ti-calendar" style="font-size:11px;margin-right:3px"></i>${tarih}</span>
-            ${o.deg_tarihi?`<span><i class="ti ti-check" style="font-size:11px;margin-right:3px"></i>Değerlendirme: ${o.deg_tarihi}</span>`:''}
-          </div>
-          ${o.red_neden?`<div style="margin-top:6px;padding:6px 10px;background:var(--red-bg,#fef2f2);border-radius:6px;font-size:11px;color:var(--red)"><i class="ti ti-info-circle"></i> Red nedeni: ${o.red_neden}</div>`:''}
-          ${o.deg_detay&&o.deg_detay!=='Red'?`<div style="margin-top:4px;padding:5px 10px;background:var(--green-bg);border-radius:6px;font-size:11px;color:var(--teal)"><i class="ti ti-info-circle"></i> ${o.deg_detay==='Kabul-Uygulama'?'Uygulamaya alınacak':'YK Gündemine alınacak'}</div>`:''}
-          ${o.deg_not?`<div style="margin-top:4px;font-size:11px;color:var(--text2);font-style:italic">"${o.deg_not}"</div>`:''}
+    const renk = durumRenk[o.durum]||'var(--border2)';
+
+    return `<div class="card" style="border-left:3px solid ${renk};padding:0;overflow:hidden">
+      <!-- Kapalı başlık — tıklanınca açılır -->
+      <div onclick="oneriToggle('${o.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;user-select:none">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+          <i class="ti ti-chevron-right" id="oneri-chev-${o.id}" style="font-size:12px;color:var(--text2);transition:transform .2s;flex-shrink:0"></i>
+          <span class="badge ${durumBadge[o.durum]||'b-gray'}" style="font-size:10px;flex-shrink:0">${o.durum||'Beklemede'}</span>
+          <span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.konu||''}</span>
+          ${nitelikler?`<span style="font-size:10px;color:var(--blue);background:var(--blue-bg);padding:2px 7px;border-radius:10px;flex-shrink:0;white-space:nowrap">${(o.nitelikler||[]).slice(0,2).join(', ')}${(o.nitelikler||[]).length>2?'…':''}</span>`:''}
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-          <button class="btn btn-sm" style="font-size:11px;padding:4px 10px" onclick="oneriDetayAc('${o.id}')"><i class="ti ti-eye"></i> Detay</button>
-          ${isGS && o.durum==='Beklemede'?`<button class="btn btn-sm" style="font-size:11px;padding:4px 10px;color:var(--blue)" onclick="oneriDegAc('${o.id}')"><i class="ti ti-clipboard-check"></i> Değerlendir</button>`:''}
-          ${(isGS || o.gonderen_kullanici===currentUser?.kullanici) && o.durum==='Beklemede'?`<button class="btn btn-sm" style="font-size:11px;padding:4px 10px;color:var(--red)" onclick="oneriSil('${o.id}')"><i class="ti ti-trash"></i></button>`:''}
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
+          <span style="font-size:11px;color:var(--text2)">${tarih}</span>
+        </div>
+      </div>
+
+      <!-- Açık detay içerik -->
+      <div id="oneri-body-${o.id}" style="display:none;border-top:0.5px solid var(--border)">
+        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+
+          <!-- Üst bilgiler -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;background:var(--surface2);border-radius:8px">
+            <div><div style="font-size:10px;color:var(--text2)">ÖNERİ NO</div><div style="font-size:12px;font-weight:600">${o.oneri_no||'—'}</div></div>
+            <div><div style="font-size:10px;color:var(--text2)">TARİH</div><div style="font-size:12px">${tarih}</div></div>
+            <div><div style="font-size:10px;color:var(--text2)">GÖNDEREN</div><div style="font-size:12px">${o.gonderen_ad||'—'}</div></div>
+            <div><div style="font-size:10px;color:var(--text2)">BİRİM</div><div style="font-size:12px">${o.birim||'—'}</div></div>
+          </div>
+
+          ${nitelikler?`<div><div style="font-size:10px;color:var(--text2);margin-bottom:4px">TEMEL NİTELİK</div><div style="display:flex;flex-wrap:wrap;gap:4px">${(o.nitelikler||[]).map(n=>`<span style="font-size:10px;padding:2px 8px;background:var(--blue-bg);color:var(--blue);border-radius:10px">${n}</span>`).join('')}</div></div>`:''}
+
+          <div><div style="font-size:10px;color:var(--text2);margin-bottom:4px">GEREKÇE</div><div style="font-size:12px;line-height:1.6;color:var(--text)">${o.gerekce||'—'}</div></div>
+          <div><div style="font-size:10px;color:var(--text2);margin-bottom:4px">SUNULAN ÇÖZÜM</div><div style="font-size:12px;line-height:1.6;color:var(--text)">${o.cozum||'—'}</div></div>
+
+          ${o.durum!=='Beklemede'?`<div style="padding:8px 12px;background:${o.durum==='Kabul'?'var(--green-bg)':'var(--red-bg,#fef2f2)'};border-radius:8px;border-left:3px solid ${renk}">
+            <div style="font-size:10px;font-weight:700;color:${renk};margin-bottom:3px">DEĞERLENDİRME SONUCU</div>
+            <div style="font-size:12px;font-weight:600">${o.deg_detay==='Kabul-Uygulama'?'Uygundur — Uygulamaya alınsın':o.deg_detay==='Kabul-YK'?'Uygundur — YK Gündemine alınsın':'Uygun Değildir'}</div>
+            ${o.red_neden?`<div style="font-size:11px;color:var(--red);margin-top:3px">Neden: ${o.red_neden}</div>`:''}
+            ${o.deg_not?`<div style="font-size:11px;color:var(--text2);margin-top:3px;font-style:italic">"${o.deg_not}"</div>`:''}
+            ${o.deg_tarihi?`<div style="font-size:10px;color:var(--text2);margin-top:3px">${o.deg_tarihi} · ${o.degerlendiren||''}</div>`:''}
+          </div>`:''}
+
+          <!-- Butonlar -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:0.5px solid var(--border)">
+            ${isGS && o.durum==='Beklemede'?`<button class="btn btn-sm" style="font-size:11px;color:var(--blue)" onclick="event.stopPropagation();oneriDegAc('${o.id}')"><i class="ti ti-clipboard-check"></i> Değerlendir</button>`:''}
+            <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();oneriDuzenle('${o.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+            <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();oneriSil('${o.id}')"><i class="ti ti-trash"></i> Sil</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -9237,13 +9261,56 @@ window.oneriKaydet = async function(){
   alert(`✓ "${konu}" öneriniz gönderildi.\nNo: ${no}`);
 };
 
-/* Detay görüntüle */
-window.oneriDetayAc = function(id){
+/* Accordion toggle */
+window.oneriToggle = function(id){
+  const body = document.getElementById(`oneri-body-${id}`);
+  const chev = document.getElementById(`oneri-chev-${id}`);
+  if(!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  if(chev) chev.style.transform = open ? '' : 'rotate(90deg)';
+};
+
+/* Düzenle */
+window.oneriDuzenle = function(id){
   const o = window.ONERI_DATA.find(x=>x.id===id);
   if(!o) return;
-  const tarih = o.tarih_iso ? new Date(o.tarih_iso+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '—';
-  const durumRenk = {Kabul:'var(--teal)',Red:'var(--red)',Beklemede:'var(--amber)'}[o.durum]||'var(--text2)';
-  alert(`${o.oneri_no||''}\n${o.konu}\n\nGönderen: ${o.gonderen_ad} / ${o.birim}\nTarih: ${tarih}\nNitelik: ${(o.nitelikler||[]).join(', ')||'—'}\nDurum: ${o.durum||'Beklemede'}\n\nGEREKÇE:\n${o.gerekce}\n\nSUNULAN ÇÖZÜM:\n${o.cozum}${o.red_neden?'\n\nRed Nedeni: '+o.red_neden:''}${o.deg_not?'\nNot: '+o.deg_not:''}`);
+  oneriEkleAc();
+  /* Mevcut verileri doldur */
+  document.getElementById('oneri-f-konu').value = o.konu||'';
+  document.getElementById('oneri-f-gerekcе').value = o.gerekce||'';
+  document.getElementById('oneri-f-cozum').value = o.cozum||'';
+  document.getElementById('oneri-f-detay-eki').checked = !!o.detay_eki;
+  document.getElementById('oneri-f-no').textContent = o.oneri_no||'';
+  document.getElementById('oneri-f-adsoyad').textContent = o.gonderen_ad||'';
+  document.getElementById('oneri-f-birim').textContent = o.birim||'';
+  /* Nitelikler */
+  document.querySelectorAll('.oneri-nitelik').forEach(cb=>{
+    cb.checked = (o.nitelikler||[]).some(n=>n===cb.value||n.startsWith('Diğer')&&cb.value==='Diğer');
+  });
+  /* Başlık ve kaydet butonu */
+  document.getElementById('oneri-modal-title').textContent = 'Öneri Düzenle';
+  document.getElementById('oneri-kaydet-btn').setAttribute('onclick',`oneriGuncelle('${id}')`);
+};
+
+/* Güncelle */
+window.oneriGuncelle = async function(id){
+  const konu = document.getElementById('oneri-f-konu')?.value.trim();
+  const gerekce = document.getElementById('oneri-f-gerekcе')?.value.trim();
+  const cozum = document.getElementById('oneri-f-cozum')?.value.trim();
+  if(!konu||!gerekce||!cozum){ alert('Konu, Gerekçe ve Sunulan Çözüm zorunludur.'); return; }
+  const nitelikler = [...document.querySelectorAll('.oneri-nitelik:checked')].map(cb=>{
+    if(cb.value==='Diğer'){ const dt=document.getElementById('oneri-diger-text')?.value.trim(); return dt?`Diğer (${dt})`:'Diğer'; }
+    return cb.value;
+  });
+  const { error } = await _supa.from('personel_oneriler').update({
+    konu, gerekce, cozum, nitelikler,
+    detay_eki: document.getElementById('oneri-f-detay-eki')?.checked||false
+  }).eq('id',id);
+  if(error){ alert('Güncelleme hatası: '+error.message); return; }
+  const idx = window.ONERI_DATA.findIndex(x=>x.id===id);
+  if(idx>-1) Object.assign(window.ONERI_DATA[idx],{konu,gerekce,cozum,nitelikler});
+  oneriModalKapat(); oneriRender(); oneriYillikTablo();
 };
 
 /* Değerlendirme Aç */
