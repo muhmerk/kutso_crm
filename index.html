@@ -3141,10 +3141,10 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <div>
             <label class="yk-lbl">Tercih Edilen İletişim Yöntemi</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              ${['Yazışma Adresi','E-Posta','Telefon','SMS'].map(t=>`
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px">
-                <input type="radio" name="sik-iletisim" value="${t}" style="cursor:pointer"> ${t}
-              </label>`).join('')}
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="Yazışma Adresi" style="cursor:pointer"> Yazışma Adresi</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="E-Posta" style="cursor:pointer"> E-Posta</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="Telefon" style="cursor:pointer"> Telefon</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="SMS" style="cursor:pointer"> SMS</label>
             </div>
           </div>
 
@@ -3152,10 +3152,24 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:8px">Şikâyet Yapılan İlgili Birim</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px">
-              ${['Yönetim Kurulu','Genel Sekreterlik','Dış Ticaret','Kapasite ve Ekspertiz','İş Makineleri Tescili','Satın Alma','Muhasebe','Vezne','Ticaret Sicil','Oda Sicil','Bilgi İşlem','K Belgeleri','Sayısal Takograf Belgeleri','Sigorta Acenteliği','Türk Malı - Yerli Malı','Basın Yayın','Eğitim, Toplantı, Seminer','Diğer'].map(b=>`
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap">
-                <input type="radio" name="sik-birim" value="${b}" style="cursor:pointer"> ${b}
-              </label>`).join('')}
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Yönetim Kurulu"> Yönetim Kurulu</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Genel Sekreterlik"> Genel Sekreterlik</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Dış Ticaret"> Dış Ticaret</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Kapasite ve Ekspertiz"> Kapasite ve Ekspertiz</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="İş Makineleri Tescili"> İş Makineleri Tescili</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Satın Alma"> Satın Alma</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Muhasebe"> Muhasebe</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Vezne"> Vezne</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Ticaret Sicil"> Ticaret Sicil</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Oda Sicil"> Oda Sicil</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Bilgi İşlem"> Bilgi İşlem</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="K Belgeleri"> K Belgeleri</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sayısal Takograf Belgeleri"> Sayısal Takograf Belgeleri</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sigorta Acenteliği"> Sigorta Acenteliği</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Türk Malı - Yerli Malı"> Türk Malı - Yerli Malı</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Basın Yayın"> Basın Yayın</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Eğitim, Toplantı, Seminer"> Eğitim, Toplantı, Seminer</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Diğer"> Diğer</label>
             </div>
           </div>
 
