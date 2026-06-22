@@ -3628,32 +3628,52 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         <div style="font-size:15px;font-weight:600">Değerlendirme Sonucu</div>
         <button onclick="document.getElementById('oneri-deg-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
       </div>
-      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
+      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
         <input type="hidden" id="oneri-deg-id">
+
+        <!-- 3 Ana Seçenek -->
         <div>
           <label class="yk-lbl">Değerlendirme Sonucu</label>
-          <div style="display:flex;gap:10px;margin-top:6px">
-            <label style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;font-weight:500" id="oneri-deg-kabul-lbl">
-              <input type="radio" name="oneri-deg-sonuc" value="Kabul" onchange="oneriDegSonucDeg(this.value)"> ✓ Uygun
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <label onclick="oneriDegSonucDeg('Kabul-Uygulama')" id="oneri-deg-lbl-1" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s">
+              <input type="radio" name="oneri-deg-sonuc" value="Kabul-Uygulama" style="margin-top:2px;cursor:pointer">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--teal)">✓ Uygundur</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Öneri uygulamaya alınsın</div>
+              </div>
             </label>
-            <label style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;font-weight:500" id="oneri-deg-red-lbl">
-              <input type="radio" name="oneri-deg-sonuc" value="Red" onchange="oneriDegSonucDeg(this.value)"> ✗ Uygun Değil
+            <label onclick="oneriDegSonucDeg('Kabul-YK')" id="oneri-deg-lbl-2" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s">
+              <input type="radio" name="oneri-deg-sonuc" value="Kabul-YK" style="margin-top:2px;cursor:pointer">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--blue)">✓ Uygundur</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Yön. Kur. Gündemine alınsın</div>
+              </div>
+            </label>
+            <label onclick="oneriDegSonucDeg('Red')" id="oneri-deg-lbl-3" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s">
+              <input type="radio" name="oneri-deg-sonuc" value="Red" style="margin-top:2px;cursor:pointer">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--red)">✗ Uygun Değildir</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Ret nedeni belirtilecek</div>
+              </div>
             </label>
           </div>
         </div>
+
+        <!-- Red nedenleri — sadece Red seçilince açılır -->
         <div id="oneri-deg-red-nedenler" style="display:none">
           <label class="yk-lbl">Uygun Değilse Nedenleri</label>
-          <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="oneri-red-neden" value="Yakınma ve şikayet kapsamında"> Yakınma ve şikayet kapsamında</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="oneri-red-neden" value="İdari süreçlerle ilgili bir öneri değil"> İdari süreçlerle ilgili bir öneri değil</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="oneri-red-neden" value="Çözüm önerisi yok"> Çözüm önerisi yok</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="oneri-red-neden" value="Kişisel bir talep"> Kişisel bir talep</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="oneri-red-neden" value="Belirsiz veya gerçekleşmesi mümkün değil"> Belirsiz veya gerçekleşmesi mümkün değil</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="oneri-red-neden" value="Önceki önerinin tekrarı"> Önceki önerinin tekrarı</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="oneri-red-neden" value="Mevzuata aykırı"> Mevzuata aykırı</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="oneri-red-neden" value="Diğer"> Diğer</label>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px;hover:background:var(--surface2)"><input type="radio" name="oneri-red-neden" value="Yakınma ve şikayet kapsamında"> Yakınma ve şikayet kapsamında</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="İdari süreçlerle ilgili bir öneri değil"> İdari süreçlerle ilgili bir öneri değil</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Çözüm önerisi yok"> Çözüm önerisi yok</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Kişisel bir talep"> Kişisel bir talep</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Belirsiz veya gerçekleşmesi mümkün değil"> Belirsiz veya gerçekleşmesi mümkün değil</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Önceki önerinin tekrarı"> Önceki önerinin tekrarı</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Mevzuata aykırı"> Mevzuata aykırı</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Diğer"> Diğer</label>
           </div>
         </div>
+
         <div>
           <label class="yk-lbl">Değerlendirme Notu (isteğe bağlı)</label>
           <textarea id="oneri-deg-not" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Ek açıklama..."></textarea>
@@ -9049,6 +9069,7 @@ window.oneriRender = function(){
             ${o.deg_tarihi?`<span><i class="ti ti-check" style="font-size:11px;margin-right:3px"></i>Değerlendirme: ${o.deg_tarihi}</span>`:''}
           </div>
           ${o.red_neden?`<div style="margin-top:6px;padding:6px 10px;background:var(--red-bg,#fef2f2);border-radius:6px;font-size:11px;color:var(--red)"><i class="ti ti-info-circle"></i> Red nedeni: ${o.red_neden}</div>`:''}
+          ${o.deg_detay&&o.deg_detay!=='Red'?`<div style="margin-top:4px;padding:5px 10px;background:var(--green-bg);border-radius:6px;font-size:11px;color:var(--teal)"><i class="ti ti-info-circle"></i> ${o.deg_detay==='Kabul-Uygulama'?'Uygulamaya alınacak':'YK Gündemine alınacak'}</div>`:''}
           ${o.deg_not?`<div style="margin-top:4px;font-size:11px;color:var(--text2);font-style:italic">"${o.deg_not}"</div>`:''}
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
@@ -9231,20 +9252,26 @@ window.oneriDegAc = function(id){
   document.querySelectorAll('input[name="oneri-deg-sonuc"]').forEach(r=>r.checked=false);
   document.querySelectorAll('input[name="oneri-red-neden"]').forEach(r=>r.checked=false);
   document.getElementById('oneri-deg-red-nedenler').style.display='none';
+  ['oneri-deg-lbl-1','oneri-deg-lbl-2','oneri-deg-lbl-3'].forEach(id2=>{
+    const el=document.getElementById(id2); if(el) el.style.borderColor='var(--border)';
+  });
   document.getElementById('oneri-deg-not').value='';
   document.getElementById('oneri-deg-tarih').value=new Date().toISOString().slice(0,10);
   document.getElementById('oneri-deg-modal').style.display='flex';
 };
 
 window.oneriDegSonucDeg = function(val){
-  document.getElementById('oneri-deg-red-nedenler').style.display = val==='Red'?'':'none';
-  ['oneri-deg-kabul-lbl','oneri-deg-red-lbl'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.borderColor = 'var(--border)';
-  });
-  const aktifId = val==='Kabul'?'oneri-deg-kabul-lbl':'oneri-deg-red-lbl';
-  const aktifEl = document.getElementById(aktifId);
-  if(aktifEl) aktifEl.style.borderColor = val==='Kabul'?'var(--teal)':'var(--red)';
+  /* Tüm kartları sıfırla */
+  document.getElementById('oneri-deg-lbl-1').style.borderColor='var(--border)';
+  document.getElementById('oneri-deg-lbl-2').style.borderColor='var(--border)';
+  document.getElementById('oneri-deg-lbl-3').style.borderColor='var(--border)';
+  /* Seçilen kartı vurgula */
+  if(val==='Kabul-Uygulama') document.getElementById('oneri-deg-lbl-1').style.borderColor='var(--teal)';
+  else if(val==='Kabul-YK') document.getElementById('oneri-deg-lbl-2').style.borderColor='var(--blue)';
+  else if(val==='Red') document.getElementById('oneri-deg-lbl-3').style.borderColor='var(--red)';
+  /* Red nedenlerini göster/gizle */
+  document.getElementById('oneri-deg-red-nedenler').style.display = val==='Red' ? '' : 'none';
+  if(val!=='Red') document.querySelectorAll('input[name="oneri-red-neden"]').forEach(r=>r.checked=false);
 };
 
 /* Değerlendirme Kaydet */
@@ -9257,9 +9284,19 @@ window.oneriDegerlendir = async function(){
   if(!sonuc){ alert('Lütfen değerlendirme sonucunu seçin.'); return; }
   if(sonuc==='Red' && !redNeden){ alert('Lütfen red nedenini seçin.'); return; }
 
+  /* Görüntülenecek durum metni */
+  const durumMap = {
+    'Kabul-Uygulama': 'Kabul (Uygulamaya Alınsın)',
+    'Kabul-YK': 'Kabul (YK Gündemine Alınsın)',
+    'Red': 'Red'
+  };
+  const durumGoster = durumMap[sonuc]||sonuc;
+  const anaKategori = sonuc.startsWith('Kabul') ? 'Kabul' : 'Red';
+
   const degTarihStr = degTarih ? new Date(degTarih+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '';
   const { error } = await _supa.from('personel_oneriler').update({
-    durum: sonuc,
+    durum: anaKategori,
+    deg_detay: sonuc,
     red_neden: sonuc==='Red' ? redNeden : null,
     deg_not: not_||null,
     deg_tarihi: degTarihStr||null,
@@ -9268,10 +9305,16 @@ window.oneriDegerlendir = async function(){
 
   if(error){ alert('Güncelleme hatası: '+error.message); return; }
   const idx = window.ONERI_DATA.findIndex(x=>x.id===id);
-  if(idx>-1){ window.ONERI_DATA[idx].durum=sonuc; window.ONERI_DATA[idx].red_neden=redNeden; window.ONERI_DATA[idx].deg_not=not_; window.ONERI_DATA[idx].deg_tarihi=degTarihStr; }
+  if(idx>-1){
+    window.ONERI_DATA[idx].durum = anaKategori;
+    window.ONERI_DATA[idx].deg_detay = sonuc;
+    window.ONERI_DATA[idx].red_neden = redNeden;
+    window.ONERI_DATA[idx].deg_not = not_;
+    window.ONERI_DATA[idx].deg_tarihi = degTarihStr;
+  }
   document.getElementById('oneri-deg-modal').style.display='none';
   oneriRender(); oneriMetrikGuncelle(); oneriYillikTablo();
-  alert(`✓ Öneri ${sonuc==='Kabul'?'kabul edildi':'reddedildi'}.`);
+  alert(`✓ Öneri değerlendirildi: ${durumGoster}`);
 };
 
 /* Sil */
