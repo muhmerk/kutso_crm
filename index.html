@@ -3565,12 +3565,28 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
       <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
 
-        <!-- Otomatik alanlar -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px;background:var(--surface2);border-radius:10px">
-          <div><div style="font-size:10px;color:var(--text2);margin-bottom:2px">ADI SOYADI</div><div style="font-size:13px;font-weight:500" id="oneri-f-adsoyad">—</div></div>
-          <div><div style="font-size:10px;color:var(--text2);margin-bottom:2px">ÖNERİ NO</div><div style="font-size:13px;font-weight:500" id="oneri-f-no">—</div></div>
-          <div><div style="font-size:10px;color:var(--text2);margin-bottom:2px">BİRİMİ</div><div style="font-size:13px;font-weight:500" id="oneri-f-birim">—</div></div>
-          <div><div style="font-size:10px;color:var(--text2);margin-bottom:2px">TARİH</div><div style="font-size:13px;font-weight:500" id="oneri-f-tarih-goster">—</div></div>
+        <!-- Üst bilgiler -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="yk-lbl">Adı Soyadı <span style="color:var(--red)">*</span></label>
+            <select id="oneri-f-adsoyad" class="yk-inp" onchange="oneriPersonelSec(this.value)">
+              <option value="">Personel seçin...</option>
+            </select>
+          </div>
+          <div>
+            <label class="yk-lbl">Öneri No <span style="color:var(--red)">*</span></label>
+            <input id="oneri-f-no" class="yk-inp" placeholder="ÖNERİ-2026-001" autocomplete="off">
+          </div>
+          <div>
+            <label class="yk-lbl">Birimi <span style="color:var(--red)">*</span></label>
+            <select id="oneri-f-birim" class="yk-inp">
+              <option value="">Birim seçin...</option>
+            </select>
+          </div>
+          <div>
+            <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
+            <input id="oneri-f-tarih" type="date" class="yk-inp">
+          </div>
         </div>
 
         <!-- Temel Nitelik -->
@@ -9197,13 +9213,19 @@ window.oneriYillikTablo = function(){
 
 /* Modal Aç */
 window.oneriEkleAc = function(){
-  const prs = (window.PERSONEL||[]).find(p=>p.kullanici===currentUser?.kullanici);
-  document.getElementById('oneri-f-adsoyad').textContent = currentUser?.adSoyad||'—';
-  document.getElementById('oneri-f-birim').textContent = prs?.birim||'—';
-  const bugun = new Date();
-  document.getElementById('oneri-f-tarih-goster').textContent = bugun.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-  const sayac = (window.ONERI_DATA||[]).filter(o=>new Date(o.tarih_iso||o.created_at).getFullYear()===bugun.getFullYear()).length + 1;
-  document.getElementById('oneri-f-no').textContent = `ÖNERİ-${bugun.getFullYear()}-${String(sayac).padStart(3,'0')}`;
+  /* Personel dropdown doldur */
+  const prsOpts = (window.PERSONEL||[]).map(p=>`<option value="${p.ad} ${p.soyad}" data-birim="${p.birim||''}">${p.ad} ${p.soyad}</option>`).join('');
+  const adEl = document.getElementById('oneri-f-adsoyad');
+  if(adEl){ adEl.innerHTML = '<option value="">Personel seçin...</option>' + prsOpts; adEl.value=''; }
+
+  /* Birim dropdown — PERSONEL'deki unique birimler */
+  const birimler = [...new Set((window.PERSONEL||[]).map(p=>p.birim).filter(Boolean))].sort();
+  const birimEl = document.getElementById('oneri-f-birim');
+  if(birimEl){ birimEl.innerHTML = '<option value="">Birim seçin...</option>' + birimler.map(b=>`<option value="${b}">${b}</option>`).join(''); birimEl.value=''; }
+
+  /* Diğer alanları temizle */
+  document.getElementById('oneri-f-no').value = '';
+  document.getElementById('oneri-f-tarih').value = new Date().toISOString().slice(0,10);
   document.querySelectorAll('.oneri-nitelik').forEach(cb=>cb.checked=false);
   document.getElementById('oneri-diger-text').style.display='none';
   document.getElementById('oneri-diger-text').value='';
@@ -9214,13 +9236,31 @@ window.oneriEkleAc = function(){
   document.getElementById('oneri-modal').style.display='flex';
 };
 
+/* Personel seçilince birimi otomatik doldur */
+window.oneriPersonelSec = function(adSoyad){
+  const prs = (window.PERSONEL||[]).find(p=>`${p.ad} ${p.soyad}`===adSoyad);
+  if(prs?.birim){
+    const birimEl = document.getElementById('oneri-f-birim');
+    if(birimEl) birimEl.value = prs.birim;
+  }
+};
+
 window.oneriModalKapat = function(){ document.getElementById('oneri-modal').style.display='none'; };
 
 /* Kaydet */
 window.oneriKaydet = async function(){
+  const adSoyad = document.getElementById('oneri-f-adsoyad')?.value.trim();
+  const no = document.getElementById('oneri-f-no')?.value.trim();
+  const birim = document.getElementById('oneri-f-birim')?.value.trim();
+  const tarihVal = document.getElementById('oneri-f-tarih')?.value;
   const konu = document.getElementById('oneri-f-konu')?.value.trim();
   const gerekce = document.getElementById('oneri-f-gerekcе')?.value.trim();
   const cozum = document.getElementById('oneri-f-cozum')?.value.trim();
+
+  if(!adSoyad){ alert('Lütfen personel seçin.'); return; }
+  if(!no){ alert('Öneri No zorunludur.'); return; }
+  if(!birim){ alert('Lütfen birim seçin.'); return; }
+  if(!tarihVal){ alert('Tarih zorunludur.'); return; }
   if(!konu||!gerekce||!cozum){ alert('Konu, Gerekçe ve Sunulan Çözüm zorunludur.'); return; }
 
   const nitelikler = [...document.querySelectorAll('.oneri-nitelik:checked')].map(cb=>{
@@ -9231,23 +9271,19 @@ window.oneriKaydet = async function(){
     return cb.value;
   });
 
-  const bugun = new Date();
-  const tarihIso = bugun.toISOString().slice(0,10);
-  const tarihStr = bugun.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-  const prs = (window.PERSONEL||[]).find(p=>p.kullanici===currentUser?.kullanici);
-  const no = document.getElementById('oneri-f-no').textContent;
+  const tarihStr = new Date(tarihVal+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  /* Personel kaydından kullanıcı adını bul */
+  const prs = (window.PERSONEL||[]).find(p=>`${p.ad} ${p.soyad}`===adSoyad);
 
   const { data, error } = await _supa.from('personel_oneriler').insert([{
     oneri_no: no,
-    gonderen_kullanici: currentUser?.kullanici||'',
-    gonderen_ad: currentUser?.adSoyad||'',
-    birim: prs?.birim||'',
-    tarih_iso: tarihIso,
+    gonderen_kullanici: prs?.kullanici||currentUser?.kullanici||'',
+    gonderen_ad: adSoyad,
+    birim,
+    tarih_iso: tarihVal,
     tarih: tarihStr,
     nitelikler,
-    konu,
-    gerekce,
-    cozum,
+    konu, gerekce, cozum,
     detay_eki: document.getElementById('oneri-f-detay-eki')?.checked||false,
     durum: 'Beklemede'
   }]).select().single();
@@ -9255,9 +9291,7 @@ window.oneriKaydet = async function(){
   if(error){ alert('Kaydetme hatası: '+error.message); return; }
   window.ONERI_DATA.unshift(data);
   oneriModalKapat();
-  oneriRender();
-  oneriMetrikGuncelle();
-  oneriYillikTablo();
+  oneriRender(); oneriMetrikGuncelle(); oneriYillikTablo();
   alert(`✓ "${konu}" öneriniz gönderildi.\nNo: ${no}`);
 };
 
@@ -9277,24 +9311,29 @@ window.oneriDuzenle = function(id){
   if(!o) return;
   oneriEkleAc();
   /* Mevcut verileri doldur */
+  const adEl = document.getElementById('oneri-f-adsoyad');
+  if(adEl) adEl.value = o.gonderen_ad||'';
+  document.getElementById('oneri-f-no').value = o.oneri_no||'';
+  const birimEl = document.getElementById('oneri-f-birim');
+  if(birimEl) birimEl.value = o.birim||'';
+  document.getElementById('oneri-f-tarih').value = o.tarih_iso||'';
   document.getElementById('oneri-f-konu').value = o.konu||'';
   document.getElementById('oneri-f-gerekcе').value = o.gerekce||'';
   document.getElementById('oneri-f-cozum').value = o.cozum||'';
   document.getElementById('oneri-f-detay-eki').checked = !!o.detay_eki;
-  document.getElementById('oneri-f-no').textContent = o.oneri_no||'';
-  document.getElementById('oneri-f-adsoyad').textContent = o.gonderen_ad||'';
-  document.getElementById('oneri-f-birim').textContent = o.birim||'';
-  /* Nitelikler */
   document.querySelectorAll('.oneri-nitelik').forEach(cb=>{
-    cb.checked = (o.nitelikler||[]).some(n=>n===cb.value||n.startsWith('Diğer')&&cb.value==='Diğer');
+    cb.checked = (o.nitelikler||[]).some(n=>n===cb.value||(n.startsWith('Diğer')&&cb.value==='Diğer'));
   });
-  /* Başlık ve kaydet butonu */
   document.getElementById('oneri-modal-title').textContent = 'Öneri Düzenle';
   document.getElementById('oneri-kaydet-btn').setAttribute('onclick',`oneriGuncelle('${id}')`);
 };
 
 /* Güncelle */
 window.oneriGuncelle = async function(id){
+  const adSoyad = document.getElementById('oneri-f-adsoyad')?.value.trim();
+  const no = document.getElementById('oneri-f-no')?.value.trim();
+  const birim = document.getElementById('oneri-f-birim')?.value.trim();
+  const tarihVal = document.getElementById('oneri-f-tarih')?.value;
   const konu = document.getElementById('oneri-f-konu')?.value.trim();
   const gerekce = document.getElementById('oneri-f-gerekcе')?.value.trim();
   const cozum = document.getElementById('oneri-f-cozum')?.value.trim();
@@ -9303,13 +9342,18 @@ window.oneriGuncelle = async function(id){
     if(cb.value==='Diğer'){ const dt=document.getElementById('oneri-diger-text')?.value.trim(); return dt?`Diğer (${dt})`:'Diğer'; }
     return cb.value;
   });
+  const tarihStr = tarihVal ? new Date(tarihVal+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '';
+  const prs = (window.PERSONEL||[]).find(p=>`${p.ad} ${p.soyad}`===adSoyad);
   const { error } = await _supa.from('personel_oneriler').update({
+    oneri_no: no, gonderen_ad: adSoyad, birim,
+    gonderen_kullanici: prs?.kullanici||'',
+    tarih_iso: tarihVal||null, tarih: tarihStr,
     konu, gerekce, cozum, nitelikler,
     detay_eki: document.getElementById('oneri-f-detay-eki')?.checked||false
   }).eq('id',id);
   if(error){ alert('Güncelleme hatası: '+error.message); return; }
   const idx = window.ONERI_DATA.findIndex(x=>x.id===id);
-  if(idx>-1) Object.assign(window.ONERI_DATA[idx],{konu,gerekce,cozum,nitelikler});
+  if(idx>-1) Object.assign(window.ONERI_DATA[idx],{oneri_no:no, gonderen_ad:adSoyad, birim, tarih_iso:tarihVal, tarih:tarihStr, konu, gerekce, cozum, nitelikler});
   oneriModalKapat(); oneriRender(); oneriYillikTablo();
 };
 
