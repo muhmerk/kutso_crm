@@ -10134,7 +10134,9 @@ window.personelSec = function(sekme, btn){
   sub.style.display = 'block';
   if(chev) chev.style.transform = 'rotate(90deg)';
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav').forEach(n=>{ if(n.id !== 'nav-personel-toggle') n.classList.remove('active'); });
+  document.querySelectorAll('.nav').forEach(n=>{
+    if(n.id !== 'nav-personel-toggle' && !n.closest('#personel-sub')) n.classList.remove('active');
+  });
   document.querySelector('.main').scrollTop = 0;
   if(sekme === 'bilgi'){
     document.getElementById('s-personel')?.classList.add('active');
