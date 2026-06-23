@@ -9083,7 +9083,7 @@ window.IZIN_DATA = {}; // { personel_id: [{id, yil, hak, kullanilan, not}] }
 window.izinDropdownDoldur = function(){
   const sel = document.getElementById('prs-izin-sec');
   if(!sel||!window.PERSONEL) return;
-  const GS = ['admin','feyyaz','umran','orhan'];
+  const GS = ['admin','feyyaz','umran','orhan','haver'];
   const isGS = GS.includes(currentUser?.kullanici||'');
   let liste = window.PERSONEL;
   if(!isGS) liste = liste.filter(p=>p.kullanici===currentUser?.kullanici);
@@ -9096,7 +9096,7 @@ window.izinPersonelSec = async function(prsId){
   _izinSecilenPrs = prsId || null;
   const ekleBtn = document.getElementById('prs-izin-ekle-btn');
   const content = document.getElementById('prs-izin-content');
-  const GS = ['admin','feyyaz','umran','orhan'];
+  const GS = ['admin','feyyaz','umran','orhan','haver'];
   const isGS = GS.includes(currentUser?.kullanici||'');
 
   if(!prsId){
@@ -9125,7 +9125,7 @@ window.izinRender = function(prsId){
   if(!content) return;
   const prs = (window.PERSONEL||[]).find(p=>String(p.id)===String(prsId));
   const liste = window.IZIN_DATA[prsId]||[];
-  const GS = ['admin','feyyaz','umran','orhan'];
+  const GS = ['admin','feyyaz','umran','orhan','haver'];
   const isGS = GS.includes(currentUser?.kullanici||'');
 
   if(!liste.length){
@@ -9317,7 +9317,7 @@ window.oneriRender = function(){
   if(yilFilter) data = data.filter(o=>new Date(o.tarih_iso||o.created_at).getFullYear()===parseInt(yilFilter));
   if(durumFilter) data = data.filter(o=>o.durum===durumFilter);
 
-  const GS = ['admin','feyyaz','umran','orhan'];
+  const GS = ['admin','feyyaz','umran','orhan','haver'];
   const isGS = GS.includes(currentUser?.kullanici||'');
   if(!isGS) data = data.filter(o=>o.gonderen_kullanici===currentUser?.kullanici);
 
