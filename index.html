@@ -3555,6 +3555,42 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
   </div>
 
+  <!-- ══ PERSONEL İZİN MODAL ══ -->
+  <div id="izin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:440px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div style="font-size:15px;font-weight:600" id="izin-modal-title">İzin Ekle</div>
+        <button onclick="izinModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="izin-f-id">
+        <div>
+          <label class="yk-lbl">Yıl <span style="color:var(--red)">*</span></label>
+          <input id="izin-f-yil" type="number" class="yk-inp" placeholder="2026" min="2000" max="2099">
+        </div>
+        <div>
+          <label class="yk-lbl">Hak Edilen İzin (gün) <span style="color:var(--red)">*</span></label>
+          <input id="izin-f-hak" type="number" class="yk-inp" placeholder="14" min="0">
+        </div>
+        <div>
+          <label class="yk-lbl">Kullanılan İzin (gün)</label>
+          <input id="izin-f-kullanilan" type="number" class="yk-inp" placeholder="0" min="0" value="0">
+        </div>
+        <div style="padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2)">
+          Kalan izin otomatik hesaplanır: Hak edilen − Kullanılan
+        </div>
+        <div>
+          <label class="yk-lbl">Not (isteğe bağlı)</label>
+          <input id="izin-f-not" class="yk-inp" placeholder="Açıklama...">
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-sm" onclick="izinModalKapat()">İptal</button>
+        <button class="btn btn-p btn-sm" id="izin-kaydet-btn" onclick="izinKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ PERSONEL ÖNERİ MODAL ══ -->
   <div id="oneri-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
     <div style="background:var(--surface);border-radius:16px;width:600px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
@@ -4543,6 +4579,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <button class="um-tab" onclick="prsTab('egitim',this)"><i class="ti ti-school" style="font-size:15px"></i>Katıldığı Eğitimler</button>
       <button class="um-tab" onclick="prsTab('sozlesme',this)"><i class="ti ti-file-text" style="font-size:15px"></i>Sözleşmeler</button>
       <button class="um-tab" onclick="prsTab('diger',this)"><i class="ti ti-dots" style="font-size:15px"></i>Diğer Belgeler</button>
+      <button class="um-tab" onclick="prsTab('izin',this)"><i class="ti ti-beach" style="font-size:15px"></i>Personel İzinleri</button>
     </div>
 
     <div class="mg">
@@ -4710,6 +4747,26 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
       <div id="prs-dig-content">
         <div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-files" style="font-size:28px;display:block;margin-bottom:8px"></i>Personel seçin</div>
+      </div>
+    </div>
+
+    <!-- ══ PERSONEL İZİNLERİ PANEİ ══ -->
+    <div id="prs-pane-izin" class="prs-pane">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+        <select class="flt-select" id="prs-izin-sec" onchange="izinPersonelSec(this.value)" style="flex:1;max-width:280px">
+          <option value="">Personel seçin...</option>
+        </select>
+        <button class="btn btn-p btn-sm" id="prs-izin-ekle-btn" onclick="izinEkleModal()" style="display:none">
+          <i class="ti ti-plus"></i> İzin Ekle
+        </button>
+      </div>
+
+      <!-- İzin listesi -->
+      <div id="prs-izin-content">
+        <div style="text-align:center;padding:40px;color:var(--text2)">
+          <i class="ti ti-beach" style="font-size:28px;display:block;margin-bottom:8px"></i>
+          Personel seçin
+        </div>
       </div>
     </div>
 
@@ -9016,6 +9073,206 @@ window.sw = function(id, btn) {
   closeSidebar();
 };
 
+/* ══ PERSONEL İZİN MODÜLÜ ══ */
+(function(){
+
+let _izinSecilenPrs = null; // personel id
+window.IZIN_DATA = {}; // { personel_id: [{id, yil, hak, kullanilan, not}] }
+
+/* Personel dropdown doldur */
+window.izinDropdownDoldur = function(){
+  const sel = document.getElementById('prs-izin-sec');
+  if(!sel||!window.PERSONEL) return;
+  const GS = ['admin','feyyaz','umran','orhan'];
+  const isGS = GS.includes(currentUser?.kullanici||'');
+  let liste = window.PERSONEL;
+  if(!isGS) liste = liste.filter(p=>p.kullanici===currentUser?.kullanici);
+  sel.innerHTML = '<option value="">Personel seçin...</option>' +
+    liste.map(p=>`<option value="${p.id}">${p.ad} ${p.soyad}</option>`).join('');
+};
+
+/* Personel seçilince izinlerini yükle */
+window.izinPersonelSec = async function(prsId){
+  _izinSecilenPrs = prsId || null;
+  const ekleBtn = document.getElementById('prs-izin-ekle-btn');
+  const content = document.getElementById('prs-izin-content');
+  const GS = ['admin','feyyaz','umran','orhan'];
+  const isGS = GS.includes(currentUser?.kullanici||'');
+
+  if(!prsId){
+    if(ekleBtn) ekleBtn.style.display='none';
+    content.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-beach" style="font-size:28px;display:block;margin-bottom:8px"></i>Personel seçin</div>';
+    return;
+  }
+
+  if(ekleBtn) ekleBtn.style.display = isGS ? '' : 'none';
+  content.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);font-size:12px"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Yükleniyor...</div>';
+
+  try{
+    const { data, error } = await _supa.from('personel_izinler')
+      .select('*').eq('personel_id', prsId).order('yil', {ascending:false});
+    if(error) throw error;
+    window.IZIN_DATA[prsId] = data||[];
+    izinRender(prsId);
+  }catch(e){
+    content.innerHTML=`<div style="color:var(--red);padding:10px;font-size:12px">Hata: ${e.message}</div>`;
+  }
+};
+
+/* Render */
+window.izinRender = function(prsId){
+  const content = document.getElementById('prs-izin-content');
+  if(!content) return;
+  const prs = (window.PERSONEL||[]).find(p=>String(p.id)===String(prsId));
+  const liste = window.IZIN_DATA[prsId]||[];
+  const GS = ['admin','feyyaz','umran','orhan'];
+  const isGS = GS.includes(currentUser?.kullanici||'');
+
+  if(!liste.length){
+    content.innerHTML=`<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-calendar-off" style="font-size:28px;display:block;margin-bottom:8px"></i><div style="font-size:13px">${prs?prs.ad+' '+prs.soyad+' için':'Bu personel için'} izin kaydı yok</div>${isGS?'<div style="font-size:11px;margin-top:6px">Yukarıdaki "İzin Ekle" butonuyla kayıt ekleyebilirsiniz.</div>':''}</div>`;
+    return;
+  }
+
+  const toplamKalan = liste.reduce((t,i)=>t+(i.hak_edilen-i.kullanilan),0);
+  const toplamHak = liste.reduce((t,i)=>t+i.hak_edilen,0);
+  const toplamKull = liste.reduce((t,i)=>t+i.kullanilan,0);
+
+  const satirlar = liste.map(izin=>{
+    const kalan = izin.hak_edilen - izin.kullanilan;
+    const pct = izin.hak_edilen > 0 ? Math.round(izin.kullanilan/izin.hak_edilen*100) : 0;
+    const kalanRenk = kalan <= 0 ? 'var(--red)' : kalan <= 3 ? 'var(--amber)' : 'var(--teal)';
+    return `<tr style="border-bottom:0.5px solid var(--border)">
+      <td style="padding:11px 14px;font-weight:600;font-size:13px">${izin.yil}</td>
+      <td style="padding:11px 14px;text-align:center;font-size:13px">${izin.hak_edilen}</td>
+      <td style="padding:11px 14px;text-align:center">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;background:var(--border2);border-radius:99px;height:6px">
+            <div style="width:${Math.min(pct,100)}%;background:${pct>=100?'var(--red)':pct>=70?'var(--amber)':'var(--blue)'};border-radius:99px;height:6px;transition:width .3s"></div>
+          </div>
+          <span style="font-size:12px;min-width:24px">${izin.kullanilan}</span>
+        </div>
+      </td>
+      <td style="padding:11px 14px;text-align:center">
+        <span style="font-size:14px;font-weight:700;color:${kalanRenk}">${kalan}</span>
+        <span style="font-size:10px;color:var(--text2)"> gün</span>
+      </td>
+      <td style="padding:11px 14px;font-size:11px;color:var(--text2)">${izin.not||'—'}</td>
+      ${isGS?`<td style="padding:11px 14px;text-align:right">
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="izinDuzenle('${prsId}','${izin.id}')"><i class="ti ti-edit" style="font-size:12px"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="izinSil('${prsId}','${izin.id}')"><i class="ti ti-trash" style="font-size:12px"></i></button>
+      </td>`:'<td></td>'}
+    </tr>`;
+  }).join('');
+
+  content.innerHTML=`
+    <div class="card" style="overflow:hidden;margin-bottom:14px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--surface2)">
+            <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2)">YIL</th>
+            <th style="text-align:center;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2)">HAK EDİLEN</th>
+            <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2)">KULLANILAN</th>
+            <th style="text-align:center;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2)">KALAN</th>
+            <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2)">NOT</th>
+            <th style="padding:10px 14px"></th>
+          </tr>
+        </thead>
+        <tbody>${satirlar}</tbody>
+        <tfoot>
+          <tr style="background:var(--surface2);border-top:2px solid var(--border)">
+            <td style="padding:12px 14px;font-weight:700;font-size:12px">TOPLAM</td>
+            <td style="padding:12px 14px;text-align:center;font-weight:700">${toplamHak}</td>
+            <td style="padding:12px 14px;text-align:center;font-weight:700">${toplamKull}</td>
+            <td style="padding:12px 14px;text-align:center">
+              <span style="font-size:16px;font-weight:800;color:${toplamKalan<=0?'var(--red)':toplamKalan<=5?'var(--amber)':'var(--teal)'}">${toplamKalan}</span>
+              <span style="font-size:11px;color:var(--text2)"> gün kalan</span>
+            </td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+};
+
+/* Modal Aç - Ekle */
+window.izinEkleModal = function(){
+  document.getElementById('izin-f-id').value='';
+  document.getElementById('izin-f-yil').value=new Date().getFullYear();
+  document.getElementById('izin-f-hak').value='';
+  document.getElementById('izin-f-kullanilan').value='0';
+  document.getElementById('izin-f-not').value='';
+  document.getElementById('izin-modal-title').textContent='İzin Ekle';
+  document.getElementById('izin-kaydet-btn').setAttribute('onclick','izinKaydet()');
+  document.getElementById('izin-modal').style.display='flex';
+};
+
+window.izinModalKapat = function(){ document.getElementById('izin-modal').style.display='none'; };
+
+/* Kaydet */
+window.izinKaydet = async function(){
+  const yil = parseInt(document.getElementById('izin-f-yil')?.value);
+  const hak = parseInt(document.getElementById('izin-f-hak')?.value);
+  const kull = parseInt(document.getElementById('izin-f-kullanilan')?.value||'0');
+  const not_ = document.getElementById('izin-f-not')?.value.trim()||'';
+  if(!yil||!hak){ alert('Yıl ve hak edilen izin zorunludur.'); return; }
+  if(kull>hak){ alert('Kullanılan izin, hak edilen izinden fazla olamaz.'); return; }
+  if(!_izinSecilenPrs){ alert('Personel seçili değil.'); return; }
+
+  const { data, error } = await _supa.from('personel_izinler').insert([{
+    personel_id: _izinSecilenPrs, yil, hak_edilen: hak, kullanilan: kull, not: not_||null
+  }]).select().single();
+  if(error){ alert('Kaydetme hatası: '+error.message); return; }
+
+  if(!window.IZIN_DATA[_izinSecilenPrs]) window.IZIN_DATA[_izinSecilenPrs]=[];
+  window.IZIN_DATA[_izinSecilenPrs].unshift(data);
+  window.IZIN_DATA[_izinSecilenPrs].sort((a,b)=>b.yil-a.yil);
+  izinModalKapat(); izinRender(_izinSecilenPrs);
+};
+
+/* Düzenle */
+window.izinDuzenle = function(prsId, izinId){
+  const izin = (window.IZIN_DATA[prsId]||[]).find(x=>String(x.id)===String(izinId));
+  if(!izin) return;
+  document.getElementById('izin-f-id').value=izinId;
+  document.getElementById('izin-f-yil').value=izin.yil;
+  document.getElementById('izin-f-hak').value=izin.hak_edilen;
+  document.getElementById('izin-f-kullanilan').value=izin.kullanilan;
+  document.getElementById('izin-f-not').value=izin.not||'';
+  document.getElementById('izin-modal-title').textContent='İzin Düzenle';
+  document.getElementById('izin-kaydet-btn').setAttribute('onclick',`izinGuncelle('${prsId}','${izinId}')`);
+  document.getElementById('izin-modal').style.display='flex';
+};
+
+/* Güncelle */
+window.izinGuncelle = async function(prsId, izinId){
+  const yil = parseInt(document.getElementById('izin-f-yil')?.value);
+  const hak = parseInt(document.getElementById('izin-f-hak')?.value);
+  const kull = parseInt(document.getElementById('izin-f-kullanilan')?.value||'0');
+  const not_ = document.getElementById('izin-f-not')?.value.trim()||'';
+  if(!yil||!hak){ alert('Yıl ve hak edilen izin zorunludur.'); return; }
+  if(kull>hak){ alert('Kullanılan izin, hak edilen izinden fazla olamaz.'); return; }
+
+  const { error } = await _supa.from('personel_izinler')
+    .update({ yil, hak_edilen:hak, kullanilan:kull, not:not_||null }).eq('id',izinId);
+  if(error){ alert('Güncelleme hatası: '+error.message); return; }
+
+  const idx = (window.IZIN_DATA[prsId]||[]).findIndex(x=>String(x.id)===String(izinId));
+  if(idx>-1) window.IZIN_DATA[prsId][idx] = {...window.IZIN_DATA[prsId][idx], yil, hak_edilen:hak, kullanilan:kull, not:not_||null};
+  window.IZIN_DATA[prsId].sort((a,b)=>b.yil-a.yil);
+  izinModalKapat(); izinRender(prsId);
+};
+
+/* Sil */
+window.izinSil = async function(prsId, izinId){
+  if(!confirm('Bu izin kaydını silmek istiyor musunuz?')) return;
+  const { error } = await _supa.from('personel_izinler').delete().eq('id',izinId);
+  if(error){ alert('Silme hatası: '+error.message); return; }
+  window.IZIN_DATA[prsId] = (window.IZIN_DATA[prsId]||[]).filter(x=>String(x.id)!==String(izinId));
+  izinRender(prsId);
+};
+
+})();
+
 /* ══ PERSONEL ÖNERİ MODÜLÜ ══ */
 (function(){
 
@@ -9732,6 +9989,10 @@ window.prsTab = function(pane, btn) {
   document.querySelectorAll('.um-tab-bar .um-tab').forEach(t=>t.classList.remove('um-on'));
   document.getElementById('prs-pane-'+pane).classList.add('prs-on');
   if (btn) btn.classList.add('um-on');
+  /* İzin sekmesine geçilince dropdown'u doldur */
+  if(pane === 'izin'){
+    setTimeout(()=>{ if(window.izinDropdownDoldur) window.izinDropdownDoldur(); }, 30);
+  }
 };
 
 /* Sekmeye geç + personel seç */
