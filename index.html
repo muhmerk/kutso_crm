@@ -3155,12 +3155,17 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <!-- Yıllık trend (son 5 yıl) -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
       <div class="card" style="margin-bottom:0">
-        <div class="ch">
-          <span class="ct">Yıllık şikayet trendi</span>
+        <div class="ch" onclick="sikTrendToggle()" style="cursor:pointer;user-select:none">
+          <div style="display:flex;align-items:center;gap:8px">
+            <i class="ti ti-chevron-right" id="sik-trend-chev" style="font-size:14px;color:var(--text2);transition:transform .2s"></i>
+            <span class="ct">Yıllık şikayet trendi</span>
+          </div>
           <span class="badge" id="sik-trend-badge"></span>
         </div>
-        <div id="sik-trend-bars"><div style="font-size:13px;color:var(--text2);text-align:center;padding:16px">Veri yükleniyor...</div></div>
-        <div id="sik-trend-ozet" style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);font-size:12px;color:var(--text2)"></div>
+        <div id="sik-trend-wrap" style="display:none">
+          <div id="sik-trend-bars"></div>
+          <div id="sik-trend-ozet" style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);font-size:12px;color:var(--text2)"></div>
+        </div>
       </div>
       <div class="card" style="margin-bottom:0">
         <div class="ch" onclick="sikKarsilastirmaToggle()" style="cursor:pointer;user-select:none">
@@ -16775,6 +16780,15 @@ function sikKategoriGuncelle(yil){
 }
 window.sikKategoriGuncelle=sikKategoriGuncelle;
 
+window.sikTrendToggle=function(){
+  const b=document.getElementById('sik-trend-wrap');
+  const c=document.getElementById('sik-trend-chev');
+  if(!b) return;
+  const open=b.style.display!=='none';
+  b.style.display=open?'none':'block';
+  if(c) c.style.transform=open?'rotate(0deg)':'rotate(90deg)';
+  if(!open) sikTrendGuncelle();
+};
 window.sikKarsilastirmaToggle=function(){
   const b=document.getElementById('sik-karsilastirma-wrap');
   const c=document.getElementById('sik-kar-chev');
