@@ -2343,6 +2343,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   <div id="crm-nav-sub" style="display:none;margin-left:16px;border-left:2px solid var(--border);padding-left:8px;margin-bottom:4px">
     <button class="nav nav-sub" id="nav-crm-profil" onclick="crmNavSec('profil',this)"><i class="ti ti-user-circle" style="font-size:14px"></i>Üye Profili</button>
     <button class="nav nav-sub" id="nav-crm-ziyaret" onclick="crmNavSec('ziyaret',this)"><i class="ti ti-car" style="font-size:14px"></i>Üye Ziyareti</button>
+    <button class="nav nav-sub" id="nav-crm-egitim" onclick="crmNavSec('egitim',this)"><i class="ti ti-school" style="font-size:14px"></i>Üye Eğitim & Etkinlik</button>
     <button class="nav nav-sub" id="nav-crm-memnuniyet" onclick="crmNavSec('memnuniyet',this)"><i class="ti ti-mood-smile" style="font-size:14px"></i>Üye Memnuniyet</button>
     <button class="nav nav-sub" id="nav-crm-sikayet" onclick="crmNavSec('sikayet',this)"><i class="ti ti-alert-circle" style="font-size:14px"></i>Şikayet</button>
   </div>
@@ -2358,11 +2359,6 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <button class="nav nav-sub" id="nav-yk-gorev"  onclick="kararlarSec('gorev',this)"><i class="ti ti-clipboard-check" style="font-size:14px"></i>Görevler<span class="nav-badge" id="gorev-badge" style="display:none"></span></button>
   </div>
   <button class="nav" onclick="sw('akreditasyon',this)"><i class="ti ti-certificate"></i>Akreditasyon</button>
-  <button class="nav" id="nav-egitim" onclick="egitimToggle(this)"><i class="ti ti-school"></i>Eğitim & Etkinlik<i class="ti ti-chevron-right" id="egitim-chevron" style="margin-left:auto;font-size:12px;transition:transform .2s"></i></button>
-  <div id="egitim-sub" style="display:none;margin-left:16px;border-left:2px solid var(--border);padding-left:8px;margin-bottom:4px">
-    <button class="nav nav-sub" id="nav-egitim-uye" onclick="egitimSec('uye',this)"><i class="ti ti-building-store" style="font-size:14px"></i>Üye</button>
-    <button class="nav nav-sub" id="nav-egitim-prs" onclick="egitimSec('prs',this)"><i class="ti ti-users" style="font-size:14px"></i>Personel</button>
-  </div>
   <button class="nav" onclick="sw('isplani',this)"><i class="ti ti-target"></i>İş Planı</button>
 
   <div class="sb-divider" id="sicil-nav-divider" style="display:none"></div>
@@ -2376,6 +2372,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   </button>
   <div id="personel-sub" style="display:none;padding-left:8px">
     <button class="nav nav-sub" id="nav-personel-bilgi" onclick="personelSec('bilgi',this)"><i class="ti ti-user-circle" style="font-size:14px"></i>Personel Bilgi</button>
+    <button class="nav nav-sub" id="nav-personel-egitim" onclick="personelSec('egitim',this)"><i class="ti ti-school" style="font-size:14px"></i>Personel Eğitim & Etkinlik</button>
     <button class="nav nav-sub" id="nav-personel-oneri" onclick="personelSec('oneri',this)"><i class="ti ti-bulb" style="font-size:14px"></i>Personel Öneri</button>
     <button class="nav nav-sub" id="nav-personel-memnuniyet" onclick="personelSec('memnuniyet',this)"><i class="ti ti-mood-smile" style="font-size:14px"></i>Personel Memnuniyet</button>
     <button class="nav nav-sub" id="nav-personel-kurul" onclick="personelSec('kurul',this)"><i class="ti ti-gavel" style="font-size:14px"></i>Personel Kurul Kararları</button>
@@ -6508,6 +6505,14 @@ window.crmNavSec = function(sekme, btn){
     document.getElementById('tb-title').textContent='CRM — Üye Ziyareti';
     document.getElementById('tb-sub').textContent='Saha ziyaretleri planlama ve raporlama';
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.ziyRenderListe) window.ziyRenderListe(); }, 30);
+  } else if(sekme==='egitim'){
+    document.getElementById('s-egitim')?.classList.add('active');
+    document.getElementById('tb-title').textContent='Üye Eğitim & Etkinlik';
+    document.getElementById('tb-sub').textContent='Üye eğitim ve etkinlik takibi';
+    setTimeout(()=>{
+      if(window.etkRender) window.etkRender();
+      if(window.etkMetrikleriGuncelle) window.etkMetrikleriGuncelle();
+    }, 30);
   } else if(sekme==='memnuniyet'){
     document.getElementById('s-memnuniyet')?.classList.add('active');
     document.getElementById('tb-title').textContent='Üye Memnuniyet';
@@ -10164,6 +10169,14 @@ window.personelSec = function(sekme, btn){
       if(window.initYilPickers) window.initYilPickers();
       if(window.fillPrsSelects) window.fillPrsSelects();
     }, 30);
+  } else if(sekme === 'egitim'){
+    document.getElementById('s-egitim-prs')?.classList.add('active');
+    document.getElementById('tb-title').textContent = 'Personel Eğitim & Etkinlik';
+    document.getElementById('tb-sub').textContent = 'Personel eğitim ve etkinlik takibi';
+    setTimeout(()=>{
+      if(window.etkPrsRender) window.etkPrsRender();
+      if(window.etkPrsMetrikleriGuncelle) window.etkPrsMetrikleriGuncelle();
+    }, 30);
   } else if(sekme === 'oneri'){
     document.getElementById('s-personel-oneri')?.classList.add('active');
     document.getElementById('tb-title').textContent = 'Personel Öneri';
@@ -10643,43 +10656,11 @@ window.egitimToggle = function(btn){
 };
 
 window.egitimSec = function(sekme, btn){
-  _aktifEgitimSekme = sekme;
-  document.querySelectorAll('#egitim-sub .nav-sub').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  const sub=document.getElementById('egitim-sub');
-  const chev=document.getElementById('egitim-chevron');
-  if(sub) sub.style.display='block';
-  if(chev) chev.style.transform='rotate(90deg)';
-  document.getElementById('nav-egitim')?.classList.add('active');
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  /* Her iki sekmenin breakdown div'ini gizle — layout kayması önlenir */
-  const bd1=document.getElementById('etk-m-baslik-breakdown');
-  const bd2=document.getElementById('etk-prs-m-baslik-breakdown');
-  if(bd1) bd1.style.display='none';
-  if(bd2) bd2.style.display='none';
-  const main=document.querySelector('.main');
-  if(main) main.scrollTop=0;
-  if(sekme==='uye'){
-    document.getElementById('s-egitim')?.classList.add('active');
-    document.getElementById('tb-title').textContent='Eğitim & Etkinlik — Üye';
-    document.getElementById('tb-sub').textContent=new Date().getFullYear()+' yılı program takvimi';
-    const mevcutYil=new Date().getFullYear();
-    window._etkYilFilter=new Set([mevcutYil]);
-    if(window.YD_STATE) window.YD_STATE['egitim']=new Set([mevcutYil]);
-    setTimeout(()=>{ if(window.initYilPickers)window.initYilPickers(); if(window.etkRender)window.etkRender(); if(window.etkMetrikleriGuncelle)window.etkMetrikleriGuncelle(); },30);
-  } else {
-    document.getElementById('s-egitim-prs')?.classList.add('active');
-    document.getElementById('tb-title').textContent='Eğitim & Etkinlik — Personel';
-    document.getElementById('tb-sub').textContent='Personel eğitim ve etkinlik takibi';
-    const mevcutYil=new Date().getFullYear();
-    window._etkPrsYilFilter=new Set([mevcutYil]);
-    if(window.YD_STATE) window.YD_STATE['egitim-prs']=new Set([mevcutYil]);
-    setTimeout(()=>{ 
-      if(window.initYilPickers) window.initYilPickers();
-      if(window.etkPrsRender) window.etkPrsRender(); 
-      if(window.etkPrsMetrikleriGuncelle) window.etkPrsMetrikleriGuncelle(); 
-    },30);
-  }
+  if(sekme==='uye') crmNavSec('egitim', document.getElementById('nav-crm-egitim'));
+  else if(sekme==='prs') personelSec('egitim', document.getElementById('nav-personel-egitim'));
+};
+window.egitimToggle = function(btn){
+  crmNavSec('egitim', document.getElementById('nav-crm-egitim'));
 };
 
 })();
