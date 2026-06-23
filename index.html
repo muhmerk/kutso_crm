@@ -10125,7 +10125,9 @@ window.personelToggle = function(btn){
 window.personelSec = function(sekme, btn){
   _aktifPersonelSekme = sekme;
   document.querySelectorAll('#personel-sub .nav-sub').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
+  /* btn null gelebilir — id'den bul */
+  const aktifBtn = btn || document.getElementById('nav-personel-'+sekme);
+  if(aktifBtn) aktifBtn.classList.add('active');
   document.getElementById('nav-personel-toggle').classList.add('active');
   const sub = document.getElementById('personel-sub');
   const chev = document.getElementById('personel-chevron');
