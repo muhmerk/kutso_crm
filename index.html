@@ -16589,40 +16589,48 @@ window.SIK_DB = {};
 /* ─ Statik örnek veri — gerçek DB dolduğunda devre dışı kalır ─ */
 const SIK_GECMIS_DATA = {};
 
+const SORUN_SINIFLARI = [
+  '(1) Eksik Hizmet','(2) Hizmet Sağlamayı Reddetme','(3) Kötü Hizmet',
+  '(4) Kısmen Sağlanmayan Hizmet','(5) Kusurlu Hizmet','(6) Hizmetin Gecikmesi',
+  '(7) Kötü Muamele','(8) Yanlış Bilgi','(9) Yetersiz Bilgi',
+  '(10) İlgisizlik','(11) Diğer (Bilgi Talebi)'
+];
+
 function sikYilVerisi(yil){
-  /* DOM'daki kartlar + SIK_DB birlikte — DOM her zaman yetkili kaynak */
   let toplam=0, acik=0, kritik=0, cozulen=0;
   const kategoriler={};
 
-  /* 1. DOM kartları — hem statik hem dinamik eklenenler */
-  document.querySelectorAll(`#s-sikayet .sk[data-yil="${yil}"]`).forEach(el=>{
+  const katBul = (k) => {
+    if(k.sorunSinifi && k.sorunSinifi >= 1 && k.sorunSinifi <= 11)
+      return SORUN_SINIFLARI[k.sorunSinifi-1];
+    return k.kategori||'Diğer';
+  };
+
+  document.querySelectorAll(`#sik-kart-container .sk[data-yil="${yil}"]`).forEach(el=>{
     toplam++;
     const durum=(el.dataset.durum||'').toLowerCase();
     if(durum==='kritik'||durum==='açık'||durum==='incelemede'||durum==='beklemede') acik++;
     if(durum==='kritik') kritik++;
     if(durum==='çözüldü'||durum==='tamamlandı') cozulen++;
     const id=el.dataset.id;
-    const kat=window.SIK_DB[id]?.kategori || 'Diğer';
+    const kat=katBul(window.SIK_DB[id]||{});
     kategoriler[kat]=(kategoriler[kat]||0)+1;
   });
 
-  /* SIK_DB'de olup DOM'da olmayan kayıtlar */
   Object.values(window.SIK_DB||{}).forEach(k=>{
     const kYil=k.yil||parseInt((k.tarih||'').slice(-4))||0;
     if(kYil!==yil) return;
-    if(document.querySelector(`#s-sikayet .sk[data-id="${k.id}"]`)) return;
+    if(document.querySelector(`#sik-kart-container .sk[data-id="${k.id}"]`)) return;
     toplam++;
     const d=(k.durum||'').toLowerCase();
     if(['açık','kritik','incelemede','beklemede'].includes(d)) acik++;
     if(d==='kritik') kritik++;
     if(['çözüldü','tamamlandı','kapatıldı'].includes(d)) cozulen++;
-    const kat=k.kategori||'Diğer';
+    const kat=katBul(k);
     kategoriler[kat]=(kategoriler[kat]||0)+1;
   });
 
-  /* Veri yüklendiyse her zaman gerçek sayıyı döndür (0 dahil) */
   if(window._sikVeriYuklendi) return {toplam, acik, kritik, cozulen, kategoriler};
-  /* Daha önce yüklenmemişse ve veri varsa döndür */
   if(toplam>0) return {toplam, acik, kritik, cozulen, kategoriler};
   return null;
 }
@@ -17054,9 +17062,9 @@ function sikSurecRenderTab(kartId, tab){
       <!-- Sorun Sınıfı -->
       <div style="padding:12px 14px;background:var(--surface2);border-radius:10px;margin-bottom:4px">
         <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">KARŞILAŞILAN SORUN SINIFI</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px">
-          ${sorunSiniflari.map((s,i)=>`<label style="display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--border);border-radius:12px;font-size:10px;cursor:pointer;${db.sorunSinifi===(i+1)?'background:var(--blue);color:#fff;border-color:var(--blue)':''}">
-            <input type="radio" name="sik-ss-${kartId}" value="${i+1}" ${db.sorunSinifi===(i+1)?'checked':''} style="display:none"> ${s}
+        <div style="display:flex;flex-wrap:wrap;gap:5px" id="sik-ss-group-${kartId}">
+          ${sorunSiniflari.map((s,i)=>`<label id="sik-ss-lbl-${kartId}-${i+1}" onclick="sikSorunSinifiSec('${kartId}',${i+1})" style="display:flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid ${db.sorunSinifi===(i+1)?'var(--blue)':'var(--border)'};border-radius:12px;font-size:11px;cursor:pointer;background:${db.sorunSinifi===(i+1)?'var(--blue)':'transparent'};color:${db.sorunSinifi===(i+1)?'#fff':'var(--text)'};transition:all .15s;user-select:none">
+            ${s}
           </label>`).join('')}
         </div>
       </div>
@@ -17204,6 +17212,36 @@ function sikAdimIcerik(a, kartId, veri, db, yetkili){
 }
 
 /* Accordion toggle */
+/* Sorun Sınıfı seç ve kaydet */
+window.sikSorunSinifiSec = async function(kartId, sinif){
+  const db = window.SIK_DB[kartId];
+  if(!db) return;
+
+  /* Önceki seçimi temizle */
+  document.querySelectorAll(`[id^="sik-ss-lbl-${kartId}-"]`).forEach(el=>{
+    el.style.background='transparent';
+    el.style.color='var(--text)';
+    el.style.borderColor='var(--border)';
+  });
+
+  /* Yeni seçimi vurgula */
+  const secilenEl = document.getElementById(`sik-ss-lbl-${kartId}-${sinif}`);
+  if(secilenEl){
+    secilenEl.style.background='var(--blue)';
+    secilenEl.style.color='#fff';
+    secilenEl.style.borderColor='var(--blue)';
+  }
+
+  /* State güncelle */
+  db.sorunSinifi = sinif;
+
+  /* DB'ye kaydet */
+  await _supa.from('sikayetler').update({sorun_sinifi: sinif}).eq('id', kartId);
+
+  /* Şikayet no'yu güncelle (kategori olarak görünecek) */
+  if(window.supaYukleSikayetler) window.supaYukleSikayetler();
+};
+
 window.sikAdimToggle = function(kartId, adimNo){
   const body = document.getElementById(`sik-adim-body-${kartId}-${adimNo}`);
   const chev = document.getElementById(`sik-adim-chev-${kartId}-${adimNo}`);
