@@ -3581,7 +3581,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         </div>
         <div>
           <label class="yk-lbl">Not (isteğe bağlı)</label>
-          <input id="izin-f-not" class="yk-inp" placeholder="Açıklama...">
+          <input id="izin-f-aciklama" class="yk-inp" placeholder="Açıklama...">
         </div>
       </div>
       <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
@@ -9156,7 +9156,7 @@ window.izinRender = function(prsId){
         <span style="font-size:14px;font-weight:700;color:${kalanRenk}">${kalan}</span>
         <span style="font-size:10px;color:var(--text2)"> gün</span>
       </td>
-      <td style="padding:11px 14px;font-size:11px;color:var(--text2)">${izin.not||'—'}</td>
+      <td style="padding:11px 14px;font-size:11px;color:var(--text2)">${izin.aciklama||'—'}</td>
       ${isGS?`<td style="padding:11px 14px;text-align:right">
         <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="izinDuzenle('${prsId}','${izin.id}')"><i class="ti ti-edit" style="font-size:12px"></i></button>
         <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="izinSil('${prsId}','${izin.id}')"><i class="ti ti-trash" style="font-size:12px"></i></button>
@@ -9200,7 +9200,7 @@ window.izinEkleModal = function(){
   document.getElementById('izin-f-yil').value=new Date().getFullYear();
   document.getElementById('izin-f-hak').value='';
   document.getElementById('izin-f-kullanilan').value='0';
-  document.getElementById('izin-f-not').value='';
+  document.getElementById('izin-f-aciklama').value='';
   document.getElementById('izin-modal-title').textContent='İzin Ekle';
   document.getElementById('izin-kaydet-btn').setAttribute('onclick','izinKaydet()');
   document.getElementById('izin-modal').style.display='flex';
@@ -9213,13 +9213,13 @@ window.izinKaydet = async function(){
   const yil = parseInt(document.getElementById('izin-f-yil')?.value);
   const hak = parseInt(document.getElementById('izin-f-hak')?.value);
   const kull = parseInt(document.getElementById('izin-f-kullanilan')?.value||'0');
-  const not_ = document.getElementById('izin-f-not')?.value.trim()||'';
+  const not_ = document.getElementById('izin-f-aciklama')?.value.trim()||'';
   if(!yil||!hak){ alert('Yıl ve hak edilen izin zorunludur.'); return; }
   if(kull>hak){ alert('Kullanılan izin, hak edilen izinden fazla olamaz.'); return; }
   if(!_izinSecilenPrs){ alert('Personel seçili değil.'); return; }
 
   const { data, error } = await _supa.from('personel_izinler').insert([{
-    personel_id: _izinSecilenPrs, yil, hak_edilen: hak, kullanilan: kull, not: not_||null
+    personel_id: _izinSecilenPrs, yil, hak_edilen: hak, kullanilan: kull, aciklama: not_||null
   }]).select().single();
   if(error){ alert('Kaydetme hatası: '+error.message); return; }
 
@@ -9237,7 +9237,7 @@ window.izinDuzenle = function(prsId, izinId){
   document.getElementById('izin-f-yil').value=izin.yil;
   document.getElementById('izin-f-hak').value=izin.hak_edilen;
   document.getElementById('izin-f-kullanilan').value=izin.kullanilan;
-  document.getElementById('izin-f-not').value=izin.not||'';
+  document.getElementById('izin-f-aciklama').value=izin.aciklama||'';
   document.getElementById('izin-modal-title').textContent='İzin Düzenle';
   document.getElementById('izin-kaydet-btn').setAttribute('onclick',`izinGuncelle('${prsId}','${izinId}')`);
   document.getElementById('izin-modal').style.display='flex';
@@ -9248,16 +9248,16 @@ window.izinGuncelle = async function(prsId, izinId){
   const yil = parseInt(document.getElementById('izin-f-yil')?.value);
   const hak = parseInt(document.getElementById('izin-f-hak')?.value);
   const kull = parseInt(document.getElementById('izin-f-kullanilan')?.value||'0');
-  const not_ = document.getElementById('izin-f-not')?.value.trim()||'';
+  const not_ = document.getElementById('izin-f-aciklama')?.value.trim()||'';
   if(!yil||!hak){ alert('Yıl ve hak edilen izin zorunludur.'); return; }
   if(kull>hak){ alert('Kullanılan izin, hak edilen izinden fazla olamaz.'); return; }
 
   const { error } = await _supa.from('personel_izinler')
-    .update({ yil, hak_edilen:hak, kullanilan:kull, not:not_||null }).eq('id',izinId);
+    .update({ yil, hak_edilen:hak, kullanilan:kull, aciklama:not_||null }).eq('id',izinId);
   if(error){ alert('Güncelleme hatası: '+error.message); return; }
 
   const idx = (window.IZIN_DATA[prsId]||[]).findIndex(x=>String(x.id)===String(izinId));
-  if(idx>-1) window.IZIN_DATA[prsId][idx] = {...window.IZIN_DATA[prsId][idx], yil, hak_edilen:hak, kullanilan:kull, not:not_||null};
+  if(idx>-1) window.IZIN_DATA[prsId][idx] = {...window.IZIN_DATA[prsId][idx], yil, hak_edilen:hak, kullanilan:kull, aciklama:not_||null};
   window.IZIN_DATA[prsId].sort((a,b)=>b.yil-a.yil);
   izinModalKapat(); izinRender(prsId);
 };
