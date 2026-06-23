@@ -9489,6 +9489,11 @@ window.personelSec = function(sekme, btn){
     document.getElementById('s-personel')?.classList.add('active');
     document.getElementById('tb-title').textContent = 'Personel Bilgi';
     document.getElementById('tb-sub').textContent = (window.PERSONEL?.length||16)+' personel · özlük, eğitim, sözleşme';
+    setTimeout(()=>{
+      if(window.renderPrsList) window.renderPrsList();
+      if(window.prsMetrikleriGuncelle) window.prsMetrikleriGuncelle();
+      if(window.initYilPickers) window.initYilPickers();
+    }, 30);
   } else if(sekme === 'oneri'){
     document.getElementById('s-personel-oneri')?.classList.add('active');
     document.getElementById('tb-title').textContent = 'Personel Öneri';
