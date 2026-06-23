@@ -2343,10 +2343,10 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   <div id="crm-nav-sub" style="display:none;margin-left:16px;border-left:2px solid var(--border);padding-left:8px;margin-bottom:4px">
     <button class="nav nav-sub" id="nav-crm-profil" onclick="crmNavSec('profil',this)"><i class="ti ti-user-circle" style="font-size:14px"></i>Üye Profili</button>
     <button class="nav nav-sub" id="nav-crm-ziyaret" onclick="crmNavSec('ziyaret',this)"><i class="ti ti-car" style="font-size:14px"></i>Üye Ziyareti</button>
+    <button class="nav nav-sub" id="nav-crm-memnuniyet" onclick="crmNavSec('memnuniyet',this)"><i class="ti ti-mood-smile" style="font-size:14px"></i>Üye Memnuniyet</button>
+    <button class="nav nav-sub" id="nav-crm-sikayet" onclick="crmNavSec('sikayet',this)"><i class="ti ti-alert-circle" style="font-size:14px"></i>Şikayet</button>
   </div>
   <button class="nav" id="nav-sicil" onclick="sw('sicil',this)" style="display:none"><i class="ti ti-building-bank"></i>Ticaret Sicili</button>
-  <button class="nav" id="nav-mem" onclick="sw('memnuniyet',this)"><i class="ti ti-mood-smile"></i>Üye Memnuniyet</button>
-  <button class="nav" onclick="sw('sikayet',this)"><i class="ti ti-alert-circle"></i>Şikayet</button>
 
   <div class="sb-divider"></div>
   <div class="sb-section">Oda Yönetimi</div>
@@ -5242,10 +5242,12 @@ function sw(id, btn) {
     Promise.all([supaYukleYK(), supaYukleMK(), supaYukleMeclis()]);
     if (window.supaYukleGorevler) window.supaYukleGorevler();
   } else if (id === 'memnuniyet') {
+    if(window.crmNavSec){ window.crmNavSec('memnuniyet', document.getElementById('nav-crm-memnuniyet')); return; }
     const mevcutYil = new Date().getFullYear();
     if(window.YD_STATE) window.YD_STATE['memnuniyet'] = new Set([mevcutYil]);
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.memSayfaGuncelle) window.memSayfaGuncelle(); }, 30);
   } else if (id === 'sikayet') {
+    if(window.crmNavSec){ window.crmNavSec('sikayet', document.getElementById('nav-crm-sikayet')); return; }
     supaYukleSikayetler();
   } else if (id === 'akreditasyon') {
     supaYukleAkreditasyon();
@@ -6489,21 +6491,35 @@ window.crmNavToggle = function(btn){
 window.crmNavSec = function(sekme, btn){
   _aktifCrmSekme=sekme;
   document.querySelectorAll('#crm-nav-sub .nav-sub').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
+  const aktifBtn = btn || document.getElementById('nav-crm-'+sekme);
+  if(aktifBtn) aktifBtn.classList.add('active');
   const sub=document.getElementById('crm-nav-sub'); if(sub) sub.style.display='block';
   const chev=document.getElementById('crm-nav-chev'); if(chev) chev.style.transform='rotate(90deg)';
   document.getElementById('nav-crm')?.classList.add('active');
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav').forEach(n=>{ if(n.id!=='nav-crm'&&!n.closest('#crm-nav-sub')) n.classList.remove('active'); });
   document.querySelector('.main').scrollTop=0;
   if(sekme==='profil'){
     document.getElementById('s-crm')?.classList.add('active');
     document.getElementById('tb-title').textContent='CRM — Üye Profili';
     document.getElementById('tb-sub').textContent='Firma arayın, iletişim geçmişi ve detayları görüntüleyin';
-  } else {
+  } else if(sekme==='ziyaret'){
     document.getElementById('s-uye-ziyaret')?.classList.add('active');
     document.getElementById('tb-title').textContent='CRM — Üye Ziyareti';
     document.getElementById('tb-sub').textContent='Saha ziyaretleri planlama ve raporlama';
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.ziyRenderListe) window.ziyRenderListe(); }, 30);
+  } else if(sekme==='memnuniyet'){
+    document.getElementById('s-memnuniyet')?.classList.add('active');
+    document.getElementById('tb-title').textContent='Üye Memnuniyet';
+    document.getElementById('tb-sub').textContent=`Yıllık karşılaştırmalı · ${new Date().getFullYear()-4}–${new Date().getFullYear()}`;
+    const mevcutYil = new Date().getFullYear();
+    if(window.YD_STATE) window.YD_STATE['memnuniyet'] = window.YD_STATE['memnuniyet']||new Set([mevcutYil]);
+    setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.memSayfaGuncelle) window.memSayfaGuncelle(); }, 30);
+  } else if(sekme==='sikayet'){
+    document.getElementById('s-sikayet')?.classList.add('active');
+    document.getElementById('tb-title').textContent='Şikayet Yönetimi';
+    document.getElementById('tb-sub').textContent='Şikayet kayıt ve takip sistemi';
+    setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); }, 30);
   }
 };
 
