@@ -9755,6 +9755,7 @@ window.personelSec = function(sekme, btn){
       if(window.renderPrsList) window.renderPrsList();
       if(window.prsMetrikleriGuncelle) window.prsMetrikleriGuncelle();
       if(window.initYilPickers) window.initYilPickers();
+      if(window.fillPrsSelects) window.fillPrsSelects();
     }, 30);
   } else if(sekme === 'oneri'){
     document.getElementById('s-personel-oneri')?.classList.add('active');
@@ -9987,11 +9988,12 @@ window.prsCloseDetail = function() {
 window.prsTab = function(pane, btn) {
   document.querySelectorAll('.prs-pane').forEach(p=>p.classList.remove('prs-on'));
   document.querySelectorAll('.um-tab-bar .um-tab').forEach(t=>t.classList.remove('um-on'));
-  document.getElementById('prs-pane-'+pane).classList.add('prs-on');
+  document.getElementById('prs-pane-'+pane)?.classList.add('prs-on');
   if (btn) btn.classList.add('um-on');
-  /* İzin sekmesine geçilince dropdown'u doldur */
   if(pane === 'izin'){
     setTimeout(()=>{ if(window.izinDropdownDoldur) window.izinDropdownDoldur(); }, 30);
+  } else if(['ozluk','egitim','soz','dig'].includes(pane)){
+    setTimeout(()=>{ if(window.fillPrsSelects) window.fillPrsSelects(); }, 30);
   }
 };
 
@@ -10026,7 +10028,8 @@ function ozlukYetkiVar() {
 
 function kendiId() {
   if (!currentUser) return null;
-  const p = PERSONEL.find(x => x.kullanici === currentUser.kullanici);
+  const prsListesi = window.PERSONEL || PERSONEL || [];
+  const p = prsListesi.find(x => x.kullanici === currentUser.kullanici);
   return p ? p.id : null;
 }
 
@@ -10104,10 +10107,11 @@ window.prsSilModal = function(id){
   el=document.getElementById('tb-sub'); if(el&&document.getElementById('s-personel')&&document.getElementById('s-personel').classList.contains('active')) el.textContent=n+' personel · özlük, eğitim, sözleşme';
 };
 function fillPrsSelects() {
-  const opts = PERSONEL.map(p=>`<option value="${p.id}">${p.ad} ${p.soyad} — ${p.unvan}</option>`).join('');
+  const prsListesi = window.PERSONEL || PERSONEL || [];
+  const opts = prsListesi.map(p=>`<option value="${p.id}">${p.ad} ${p.soyad} — ${p.unvan}</option>`).join('');
   const tamYetki = prsEklemeYetkiVar();
   const kId = kendiId();
-  const kisi = kId ? PERSONEL.find(x=>x.id===kId) : null;
+  const kisi = kId ? prsListesi.find(x=>x.id===kId) : null;
 
   const tabConfig = {
     ozluk:  { loadFn:'prsOzlukLoad',    btn:'prs-ozluk-upload-btn' },
@@ -10133,7 +10137,13 @@ function fillPrsSelects() {
         if (btn) btn.style.display = 'inline-flex';
       }, 50);
     } else {
-      el.innerHTML = '<option value="">Erişim yetkiniz yok</option>';
+      /* Personel listesinde kaydı yok — sadece kendi adını göster */
+      const adSoyad = currentUser?.adSoyad || '';
+      if(adSoyad) {
+        el.innerHTML = `<option value="">Personel kaydı bulunamadı</option>`;
+      } else {
+        el.innerHTML = '<option value="">Giriş yapın</option>';
+      }
       el.disabled = true;
     }
   });
