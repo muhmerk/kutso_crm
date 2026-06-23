@@ -3555,6 +3555,82 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
   </div>
 
+  <!-- ══ KURUL TOPLANTI MODAL ══ -->
+  <div id="kurul-toplanti-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:480px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div style="font-size:15px;font-weight:600" id="kurul-t-modal-title">Kurul Toplantısı Ekle</div>
+        <button onclick="kurulModalKapat('kurul-toplanti-modal')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="kurul-t-id">
+        <div>
+          <label class="yk-lbl">Toplantı Adı / Başlığı <span style="color:var(--red)">*</span></label>
+          <input id="kurul-t-ad" class="yk-inp" placeholder="Örn: 2026 Yılı 1. Personel Kurul Toplantısı" autocomplete="off">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
+            <input id="kurul-t-tarih" type="date" class="yk-inp">
+          </div>
+          <div>
+            <label class="yk-lbl">Saat</label>
+            <input id="kurul-t-saat" type="time" class="yk-inp" value="10:00">
+          </div>
+        </div>
+        <div>
+          <label class="yk-lbl">Toplantı Yeri</label>
+          <input id="kurul-t-yer" class="yk-inp" placeholder="TSO Toplantı Salonu...">
+        </div>
+        <div>
+          <label class="yk-lbl">Katılımcılar</label>
+          <input id="kurul-t-katilimci" class="yk-inp" placeholder="İsim, İsim, İsim...">
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-sm" onclick="kurulModalKapat('kurul-toplanti-modal')">İptal</button>
+        <button class="btn btn-p btn-sm" id="kurul-t-kaydet-btn" onclick="kurulToplantıKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ KURUL GÜNDEM MODAL ══ -->
+  <div id="kurul-gundem-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:520px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div>
+          <div style="font-size:15px;font-weight:600" id="kurul-g-modal-title">Gündem Ekle</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="kurul-g-modal-sub"></div>
+        </div>
+        <button onclick="kurulModalKapat('kurul-gundem-modal')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="kurul-g-toplanti-id">
+        <input type="hidden" id="kurul-g-id">
+        <div>
+          <label class="yk-lbl">Gündem Maddesi No</label>
+          <input id="kurul-g-no" type="number" class="yk-inp" placeholder="1" min="1" style="width:80px">
+        </div>
+        <div>
+          <label class="yk-lbl">Gündem Konusu <span style="color:var(--red)">*</span></label>
+          <input id="kurul-g-konu" class="yk-inp" placeholder="Gündem konusu başlığı...">
+        </div>
+        <div>
+          <label class="yk-lbl">Açıklama (isteğe bağlı)</label>
+          <textarea id="kurul-g-aciklama" class="yk-inp" style="min-height:70px;resize:vertical" placeholder="Gündem detayı..."></textarea>
+        </div>
+        <div>
+          <label class="yk-lbl">Alınan Karar</label>
+          <textarea id="kurul-g-karar" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Bu gündem maddesinde alınan karar..."></textarea>
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-sm" onclick="kurulModalKapat('kurul-gundem-modal')">İptal</button>
+        <button class="btn btn-p btn-sm" id="kurul-g-kaydet-btn" onclick="kurulGundemKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ PERSONEL İZİN MODAL ══ -->
   <div id="izin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
     <div style="background:var(--surface);border-radius:16px;width:440px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
@@ -4813,11 +4889,34 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
   <!-- ══════════ PERSONEL KURUL KARARLARI ══════════ -->
   <div id="s-personel-kurul" class="section">
-    <div style="text-align:center;padding:60px 20px;color:var(--text2)">
-      <i class="ti ti-gavel" style="font-size:48px;display:block;margin-bottom:16px;color:var(--purple)"></i>
-      <div style="font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text)">Personel Kurul Kararları</div>
-      <div style="font-size:13px">Bu bölüm tasarım aşamasındadır.</div>
+
+    <!-- Üst bar -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <select id="kurul-yil-sec" class="yk-inp" style="height:32px;font-size:12px;width:90px" onchange="kurulYilSec(this.value)">
+          <option value="">Yıl</option>
+        </select>
+      </div>
+      <button class="btn btn-p btn-sm" id="kurul-ekle-btn" onclick="kurulToplantıEkle()" style="display:none">
+        <i class="ti ti-plus"></i> Personel Kurul Toplantısı Ekle
+      </button>
     </div>
+
+    <!-- Özet metrikler -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
+      <div class="mc"><div class="mc-ico" style="background:var(--blue-bg)"><i class="ti ti-users-group" style="color:var(--blue)"></i></div><div class="mc-lbl">Toplantı Sayısı</div><div class="mc-val" id="kurul-m-toplanti">—</div></div>
+      <div class="mc"><div class="mc-ico" style="background:var(--amber-bg)"><i class="ti ti-list" style="color:var(--amber)"></i></div><div class="mc-lbl">Toplam Gündem</div><div class="mc-val" id="kurul-m-gundem">—</div></div>
+      <div class="mc"><div class="mc-ico" style="background:var(--green-bg)"><i class="ti ti-gavel" style="color:var(--teal)"></i></div><div class="mc-lbl">Alınan Karar</div><div class="mc-val" id="kurul-m-karar">—</div></div>
+    </div>
+
+    <!-- Toplantı listesi -->
+    <div id="kurul-liste">
+      <div style="text-align:center;padding:40px;color:var(--text2)">
+        <i class="ti ti-calendar-off" style="font-size:28px;display:block;margin-bottom:8px"></i>
+        Yıl seçin
+      </div>
+    </div>
+
   </div>
 
   </div><!-- /content -->
@@ -9073,6 +9172,294 @@ window.sw = function(id, btn) {
   closeSidebar();
 };
 
+/* ══ PERSONEL KURUL KARARLARI MODÜLÜ ══ */
+(function(){
+
+const KURUL_YETKİLİLER = ['admin','feyyaz','umran','orhan','haver'];
+const kurulYetkiVar = () => KURUL_YETKİLİLER.includes(currentUser?.kullanici||'');
+
+window.KURUL_DATA = {}; // { yil: [{id, ad, tarih, saat, yer, katilimci, gundemler:[{id, no, konu, aciklama, karar}]}] }
+let _kurulSecilenYil = new Date().getFullYear();
+
+/* Yıl dropdown doldur */
+function kurulYilDoldur(){
+  const sel = document.getElementById('kurul-yil-sec');
+  if(!sel) return;
+  const buYil = new Date().getFullYear();
+  let html = '<option value="">Yıl seçin</option>';
+  for(let y = 2020; y <= 2030; y++){
+    html += `<option value="${y}" ${y===buYil?'selected':''}>${y}</option>`;
+  }
+  sel.innerHTML = html;
+}
+
+/* Yıl seçilince */
+window.kurulYilSec = async function(yil){
+  _kurulSecilenYil = parseInt(yil)||new Date().getFullYear();
+  const ekleBtn = document.getElementById('kurul-ekle-btn');
+  if(ekleBtn) ekleBtn.style.display = kurulYetkiVar() ? '' : 'none';
+  if(!yil){ kurulListeRender(); return; }
+  await kurulYukle(_kurulSecilenYil);
+};
+
+/* DB'den yükle */
+async function kurulYukle(yil){
+  try{
+    const { data: toplantılar, error } = await _supa.from('kurul_toplantılar')
+      .select('*, kurul_gundemler(*)').eq('yil', yil).order('tarih', {ascending:true});
+    if(error) throw error;
+    window.KURUL_DATA[yil] = (toplantılar||[]).map(t=>({
+      ...t,
+      gundemler: (t.kurul_gundemler||[]).sort((a,b)=>(a.no||0)-(b.no||0))
+    }));
+    kurulListeRender();
+    kurulMetrikGuncelle();
+  }catch(e){ console.error('Kurul yükle hatası:', e.message); }
+}
+
+/* Metrik güncelle */
+function kurulMetrikGuncelle(){
+  const liste = window.KURUL_DATA[_kurulSecilenYil]||[];
+  const toplanti = liste.length;
+  const gundem = liste.reduce((t,tp)=>t+(tp.gundemler||[]).length, 0);
+  const karar = liste.reduce((t,tp)=>t+(tp.gundemler||[]).filter(g=>g.karar).length, 0);
+  const s = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  s('kurul-m-toplanti', toplanti);
+  s('kurul-m-gundem', gundem);
+  s('kurul-m-karar', karar);
+}
+
+/* Liste render */
+function kurulListeRender(){
+  const liste = document.getElementById('kurul-liste');
+  if(!liste) return;
+  const data = window.KURUL_DATA[_kurulSecilenYil]||[];
+  const yetki = kurulYetkiVar();
+
+  if(!_kurulSecilenYil || !document.getElementById('kurul-yil-sec')?.value){
+    liste.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-calendar-off" style="font-size:28px;display:block;margin-bottom:8px"></i>Yıl seçin</div>';
+    return;
+  }
+  if(!data.length){
+    liste.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-clipboard-off" style="font-size:28px;display:block;margin-bottom:8px"></i><div style="font-size:13px">${_kurulSecilenYil} yılında toplantı kaydı yok</div></div>`;
+    return;
+  }
+
+  liste.innerHTML = data.map(t=>{
+    const tarihStr = t.tarih ? new Date(t.tarih+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '—';
+    const gundemler = t.gundemler||[];
+
+    const gundemHtml = gundemler.map((g,gi)=>`
+      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:6px">
+        <!-- Gündem başlık -->
+        <div onclick="kurulGundemToggle('${t.id}','${g.id}')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none;background:var(--surface)">
+          <i class="ti ti-chevron-right" id="kg-chev-${g.id}" style="font-size:11px;color:var(--text2);transition:transform .2s;flex-shrink:0"></i>
+          <span style="font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0">${g.no||gi+1}.</span>
+          <span style="font-size:13px;font-weight:500;flex:1">${g.konu||''}</span>
+          ${g.karar?`<span class="badge b-green" style="font-size:9px;flex-shrink:0">Karar var</span>`:`<span class="badge b-amber" style="font-size:9px;flex-shrink:0">Karar yok</span>`}
+          ${yetki?`<div style="display:flex;gap:3px;flex-shrink:0" onclick="event.stopPropagation()">
+            <button class="btn btn-sm" style="padding:2px 6px" onclick="kurulGundemDuzenle('${t.id}','${g.id}')"><i class="ti ti-edit" style="font-size:11px"></i></button>
+            <button class="btn btn-sm" style="padding:2px 6px;color:var(--red)" onclick="kurulGundemSil('${t.id}','${g.id}')"><i class="ti ti-trash" style="font-size:11px"></i></button>
+          </div>`:''}
+        </div>
+        <!-- Gündem detay -->
+        <div id="kg-body-${g.id}" style="display:none;padding:12px 14px;border-top:0.5px solid var(--border);background:var(--surface2)">
+          ${g.aciklama?`<div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">${g.aciklama}</div>`:''}
+          ${g.karar?`<div style="padding:10px 12px;background:var(--green-bg);border-radius:8px;border-left:3px solid var(--teal)">
+            <div style="font-size:10px;font-weight:700;color:var(--teal);margin-bottom:4px">ALINAN KARAR</div>
+            <div style="font-size:12px;line-height:1.6">${g.karar}</div>
+          </div>`:`<div style="font-size:12px;color:var(--text2);font-style:italic">Henüz karar eklenmedi.</div>`}
+        </div>
+      </div>`).join('');
+
+    return `<div class="card" style="border-left:3px solid var(--purple);padding:0;overflow:hidden;margin-bottom:12px">
+      <!-- Toplantı başlık -->
+      <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">${t.ad||''}</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text2)">
+            <span><i class="ti ti-calendar" style="font-size:11px;margin-right:3px"></i>${tarihStr}${t.saat?' · '+t.saat:''}</span>
+            ${t.yer?`<span><i class="ti ti-map-pin" style="font-size:11px;margin-right:3px"></i>${t.yer}</span>`:''}
+            ${t.katilimci?`<span><i class="ti ti-users" style="font-size:11px;margin-right:3px"></i>${t.katilimci}</span>`:''}
+            <span><i class="ti ti-list" style="font-size:11px;margin-right:3px"></i>${gundemler.length} gündem · ${gundemler.filter(g=>g.karar).length} karar</span>
+          </div>
+        </div>
+        ${yetki?`<div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-sm" style="font-size:11px" onclick="kurulGundemEkle('${t.id}','${t.ad}')"><i class="ti ti-plus"></i> Gündem Ekle</button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="kurulToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="kurulToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>
+        </div>`:''}
+      </div>
+      <!-- Gündemler -->
+      ${gundemler.length?`<div style="padding:0 12px 12px">${gundemHtml}</div>`:`<div style="padding:0 16px 12px;font-size:12px;color:var(--text2);font-style:italic">${yetki?'Henüz gündem eklenmedi. "Gündem Ekle" butonunu kullanın.':'Henüz gündem eklenmedi.'}</div>`}
+    </div>`;
+  }).join('');
+}
+
+/* Gündem accordion toggle */
+window.kurulGundemToggle = function(tId, gId){
+  const body = document.getElementById(`kg-body-${gId}`);
+  const chev = document.getElementById(`kg-chev-${gId}`);
+  if(!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  if(chev) chev.style.transform = open ? '' : 'rotate(90deg)';
+};
+
+/* Modal kapat */
+window.kurulModalKapat = function(id){ document.getElementById(id).style.display='none'; };
+
+/* TOPLANTI EKLE */
+window.kurulToplantıEkle = function(){
+  document.getElementById('kurul-t-id').value='';
+  document.getElementById('kurul-t-ad').value='';
+  document.getElementById('kurul-t-tarih').value=new Date().toISOString().slice(0,10);
+  document.getElementById('kurul-t-saat').value='10:00';
+  document.getElementById('kurul-t-yer').value='';
+  document.getElementById('kurul-t-katilimci').value='';
+  document.getElementById('kurul-t-modal-title').textContent='Kurul Toplantısı Ekle';
+  document.getElementById('kurul-t-kaydet-btn').setAttribute('onclick','kurulToplantıKaydet()');
+  document.getElementById('kurul-toplanti-modal').style.display='flex';
+};
+
+window.kurulToplantıKaydet = async function(){
+  const ad = document.getElementById('kurul-t-ad')?.value.trim();
+  const tarih = document.getElementById('kurul-t-tarih')?.value;
+  if(!ad||!tarih){ alert('Ad ve tarih zorunludur.'); return; }
+  const { data, error } = await _supa.from('kurul_toplantılar').insert([{
+    ad, tarih, yil: parseInt(tarih.slice(0,4)),
+    saat: document.getElementById('kurul-t-saat')?.value||'',
+    yer: document.getElementById('kurul-t-yer')?.value.trim()||'',
+    katilimci: document.getElementById('kurul-t-katilimci')?.value.trim()||''
+  }]).select().single();
+  if(error){ alert('Hata: '+error.message); return; }
+  if(!window.KURUL_DATA[_kurulSecilenYil]) window.KURUL_DATA[_kurulSecilenYil]=[];
+  window.KURUL_DATA[_kurulSecilenYil].push({...data, gundemler:[]});
+  window.KURUL_DATA[_kurulSecilenYil].sort((a,b)=>a.tarih?.localeCompare(b.tarih||''));
+  kurulModalKapat('kurul-toplanti-modal'); kurulListeRender(); kurulMetrikGuncelle();
+};
+
+window.kurulToplantıDuzenle = function(id){
+  const t = (window.KURUL_DATA[_kurulSecilenYil]||[]).find(x=>x.id===id);
+  if(!t) return;
+  document.getElementById('kurul-t-id').value=id;
+  document.getElementById('kurul-t-ad').value=t.ad||'';
+  document.getElementById('kurul-t-tarih').value=t.tarih||'';
+  document.getElementById('kurul-t-saat').value=t.saat||'';
+  document.getElementById('kurul-t-yer').value=t.yer||'';
+  document.getElementById('kurul-t-katilimci').value=t.katilimci||'';
+  document.getElementById('kurul-t-modal-title').textContent='Toplantıyı Düzenle';
+  document.getElementById('kurul-t-kaydet-btn').setAttribute('onclick',`kurulToplantıGuncelle('${id}')`);
+  document.getElementById('kurul-toplanti-modal').style.display='flex';
+};
+
+window.kurulToplantıGuncelle = async function(id){
+  const ad = document.getElementById('kurul-t-ad')?.value.trim();
+  const tarih = document.getElementById('kurul-t-tarih')?.value;
+  if(!ad||!tarih){ alert('Ad ve tarih zorunludur.'); return; }
+  const gunc = { ad, tarih, yil:parseInt(tarih.slice(0,4)), saat:document.getElementById('kurul-t-saat')?.value||'', yer:document.getElementById('kurul-t-yer')?.value.trim()||'', katilimci:document.getElementById('kurul-t-katilimci')?.value.trim()||'' };
+  const { error } = await _supa.from('kurul_toplantılar').update(gunc).eq('id',id);
+  if(error){ alert('Hata: '+error.message); return; }
+  const idx = (window.KURUL_DATA[_kurulSecilenYil]||[]).findIndex(x=>x.id===id);
+  if(idx>-1) Object.assign(window.KURUL_DATA[_kurulSecilenYil][idx], gunc);
+  kurulModalKapat('kurul-toplanti-modal'); kurulListeRender(); kurulMetrikGuncelle();
+};
+
+window.kurulToplantıSil = async function(id){
+  if(!confirm('Bu toplantıyı ve tüm gündemlerini silmek istiyor musunuz?')) return;
+  const { error } = await _supa.from('kurul_toplantılar').delete().eq('id',id);
+  if(error){ alert('Hata: '+error.message); return; }
+  window.KURUL_DATA[_kurulSecilenYil] = (window.KURUL_DATA[_kurulSecilenYil]||[]).filter(x=>x.id!==id);
+  kurulListeRender(); kurulMetrikGuncelle();
+};
+
+/* GÜNDEM EKLE */
+window.kurulGundemEkle = function(tId, tAd){
+  document.getElementById('kurul-g-toplanti-id').value=tId;
+  document.getElementById('kurul-g-id').value='';
+  const t = (window.KURUL_DATA[_kurulSecilenYil]||[]).find(x=>x.id===tId);
+  const sonNo = t ? (t.gundemler||[]).length+1 : 1;
+  document.getElementById('kurul-g-no').value=sonNo;
+  document.getElementById('kurul-g-konu').value='';
+  document.getElementById('kurul-g-aciklama').value='';
+  document.getElementById('kurul-g-karar').value='';
+  document.getElementById('kurul-g-modal-title').textContent='Gündem Ekle';
+  document.getElementById('kurul-g-modal-sub').textContent=tAd||'';
+  document.getElementById('kurul-g-kaydet-btn').setAttribute('onclick','kurulGundemKaydet()');
+  document.getElementById('kurul-gundem-modal').style.display='flex';
+};
+
+window.kurulGundemKaydet = async function(){
+  const tId = document.getElementById('kurul-g-toplanti-id')?.value;
+  const konu = document.getElementById('kurul-g-konu')?.value.trim();
+  if(!konu){ alert('Gündem konusu zorunludur.'); return; }
+  const { data, error } = await _supa.from('kurul_gundemler').insert([{
+    toplanti_id: tId,
+    no: parseInt(document.getElementById('kurul-g-no')?.value||'1'),
+    konu,
+    aciklama: document.getElementById('kurul-g-aciklama')?.value.trim()||null,
+    karar: document.getElementById('kurul-g-karar')?.value.trim()||null
+  }]).select().single();
+  if(error){ alert('Hata: '+error.message); return; }
+  const t = (window.KURUL_DATA[_kurulSecilenYil]||[]).find(x=>x.id===tId);
+  if(t){ if(!t.gundemler) t.gundemler=[]; t.gundemler.push(data); t.gundemler.sort((a,b)=>(a.no||0)-(b.no||0)); }
+  kurulModalKapat('kurul-gundem-modal'); kurulListeRender(); kurulMetrikGuncelle();
+};
+
+window.kurulGundemDuzenle = function(tId, gId){
+  const t = (window.KURUL_DATA[_kurulSecilenYil]||[]).find(x=>x.id===tId);
+  const g = t?.gundemler?.find(x=>x.id===gId);
+  if(!g) return;
+  document.getElementById('kurul-g-toplanti-id').value=tId;
+  document.getElementById('kurul-g-id').value=gId;
+  document.getElementById('kurul-g-no').value=g.no||1;
+  document.getElementById('kurul-g-konu').value=g.konu||'';
+  document.getElementById('kurul-g-aciklama').value=g.aciklama||'';
+  document.getElementById('kurul-g-karar').value=g.karar||'';
+  document.getElementById('kurul-g-modal-title').textContent='Gündem Düzenle';
+  document.getElementById('kurul-g-modal-sub').textContent=t?.ad||'';
+  document.getElementById('kurul-g-kaydet-btn').setAttribute('onclick',`kurulGundemGuncelle('${tId}','${gId}')`);
+  document.getElementById('kurul-gundem-modal').style.display='flex';
+};
+
+window.kurulGundemGuncelle = async function(tId, gId){
+  const konu = document.getElementById('kurul-g-konu')?.value.trim();
+  if(!konu){ alert('Gündem konusu zorunludur.'); return; }
+  const gunc = {
+    no: parseInt(document.getElementById('kurul-g-no')?.value||'1'),
+    konu,
+    aciklama: document.getElementById('kurul-g-aciklama')?.value.trim()||null,
+    karar: document.getElementById('kurul-g-karar')?.value.trim()||null
+  };
+  const { error } = await _supa.from('kurul_gundemler').update(gunc).eq('id',gId);
+  if(error){ alert('Hata: '+error.message); return; }
+  const t = (window.KURUL_DATA[_kurulSecilenYil]||[]).find(x=>x.id===tId);
+  if(t){ const idx=t.gundemler.findIndex(x=>x.id===gId); if(idx>-1) Object.assign(t.gundemler[idx],gunc); t.gundemler.sort((a,b)=>(a.no||0)-(b.no||0)); }
+  kurulModalKapat('kurul-gundem-modal'); kurulListeRender(); kurulMetrikGuncelle();
+};
+
+window.kurulGundemSil = async function(tId, gId){
+  if(!confirm('Bu gündem maddesini silmek istiyor musunuz?')) return;
+  const { error } = await _supa.from('kurul_gundemler').delete().eq('id',gId);
+  if(error){ alert('Hata: '+error.message); return; }
+  const t = (window.KURUL_DATA[_kurulSecilenYil]||[]).find(x=>x.id===tId);
+  if(t) t.gundemler = t.gundemler.filter(x=>x.id!==gId);
+  kurulListeRender(); kurulMetrikGuncelle();
+};
+
+/* Sekme açılınca init */
+window.kurulAcildi = function(){
+  kurulYilDoldur();
+  const ekleBtn = document.getElementById('kurul-ekle-btn');
+  if(ekleBtn) ekleBtn.style.display = kurulYetkiVar() ? '' : 'none';
+  const buYil = new Date().getFullYear();
+  const sel = document.getElementById('kurul-yil-sec');
+  if(sel) sel.value = buYil;
+  kurulYilSec(buYil);
+};
+
+})();
+
 /* ══ PERSONEL İZİN MODÜLÜ ══ */
 (function(){
 
@@ -9772,6 +10159,7 @@ window.personelSec = function(sekme, btn){
     document.getElementById('s-personel-kurul')?.classList.add('active');
     document.getElementById('tb-title').textContent = 'Personel Kurul Kararları';
     document.getElementById('tb-sub').textContent = 'Kurul kararları ve yönetim bildirileri';
+    setTimeout(()=>{ if(window.kurulAcildi) window.kurulAcildi(); }, 30);
   }
   document.getElementById('tb-right-page').innerHTML = '';
 };
