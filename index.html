@@ -21534,8 +21534,8 @@ function sanayiRenderKapasite(root){
     <div class="card" style="padding:18px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-calendar" style="margin-right:5px"></i>Rapor Bilgileri</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        ${skInput('Rapor Tarihi','sk-rapor-tarihi','text','gg.aa.yyyy')}
-        ${skInput('Geçerlilik Tarihi','sk-gecerlilik-tarihi','text','gg.aa.yyyy')}
+        ${skInput('Rapor Tarihi','sk-rapor-tarihi','date','')}
+        ${skInput('Geçerlilik Tarihi','sk-gecerlilik-tarihi','date','')}
         ${skInput('Tescilli Markalar','sk-markalar','text','','2')}
         ${skInput('Sertifikalar','sk-sertifikalar','text','ISO 9001 vb.','2')}
         ${skInput('Yabancı Sermaye','sk-yabanci-sermaye','text','Varsa belirtin','2')}
@@ -21580,14 +21580,22 @@ function sanayiRenderKapasite(root){
         <button class="btn btn-sm" onclick="skMakineSatirEkle()" style="gap:5px"><i class="ti ti-plus"></i> Satır Ekle</button>
       </div>
       <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px" id="sk-makine-tablo">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed" id="sk-makine-tablo">
+          <colgroup>
+            <col style="width:110px">
+            <col style="width:auto">
+            <col style="width:70px">
+            <col style="width:80px">
+            <col style="width:75px">
+            <col style="width:36px">
+          </colgroup>
           <thead><tr style="background:var(--surface2)">
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Makine Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Makine Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Açıklama</th>
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Adet</th>
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Güç (kW)</th>
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Y/İ</th>
-            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border);width:32px"></th>
+            <th style="padding:8px 6px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Adet</th>
+            <th style="padding:8px 6px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Güç (kW)</th>
+            <th style="padding:8px 6px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Y/İ</th>
+            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border)"></th>
           </tr></thead>
           <tbody id="sk-makine-body"></tbody>
         </table>
@@ -21602,16 +21610,26 @@ function sanayiRenderKapasite(root){
         <button class="btn btn-sm" onclick="skUretimSatirEkle()" style="gap:5px"><i class="ti ti-plus"></i> Ürün Ekle</button>
       </div>
       <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px" id="sk-uretim-tablo">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed" id="sk-uretim-tablo">
+          <colgroup>
+            <col style="width:40px">
+            <col style="width:145px">
+            <col style="width:auto">
+            <col style="width:90px">
+            <col style="width:90px">
+            <col style="width:80px">
+            <col style="width:65px">
+            <col style="width:36px">
+          </colgroup>
           <thead><tr style="background:var(--surface2)">
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Üretim Kodu</th>
+            <th style="padding:8px 6px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">S.No</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Üretim Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Ürün Adı / Açıklama</th>
-            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Kapasite</th>
-            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Fiili Miktar</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Birim</th>
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">% Oran</th>
-            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border);width:32px"></th>
+            <th style="padding:8px 6px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Kapasite</th>
+            <th style="padding:8px 6px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Fiili Miktar</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Birim</th>
+            <th style="padding:8px 6px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">% Oran</th>
+            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border)"></th>
           </tr></thead>
           <tbody id="sk-uretim-body"></tbody>
         </table>
@@ -21625,15 +21643,24 @@ function sanayiRenderKapasite(root){
         <button class="btn btn-sm" onclick="skTuketimSatirEkle()" style="gap:5px"><i class="ti ti-plus"></i> Girdi Ekle</button>
       </div>
       <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px" id="sk-tuketim-tablo">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed" id="sk-tuketim-tablo">
+          <colgroup>
+            <col style="width:40px">
+            <col style="width:115px">
+            <col style="width:auto">
+            <col style="width:90px">
+            <col style="width:80px">
+            <col style="width:110px">
+            <col style="width:36px">
+          </colgroup>
           <thead><tr style="background:var(--surface2)">
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Tüketim Kodu</th>
+            <th style="padding:8px 6px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">S.No</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Tüketim Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Hammadde / Girdi Adı</th>
-            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Miktar</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Birim</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Tedarik Şekli</th>
-            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border);width:32px"></th>
+            <th style="padding:8px 6px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Miktar</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Birim</th>
+            <th style="padding:8px 6px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Tedarik Şekli</th>
+            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border)"></th>
           </tr></thead>
           <tbody id="sk-tuketim-body"></tbody>
         </table>
@@ -21699,10 +21726,10 @@ window.skMakineSatirEkle = function(m){
   tr.innerHTML = `
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${mkKodInp(m?.makineKodu||m?.kod)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Açıklama','100%','text',m?.aciklama)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','60px','number',m?.adet)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','70px','number',m?.gucKW)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">
-      <select style="padding:5px 6px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px">
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">${inp('0','100%','number',m?.adet)}</td>
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">${inp('0','100%','number',m?.gucKW)}</td>
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">
+      <select style="width:100%;padding:5px 4px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box">
         <option value="">—</option>
         <option value="Y" ${m?.yerliIthal==='Y'?'selected':''}>Yerli</option>
         <option value="İ" ${m?.yerliIthal==='İ'?'selected':''}>İthal</option>
@@ -21738,16 +21765,16 @@ window.skUretimSatirEkle = function(u){
   const inp = (ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
     style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
   const uKodInp = (val)=>`<input type="text" value="${val||''}" placeholder="00.00.00.00.00" autocomplete="off" maxlength="14"
-    style="width:130px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
+    style="width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
     oninput="(function(el){var v=el.value.replace(/[^0-9]/g,'');var r='';if(v.length>0)r+=v.slice(0,2);if(v.length>2)r+='.'+v.slice(2,4);if(v.length>4)r+='.'+v.slice(4,6);if(v.length>6)r+='.'+v.slice(6,8);if(v.length>8)r+='.'+v.slice(8,10);el.value=r;})(this)" />`;
   tr.innerHTML = `
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">${siraNo}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${uKodInp(u?.uretimKodu||u?.naceKodu)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Ürün adı','100%','text',u?.aciklama)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','80px','number',u?.yillikKapasite)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','80px','number',u?.miktar)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Ton/Adet','70px','text',u?.birim)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('%','50px','number',u?.kullanimOrani)}</td>
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">${inp('0','100%','number',u?.yillikKapasite)}</td>
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">${inp('0','100%','number',u?.miktar)}</td>
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">${inp('Ton/Adet','100%','text',u?.birim)}</td>
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">${inp('%','100%','number',u?.kullanimOrani)}</td>
     <td style="padding:5px 4px;border-bottom:0.5px solid var(--border);text-align:center">
       <button onclick="skSilSatirNumarala('sk-u-'+${id},'sk-uretim-body')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px"><i class="ti ti-trash"></i></button>
     </td>`;
@@ -21765,15 +21792,15 @@ window.skTuketimSatirEkle = function(t){
   const inp = (ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
     style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
   const tKodInp = (val)=>`<input type="text" value="${val||''}" placeholder="00.00.00" autocomplete="off" maxlength="8"
-    style="width:100px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
+    style="width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
     oninput="(function(el){var v=el.value.replace(/[^0-9]/g,'');var r='';if(v.length>0)r+=v.slice(0,2);if(v.length>2)r+='.'+v.slice(2,4);if(v.length>4)r+='.'+v.slice(4,6);el.value=r;})(this)" />`;
   tr.innerHTML = `
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">${siraNo}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${tKodInp(t?.tuketimKodu||t?.naceKodu)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Hammadde adı','100%','text',t?.aciklama)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','80px','number',t?.miktar)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Ton/Lt','70px','text',t?.birim)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Yerli/İthal','90px','text',t?.tedarikSekli)}</td>
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">${inp('0','100%','number',t?.miktar)}</td>
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">${inp('Ton/Lt','100%','text',t?.birim)}</td>
+    <td style="padding:5px 4px;border-bottom:0.5px solid var(--border)">${inp('Yerli/İthal','100%','text',t?.tedarikSekli)}</td>
     <td style="padding:5px 4px;border-bottom:0.5px solid var(--border);text-align:center">
       <button onclick="skSilSatirNumarala('sk-t-'+${id},'sk-tuketim-body')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px"><i class="ti ti-trash"></i></button>
     </td>`;
@@ -21863,9 +21890,15 @@ function skFormVeriTopla(){
   let toplamGuc = 0;
   makineler.forEach(m=>{ toplamGuc += (parseFloat(m.adet)||0)*(parseFloat(m.gucKW)||0); });
 
+  const fromDateVal = s => {
+    if(!s) return '';
+    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m) return `${m[3]}.${m[2]}.${m[1]}`;
+    return s;
+  };
   return {
-    raporTarihi:      g('sk-rapor-tarihi'),
-    gecerlilikSuresi: g('sk-gecerlilik-tarihi'),
+    raporTarihi:      fromDateVal(g('sk-rapor-tarihi')),
+    gecerlilikSuresi: fromDateVal(g('sk-gecerlilik-tarihi')),
     tescilliMarkalar: g('sk-markalar'),
     sertifikalar:     g('sk-sertifikalar'),
     yabancıSermaye:   g('sk-yabanci-sermaye'),
@@ -21880,8 +21913,17 @@ function skFormDoldur(v){
   const set = (id,val)=>{ const el=document.getElementById(id); if(el&&val) el.value=val; };
 
   // Meta
-  set('sk-rapor-tarihi',    v.rapor_tarihi    || v.raporTarihi    ||'');
-  set('sk-gecerlilik-tarihi', v.gecerlilik_suresi || v.gecerlilikSuresi ||'');
+  const toDateVal = s => {
+    if(!s) return '';
+    // gg.aa.yyyy → yyyy-mm-dd
+    const m = String(s).match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if(m) return `${m[3]}-${m[2]}-${m[1]}`;
+    // zaten yyyy-mm-dd formatındaysa aynen kullan
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    return '';
+  };
+  set('sk-rapor-tarihi',    toDateVal(v.rapor_tarihi    || v.raporTarihi    ||''));
+  set('sk-gecerlilik-tarihi', toDateVal(v.gecerlilik_suresi || v.gecerlilikSuresi ||''));
   set('sk-markalar',        v.tescilli_markalar || v.tescilliMarkalar ||'');
   set('sk-sertifikalar',    v.sertifikalar    ||'');
   set('sk-yabanci-sermaye', v.yabanci_sermaye  || v.yabancıSermaye  ||'');
