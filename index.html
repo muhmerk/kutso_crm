@@ -22141,6 +22141,38 @@ const EUROSTAT_SINIF = (function(){
   return { sinifla, panelOlustur };
 })();
 
+/* ── Sonuç ekranı göster ── */
+function skSonucGoster(v){
+  const el = document.getElementById('sk-sonuc-ekrani');
+  if(!el) return;
+  const uretimler = (v.yillik_uretim||v.yillikUretim||[]).filter(u=>u.aciklama||u.uretimKodu);
+  const makineSayisi = (v.makineler||[]).reduce((s,m)=>s+(parseInt(m.adet)||1),0);
+  const p = v.personel||{};
+  const tesis = (v.tesisler||[])[0]||{};
+  const satirlar = [];
+  uretimler.slice(0,3).forEach(u=>{
+    const mt = u.miktar ? Number(u.miktar).toLocaleString('tr-TR')+' '+(u.birim||'') : '';
+    satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)">
+      <i class="ti ti-packages" style="color:var(--blue);font-size:14px;flex-shrink:0"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.aciklama||u.uretimKodu||'—'}</div>
+        ${mt?`<div style="font-size:11px;color:var(--text2)">${mt}</div>`:''}
+      </div>
+    </div>`);
+  });
+  if(v.makine_toplam_guc_kw) satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)"><i class="ti ti-bolt" style="color:var(--blue);font-size:14px"></i><div><span style="font-size:12px">Toplam Güç: </span><strong style="font-size:12px">${v.makine_toplam_guc_kw} kW</strong></div></div>`);
+  if(makineSayisi) satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)"><i class="ti ti-settings" style="color:var(--blue);font-size:14px"></i><div style="font-size:12px">Makine: <strong>${makineSayisi} adet</strong></div></div>`);
+  if(tesis.kapaliSaha) satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)"><i class="ti ti-building" style="color:var(--blue);font-size:14px"></i><div style="font-size:12px">Kapalı Alan: <strong>${tesis.kapaliSaha} m²</strong></div></div>`);
+  if(p.toplam) satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0"><i class="ti ti-users" style="color:var(--blue);font-size:14px"></i><div style="font-size:12px">Personel: <strong>${p.toplam} kişi</strong></div></div>`);
+
+  el.innerHTML = satirlar.length ? `
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="ti ti-check" style="margin-right:5px;color:var(--green)"></i>Kaydedilen Özet</div>
+      ${satirlar.join('')}
+    </div>` : '';
+  el.style.display = '';
+}
+
 /* ── Kaydet ── */
 window.skKaydet = async function(){
   if(!_seciliFirmaId){ alert('Önce firma seçin.'); return; }
