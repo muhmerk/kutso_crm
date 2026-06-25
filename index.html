@@ -22289,8 +22289,8 @@ function slRenderYilBar(){
   bar.innerHTML =
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
       '<span style="font-size:11px;color:var(--text2);margin-right:2px">Yıl:</span>' +
-      '<button style="'+btnSt(_slAktifYil==='tumu')+'" onclick="slYilSec('tumu')">Tümü</button>' +
-      yillar.map(y=>'<button style="'+btnSt(_slAktifYil==String(y))+'" onclick="slYilSec(''+y+'')">'+y+'</button>').join('') +
+      '<button style="'+btnSt(_slAktifYil==='tumu')+'" onclick="slYilSec(\'tumu\')">Tümü</button>' +
+      yillar.map(y=>'<button style="'+btnSt(_slAktifYil==String(y))+'" onclick="slYilSec('+JSON.stringify(String(y))+')">'+y+'</button>').join('') +
     '</div>';
 }
 
@@ -22383,8 +22383,8 @@ function slRenderKartlar(){
             '<i class="ti ti-chevron-right" id="sl-chev-'+idx+'" style="font-size:16px;color:var(--text2);transition:transform .2s;margin-left:2px"></i>' +
           '</div>' +
           '<div style="display:flex;gap:6px">' +
-            '<button class="btn btn-sm" style="font-size:11px;gap:4px" onclick="event.stopPropagation();slDuzenle(''+uidE+'',''+adE+'')" title="Düzenle"><i class="ti ti-edit"></i> Düzenle</button>' +
-            '<button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();slFirmaSil(''+uidE+'')" title="Sil"><i class="ti ti-trash"></i></button>' +
+            '<button class="btn btn-sm" style="font-size:11px;gap:4px" onclick="event.stopPropagation();slDuzenle(\''+uidE+'\',\''+adE+'\');" title="Düzenle"><i class="ti ti-edit"></i> Düzenle</button>' +
+            '<button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();slFirmaSil(\''+uidE+'\');" title="Sil"><i class="ti ti-trash"></i></button>' +
           '</div>' +
         '</div>' +
       '</div>';
