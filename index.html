@@ -21933,18 +21933,18 @@ window.sanayiSecListe = async function(){
 function sanayiRenderKapasite(root){
   _mod = 'kapasite';
   root.innerHTML = `
-<div style="max-width:700px;margin:0 auto;padding:8px 0">
+<div style="max-width:760px;margin:0 auto;padding:8px 0">
 
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
     <button class="btn btn-sm" onclick="window.sanayiMainAc()" style="gap:4px"><i class="ti ti-arrow-left"></i> Geri</button>
     <div>
       <div style="font-size:15px;font-weight:500">Kapasite Raporu Ekle / Güncelle</div>
-      <div style="font-size:12px;color:var(--text2)">Firma seçin, PDF yükleyin — Supabase'e kaydedilir</div>
+      <div style="font-size:12px;color:var(--text2)">Firma seçin, bilgileri doldurun, kaydedin</div>
     </div>
   </div>
 
-  <!-- ADIM 1: Firma Arama -->
-  <div class="card" style="padding:20px;margin-bottom:16px" id="sk-adim1">
+  <!-- Firma Seç -->
+  <div class="card" style="padding:20px;margin-bottom:16px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <div style="width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0">1</div>
       <div style="font-size:13px;font-weight:500">Üye Firma Seçin</div>
@@ -21957,562 +21957,451 @@ function sanayiRenderKapasite(root){
              oninput="skAra(this.value)" />
     </div>
     <div id="sk-sonuclar" style="margin-top:6px;border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;display:none;background:var(--surface);box-shadow:0 4px 16px rgba(0,0,0,.08)"></div>
-
     <div id="sk-secili" style="display:none;margin-top:10px;padding:10px 14px;background:var(--blue-bg,#E6F1FB);border-radius:var(--radius);border:0.5px solid var(--blue);align-items:center;gap:10px">
       <div id="sk-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
         <div id="sk-firma-adi" style="font-size:13px;font-weight:500"></div>
         <div id="sk-rapor-durumu" style="font-size:11px;color:var(--blue)"></div>
       </div>
-      <button onclick="skTemizle()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:2px;border-radius:4px"><i class="ti ti-x"></i></button>
+      <button onclick="skTemizle()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:2px"><i class="ti ti-x"></i></button>
     </div>
   </div>
 
-  <!-- ADIM 2: PDF -->
-  <div class="card" style="padding:20px;margin-bottom:16px;opacity:.45;pointer-events:none" id="sk-adim2">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-      <div style="width:24px;height:24px;border-radius:50%;background:var(--surface2);border:0.5px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0" id="sk-adim2-no">2</div>
-      <div style="font-size:13px;font-weight:500">Kapasite Raporu PDF Yükle</div>
-    </div>
-    <div id="sk-dropzone"
-         ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
-         ondragleave="this.style.borderColor='var(--border)'"
-         ondrop="skDrop(event)"
-         onclick="document.getElementById('sk-file-input').click()"
-         style="border:1.5px dashed var(--border);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:border-color .15s">
-      <i class="ti ti-cloud-upload" style="font-size:34px;color:var(--text2);display:block;margin-bottom:8px"></i>
-      <div style="font-size:13px;font-weight:500;margin-bottom:3px">PDF dosyasını sürükleyin veya tıklayın</div>
-      <div style="font-size:11px;color:var(--text2)">TOBB Kapasite Raporu · yalnızca .pdf</div>
-    </div>
-    <input type="file" id="sk-file-input" accept=".pdf" style="display:none" onchange="skDosyaSec(this)" />
-    <div id="sk-dosya-bilgi" style="display:none;margin-top:10px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius);border:0.5px solid var(--border);align-items:center;gap:10px">
-      <i class="ti ti-file-type-pdf" style="font-size:22px;color:#E24B4A;flex-shrink:0"></i>
-      <div style="flex:1;min-width:0">
-        <div id="sk-dosya-adi" style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-        <div id="sk-dosya-boyut" style="font-size:11px;color:var(--text2)"></div>
+  <!-- Form (firma seçilince açılır) -->
+  <div id="sk-form-wrap" style="display:none">
+
+    <!-- PDF -->
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px"><i class="ti ti-file-type-pdf" style="margin-right:5px;color:#E24B4A"></i>Kapasite Raporu PDF</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label for="sk-pdf-input" class="btn btn-sm" style="cursor:pointer;gap:6px"><i class="ti ti-upload"></i> PDF Seç</label>
+        <input type="file" id="sk-pdf-input" accept=".pdf" style="display:none" onchange="skPdfSec(this)" />
+        <div id="sk-pdf-bilgi" style="font-size:12px;color:var(--text2)">Henüz dosya seçilmedi</div>
       </div>
-      <button onclick="skDosyaTemizle()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:2px"><i class="ti ti-x"></i></button>
     </div>
-  </div>
 
-  <!-- ADIM 3: Analiz butonu -->
-  <div id="sk-adim3-wrap" style="display:none;margin-bottom:16px">
-    <button id="sk-analiz-btn" class="btn btn-p" onclick="skAnalizBaslat()" style="width:100%;padding:12px;font-size:14px;justify-content:center;gap:8px">
-      <i class="ti ti-sparkles"></i> AI ile Analiz Et ve Supabase'e Kaydet
+    <!-- Rapor Meta -->
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-calendar" style="margin-right:5px"></i>Rapor Bilgileri</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Rapor Tarihi</div>
+          <input id="sk-rapor-tarihi" type="text" placeholder="gg.aa.yyyy" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Geçerlilik Tarihi</div>
+          <input id="sk-gecerlilik-tarihi" type="text" placeholder="gg.aa.yyyy" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div style="grid-column:span 2"><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Tescilli Markalar</div>
+          <input id="sk-markalar" type="text" placeholder="" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div style="grid-column:span 2"><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Sertifikalar</div>
+          <input id="sk-sertifikalar" type="text" placeholder="ISO 9001 vb." style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div style="grid-column:span 2"><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Yabancı Sermaye</div>
+          <input id="sk-yabanci-sermaye" type="text" placeholder="Varsa belirtin" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      </div>
+    </div>
+
+    <!-- Personel -->
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-users" style="margin-right:5px"></i>Personel Durumu</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Mühendis</div>
+          <input id="sk-p-muhendis" type="number" min="0" placeholder="0" oninput="skPersonelTopla()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box;text-align:center" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Teknisyen</div>
+          <input id="sk-p-teknisyen" type="number" min="0" placeholder="0" oninput="skPersonelTopla()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box;text-align:center" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Usta</div>
+          <input id="sk-p-usta" type="number" min="0" placeholder="0" oninput="skPersonelTopla()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box;text-align:center" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">İşçi</div>
+          <input id="sk-p-isci" type="number" min="0" placeholder="0" oninput="skPersonelTopla()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box;text-align:center" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">İdari Personel</div>
+          <input id="sk-p-idari" type="number" min="0" placeholder="0" oninput="skPersonelTopla()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box;text-align:center" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Taşeron İşçi</div>
+          <input id="sk-p-taseron" type="number" min="0" placeholder="0" oninput="skPersonelTopla()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box;text-align:center" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Diğer</div>
+          <input id="sk-p-diger" type="number" min="0" placeholder="0" oninput="skPersonelTopla()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box;text-align:center" /></div>
+      </div>
+      <div style="margin-top:12px;padding:10px 14px;background:var(--surface2);border-radius:8px;border:0.5px solid var(--border);display:flex;align-items:center;gap:8px">
+        <i class="ti ti-calculator" style="font-size:14px;color:var(--text2)"></i>
+        <span style="font-size:12px;color:var(--text2)">Toplam Personel:</span>
+        <span id="sk-personel-toplam" style="font-size:15px;font-weight:700;color:var(--blue)">0</span>
+      </div>
+    </div>
+
+    <!-- Tesis -->
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-building" style="margin-right:5px"></i>Üretim Tesisi Bilgileri</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Toplam Arazi (m²)</div><input id="sk-t-arazi" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Toplam Kapalı Alan (m²)</div><input id="sk-t-kapali" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Zemin Kat (m²)</div><input id="sk-t-zemin" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Bodrum Kat (m²)</div><input id="sk-t-bodrum" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">1. Kat (m²)</div><input id="sk-t-kat1" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">2. Kat (m²)</div><input id="sk-t-kat2" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Diğer Alanlar (m²)</div><input id="sk-t-diger" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Bina İnşaat Tipi</div><input id="sk-t-insaat" type="text" placeholder="Betonarme / Çelik" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Mülkiyet Durumu</div><input id="sk-t-mulkiyet" type="text" placeholder="Kira / Mülk" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Makine Değeri (TL)</div><input id="sk-t-makine-deger" type="text" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      </div>
+    </div>
+
+    <!-- Makine Teçhizat -->
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px"><i class="ti ti-settings" style="margin-right:5px"></i>Makine ve Teçhizat (Tablo I)</div>
+        <button class="btn btn-sm" onclick="skMakineSatirEkle()" style="gap:5px"><i class="ti ti-plus"></i> Satır Ekle</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:var(--surface2)">
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Makine Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Açıklama</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Adet</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Güç (kW)</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Y/İ</th>
+            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border);width:32px"></th>
+          </tr></thead>
+          <tbody id="sk-makine-body"></tbody>
+        </table>
+      </div>
+      <div id="sk-makine-toplam-guc" style="margin-top:10px;text-align:right;font-size:12px;color:var(--text2)"></div>
+    </div>
+
+    <!-- Yıllık Üretim -->
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px"><i class="ti ti-packages" style="margin-right:5px"></i>Yıllık Üretim Kapasitesi (Tablo II)</div>
+        <button class="btn btn-sm" onclick="skUretimSatirEkle()" style="gap:5px"><i class="ti ti-plus"></i> Ürün Ekle</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:var(--surface2)">
+            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">NACE Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">GTK Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Ürün Adı / Açıklama</th>
+            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Kapasite</th>
+            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Fiili Miktar</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Birim</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">% Oran</th>
+            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border);width:32px"></th>
+          </tr></thead>
+          <tbody id="sk-uretim-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Yıllık Tüketim -->
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px"><i class="ti ti-flask" style="margin-right:5px"></i>Yıllık Tüketim Kapasitesi (Tablo IV)</div>
+        <button class="btn btn-sm" onclick="skTuketimSatirEkle()" style="gap:5px"><i class="ti ti-plus"></i> Girdi Ekle</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:var(--surface2)">
+            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">NACE Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">GTK Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Hammadde / Girdi Adı</th>
+            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Miktar</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Birim</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Tedarik Şekli</th>
+            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border);width:32px"></th>
+          </tr></thead>
+          <tbody id="sk-tuketim-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Kaydet -->
+    <button class="btn btn-p" onclick="skKaydet()" style="width:100%;padding:13px;font-size:14px;justify-content:center;gap:8px;margin-bottom:24px">
+      <i class="ti ti-device-floppy"></i> Supabase'e Kaydet
     </button>
   </div>
 
-  <!-- Yükleniyor -->
-  <div id="sk-yukleniyor" style="display:none" class="card">
-    <div style="padding:32px;text-align:center">
-      <div style="width:56px;height:56px;border-radius:14px;background:var(--blue-bg,#E6F1FB);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-        <i class="ti ti-loader" style="font-size:28px;color:var(--blue);animation:spin .8s linear infinite"></i>
-      </div>
-      <div id="sk-yukleniyor-mesaj" style="font-size:14px;font-weight:500;margin-bottom:4px">İşleniyor...</div>
-      <div id="sk-yukleniyor-alt" style="font-size:12px;color:var(--text2)"></div>
-    </div>
-  </div>
-
-  <!-- Sonuç -->
   <div id="sk-sonuc-ekrani" style="display:none"></div>
 </div>`;
 
-  // Önceden seçili firma varsa (CRM profilinden gelindi) direkt yükle
   if(_seciliFirmaId) _skFirmaGoster(_seciliFirmaId, _seciliFirmaNo, _seciliFirmaAdi);
 }
 
+/* ── Personel toplam otomatik ── */
+window.skPersonelTopla = function(){
+  const ids=['sk-p-muhendis','sk-p-teknisyen','sk-p-usta','sk-p-isci','sk-p-idari','sk-p-taseron','sk-p-diger'];
+  const toplam=ids.reduce((s,id)=>s+(parseInt(document.getElementById(id)?.value)||0),0);
+  const el=document.getElementById('sk-personel-toplam'); if(el) el.textContent=toplam;
+};
+
+/* ── Makine satır ekle ── */
+let _mId=0;
+window.skMakineSatirEkle = function(m){
+  const body=document.getElementById('sk-makine-body'); if(!body) return;
+  const id=++_mId;
+  const tr=document.createElement('tr');
+  tr.id='sk-m-'+id;
+  const inp=(ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
+    style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:center':''}"
+    oninput="skGucTopla()" />`;
+  tr.innerHTML=
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Kod','100px','text',m?.kod)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Açıklama','100%','text',m?.aciklama)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','60px','number',m?.adet)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','70px','number',m?.gucKW)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+
+      '<select style="padding:5px 6px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px">'+
+        '<option value="">—</option><option value="Y"'+(m?.yerliIthal==='Y'?' selected':'')+'>Yerli</option>'+
+        '<option value="İ"'+(m?.yerliIthal==='İ'?' selected':'')+'>İthal</option>'+
+      '</select></td>'+
+    '<td style="padding:5px 4px;border-bottom:0.5px solid var(--border);text-align:center">'+
+      '<button onclick="document.getElementById(\'sk-m-'+id+'\').remove();skGucTopla()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px"><i class="ti ti-trash"></i></button></td>';
+  body.appendChild(tr);
+};
+
+window.skGucTopla = function(){
+  const body=document.getElementById('sk-makine-body'); if(!body) return;
+  let toplam=0;
+  body.querySelectorAll('tr').forEach(tr=>{
+    const inp=tr.querySelectorAll('input');
+    toplam+=(parseFloat(inp[2]?.value)||0)*(parseFloat(inp[3]?.value)||0);
+  });
+  const el=document.getElementById('sk-makine-toplam-guc');
+  if(el) el.innerHTML=toplam>0?'Toplam Kurulu Güç: <strong>'+toplam.toLocaleString('tr-TR')+' kW</strong>':'';
+};
+
+/* ── Üretim satır ekle ── */
+let _uId=0;
+window.skUretimSatirEkle = function(u){
+  const body=document.getElementById('sk-uretim-body'); if(!body) return;
+  const sira=body.querySelectorAll('tr').length+1;
+  const id=++_uId;
+  const tr=document.createElement('tr');
+  tr.id='sk-u-'+id;
+  const inp=(ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
+    style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
+  tr.innerHTML=
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">'+sira+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0000','80px','text',u?.naceKodu)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('000000','80px','text',u?.gtkKodu)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Ürün adı','100%','text',u?.aciklama)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','80px','number',u?.yillikKapasite)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','80px','number',u?.miktar)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Ton/Adet','70px','text',u?.birim)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('%','50px','number',u?.kullanimOrani)+'</td>'+
+    '<td style="padding:5px 4px;border-bottom:0.5px solid var(--border);text-align:center">'+
+      '<button onclick="skSatirSil(\'sk-u-'+id+'\',\'sk-uretim-body\')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px"><i class="ti ti-trash"></i></button></td>';
+  body.appendChild(tr);
+};
+
+/* ── Tüketim satır ekle ── */
+let _tId=0;
+window.skTuketimSatirEkle = function(t){
+  const body=document.getElementById('sk-tuketim-body'); if(!body) return;
+  const sira=body.querySelectorAll('tr').length+1;
+  const id=++_tId;
+  const tr=document.createElement('tr');
+  tr.id='sk-t-'+id;
+  const inp=(ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
+    style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
+  tr.innerHTML=
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">'+sira+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0000','80px','text',t?.naceKodu)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('000000','80px','text',t?.gtkKodu)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Hammadde adı','100%','text',t?.aciklama)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','80px','number',t?.miktar)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Ton/Lt','70px','text',t?.birim)+'</td>'+
+    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Yerli/İthal','90px','text',t?.tedarikSekli)+'</td>'+
+    '<td style="padding:5px 4px;border-bottom:0.5px solid var(--border);text-align:center">'+
+      '<button onclick="skSatirSil(\'sk-t-'+id+'\',\'sk-tuketim-body\')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px"><i class="ti ti-trash"></i></button></td>';
+  body.appendChild(tr);
+};
+
+window.skSatirSil = function(trId, bodyId){
+  const tr=document.getElementById(trId); if(tr) tr.remove();
+  const body=document.getElementById(bodyId); if(!body) return;
+  body.querySelectorAll('tr').forEach((row,i)=>{
+    const ilk=row.querySelector('td:first-child'); if(ilk) ilk.textContent=i+1;
+  });
+};
+
+/* ── Formdan veri topla ── */
+function skFormVeriTopla(){
+  const g=id=>(document.getElementById(id)?.value||'').trim();
+  const pIds={muhendis:'sk-p-muhendis',teknisyen:'sk-p-teknisyen',usta:'sk-p-usta',
+               isci:'sk-p-isci',idariPersonel:'sk-p-idari',taseronIsci:'sk-p-taseron',diger:'sk-p-diger'};
+  const personel={};
+  let ptoplam=0;
+  for(const [k,id] of Object.entries(pIds)){
+    const v=parseInt(document.getElementById(id)?.value)||0;
+    personel[k]=v||''; ptoplam+=v;
+  }
+  personel.toplam=ptoplam||'';
+  const tesisler=[{
+    toplamArazi:g('sk-t-arazi'),kapaliSaha:g('sk-t-kapali'),zemin:g('sk-t-zemin'),
+    bodrum:g('sk-t-bodrum'),kat1:g('sk-t-kat1'),kat2:g('sk-t-kat2'),
+    digerAlanlar:g('sk-t-diger'),binaInsaatTipi:g('sk-t-insaat'),mulkiyet:g('sk-t-mulkiyet'),
+  }];
+  const makineler=[];
+  document.getElementById('sk-makine-body')?.querySelectorAll('tr').forEach(tr=>{
+    const inp=tr.querySelectorAll('input'); const sel=tr.querySelector('select');
+    makineler.push({kod:inp[0]?.value?.trim()||'',aciklama:inp[1]?.value?.trim()||'',
+      adet:inp[2]?.value?.trim()||'',gucKW:inp[3]?.value?.trim()||'',yerliIthal:sel?.value||''});
+  });
+  const yillikUretim=[];
+  document.getElementById('sk-uretim-body')?.querySelectorAll('tr').forEach((tr,i)=>{
+    const inp=tr.querySelectorAll('input');
+    yillikUretim.push({siraNo:String(i+1),naceKodu:inp[0]?.value?.trim()||'',gtkKodu:inp[1]?.value?.trim()||'',
+      aciklama:inp[2]?.value?.trim()||'',yillikKapasite:inp[3]?.value?.trim()||'',
+      miktar:inp[4]?.value?.trim()||'',birim:inp[5]?.value?.trim()||'',kullanimOrani:inp[6]?.value?.trim()||''});
+  });
+  const yillikTuketim=[];
+  document.getElementById('sk-tuketim-body')?.querySelectorAll('tr').forEach((tr,i)=>{
+    const inp=tr.querySelectorAll('input');
+    yillikTuketim.push({siraNo:String(i+1),naceKodu:inp[0]?.value?.trim()||'',gtkKodu:inp[1]?.value?.trim()||'',
+      aciklama:inp[2]?.value?.trim()||'',miktar:inp[3]?.value?.trim()||'',
+      birim:inp[4]?.value?.trim()||'',tedarikSekli:inp[5]?.value?.trim()||''});
+  });
+  let toplamGuc=0;
+  makineler.forEach(m=>{ toplamGuc+=(parseFloat(m.adet)||0)*(parseFloat(m.gucKW)||0); });
+  return {
+    raporTarihi:g('sk-rapor-tarihi'),gecerlilikSuresi:g('sk-gecerlilik-tarihi'),
+    tescilliMarkalar:g('sk-markalar'),sertifikalar:g('sk-sertifikalar'),
+    yabancıSermaye:g('sk-yabanci-sermaye'),makineDegeriTL:g('sk-t-makine-deger'),
+    toplamGucKW:toplamGuc>0?String(toplamGuc):'',
+    personel,tesisler,makineler,yillikUretim,yillikTuketim,
+  };
+}
+
+/* ── Formu mevcut veriyle doldur ── */
+function skFormDoldur(v){
+  const set=(id,val)=>{const el=document.getElementById(id); if(el&&val!=null) el.value=val;};
+  set('sk-rapor-tarihi',     v.rapor_tarihi||v.raporTarihi||'');
+  set('sk-gecerlilik-tarihi',v.gecerlilik_suresi||v.gecerlilikSuresi||'');
+  set('sk-markalar',         v.tescilli_markalar||v.tescilliMarkalar||'');
+  set('sk-sertifikalar',     v.sertifikalar||'');
+  set('sk-yabanci-sermaye',  v.yabanci_sermaye||v.yabancıSermaye||'');
+  const p=v.personel||{};
+  set('sk-p-muhendis', p.muhendis||'');
+  set('sk-p-teknisyen',p.teknisyen||'');
+  set('sk-p-usta',     p.usta||'');
+  set('sk-p-isci',     p.isci||'');
+  set('sk-p-idari',    p.idariPersonel||'');
+  set('sk-p-taseron',  p.taseronIsci||'');
+  set('sk-p-diger',    p.diger||'');
+  setTimeout(skPersonelTopla,50);
+  const t=(v.tesisler||[])[0]||{};
+  set('sk-t-arazi',       t.toplamArazi||'');
+  set('sk-t-kapali',      t.kapaliSaha||'');
+  set('sk-t-zemin',       t.zemin||'');
+  set('sk-t-bodrum',      t.bodrum||'');
+  set('sk-t-kat1',        t.kat1||'');
+  set('sk-t-kat2',        t.kat2||'');
+  set('sk-t-diger',       t.digerAlanlar||'');
+  set('sk-t-insaat',      t.binaInsaatTipi||'');
+  set('sk-t-mulkiyet',    t.mulkiyet||'');
+  set('sk-t-makine-deger',v.makine_degeri_tl||v.makineDegeriTL||'');
+  const mb=document.getElementById('sk-makine-body'); if(mb){mb.innerHTML='';_mId=0;}
+  (v.makineler||[]).forEach(m=>skMakineSatirEkle(m));
+  setTimeout(skGucTopla,50);
+  const ub=document.getElementById('sk-uretim-body'); if(ub){ub.innerHTML='';_uId=0;}
+  (v.yillik_uretim||v.yillikUretim||[]).forEach(u=>skUretimSatirEkle(u));
+  const tb=document.getElementById('sk-tuketim-body'); if(tb){tb.innerHTML='';_tId=0;}
+  (v.yillik_tuketim||v.yillikTuketim||[]).forEach(t=>skTuketimSatirEkle(t));
+  const dosya=v.dosya_adi||'';
+  if(dosya){const el=document.getElementById('sk-pdf-bilgi'); if(el) el.textContent='Mevcut: '+dosya;}
+}
+
 /* ── Arama ── */
-let _skTimer = null;
-window.skAra = function(q){
-  const son = document.getElementById('sk-sonuclar');
-  if(!son) return;
-  const qt = (q||'').trim();
-  if(!qt){ son.style.display='none'; return; }
+let _skTimer=null;
+window.skAra=function(q){
+  const son=document.getElementById('sk-sonuclar'); if(!son) return;
+  const qt=(q||'').trim();
+  if(!qt){son.style.display='none';return;}
   son.style.display='block';
   son.innerHTML='<div style="padding:12px 16px;color:var(--text2);font-size:13px;display:flex;align-items:center;gap:8px"><i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Aranıyor...</div>';
   clearTimeout(_skTimer);
-  _skTimer = setTimeout(async()=>{
-    try {
-      const hits = await sbFirmaAra(qt);
-      if(!hits.length){
-        son.innerHTML='<div style="padding:12px 16px;color:var(--text2);font-size:13px;text-align:center"><i class="ti ti-mood-empty" style="font-size:18px;display:block;margin-bottom:4px"></i>Kayıt bulunamadı</div>';
-        return;
-      }
-      son.innerHTML = hits.map(f=>{
-        const ad  = f.firma||'?';
-        const no  = f.no||'';
-        const vn  = f.vergi||'';
-        const av  = ad.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
-        const idE = String(f.id||'').replace(/'/g,"\\'");
-        const noE = String(no).replace(/'/g,"\\'");
-        const adE = ad.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        return '<div onclick="skFirmaSecById(\''+idE+'\',\''+noE+'\',\''+adE+'\')" '+
-          'style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--border);transition:background .1s" '+
-          'onmouseenter="this.style.background=\'var(--surface2)\'" onmouseleave="this.style.background=\'\'">'+
+  _skTimer=setTimeout(async()=>{
+    try{
+      const hits=await sbFirmaAra(qt);
+      if(!hits.length){son.innerHTML='<div style="padding:12px 16px;color:var(--text2);font-size:13px;text-align:center"><i class="ti ti-mood-empty" style="font-size:18px;display:block;margin-bottom:4px"></i>Kayıt bulunamadı</div>';return;}
+      son.innerHTML=hits.map(f=>{
+        const ad=f.firma||'?',no=f.no||'',vn=f.vergi||'';
+        const av=ad.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+        const idE=String(f.id||'').replace(/'/g,"\\'"),noE=String(no).replace(/'/g,"\\'"),adE=ad.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        return '<div onclick="skFirmaSecById(\''+idE+'\',\''+noE+'\',\''+adE+'\')" style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--border);transition:background .1s" onmouseenter="this.style.background=\'var(--surface2)\'" onmouseleave="this.style.background=\'\'">'+
           '<div style="width:32px;height:32px;border-radius:50%;background:var(--blue-bg,#E6F1FB);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0">'+av+'</div>'+
-          '<div style="flex:1;min-width:0">'+
-            '<div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+ad+'</div>'+
-            '<div style="font-size:11px;color:var(--text2);margin-top:1px">'+(no?'Sicil: '+no:'')+((no&&vn)?' · ':'')+( vn?'VN: '+vn:'')+'</div>'+
-          '</div>'+
-        '</div>';
+          '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+ad+'</div>'+
+          '<div style="font-size:11px;color:var(--text2);margin-top:1px">'+(no?'Sicil: '+no:'')+((no&&vn)?' · ':'')+(vn?'VN: '+vn:'')+'</div></div></div>';
       }).join('');
-    } catch(e){ son.innerHTML='<div style="padding:12px 16px;color:var(--red);font-size:12px">Arama hatası</div>'; }
-  }, 300);
+    }catch(e){son.innerHTML='<div style="padding:12px 16px;color:var(--red);font-size:12px">Arama hatası</div>';}
+  },300);
 };
 
-/* ── Firma Seç ── */
-window.skFirmaSecById = async function(id, no, ad){
+window.skFirmaSecById=async function(id,no,ad){
   document.getElementById('sk-sonuclar').style.display='none';
-  const inp = document.getElementById('sk-search'); if(inp) inp.value='';
-  await _skFirmaGoster(id, no, ad);
+  const inp=document.getElementById('sk-search'); if(inp) inp.value='';
+  await _skFirmaGoster(id,no,ad);
 };
 
-async function _skFirmaGoster(id, no, ad){
-  _seciliFirmaId  = id;
-  _seciliFirmaNo  = no;
-  _seciliFirmaAdi = ad;
-
-  const chip = document.getElementById('sk-secili');    if(chip) chip.style.display='flex';
-  const av   = document.getElementById('sk-avatar');    if(av)   av.textContent = (ad||'?').split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
-  const adEl = document.getElementById('sk-firma-adi'); if(adEl) adEl.textContent = ad;
-
-  // Supabase'de mevcut rapor var mı?
-  const dur = document.getElementById('sk-rapor-durumu');
+async function _skFirmaGoster(id,no,ad){
+  _seciliFirmaId=id; _seciliFirmaNo=no; _seciliFirmaAdi=ad;
+  const chip=document.getElementById('sk-secili'); if(chip) chip.style.display='flex';
+  const av=document.getElementById('sk-avatar');
+  if(av) av.textContent=ad.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+  document.getElementById('sk-firma-adi').textContent=ad;
+  document.getElementById('sk-form-wrap').style.display='block';
+  const dur=document.getElementById('sk-rapor-durumu');
   if(dur) dur.textContent='Kontrol ediliyor...';
-  try {
-    const mevcut = await sbYukle(id);
-    if(dur) dur.textContent = mevcut
-      ? 'Mevcut rapor: '+(mevcut.dosya_adi||'—')+' · '+(mevcut.yukleme_tarihi ? new Date(mevcut.yukleme_tarihi).toLocaleString('tr-TR') : '—')
-      : 'Henüz rapor yüklenmemiş';
-    if(mevcut) skSonucGoster(mevcut);
-  } catch(e){ if(dur) dur.textContent='Kontrol edilemedi'; }
-
-  // Adım 2'yi aktif et
-  const a2 = document.getElementById('sk-adim2');
-  if(a2){ a2.style.opacity='1'; a2.style.pointerEvents='auto'; }
-  const a2no = document.getElementById('sk-adim2-no');
-  if(a2no){ a2no.style.background='var(--blue)'; a2no.style.color='#fff'; a2no.style.border='none'; }
+  try{
+    const mevcut=await sbYukle(id);
+    if(dur) dur.textContent=mevcut
+      ?'Mevcut rapor: '+(mevcut.dosya_adi||'—')+' · '+new Date(mevcut.yukleme_tarihi).toLocaleString('tr-TR')
+      :'Henüz rapor girilmemiş — formu doldurun';
+    if(mevcut) skFormDoldur(mevcut);
+  }catch(e){if(dur) dur.textContent='Kontrol edilemedi';}
 }
 
-window.skTemizle = function(){
+window.skTemizle=function(){
   _seciliFirmaId=null; _seciliFirmaNo=null; _seciliFirmaAdi=null;
   const chip=document.getElementById('sk-secili'); if(chip) chip.style.display='none';
-  const a2=document.getElementById('sk-adim2'); if(a2){a2.style.opacity='.45';a2.style.pointerEvents='none';}
-  const a3=document.getElementById('sk-adim3-wrap'); if(a3) a3.style.display='none';
-  const se=document.getElementById('sk-sonuc-ekrani'); if(se) se.style.display='none';
-  skDosyaTemizle();
+  document.getElementById('sk-form-wrap').style.display='none';
+  document.getElementById('sk-sonuc-ekrani').style.display='none';
 };
 
-/* ── Dosya seçimi ── */
-let _secilenDosya = null;
-window.skDosyaSec = function(inp){
-  const f=inp?.files?.[0];
-  if(!f||f.type!=='application/pdf'){alert('PDF dosyası seçin.');return;}
-  _secilenDosya=f;
-  document.getElementById('sk-dropzone').style.display='none';
-  const bilgi=document.getElementById('sk-dosya-bilgi'); if(bilgi) bilgi.style.display='flex';
-  const adi=document.getElementById('sk-dosya-adi'); if(adi) adi.textContent=f.name;
-  const boy=document.getElementById('sk-dosya-boyut'); if(boy) boy.textContent=(f.size/1024).toFixed(1)+' KB';
-  const a3=document.getElementById('sk-adim3-wrap'); if(a3) a3.style.display='block';
-};
-window.skDrop=function(e){
-  e.preventDefault();
-  document.getElementById('sk-dropzone').style.borderColor='var(--border)';
-  const f=e.dataTransfer?.files?.[0];
-  if(f) skDosyaSec({files:[f]});
-};
-window.skDosyaTemizle=function(){
-  _secilenDosya=null;
-  const dz=document.getElementById('sk-dropzone'); if(dz) dz.style.display='block';
-  const bilgi=document.getElementById('sk-dosya-bilgi'); if(bilgi) bilgi.style.display='none';
-  const a3=document.getElementById('sk-adim3-wrap'); if(a3) a3.style.display='none';
-  const fi=document.getElementById('sk-file-input'); if(fi) fi.value='';
+window.skPdfSec=function(inp){
+  const f=inp?.files?.[0]; if(!f) return;
+  window._skPdfDosyaAdi=f.name;
+  const el=document.getElementById('sk-pdf-bilgi'); if(el) el.textContent=f.name+' ('+(f.size/1024).toFixed(0)+' KB)';
 };
 
-/* ── AI Analiz + Supabase Kaydet ── */
-window.skAnalizBaslat = async function(){
+/* ── Kaydet ── */
+window.skKaydet=async function(){
   if(!_seciliFirmaId){alert('Önce firma seçin.');return;}
-  if(!_secilenDosya){alert('PDF dosyası seçin.');return;}
-
-  const yk=document.getElementById('sk-yukleniyor');
-  const se=document.getElementById('sk-sonuc-ekrani');
-  const btn=document.getElementById('sk-analiz-btn');
-  if(yk) yk.style.display='block';
-  if(se) se.style.display='none';
-  if(btn) btn.disabled=true;
-
-  function msg(m,alt){
-    const e1=document.getElementById('sk-yukleniyor-mesaj'); if(e1) e1.textContent=m;
-    const e2=document.getElementById('sk-yukleniyor-alt');   if(e2) e2.textContent=alt||'';
-  }
-
-  try {
-    msg('PDF okunuyor...','Dosya hazırlanıyor');
-    const b64=await new Promise((res,rej)=>{
-      const r=new FileReader();
-      r.onload=()=>res(r.result.split(',')[1]);
-      r.onerror=()=>rej(new Error('Dosya okunamadı'));
-      r.readAsDataURL(_secilenDosya);
-    });
-
-    msg('AI ile analiz ediliyor...','Bu işlem 15-30 saniye sürebilir');
-
-    const prompt=`Bu bir TOBB onaylı KAPASİTE RAPORU belgesidir. Belgedeki TÜM bilgileri eksiksiz çıkar. Bulamadığın alanları boş string, bulamadığın dizileri boş dizi [] bırak. SADECE JSON döndür, başka hiçbir şey yazma.
-
-ÖNEMLİ KURALLAR:
-- yillikUretim ve yillikTuketim dizilerindeki TÜM satırları ekle, hiçbirini atma. Raporda 15 ürün varsa 15 obje olacak.
-- Her üretim/tüketim satırı için naceKodu alanını da doldur (varsa).
-- personel bölümündeki tüm alt kalemleri (teknik, ofis, yönetici, vb.) ayrı ayrı çıkar.
-- tesisler bölümündeki tüm bilgileri (zemin, bodrum, kat alanları dahil) çıkar.
-- Kapasite hesabı bölümünü ÇIKARMANA GEREK YOK.
-
-{
-  "firmaAdi":"","vergiDairesi":"","vergiNo":"","mersisNo":"","odaSicilNo":"",
-  "ticaretSicilNo":"","sanayiSicilNo":"","tescilliSermaye":"","faaliyetKodlari":"",
-  "adres":"","telefon":"","faks":"","email":"","web":"",
-  "gecerlilikSuresi":"","raporTarihi":"","tescilliMarkalar":"","sertifikalar":"","yabancıSermaye":"",
-  "personel":{
-    "toplam":"",
-    "muhendis":"",
-    "teknisyen":"",
-    "usta":"",
-    "nitelikliIsci":"",
-    "niteliksizIsci":"",
-    "idariPersonel":"",
-    "taseronIsci":"",
-    "digerPersonel":"",
-    "erkek":"",
-    "kadin":"",
-    "aciklama":""
-  },
-  "tesisler":[{
-    "adres":"",
-    "toplamArazi":"",
-    "kapaliSaha":"",
-    "zemin":"",
-    "bodrum":"",
-    "kat1":"",
-    "kat2":"",
-    "digerAlanlar":"",
-    "binaInsaatTipi":"",
-    "mulkiyet":"",
-    "aciklama":""
-  }],
-  "makineDegeriTL":"",
-  "toplamGucKW":"",
-  "makineler":[{
-    "kod":"",
-    "adet":"",
-    "aciklama":"",
-    "gucKW":"",
-    "yerliIthal":"",
-    "marka":"",
-    "model":"",
-    "yil":""
-  }],
-  "yillikUretim":[{
-    "siraNo":"",
-    "naceKodu":"",
-    "gtkKodu":"",
-    "aciklama":"",
-    "birim":"",
-    "yillikKapasite":"",
-    "miktar":"",
-    "kullanimOrani":""
-  }],
-  "yillikTuketim":[{
-    "siraNo":"",
-    "naceKodu":"",
-    "gtkKodu":"",
-    "aciklama":"",
-    "birim":"",
-    "miktar":"",
-    "tedarikSekli":""
-  }]
-}`;
-
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',max_tokens:3000,
-        messages:[{role:'user',content:[
-          {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
-          {type:'text',text:prompt}
-        ]}]
-      })
-    });
-    if(!resp.ok) throw new Error('API hatası: '+resp.status);
-    const data=await resp.json();
-    const txt=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
-
-    msg('Supabase\'e kaydediliyor...','');
-    let parsed;
-    try { parsed=JSON.parse(txt.replace(/```json|```/g,'').trim()); }
-    catch(e){ throw new Error('AI yanıtı parse hatası — tekrar deneyin'); }
-
-    await sbKaydet(_seciliFirmaId, _seciliFirmaNo, _seciliFirmaAdi, parsed, _secilenDosya.name);
-
-    // CRM profil kartını güncelle
+  const btn=document.querySelector('[onclick="skKaydet()"]');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Kaydediliyor...';}
+  try{
+    const veri=skFormVeriTopla();
+    const dosyaAdi=window._skPdfDosyaAdi||(document.getElementById('sk-pdf-bilgi')?.textContent?.startsWith('Mevcut:')?document.getElementById('sk-pdf-bilgi').textContent.replace('Mevcut:','').trim():'');
+    await sbKaydet(_seciliFirmaId,_seciliFirmaNo,_seciliFirmaAdi,veri,dosyaAdi);
     if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaId);
-
-    if(yk) yk.style.display='none';
-    if(btn) btn.disabled=false;
-
-    // Rapor durumu güncelle
     const dur=document.getElementById('sk-rapor-durumu');
-    if(dur) dur.textContent='Kaydedildi: '+_secilenDosya.name+' · '+new Date().toLocaleString('tr-TR');
-
-    // Sonucu çek ve göster
-    const kayitli = await sbYukle(_seciliFirmaId);
-    skSonucGoster(kayitli||parsed);
-
-  } catch(e){
-    if(yk) yk.style.display='none';
-    if(btn) btn.disabled=false;
-    console.error(e);
-    alert('Hata: '+(e.message||'Bilinmeyen hata'));
-  }
-  if(document.getElementById('sk-file-input')) document.getElementById('sk-file-input').value='';
+    if(dur) dur.textContent='Kaydedildi · '+new Date().toLocaleString('tr-TR');
+    const kayitli=await sbYukle(_seciliFirmaId);
+    skSonucGoster(kayitli||veri);
+  }catch(e){alert('Kayıt hatası: '+(e.message||e));}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-device-floppy"></i> Supabase\'e Kaydet';}}
 };
 
-/* ── Sonuç Göster ── */
-function skSonucGoster(v){
-  const wrap=document.getElementById('sk-sonuc-ekrani');
-  if(!wrap) return;
-  wrap.style.display='block';
-  setTimeout(()=>wrap.scrollIntoView({behavior:'smooth',block:'start'}),100);
-
-  // DB'den gelen kolon adlarını normalize et
-  const norm = {
-    firmaAdi:         v.firma_adi         || v.firmaAdi         ||'',
-    vergiDairesi:     v.vergi_dairesi     || v.vergiDairesi     ||'',
-    vergiNo:          v.vergi_no          || v.vergiNo          ||'',
-    mersisNo:         v.mersis_no         || v.mersisNo         ||'',
-    odaSicilNo:       v.oda_sicil_no      || v.odaSicilNo       ||'',
-    ticaretSicilNo:   v.ticaret_sicil_no  || v.ticaretSicilNo   ||'',
-    sanayiSicilNo:    v.sanayi_sicil_no   || v.sanayiSicilNo    ||'',
-    tescilliSermaye:  v.tescilli_sermaye  || v.tescilliSermaye  ||'',
-    faaliyetKodlari:  v.faaliyet_kodlari  || v.faaliyetKodlari  ||'',
-    adres:            v.adres             ||'',
-    telefon:          v.telefon           ||'',
-    faks:             v.faks              ||'',
-    email:            v.email             ||'',
-    web:              v.web               ||'',
-    gecerlilikSuresi: v.gecerlilik_suresi || v.gecerlilikSuresi ||'',
-    raporTarihi:      v.rapor_tarihi      || v.raporTarihi      ||'',
-    tescilliMarkalar: v.tescilli_markalar || v.tescilliMarkalar ||'',
-    sertifikalar:     v.sertifikalar      ||'',
-    makineDegeriTL:   v.makine_degeri_tl  || v.makineDegeriTL  ||'',
-    toplamGucKW:      v.makine_toplam_guc_kw || v.toplamGucKW  ||'',
-    personel:         v.personel          ||{},
-    tesisler:         v.tesisler          ||[],
-    makineler:        v.makineler         ||[],
-    yillikUretim:     v.yillik_uretim     || v.yillikUretim     ||[],
-    yillikTuketim:    v.yillik_tuketim    || v.yillikTuketim    ||[],
-    dosyaAdi:         v.dosya_adi         || v._dosyaAdi        ||'',
-    yuklenmeTarihi:   v.yukleme_tarihi    ? new Date(v.yukleme_tarihi).toLocaleString('tr-TR') : (v._yuklenmeTarihi||''),
-  };
-
-  const p        = norm.personel||{};
-  const tesisler = norm.tesisler||[];
-  const makineler= norm.makineler||[];
-  const uretim   = norm.yillikUretim||[];
-  const tuketim  = norm.yillikTuketim||[];
-
-  function sat(lbl,val,tip){
-    if(!val) return '';
-    const v2 = tip==='mono' ? `<span style="font-family:monospace;font-size:11px">${val}</span>` : val;
-    return `<div style="padding:8px 10px;background:var(--surface2);border-radius:8px;border:0.5px solid var(--border)">
-      <div style="font-size:10px;color:var(--text2);margin-bottom:2px">${lbl}</div>
-      <div style="font-size:12px;font-weight:500">${v2}</div></div>`;
-  }
-  function thStyle(){ return 'text-align:left;padding:8px 12px;font-size:11px;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap'; }
-  function tdStyle(align){ return `padding:8px 12px;border-bottom:0.5px solid var(--border)${align?';text-align:'+align:''}`; }
-
-  // ── Personel satırları
-  const personelKalemler = [
-    ['Toplam',p.toplam],['Mühendis',p.muhendis],['Teknisyen',p.teknisyen],
-    ['Usta',p.usta],['Nitelikli İşçi',p.nitelikliIsci],['Niteliksiz İşçi',p.niteliksizIsci],
-    ['İdari Personel',p.idariPersonel],['Taşeron İşçi',p.taseronIsci],
-    ['Diğer',p.digerPersonel],['Erkek',p.erkek],['Kadın',p.kadin]
-  ].filter(([,x])=>x);
-
-  wrap.innerHTML=`
-<div style="display:flex;flex-direction:column;gap:16px;margin-top:4px">
-
-  <div style="padding:14px 16px;background:#E1F5EE;border-radius:var(--radius);border:0.5px solid #1D9E75;display:flex;align-items:center;gap:12px">
-    <i class="ti ti-circle-check" style="font-size:22px;color:#0F6E56;flex-shrink:0"></i>
-    <div>
-      <div style="font-size:13px;font-weight:500;color:#085041">Supabase'e başarıyla kaydedildi</div>
-      <div style="font-size:11px;color:#0F6E56;margin-top:2px">${norm.dosyaAdi||''} · ${norm.yuklenmeTarihi}</div>
-    </div>
-    <button onclick="skRaporSil()" style="margin-left:auto;background:none;border:0.5px solid #1D9E75;border-radius:6px;padding:4px 10px;cursor:pointer;color:#085041;font-size:11px;flex-shrink:0"><i class="ti ti-trash" style="font-size:11px"></i> Sil</button>
-  </div>
-
-  <!-- FİRMA BİLGİLERİ -->
-  <div class="card" style="padding:18px">
-    <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-building" style="margin-right:5px"></i>Firma Bilgileri</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
-      ${sat('Firma Adı',norm.firmaAdi)}
-      ${sat('Vergi Dairesi',norm.vergiDairesi)}
-      ${sat('Vergi No',norm.vergiNo,'mono')}
-      ${sat('MERSİS No',norm.mersisNo,'mono')}
-      ${sat('Oda Sicil No',norm.odaSicilNo,'mono')}
-      ${sat('Ticaret Sicil No',norm.ticaretSicilNo,'mono')}
-      ${sat('Sanayi Sicil No',norm.sanayiSicilNo,'mono')}
-      ${sat('Tescilli Sermaye',norm.tescilliSermaye)}
-      ${sat('Faaliyet Kodu',norm.faaliyetKodlari)}
-      ${sat('Adres',norm.adres)}
-      ${sat('Telefon',norm.telefon)}
-      ${sat('Faks',norm.faks)}
-      ${sat('E-posta',norm.email)}
-      ${sat('Web',norm.web)}
-      ${sat('Geçerlilik Süresi',norm.gecerlilikSuresi)}
-      ${sat('Rapor Tarihi',norm.raporTarihi)}
-      ${sat('Markalar',norm.tescilliMarkalar)}
-      ${sat('Sertifikalar',norm.sertifikalar)}
-    </div>
-
-    <!-- Personel Durumu -->
-    ${personelKalemler.length ? `
-    <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border)">
-      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Personel Durumu</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">
-        ${personelKalemler.map(([k,x])=>`
-        <div style="padding:10px 12px;background:var(--surface2);border-radius:8px;border:0.5px solid var(--border);text-align:center">
-          <div style="font-size:18px;font-weight:700;color:var(--blue)">${x}</div>
-          <div style="font-size:10px;color:var(--text2);margin-top:3px;line-height:1.3">${k}</div>
-        </div>`).join('')}
-      </div>
-      ${p.aciklama ? `<div style="margin-top:10px;font-size:12px;color:var(--text2);padding:8px 10px;background:var(--surface2);border-radius:6px">${p.aciklama}</div>` : ''}
-    </div>` : ''}
-
-    <!-- Üretim Tesisi Bilgileri -->
-    ${tesisler.filter(t=>t.toplamArazi||t.kapaliSaha||t.zemin||t.bodrum).map((t,i)=>`
-    <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border)">
-      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">
-        Üretim Tesisi${tesisler.length>1?' '+(i+1):''}
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
-        ${sat('Toplam Arazi',t.toplamArazi?t.toplamArazi+' m²':'')}
-        ${sat('Toplam Kapalı Alan',t.kapaliSaha?t.kapaliSaha+' m²':'')}
-        ${sat('Zemin Kat',t.zemin?t.zemin+' m²':'')}
-        ${sat('Bodrum Kat',t.bodrum?t.bodrum+' m²':'')}
-        ${sat('1. Kat',t.kat1?t.kat1+' m²':'')}
-        ${sat('2. Kat',t.kat2?t.kat2+' m²':'')}
-        ${sat('Diğer Alanlar',t.digerAlanlar?t.digerAlanlar+' m²':'')}
-        ${sat('Bina İnşaat Tipi',t.binaInsaatTipi)}
-        ${sat('Mülkiyet Durumu',t.mulkiyet)}
-        ${sat('Tesis Adresi',t.adres)}
-        ${sat('Makine Değeri',norm.makineDegeriTL?'₺'+norm.makineDegeriTL:'')}
-      </div>
-      ${t.aciklama?`<div style="margin-top:8px;font-size:12px;color:var(--text2);padding:8px 10px;background:var(--surface2);border-radius:6px">${t.aciklama}</div>`:''}
-    </div>`).join('')}
-  </div>
-
-  <!-- Makine ve Teçhizat -->
-  ${makineler.length?`
-  <div class="card" style="padding:18px">
-    <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-settings" style="margin-right:5px"></i>Makine ve Teçhizat (Tablo I) <span style="font-weight:400;font-size:10px;margin-left:6px">${makineler.length} kalem</span></div>
-    <div class="um-table-wrap">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead><tr>
-          <th style="${thStyle()}">Kod</th>
-          <th style="${thStyle()};text-align:center">Adet</th>
-          <th style="${thStyle()}">Makine Açıklaması</th>
-          <th style="${thStyle()}">Marka / Model</th>
-          <th style="${thStyle()};text-align:right">Güç (kW)</th>
-          <th style="${thStyle()};text-align:center">Y/İ</th>
-        </tr></thead>
-        <tbody>${makineler.map(m=>`<tr>
-          <td style="${tdStyle()};font-family:monospace;font-size:11px;color:var(--text2)">${m.kod||'—'}</td>
-          <td style="${tdStyle('center')};font-weight:600">${m.adet||'—'}</td>
-          <td style="${tdStyle()}">${m.aciklama||'—'}</td>
-          <td style="${tdStyle()};color:var(--text2);font-size:11px">${[m.marka,m.model,m.yil?m.yil+'yılı':''].filter(Boolean).join(' ')||'—'}</td>
-          <td style="${tdStyle('right')};font-weight:500">${m.gucKW||m.guc_kw||'—'}</td>
-          <td style="${tdStyle('center')}">${m.yerliIthal||'—'}</td>
-        </tr>`).join('')}</tbody>
-        ${norm.toplamGucKW?`<tfoot><tr>
-          <td colspan="4" style="padding:8px 12px;font-size:12px;color:var(--text2);font-weight:500">Toplam Kurulu Güç</td>
-          <td style="padding:8px 12px;text-align:right;font-weight:700;font-size:13px">${norm.toplamGucKW} kW</td>
-          <td></td>
-        </tr></tfoot>`:''}
-      </table>
-    </div>
-  </div>`:''}
-
-  <!-- Yıllık Üretim Kapasitesi -->
-  ${uretim.length?`
-  <div class="card" style="padding:18px">
-    <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-packages" style="margin-right:5px"></i>Yıllık Üretim Kapasitesi (Tablo II) <span style="font-weight:400;font-size:10px;margin-left:6px">${uretim.length} ürün</span></div>
-    <div class="um-table-wrap">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead><tr>
-          <th style="${thStyle()};text-align:center">S.No</th>
-          <th style="${thStyle()}">NACE Kodu</th>
-          <th style="${thStyle()}">GTK Kodu</th>
-          <th style="${thStyle()}">Ürün Açıklaması</th>
-          <th style="${thStyle()};text-align:right">Yıllık Kapasite</th>
-          <th style="${thStyle()};text-align:right">Fiili Miktar</th>
-          <th style="${thStyle()}">Birim</th>
-          <th style="${thStyle()};text-align:center">Kull. Oranı</th>
-        </tr></thead>
-        <tbody>${uretim.map((u,i)=>`<tr>
-          <td style="${tdStyle('center')};color:var(--text2);font-size:11px">${u.siraNo||i+1}</td>
-          <td style="${tdStyle()};font-family:monospace;font-size:11px;color:var(--blue)">${u.naceKodu||'—'}</td>
-          <td style="${tdStyle()};font-family:monospace;font-size:11px;color:var(--text2)">${u.gtkKodu||'—'}</td>
-          <td style="${tdStyle()};font-weight:500">${u.aciklama||'—'}</td>
-          <td style="${tdStyle('right')}">${u.yillikKapasite?Number(u.yillikKapasite).toLocaleString('tr-TR'):'—'}</td>
-          <td style="${tdStyle('right')};font-weight:600;color:var(--blue)">${u.miktar?Number(u.miktar).toLocaleString('tr-TR'):'—'}</td>
-          <td style="${tdStyle()}">${u.birim||'—'}</td>
-          <td style="${tdStyle('center')}">${u.kullanimOrani?'%'+u.kullanimOrani:'—'}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>
-  </div>`:''}
-
-  <!-- Yıllık Tüketim Kapasitesi -->
-  ${tuketim.length?`
-  <div class="card" style="padding:18px">
-    <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-flask" style="margin-right:5px"></i>Yıllık Tüketim Kapasitesi (Tablo IV) <span style="font-weight:400;font-size:10px;margin-left:6px">${tuketim.length} kalem</span></div>
-    <div class="um-table-wrap">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead><tr>
-          <th style="${thStyle()};text-align:center">S.No</th>
-          <th style="${thStyle()}">NACE Kodu</th>
-          <th style="${thStyle()}">GTK Kodu</th>
-          <th style="${thStyle()}">Girdi / Hammadde Açıklaması</th>
-          <th style="${thStyle()};text-align:right">Miktar</th>
-          <th style="${thStyle()}">Birim</th>
-          <th style="${thStyle()}">Tedarik Şekli</th>
-        </tr></thead>
-        <tbody>${tuketim.map((t,i)=>`<tr>
-          <td style="${tdStyle('center')};color:var(--text2);font-size:11px">${t.siraNo||i+1}</td>
-          <td style="${tdStyle()};font-family:monospace;font-size:11px;color:var(--blue)">${t.naceKodu||'—'}</td>
-          <td style="${tdStyle()};font-family:monospace;font-size:11px;color:var(--text2)">${t.gtkKodu||'—'}</td>
-          <td style="${tdStyle()};font-weight:500">${t.aciklama||'—'}</td>
-          <td style="${tdStyle('right')};font-weight:600">${t.miktar?Number(t.miktar).toLocaleString('tr-TR'):'—'}</td>
-          <td style="${tdStyle()}">${t.birim||'—'}</td>
-          <td style="${tdStyle()};color:var(--text2)">${t.tedarikSekli||'—'}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>
-  </div>`:''}
-
-</div>`;
-}
-
-window.skRaporSil = async function(){
+window.skRaporSil=async function(){
   if(!confirm('Bu firmaya ait kapasite raporu Supabase\'den silinecek. Emin misiniz?')) return;
-  try {
+  try{
     await sbSil(_seciliFirmaId);
     if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaId);
     document.getElementById('sk-sonuc-ekrani').style.display='none';
-    const dur=document.getElementById('sk-rapor-durumu'); if(dur) dur.textContent='Rapor silindi';
-    const a2no=document.getElementById('sk-adim2-no');
-    if(a2no){a2no.style.background='var(--surface2)';a2no.style.color='var(--text2)';a2no.style.border='0.5px solid var(--border)';}
-  } catch(e){ alert(e.message); }
+    const dur=document.getElementById('sk-rapor-durumu');
+    if(dur) dur.textContent='Rapor silindi — formu yeniden doldurun';
+    ['sk-makine-body','sk-uretim-body','sk-tuketim-body'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.innerHTML='';
+    });
+    _mId=0; _uId=0; _tId=0;
+  }catch(e){alert(e.message);}
 };
+
 
 /* ══════════════════════════════════════════════════════════
    LISTE MODÜLÜ
