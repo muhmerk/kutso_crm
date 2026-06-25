@@ -21310,20 +21310,6 @@ async function sbKaydet(uyeId, uyeNo, uyeAdi, veri, dosyaAdi){
     uye_adi:           uyeAdi||'',
     dosya_adi:         dosyaAdi||'',
     yukleme_tarihi:    new Date().toISOString(),
-    firma_adi:         veri.firmaAdi||'',
-    vergi_dairesi:     veri.vergiDairesi||'',
-    vergi_no:          veri.vergiNo||'',
-    mersis_no:         veri.mersisNo||'',
-    oda_sicil_no:      veri.odaSicilNo||'',
-    ticaret_sicil_no:  veri.ticaretSicilNo||'',
-    sanayi_sicil_no:   veri.sanayiSicilNo||'',
-    tescilli_sermaye:  veri.tescilliSermaye||'',
-    faaliyet_kodlari:  veri.faaliyetKodlari||'',
-    adres:             veri.adres||'',
-    telefon:           veri.telefon||'',
-    faks:              veri.faks||'',
-    email:             veri.email||'',
-    web:               veri.web||'',
     gecerlilik_suresi: veri.gecerlilikSuresi||'',
     rapor_tarihi:      veri.raporTarihi||'',
     tescilli_markalar: veri.tescilliMarkalar||'',
@@ -21336,7 +21322,6 @@ async function sbKaydet(uyeId, uyeNo, uyeAdi, veri, dosyaAdi){
     makineler:         veri.makineler||[],
     yillik_uretim:     veri.yillikUretim||[],
     yillik_tuketim:    veri.yillikTuketim||[],
-    kapasite_hesabi:   veri.kapasiteHesabi||'',
     updated_at:        new Date().toISOString()
   };
 
@@ -22200,24 +22185,31 @@ window.skTemizle = function(){
 /* ── Dosya seçimi (sadece isim kaydedilir, parse yok) ── */
 let _secilenDosya = null;
 let _secilenDosyaAdi = '';
-window.skDosyaSec = function(inp){
-  const f=inp?.files?.[0];
+window._skPdfDosyaAdi = '';
+
+function _skDosyaSecilenAyarla(f){
   if(!f||f.type!=='application/pdf'){alert('PDF dosyası seçin.');return;}
   _secilenDosya=f;
   _secilenDosyaAdi=f.name;
-  const bilgi=document.getElementById('sk-dosya-bilgi'); if(bilgi) bilgi.style.display='flex';
-  const adi=document.getElementById('sk-dosya-adi'); if(adi) adi.textContent=f.name;
-  const boy=document.getElementById('sk-dosya-boyut'); if(boy) boy.textContent=(f.size/1024).toFixed(1)+' KB';
+  window._skPdfDosyaAdi=f.name;
+  const bilgi=document.getElementById('sk-pdf-bilgi');
+  if(bilgi) bilgi.textContent='Seçildi: '+f.name+' ('+(f.size/1024).toFixed(1)+' KB)';
+}
+
+window.skPdfSec = function(inp){
+  _skDosyaSecilenAyarla(inp?.files?.[0]);
+};
+window.skDosyaSec = function(inp){
+  _skDosyaSecilenAyarla(inp?.files?.[0]);
 };
 window.skDrop=function(e){
   e.preventDefault();
-  const f=e.dataTransfer?.files?.[0];
-  if(f) skDosyaSec({files:[f]});
+  _skDosyaSecilenAyarla(e.dataTransfer?.files?.[0]);
 };
 window.skDosyaTemizle=function(){
-  _secilenDosya=null; _secilenDosyaAdi='';
-  const bilgi=document.getElementById('sk-dosya-bilgi'); if(bilgi) bilgi.style.display='none';
-  const fi=document.getElementById('sk-file-input'); if(fi) fi.value='';
+  _secilenDosya=null; _secilenDosyaAdi=''; window._skPdfDosyaAdi='';
+  const bilgi=document.getElementById('sk-pdf-bilgi'); if(bilgi) bilgi.textContent='Henüz dosya seçilmedi';
+  const fi=document.getElementById('sk-pdf-input'); if(fi) fi.value='';
 };
 
 window.skRaporSil = async function(){
