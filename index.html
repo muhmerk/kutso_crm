@@ -22020,9 +22020,9 @@ function sanayiRenderKapasite(root){
       <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-calendar" style="margin-right:5px"></i>Rapor Bilgileri</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Rapor Tarihi</div>
-          <input id="sk-rapor-tarihi" type="text" placeholder="gg.aa.yyyy" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+          <input id="sk-rapor-tarihi" type="date" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Geçerlilik Tarihi</div>
-          <input id="sk-gecerlilik-tarihi" type="text" placeholder="gg.aa.yyyy" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+          <input id="sk-gecerlilik-tarihi" type="date" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
         <div style="grid-column:span 2"><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Tescilli Markalar</div>
           <input id="sk-markalar" type="text" placeholder="" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
         <div style="grid-column:span 2"><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Sertifikalar</div>
@@ -22064,11 +22064,7 @@ function sanayiRenderKapasite(root){
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Toplam Arazi (m²)</div><input id="sk-t-arazi" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Toplam Kapalı Alan (m²)</div><input id="sk-t-kapali" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
-        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Zemin Kat (m²)</div><input id="sk-t-zemin" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
-        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Bodrum Kat (m²)</div><input id="sk-t-bodrum" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
-        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">1. Kat (m²)</div><input id="sk-t-kat1" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
-        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">2. Kat (m²)</div><input id="sk-t-kat2" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
-        <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Diğer Alanlar (m²)</div><input id="sk-t-diger" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Bina İnşaat Tipi</div><input id="sk-t-insaat" type="text" placeholder="Betonarme / Çelik" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Mülkiyet Durumu</div><input id="sk-t-mulkiyet" type="text" placeholder="Kira / Mülk" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Makine Değeri (TL)</div><input id="sk-t-makine-deger" type="text" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
@@ -22170,21 +22166,48 @@ window.skMakineSatirEkle = function(m){
   const id=++_mId;
   const tr=document.createElement('tr');
   tr.id='sk-m-'+id;
-  const inp=(ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
-    style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:center':''}"
-    oninput="skGucTopla()" />`;
-  tr.innerHTML=
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Kod','100px','text',m?.kod)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Açıklama','100%','text',m?.aciklama)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','60px','number',m?.adet)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','70px','number',m?.gucKW)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+
-      '<select style="padding:5px 6px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px">'+
-        '<option value="">—</option><option value="Y"'+(m?.yerliIthal==='Y'?' selected':'')+'>Yerli</option>'+
-        '<option value="İ"'+(m?.yerliIthal==='İ'?' selected':'')+'>İthal</option>'+
-      '</select></td>'+
-    '<td style="padding:5px 4px;border-bottom:0.5px solid var(--border);text-align:center">'+
-      '<button onclick="document.getElementById(\'sk-m-'+id+'\').remove();skGucTopla()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px"><i class="ti ti-trash"></i></button></td>';
+  // Maskeli kod input: 00.00.00
+  const kodInput = document.createElement('input');
+  kodInput.type='text'; kodInput.placeholder='00.00.00'; kodInput.autocomplete='off';
+  kodInput.value = m?.kod||'';
+  kodInput.style.cssText='width:90px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;font-family:monospace';
+  kodInput.addEventListener('input', function(){
+    let digits = this.value.replace(/\D/g,'');
+    if(digits.length>6) digits=digits.slice(0,6);
+    let masked='';
+    for(let i=0;i<digits.length;i++){
+      if(i===2||i===4) masked+='.';
+      masked+=digits[i];
+    }
+    this.value=masked;
+    skGucTopla();
+  });
+  const aciklamaInput = document.createElement('input');
+  aciklamaInput.type='text'; aciklamaInput.placeholder='Makine adı ve açıklaması'; aciklamaInput.autocomplete='off';
+  aciklamaInput.value=m?.aciklama||'';
+  aciklamaInput.style.cssText='width:100%;min-width:220px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box';
+  const adetInput = document.createElement('input');
+  adetInput.type='number'; adetInput.placeholder='0'; adetInput.value=m?.adet||'';
+  adetInput.style.cssText='width:60px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:center';
+  adetInput.addEventListener('input',skGucTopla);
+  const gucInput = document.createElement('input');
+  gucInput.type='number'; gucInput.placeholder='0'; gucInput.value=m?.gucKW||'';
+  gucInput.style.cssText='width:70px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:center';
+  gucInput.addEventListener('input',skGucTopla);
+  const sel=document.createElement('select');
+  sel.style.cssText='padding:5px 6px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px';
+  sel.innerHTML='<option value="">—</option><option value="Y"'+(m?.yerliIthal==='Y'?' selected':'')+'>Yerli</option><option value="İ"'+(m?.yerliIthal==='İ'?' selected':'')+'>İthal</option>';
+  const delBtn=document.createElement('button');
+  delBtn.innerHTML='<i class="ti ti-trash"></i>';
+  delBtn.style.cssText='background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px';
+  delBtn.onclick=()=>{ tr.remove(); skGucTopla(); };
+  const tdKod=document.createElement('td'); tdKod.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'; tdKod.appendChild(kodInput);
+  const tdAcik=document.createElement('td'); tdAcik.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'; tdAcik.appendChild(aciklamaInput);
+  const tdAdet=document.createElement('td'); tdAdet.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'; tdAdet.appendChild(adetInput);
+  const tdGuc=document.createElement('td'); tdGuc.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'; tdGuc.appendChild(gucInput);
+  const tdSel=document.createElement('td'); tdSel.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'; tdSel.appendChild(sel);
+  const tdDel=document.createElement('td'); tdDel.style.cssText='padding:5px 4px;border-bottom:0.5px solid var(--border);text-align:center'; tdDel.appendChild(delBtn);
+  tr.appendChild(tdKod); tr.appendChild(tdAcik); tr.appendChild(tdAdet); tr.appendChild(tdGuc); tr.appendChild(tdSel); tr.appendChild(tdDel);
   body.appendChild(tr);
 };
 
@@ -22207,19 +22230,60 @@ window.skUretimSatirEkle = function(u){
   const id=++_uId;
   const tr=document.createElement('tr');
   tr.id='sk-u-'+id;
-  const inp=(ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
-    style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
-  tr.innerHTML=
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">'+sira+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0000','80px','text',u?.naceKodu)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('000000','80px','text',u?.gtkKodu)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Ürün adı','100%','text',u?.aciklama)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','80px','number',u?.yillikKapasite)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','80px','number',u?.miktar)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Ton/Adet','70px','text',u?.birim)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('%','50px','number',u?.kullanimOrani)+'</td>'+
-    '<td style="padding:5px 4px;border-bottom:0.5px solid var(--border);text-align:center">'+
-      '<button onclick="skSatirSil(\'sk-u-'+id+'\',\'sk-uretim-body\')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px"><i class="ti ti-trash"></i></button></td>';
+
+  function maskeliInput(placeholder, maxDigits, separator, value){
+    const el=document.createElement('input');
+    el.type='text'; el.placeholder=placeholder; el.autocomplete='off';
+    el.value=value||'';
+    el.style.cssText='width:110px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;font-family:monospace';
+    el.addEventListener('input',function(){
+      const digits=this.value.replace(/\D/g,'').slice(0,maxDigits);
+      // Format: 00.00.00.00.00 → noktalar 2'şer gruplar
+      let masked='';
+      for(let i=0;i<digits.length;i++){
+        if(i>0 && i%2===0) masked+=separator;
+        masked+=digits[i];
+      }
+      this.value=masked;
+    });
+    return el;
+  }
+
+  function numInput(val){
+    const el=document.createElement('input');
+    el.type='number'; el.placeholder='0'; el.value=val||'';
+    el.style.cssText='width:80px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:right';
+    return el;
+  }
+  function txtInput(ph, val, minw){
+    const el=document.createElement('input');
+    el.type='text'; el.placeholder=ph; el.value=val||''; el.autocomplete='off';
+    el.style.cssText='width:100%;min-width:'+(minw||'80px')+';padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box';
+    return el;
+  }
+
+  // Üretim kodu: 00.00.00.00.00 (10 rakam, 2'şer gruplar)
+  const naceEl = maskeliInput('00.00', 4, '.', u?.naceKodu);
+  naceEl.style.width='70px';
+  const gtkEl  = maskeliInput('00.00.00.00.00', 10, '.', u?.gtkKodu);
+  const acikEl = txtInput('Ürün adı ve açıklaması (uzun girebilirsiniz)', u?.aciklama, '260px');
+  const kapEl  = numInput(u?.yillikKapasite);
+  const mktEl  = numInput(u?.miktar);
+  const birimEl= txtInput('Ton/Adet', u?.birim, '65px'); birimEl.style.width='75px';
+  const oranEl = numInput(u?.kullanimOrani); oranEl.style.width='55px';
+  const delBtn = document.createElement('button');
+  delBtn.innerHTML='<i class="ti ti-trash"></i>';
+  delBtn.style.cssText='background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px';
+  delBtn.onclick=()=>skSatirSil('sk-u-'+id,'sk-uretim-body');
+
+  const tdSira=document.createElement('td'); tdSira.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px;white-space:nowrap'; tdSira.textContent=sira;
+  [[naceEl],[gtkEl],[acikEl],[kapEl],[mktEl],[birimEl],[oranEl],[delBtn]].forEach((els,i)=>{
+    const td=document.createElement('td');
+    td.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'+(i===7?';text-align:center':'');
+    els.forEach(e=>td.appendChild(e));
+    tr.appendChild(td);
+  });
+  tr.insertBefore(tdSira, tr.firstChild);
   body.appendChild(tr);
 };
 
@@ -22231,18 +22295,71 @@ window.skTuketimSatirEkle = function(t){
   const id=++_tId;
   const tr=document.createElement('tr');
   tr.id='sk-t-'+id;
-  const inp=(ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
-    style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
-  tr.innerHTML=
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">'+sira+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0000','80px','text',t?.naceKodu)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('000000','80px','text',t?.gtkKodu)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Hammadde adı','100%','text',t?.aciklama)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('0','80px','number',t?.miktar)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Ton/Lt','70px','text',t?.birim)+'</td>'+
-    '<td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">'+inp('Yerli/İthal','90px','text',t?.tedarikSekli)+'</td>'+
-    '<td style="padding:5px 4px;border-bottom:0.5px solid var(--border);text-align:center">'+
-      '<button onclick="skSatirSil(\'sk-t-'+id+'\',\'sk-tuketim-body\')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px"><i class="ti ti-trash"></i></button></td>';
+
+  function maskeliInput6(val){
+    // Tüketim kodu: 00.00.00 (6 rakam)
+    const el=document.createElement('input');
+    el.type='text'; el.placeholder='00.00.00'; el.autocomplete='off';
+    el.value=val||'';
+    el.style.cssText='width:90px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;font-family:monospace';
+    el.addEventListener('input',function(){
+      const digits=this.value.replace(/[^0-9]/g,'').slice(0,6);
+      let masked='';
+      for(let i=0;i<digits.length;i++){
+        if(i>0 && i%2===0) masked+='.';
+        masked+=digits[i];
+      }
+      this.value=masked;
+    });
+    return el;
+  }
+  function maskeliNace4(val){
+    // NACE: 00.00 (4 rakam)
+    const el=document.createElement('input');
+    el.type='text'; el.placeholder='00.00'; el.autocomplete='off';
+    el.value=val||'';
+    el.style.cssText='width:70px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;font-family:monospace';
+    el.addEventListener('input',function(){
+      const digits=this.value.replace(/[^0-9]/g,'').slice(0,4);
+      let masked='';
+      for(let i=0;i<digits.length;i++){
+        if(i===2) masked+='.';
+        masked+=digits[i];
+      }
+      this.value=masked;
+    });
+    return el;
+  }
+  function numEl(val){
+    const el=document.createElement('input'); el.type='number'; el.placeholder='0'; el.value=val||'';
+    el.style.cssText='width:80px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:right';
+    return el;
+  }
+  function txtEl(ph,val,minw){
+    const el=document.createElement('input'); el.type='text'; el.placeholder=ph; el.value=val||''; el.autocomplete='off';
+    el.style.cssText='width:100%;min-width:'+(minw||'80px')+';padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box';
+    return el;
+  }
+
+  const naceEl2  = maskeliNace4(t?.naceKodu);
+  const gtkEl2   = maskeliInput6(t?.gtkKodu);
+  const acikEl2  = txtEl('Hammadde / girdi adı ve açıklaması', t?.aciklama, '260px');
+  const mktEl2   = numEl(t?.miktar);
+  const birimEl2 = txtEl('Ton/Lt', t?.birim, '65px'); birimEl2.style.width='75px';
+  const tedEl    = txtEl('Yerli/İthal', t?.tedarikSekli, '90px'); tedEl.style.width='90px';
+  const delBtn2  = document.createElement('button');
+  delBtn2.innerHTML='<i class="ti ti-trash"></i>';
+  delBtn2.style.cssText='background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px';
+  delBtn2.onclick=()=>skSatirSil('sk-t-'+id,'sk-tuketim-body');
+
+  const tdSira2=document.createElement('td'); tdSira2.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px;white-space:nowrap'; tdSira2.textContent=sira;
+  tr.appendChild(tdSira2);
+  [[naceEl2],[gtkEl2],[acikEl2],[mktEl2],[birimEl2],[tedEl],[delBtn2]].forEach((els,i)=>{
+    const td=document.createElement('td');
+    td.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'+(i===6?';text-align:center':'');
+    els.forEach(e=>td.appendChild(e));
+    tr.appendChild(td);
+  });
   body.appendChild(tr);
 };
 
@@ -22267,29 +22384,43 @@ function skFormVeriTopla(){
   }
   personel.toplam=ptoplam||'';
   const tesisler=[{
-    toplamArazi:g('sk-t-arazi'),kapaliSaha:g('sk-t-kapali'),zemin:g('sk-t-zemin'),
-    bodrum:g('sk-t-bodrum'),kat1:g('sk-t-kat1'),kat2:g('sk-t-kat2'),
-    digerAlanlar:g('sk-t-diger'),binaInsaatTipi:g('sk-t-insaat'),mulkiyet:g('sk-t-mulkiyet'),
+    toplamArazi:g('sk-t-arazi'),kapaliSaha:g('sk-t-kapali'),
+    binaInsaatTipi:g('sk-t-insaat'),mulkiyet:g('sk-t-mulkiyet'),
   }];
   const makineler=[];
   document.getElementById('sk-makine-body')?.querySelectorAll('tr').forEach(tr=>{
     const inp=tr.querySelectorAll('input'); const sel=tr.querySelector('select');
-    makineler.push({kod:inp[0]?.value?.trim()||'',aciklama:inp[1]?.value?.trim()||'',
+    if(inp.length>=4) makineler.push({
+      kod:inp[0]?.value?.trim()||'',aciklama:inp[1]?.value?.trim()||'',
       adet:inp[2]?.value?.trim()||'',gucKW:inp[3]?.value?.trim()||'',yerliIthal:sel?.value||''});
   });
   const yillikUretim=[];
   document.getElementById('sk-uretim-body')?.querySelectorAll('tr').forEach((tr,i)=>{
     const inp=tr.querySelectorAll('input');
-    yillikUretim.push({siraNo:String(i+1),naceKodu:inp[0]?.value?.trim()||'',gtkKodu:inp[1]?.value?.trim()||'',
-      aciklama:inp[2]?.value?.trim()||'',yillikKapasite:inp[3]?.value?.trim()||'',
-      miktar:inp[4]?.value?.trim()||'',birim:inp[5]?.value?.trim()||'',kullanimOrani:inp[6]?.value?.trim()||''});
+    if(inp.length>=7) yillikUretim.push({
+      siraNo:String(i+1),
+      naceKodu:inp[0]?.value?.trim()||'',
+      gtkKodu:inp[1]?.value?.trim()||'',
+      aciklama:inp[2]?.value?.trim()||'',
+      yillikKapasite:inp[3]?.value?.trim()||'',
+      miktar:inp[4]?.value?.trim()||'',
+      birim:inp[5]?.value?.trim()||'',
+      kullanimOrani:inp[6]?.value?.trim()||'',
+      teknolojiSinifi: skNaceSiniflandir(inp[0]?.value?.trim()||'')
+    });
   });
   const yillikTuketim=[];
   document.getElementById('sk-tuketim-body')?.querySelectorAll('tr').forEach((tr,i)=>{
     const inp=tr.querySelectorAll('input');
-    yillikTuketim.push({siraNo:String(i+1),naceKodu:inp[0]?.value?.trim()||'',gtkKodu:inp[1]?.value?.trim()||'',
-      aciklama:inp[2]?.value?.trim()||'',miktar:inp[3]?.value?.trim()||'',
-      birim:inp[4]?.value?.trim()||'',tedarikSekli:inp[5]?.value?.trim()||''});
+    if(inp.length>=6) yillikTuketim.push({
+      siraNo:String(i+1),
+      naceKodu:inp[0]?.value?.trim()||'',
+      gtkKodu:inp[1]?.value?.trim()||'',
+      aciklama:inp[2]?.value?.trim()||'',
+      miktar:inp[3]?.value?.trim()||'',
+      birim:inp[4]?.value?.trim()||'',
+      tedarikSekli:inp[5]?.value?.trim()||''
+    });
   });
   let toplamGuc=0;
   makineler.forEach(m=>{ toplamGuc+=(parseFloat(m.adet)||0)*(parseFloat(m.gucKW)||0); });
@@ -22322,11 +22453,7 @@ function skFormDoldur(v){
   const t=(v.tesisler||[])[0]||{};
   set('sk-t-arazi',       t.toplamArazi||'');
   set('sk-t-kapali',      t.kapaliSaha||'');
-  set('sk-t-zemin',       t.zemin||'');
-  set('sk-t-bodrum',      t.bodrum||'');
-  set('sk-t-kat1',        t.kat1||'');
-  set('sk-t-kat2',        t.kat2||'');
-  set('sk-t-diger',       t.digerAlanlar||'');
+
   set('sk-t-insaat',      t.binaInsaatTipi||'');
   set('sk-t-mulkiyet',    t.mulkiyet||'');
   set('sk-t-makine-deger',v.makine_degeri_tl||v.makineDegeriTL||'');
@@ -22403,6 +22530,39 @@ window.skPdfSec=function(inp){
   window._skPdfDosyaAdi=f.name;
   const el=document.getElementById('sk-pdf-bilgi'); if(el) el.textContent=f.name+' ('+(f.size/1024).toFixed(0)+' KB)';
 };
+
+
+/* ── Eurostat Teknoloji Sınıflandırması ── */
+function skNaceSiniflandir(naceKodu){
+  if(!naceKodu) return '';
+  // NACE kodundan baş kısmı al (nokta öncesi veya ilk 2 rakam)
+  const k = naceKodu.replace('.','').replace('.','');
+  const bas2 = parseInt(k.slice(0,2))||0;
+  const full = naceKodu.replace(/\./g,'');
+
+  // Yüksek Teknoloji
+  if(bas2===21 || bas2===26 || bas2===62) return 'Yüksek Teknoloji';
+  if(naceKodu.startsWith('30.30')) return 'Yüksek Teknoloji';
+
+  // Orta-Yüksek Teknoloji
+  if(bas2===20 || bas2===27 || bas2===28 || bas2===29) return 'Orta-Yüksek Teknoloji';
+  if(naceKodu.startsWith('25.40')) return 'Orta-Yüksek Teknoloji';
+  if(naceKodu.startsWith('32.50')) return 'Orta-Yüksek Teknoloji';
+  if(bas2===30 && !naceKodu.startsWith('30.11') && !naceKodu.startsWith('30.12') && !naceKodu.startsWith('30.30')) return 'Orta-Yüksek Teknoloji';
+
+  // Orta-Düşük Teknoloji
+  if(naceKodu.startsWith('18.20')) return 'Orta-Düşük Teknoloji';
+  if(bas2===19 || bas2===22 || bas2===23 || bas2===24 || bas2===33) return 'Orta-Düşük Teknoloji';
+  if(bas2===25 && !naceKodu.startsWith('25.40')) return 'Orta-Düşük Teknoloji';
+  if(naceKodu.startsWith('30.11') || naceKodu.startsWith('30.12')) return 'Orta-Düşük Teknoloji';
+
+  // Düşük Teknoloji
+  const dusuk = [10,11,12,13,14,15,16,17,18,31,32,35,1,3];
+  if(dusuk.includes(bas2)) return 'Düşük Teknoloji';
+  if(bas2>=5 && bas2<=8) return 'Düşük Teknoloji';
+
+  return '';
+}
 
 /* ── Kaydet ── */
 window.skKaydet=async function(){
