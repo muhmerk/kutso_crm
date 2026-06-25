@@ -21667,8 +21667,6 @@ function sanayiRenderKapasite(root){
 
   </div><!-- /sk-form-wrap -->
 
-  <!-- Sonuç Ekranı -->
-  <div id="sk-sonuc-ekrani" style="display:none"></div>
 
 </div>`;
 
@@ -22033,7 +22031,7 @@ async function _skFirmaGoster(id, no, ad){
     if(dur) dur.textContent = mevcut
       ? 'Mevcut rapor: '+(mevcut.dosya_adi||'—')+' · '+(mevcut.yukleme_tarihi ? new Date(mevcut.yukleme_tarihi).toLocaleString('tr-TR') : '—')
       : 'Henüz rapor yüklenmemiş';
-    if(mevcut) skSonucGoster(mevcut);
+    // (kaydedilen özet kaldırıldı)
   } catch(e){ if(dur) dur.textContent='Kontrol edilemedi'; }
 
   // Adım 2'yi aktif et (varsa)
@@ -22146,38 +22144,6 @@ const EUROSTAT_SINIF = (function(){
   return { sinifla, panelOlustur };
 })();
 
-/* ── Sonuç ekranı göster ── */
-function skSonucGoster(v){
-  const el = document.getElementById('sk-sonuc-ekrani');
-  if(!el) return;
-  const uretimler = (v.yillik_uretim||v.yillikUretim||[]).filter(u=>u.aciklama||u.uretimKodu);
-  const makineSayisi = (v.makineler||[]).reduce((s,m)=>s+(parseInt(m.adet)||1),0);
-  const p = v.personel||{};
-  const tesis = (v.tesisler||[])[0]||{};
-  const satirlar = [];
-  uretimler.slice(0,3).forEach(u=>{
-    const mt = u.miktar ? Number(u.miktar).toLocaleString('tr-TR')+' '+(u.birim||'') : '';
-    satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)">
-      <i class="ti ti-packages" style="color:var(--blue);font-size:14px;flex-shrink:0"></i>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.aciklama||u.uretimKodu||'—'}</div>
-        ${mt?`<div style="font-size:11px;color:var(--text2)">${mt}</div>`:''}
-      </div>
-    </div>`);
-  });
-  if(v.makine_toplam_guc_kw) satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)"><i class="ti ti-bolt" style="color:var(--blue);font-size:14px"></i><div><span style="font-size:12px">Toplam Güç: </span><strong style="font-size:12px">${v.makine_toplam_guc_kw} kW</strong></div></div>`);
-  if(makineSayisi) satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)"><i class="ti ti-settings" style="color:var(--blue);font-size:14px"></i><div style="font-size:12px">Makine: <strong>${makineSayisi} adet</strong></div></div>`);
-  if(tesis.kapaliSaha) satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)"><i class="ti ti-building" style="color:var(--blue);font-size:14px"></i><div style="font-size:12px">Kapalı Alan: <strong>${tesis.kapaliSaha} m²</strong></div></div>`);
-  if(p.toplam) satirlar.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 0"><i class="ti ti-users" style="color:var(--blue);font-size:14px"></i><div style="font-size:12px">Personel: <strong>${p.toplam} kişi</strong></div></div>`);
-
-  el.innerHTML = satirlar.length ? `
-    <div class="card" style="padding:18px;margin-bottom:16px">
-      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="ti ti-check" style="margin-right:5px;color:var(--green)"></i>Kaydedilen Özet</div>
-      ${satirlar.join('')}
-    </div>` : '';
-  el.style.display = '';
-}
-
 /* ── Kaydet ── */
 window.skKaydet = async function(){
   if(!_seciliFirmaId){ alert('Önce firma seçin.'); return; }
@@ -22191,7 +22157,6 @@ window.skKaydet = async function(){
     const dur=document.getElementById('sk-rapor-durumu');
     if(dur) dur.textContent='Kaydedildi · '+new Date().toLocaleString('tr-TR');
     const kayitli = await sbYukle(_seciliFirmaNo||_seciliFirmaId);
-    skSonucGoster(kayitli||veri);
 
     // Eurostat sınıflandırmasını göster
     const uretimVerisi = (kayitli?.yillik_uretim || veri.yillikUretim || []);
@@ -22215,7 +22180,6 @@ window.skTemizle = function(){
   const chip=document.getElementById('sk-secili'); if(chip) chip.style.display='none';
   const a2=document.getElementById('sk-adim2'); if(a2){a2.style.opacity='.45';a2.style.pointerEvents='none';}
   const a3=document.getElementById('sk-adim3-wrap'); if(a3) a3.style.display='none';
-  const se=document.getElementById('sk-sonuc-ekrani'); if(se) se.style.display='none';
   skDosyaTemizle();
 };
 
@@ -22254,7 +22218,6 @@ window.skRaporSil = async function(){
   try {
     await sbSil(_seciliFirmaNo||_seciliFirmaId);
     if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaNo||_seciliFirmaId);
-    document.getElementById('sk-sonuc-ekrani').style.display='none';
     const dur=document.getElementById('sk-rapor-durumu'); if(dur) dur.textContent='Rapor silindi';
     const a2no=document.getElementById('sk-adim2-no');
     if(a2no){a2no.style.background='var(--surface2)';a2no.style.color='var(--text2)';a2no.style.border='0.5px solid var(--border)';}
@@ -22446,22 +22409,22 @@ window.skPaneDetayToggle = function(){
 
 window.skPaneDuzenle = function(uyeId){
   const v = window._skPaneVeri;
-  // Kapasite raporu ekleme ekranına geç, formu doldur
+  const cf = window.currentFirm;
+  const no = cf?.no || uyeId;
+  const ad = cf?.firma || cf?.name || (v && (v.uye_adi||v.firma_adi)) || '';
+  // Sanayi sekmesine geç
   crmNavSec('sanayi', document.getElementById('nav-crm-sanayi'));
   setTimeout(()=>{
-    const cf = window.currentFirm;
-    if(window.sanayiMainAc) window.sanayiMainAc(cf?cf.id:null, cf?cf.no:null, cf?(cf.firma||cf.name):null);
+    // Kapasite raporu ekleme formunu doğrudan aç
+    if(window.sanayiSecKapasite) window.sanayiSecKapasite();
     setTimeout(()=>{
-      if(v && window.skFormDoldur) {
-        // Formu firmayı seçili hale getir
-        const no = cf?.no||uyeId;
-        const ad = cf?.firma||cf?.name||v.uye_adi||'';
-        if(window._skFirmaGoster) window._skFirmaGoster(uyeId, no, ad).then(()=>{
-          setTimeout(()=>{ if(window.skFormDoldur) skFormDoldur(v); }, 100);
+      if(window._skFirmaGoster) {
+        window._skFirmaGoster(uyeId, no, ad).then(()=>{
+          setTimeout(()=>{ if(v && window.skFormDoldur) skFormDoldur(v); }, 150);
         });
       }
-    }, 200);
-  }, 100);
+    }, 250);
+  }, 120);
 };
 
 function skPaneDetayHtml(v){
