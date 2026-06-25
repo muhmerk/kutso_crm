@@ -21785,39 +21785,26 @@ let _mod = 'home';
    SUPABASE YARDIMCILARI
 ══════════════════════════════════════════════════════════ */
 async function sbKaydet(uyeId, uyeNo, uyeAdi, veri, dosyaAdi){
+  // Sadece SQL şemasındaki kolonlar — adres/telefon/email vb. yok
   const satirVeri = {
-    uye_id:            uyeId,
-    uye_no:            String(uyeNo||''),
-    uye_adi:           uyeAdi||'',
-    dosya_adi:         dosyaAdi||'',
-    yukleme_tarihi:    new Date().toISOString(),
-    firma_adi:         veri.firmaAdi||'',
-    vergi_dairesi:     veri.vergiDairesi||'',
-    vergi_no:          veri.vergiNo||'',
-    mersis_no:         veri.mersisNo||'',
-    oda_sicil_no:      veri.odaSicilNo||'',
-    ticaret_sicil_no:  veri.ticaretSicilNo||'',
-    sanayi_sicil_no:   veri.sanayiSicilNo||'',
-    tescilli_sermaye:  veri.tescilliSermaye||'',
-    faaliyet_kodlari:  veri.faaliyetKodlari||'',
-    adres:             veri.adres||'',
-    telefon:           veri.telefon||'',
-    faks:              veri.faks||'',
-    email:             veri.email||'',
-    web:               veri.web||'',
-    gecerlilik_suresi: veri.gecerlilikSuresi||'',
-    rapor_tarihi:      veri.raporTarihi||'',
-    tescilli_markalar: veri.tescilliMarkalar||'',
-    sertifikalar:      veri.sertifikalar||'',
-    yabanci_sermaye:   veri.yabancıSermaye||veri.yabanci_sermaye||'',
-    personel:          veri.personel||{},
-    tesisler:          veri.tesisler||[],
-    makine_degeri_tl:  veri.makineDegeriTL||'',
-    makine_toplam_guc_kw: veri.toplamGucKW||'',
-    makineler:         veri.makineler||[],
-    yillik_uretim:     veri.yillikUretim||[],
-    yillik_tuketim:    veri.yillikTuketim||[],
-    updated_at:        new Date().toISOString()
+    uye_id:              uyeId,
+    uye_no:              String(uyeNo||''),
+    uye_adi:             uyeAdi||'',
+    dosya_adi:           dosyaAdi||'',
+    yukleme_tarihi:      new Date().toISOString(),
+    rapor_tarihi:        veri.raporTarihi||'',
+    gecerlilik_suresi:   veri.gecerlilikSuresi||'',
+    tescilli_markalar:   veri.tescilliMarkalar||'',
+    sertifikalar:        veri.sertifikalar||'',
+    yabanci_sermaye:     veri.yabancıSermaye||veri.yabanci_sermaye||'',
+    personel:            veri.personel||{},
+    tesisler:            veri.tesisler||[],
+    makine_degeri_tl:    veri.makineDegeriTL||'',
+    makine_toplam_guc_kw:veri.toplamGucKW||'',
+    makineler:           veri.makineler||[],
+    yillik_uretim:       veri.yillikUretim||[],
+    yillik_tuketim:      veri.yillikTuketim||[],
+    updated_at:          new Date().toISOString()
   };
 
   // Mevcut kayıt var mı?
