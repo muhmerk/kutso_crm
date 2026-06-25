@@ -21360,8 +21360,8 @@ async function sbSil(uyeId){
 
 async function sbListele(){
   const { data, error } = await _supa.from('sanayi_bilgi')
-    .select('uye_no, uye_adi, dosya_adi, yukleme_tarihi, personel, yillik_uretim, makine_toplam_guc_kw, makineler, updated_at')
-    .order('updated_at', { ascending: false });
+    .select('uye_no, uye_adi, dosya_adi, yukleme_tarihi, rapor_tarihi, gecerlilik_suresi, personel, yillik_uretim, makine_toplam_guc_kw, makineler, tesisler, updated_at')
+    .order('rapor_tarihi', { ascending: false });
   if(error) console.warn('sbListele:', error.message);
   return data || [];
 }
@@ -22225,94 +22225,369 @@ window.skRaporSil = async function(){
 };
 
 /* ══════════════════════════════════════════════════════════
-   LISTE MODÜLÜ
+   LISTE MODÜLÜ — Yıl filtreli, kart tasarımlı
 ══════════════════════════════════════════════════════════ */
+let _slTumItems = [];
+let _slAktifYil = 'tumu';
+let _slAcikKart = null;
+
 async function sanayiRenderListe(root){
-  _mod='liste';
-  root.innerHTML=`<div style="max-width:700px;margin:0 auto;padding:8px 0">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-      <button class="btn btn-sm" onclick="window.sanayiMainAc()" style="gap:4px"><i class="ti ti-arrow-left"></i> Geri</button>
-      <div>
-        <div style="font-size:15px;font-weight:500">Kayıtlı Firmalar</div>
-        <div style="font-size:12px;color:var(--text2)">Supabase — sanayi_bilgi tablosu</div>
-      </div>
+  _mod = 'liste';
+  root.innerHTML = `
+<div style="max-width:860px;margin:0 auto;padding:8px 0">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <button class="btn btn-sm" onclick="window.sanayiMainAc()" style="gap:4px"><i class="ti ti-arrow-left"></i> Geri</button>
+    <div style="flex:1">
+      <div style="font-size:15px;font-weight:500">Kayıtlı Firmalar</div>
+      <div style="font-size:12px;color:var(--text2)">Kapasite raporu kayıtlı firmalar</div>
     </div>
-    <div id="sl-liste" style="text-align:center;padding:32px;color:var(--text2)">
-      <i class="ti ti-loader" style="animation:spin .8s linear infinite;font-size:24px"></i>
-      <div style="margin-top:10px;font-size:13px">Yükleniyor...</div>
-    </div>
-  </div>`;
+    <button class="btn btn-p btn-sm" onclick="window.sanayiSecKapasite()" style="gap:5px"><i class="ti ti-plus"></i> Rapor Ekle</button>
+  </div>
+  <div id="sl-yil-bar" style="margin-bottom:16px"></div>
+  <div id="sl-liste" style="text-align:center;padding:40px;color:var(--text2)">
+    <i class="ti ti-loader" style="animation:spin .8s linear infinite;font-size:24px"></i>
+    <div style="margin-top:10px;font-size:13px">Yükleniyor...</div>
+  </div>
+</div>`;
 
-  let items;
-  try { items = await sbListele(); } catch(e){ items=[]; }
+  try { _slTumItems = await sbListele(); } catch(e){ _slTumItems = []; }
+  _slAcikKart = null;
+  _slAktifYil = 'tumu';
+  slRenderYilBar();
+  slRenderKartlar();
+}
 
-  const listeEl=document.getElementById('sl-liste');
+function slRapTarihYil(v){
+  const s = v.rapor_tarihi || '';
+  if(s){
+    const m1 = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/); if(m1) return parseInt(m1[3]);
+    const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);      if(m2) return parseInt(m2[1]);
+  }
+  const u = v.yukleme_tarihi||'';
+  return u ? new Date(u).getFullYear() : null;
+}
+
+function slFmtTarih(s){
+  if(!s) return '—';
+  const m1 = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/); if(m1) return s;
+  const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);      if(m2) return m2[3]+'.'+m2[2]+'.'+m2[1];
+  return s;
+}
+
+function slRenderYilBar(){
+  const bar = document.getElementById('sl-yil-bar');
+  if(!bar) return;
+  const yilSet = new Set();
+  _slTumItems.forEach(v=>{ const y=slRapTarihYil(v); if(y) yilSet.add(y); });
+  const yillar = [...yilSet].sort((a,b)=>b-a);
+  if(!yillar.length){ bar.innerHTML=''; return; }
+  const btnSt = (aktif) =>
+    'cursor:pointer;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:500;' +
+    'border:0.5px solid '+(aktif?'var(--blue)':'var(--border)')+';' +
+    'background:'+(aktif?'var(--blue)':'var(--surface)')+';' +
+    'color:'+(aktif?'#fff':'var(--text)')+';transition:all .15s';
+  bar.innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
+      '<span style="font-size:11px;color:var(--text2);margin-right:2px">Yıl:</span>' +
+      '<button style="'+btnSt(_slAktifYil==='tumu')+'" onclick="slYilSec('tumu')">Tümü</button>' +
+      yillar.map(y=>'<button style="'+btnSt(_slAktifYil==String(y))+'" onclick="slYilSec(''+y+'')">'+y+'</button>').join('') +
+    '</div>';
+}
+
+window.slYilSec = function(yil){
+  _slAktifYil = yil;
+  _slAcikKart = null;
+  slRenderYilBar();
+  slRenderKartlar();
+};
+
+function slFiltrele(){
+  if(_slAktifYil==='tumu') return _slTumItems;
+  return _slTumItems.filter(v=>String(slRapTarihYil(v))===String(_slAktifYil));
+}
+
+function slRenderKartlar(){
+  const listeEl = document.getElementById('sl-liste');
   if(!listeEl) return;
+  const items = slFiltrele();
 
+  if(!_slTumItems.length){
+    listeEl.innerHTML =
+      '<div style="text-align:center;padding:48px;color:var(--text2)">' +
+        '<div style="width:56px;height:56px;border-radius:14px;background:var(--surface2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">' +
+          '<i class="ti ti-building-factory-2" style="font-size:28px;opacity:.4"></i>' +
+        '</div>' +
+        '<div style="font-size:14px;font-weight:500">Henüz kapasite raporu yüklenmemiş</div>' +
+        '<div style="font-size:13px;margin-top:6px">Kapasite Raporu Ekle seçeneğiyle başlayın</div>' +
+        '<button class="btn btn-p btn-sm" onclick="window.sanayiSecKapasite()" style="margin-top:16px"><i class="ti ti-plus"></i> Rapor Ekle</button>' +
+      '</div>';
+    return;
+  }
   if(!items.length){
-    listeEl.innerHTML=`<div style="text-align:center;padding:48px;color:var(--text2)">
-      <div style="width:56px;height:56px;border-radius:14px;background:var(--surface2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
-        <i class="ti ti-building-factory-2" style="font-size:28px;opacity:.4"></i>
-      </div>
-      <div style="font-size:14px;font-weight:500">Henüz kapasite raporu yüklenmemiş</div>
-      <div style="font-size:13px;margin-top:6px">Kapasite Raporu Ekle seçeneğiyle başlayın</div>
-      <button class="btn btn-p btn-sm" onclick="window.sanayiSecKapasite()" style="margin-top:16px"><i class="ti ti-plus"></i> Rapor Ekle</button>
-    </div>`;
+    listeEl.innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--text2)">' +
+        '<i class="ti ti-calendar-off" style="font-size:28px;display:block;margin-bottom:10px;opacity:.4"></i>' +
+        '<div style="font-size:14px;font-weight:500">'+_slAktifYil+' yılına ait rapor bulunamadı</div>' +
+      '</div>';
     return;
   }
 
-  const _avcol=[{bg:'#E1F5EE',c:'#085041'},{bg:'#E8F1FB',c:'#0C447C'},{bg:'#EEEDFE',c:'#3C3489'},{bg:'#FEF3DE',c:'#633806'},{bg:'#FAECE7',c:'#712B13'}];
+  const avcol=[{bg:'#E1F5EE',c:'#085041'},{bg:'#E8F1FB',c:'#0C447C'},{bg:'#EEEDFE',c:'#3C3489'},{bg:'#FEF3DE',c:'#633806'},{bg:'#FAECE7',c:'#712B13'}];
   function hs(s){let h=0;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;return Math.abs(h);}
 
-  listeEl.innerHTML=`
-  <div style="font-size:12px;color:var(--text2);margin-bottom:8px;text-align:right">${items.length} firma kayıtlı</div>
-  <div class="card" style="padding:0;overflow:hidden">
-    ${items.map(v=>{
-      const ad  = v.uye_adi||v.firma_adi||'?';
-      const no  = v.uye_no||'';
-      const col = _avcol[hs(ad)%_avcol.length];
-      const av  = ad.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
-      const ur  = (v.yillik_uretim||[]).filter(u=>u.aciklama).map(u=>u.aciklama).slice(0,2).join(', ');
-      const ps  = (v.personel||{}).toplam?(v.personel.toplam+' personel'):'';
-      const gk  = v.makine_toplam_guc_kw?v.makine_toplam_guc_kw+' kW':'';
-      const meta=[ur,ps,gk].filter(Boolean).join(' · ');
-      const tar = v.yukleme_tarihi?new Date(v.yukleme_tarihi).toLocaleString('tr-TR'):'';
-      const dos = v.dosya_adi||'';
-      const uid = v.uye_no||'';
-      const idE = String(uid).replace(/'/g,"\\\'");
-      const noE = String(no).replace(/'/g,"\\\'");
-      const adE = ad.replace(/'/g,"\\'");
-      return '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:0.5px solid var(--border);transition:background .1s" onmouseenter="this.style.background=\'var(--surface2)\'" onmouseleave="this.style.background=\'\'">'+
-        '<div style="width:38px;height:38px;border-radius:50%;background:'+col.bg+';color:'+col.c+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0">'+av+'</div>'+
-        '<div style="flex:1;min-width:0">'+
-          '<div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+ad+'</div>'+
-          '<div style="font-size:11px;color:var(--text2);margin-top:2px">'+(no?'Sicil: '+no:'')+((no&&meta)?' · ':'')+meta+'</div>'+
-          (tar||dos?'<div style="font-size:10px;color:var(--text2);margin-top:2px;opacity:.7">'+(dos?'<i class="ti ti-file-type-pdf" style="font-size:10px;color:#E24B4A;margin-right:3px"></i>'+dos:'')+(dos&&tar?' · ':'')+tar+'</div>':'')+
-        '</div>'+
-        '<div style="display:flex;gap:6px;flex-shrink:0">'+
-          '<button class="btn btn-sm" onclick="slFirmaGor(\''+idE+'\',\''+noE+'\',\''+adE+'\')" style="font-size:12px"><i class="ti ti-eye"></i> Görüntüle</button>'+
-          '<button class="btn btn-sm" onclick="slFirmaSil(\''+idE+'\')" style="font-size:12px;color:var(--red)" title="Sil"><i class="ti ti-trash"></i></button>'+
-        '</div>'+
+  listeEl.innerHTML =
+    '<div style="font-size:12px;color:var(--text2);margin-bottom:10px;text-align:right">'+items.length+' rapor</div>' +
+    '<div id="sl-kartlar"></div>';
+
+  const kartlarEl = document.getElementById('sl-kartlar');
+  items.forEach(function(v, idx){
+    const ad  = v.uye_adi||v.firma_adi||'?';
+    const no  = v.uye_no||'';
+    const col = avcol[hs(ad)%avcol.length];
+    const av  = ad.split(' ').filter(function(w){return w;}).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase()||'?';
+    const rapTarih = slFmtTarih(v.rapor_tarihi);
+    const gecTarih = slFmtTarih(v.gecerlilik_suresi);
+    const uid = no||String(idx);
+    const uidE = uid.replace(/'/g, "\\'");
+    const adE  = ad.replace(/'/g,  "\\'");
+    const gecColor = (gecTarih==='—') ? 'var(--text2)' : '#0F6E56';
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'margin-bottom:10px';
+
+    const kart = document.createElement('div');
+    kart.className = 'card';
+    kart.id = 'sl-kart-'+idx;
+    kart.style.cssText = 'padding:16px 18px;cursor:pointer;border:0.5px solid var(--border);transition:box-shadow .15s,border-color .15s';
+    kart.onmouseenter = function(){ if(_slAcikKart!==uid) this.style.borderColor='var(--blue)'; };
+    kart.onmouseleave = function(){ if(_slAcikKart!==uid) this.style.borderColor='var(--border)'; };
+    kart.onclick = function(){ slKartToggle(uid,idx,v); };
+    kart.innerHTML =
+      '<div style="display:flex;align-items:center;gap:14px">' +
+        '<div style="width:44px;height:44px;border-radius:50%;background:'+col.bg+';color:'+col.c+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">'+av+'</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+ad+'</div>' +
+          '<div style="font-size:11px;color:var(--text2);margin-top:3px">'+(no?'Sicil No: <strong>'+no+'</strong>':'—')+'</div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">' +
+          '<div style="display:flex;align-items:center;gap:14px">' +
+            '<div style="text-align:center">' +
+              '<div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Başlangıç</div>' +
+              '<div style="font-size:12px;font-weight:600;color:var(--blue)">'+rapTarih+'</div>' +
+            '</div>' +
+            '<div style="width:1px;height:28px;background:var(--border)"></div>' +
+            '<div style="text-align:center">' +
+              '<div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Bitiş</div>' +
+              '<div style="font-size:12px;font-weight:600;color:'+gecColor+'">'+gecTarih+'</div>' +
+            '</div>' +
+            '<i class="ti ti-chevron-right" id="sl-chev-'+idx+'" style="font-size:16px;color:var(--text2);transition:transform .2s;margin-left:2px"></i>' +
+          '</div>' +
+          '<div style="display:flex;gap:6px">' +
+            '<button class="btn btn-sm" style="font-size:11px;gap:4px" onclick="event.stopPropagation();slDuzenle(''+uidE+'',''+adE+'')" title="Düzenle"><i class="ti ti-edit"></i> Düzenle</button>' +
+            '<button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();slFirmaSil(''+uidE+'')" title="Sil"><i class="ti ti-trash"></i></button>' +
+          '</div>' +
+        '</div>' +
       '</div>';
-    }).join('')}
-  </div>`;
+
+    const detay = document.createElement('div');
+    detay.id = 'sl-detay-'+idx;
+    detay.style.cssText = 'display:none;margin-top:-4px';
+
+    wrapper.appendChild(kart);
+    wrapper.appendChild(detay);
+    kartlarEl.appendChild(wrapper);
+  });
 }
 
-window.slFirmaGor=function(uid,no,ad){
-  _seciliFirmaId=uid; _seciliFirmaNo=no; _seciliFirmaAdi=ad;
-  window.sanayiSecKapasite();
-  setTimeout(()=>_skFirmaGoster(uid,no,ad),120);
+window.slKartToggle = async function(uid, idx, v){
+  const detay = document.getElementById('sl-detay-'+idx);
+  const chev  = document.getElementById('sl-chev-'+idx);
+  const kart  = document.getElementById('sl-kart-'+idx);
+  if(!detay) return;
+
+  if(_slAcikKart === uid){
+    detay.style.display = 'none';
+    if(chev) chev.style.transform = '';
+    if(kart){ kart.style.borderColor='var(--border)'; kart.style.borderRadius=''; }
+    _slAcikKart = null;
+    return;
+  }
+
+  // Onceki acik karti kapat
+  if(_slAcikKart !== null){
+    const items = slFiltrele();
+    items.forEach(function(_,i){
+      var d=document.getElementById('sl-detay-'+i);
+      var c=document.getElementById('sl-chev-'+i);
+      var k=document.getElementById('sl-kart-'+i);
+      if(d) d.style.display='none';
+      if(c) c.style.transform='';
+      if(k){ k.style.borderColor='var(--border)'; k.style.borderRadius=''; }
+    });
+  }
+
+  _slAcikKart = uid;
+  if(kart){ kart.style.borderColor='var(--blue)'; kart.style.borderRadius='var(--radius) var(--radius) 0 0'; }
+  if(chev) chev.style.transform='rotate(90deg)';
+
+  detay.innerHTML =
+    '<div style="background:var(--surface);border:0.5px solid var(--blue);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:20px;text-align:center;color:var(--text2)">' +
+    '<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Yükleniyor...</div>';
+  detay.style.display = 'block';
+
+  try {
+    const tam = await sbYukle(uid);
+    if(!tam){ detay.innerHTML='<div style="background:var(--surface);border:0.5px solid var(--blue);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:16px;font-size:12px">Veri bulunamadı.</div>'; return; }
+    detay.innerHTML =
+      '<div style="background:var(--surface);border:0.5px solid var(--blue);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden">' +
+      slDetayHtml(tam) + '</div>';
+  } catch(e){
+    detay.innerHTML = '<div style="background:var(--surface);border:0.5px solid var(--blue);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:16px;color:var(--red);font-size:12px">Yükleme hatası: '+e.message+'</div>';
+  }
 };
 
-window.slFirmaSil=async function(uid){
+function slDetayHtml(v){
+  var fmtDate = function(s){
+    if(!s) return '—';
+    var m1=s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/); if(m1) return s;
+    var m2=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m2) return m2[3]+'.'+m2[2]+'.'+m2[1];
+    return s;
+  };
+  var satir = function(lbl,val){
+    if(!val) return '';
+    return '<tr>' +
+      '<td style="padding:7px 14px;font-size:11px;color:var(--text2);white-space:nowrap;font-weight:500;border-bottom:0.5px solid var(--border);width:160px">'+lbl+'</td>' +
+      '<td style="padding:7px 14px;font-size:12px;border-bottom:0.5px solid var(--border)">'+val+'</td>' +
+    '</tr>';
+  };
+  var tesis    = (v.tesisler||[])[0]||{};
+  var p        = v.personel||{};
+  var uretimler= v.yillik_uretim||[];
+  var makineler= v.makineler||[];
+  var tuketimler=v.yillik_tuketim||[];
+  var toplamGuc= v.makine_toplam_guc_kw||'';
+
+  var tblHead = function(){
+    var cols=Array.prototype.slice.call(arguments);
+    return '<thead><tr style="background:var(--surface2)">'+
+      cols.map(function(c){ return '<th style="padding:6px 14px;text-align:'+(c.align||'left')+';color:var(--text2);font-weight:500;font-size:11px;border-bottom:0.5px solid var(--border)">'+c.label+'</th>'; }).join('')+
+    '</tr></thead>';
+  };
+  var tblCell = function(val,align,bold){
+    var v2 = val||'—';
+    return '<td style="padding:6px 14px;border-bottom:0.5px solid var(--border);text-align:'+(align||'left')+';font-size:12px">'+(bold?'<strong>'+v2+'</strong>':v2)+'</td>';
+  };
+
+  var makineHtml = makineler.length ?
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
+      tblHead({label:'Kod'},{label:'Açıklama'},{label:'Adet',align:'center'},{label:'Güç (kW)',align:'right'},{label:'Y/İ',align:'center'}) +
+      '<tbody>' +
+        makineler.map(function(m){ return '<tr>'+tblCell(m.makineKodu||m.kod)+tblCell(m.aciklama,'left',true)+tblCell(m.adet,'center')+tblCell(m.gucKW,'right')+tblCell(m.yerliIthal,'center')+'</tr>'; }).join('') +
+        (toplamGuc?'<tr><td colspan="5" style="padding:7px 14px;text-align:right;font-size:12px;font-weight:600;color:var(--blue)">Toplam Kurulu Güç: '+toplamGuc+' kW</td></tr>':'') +
+      '</tbody>' +
+    '</table></div>' :
+    '<div style="font-size:12px;color:var(--text2);padding:10px 14px">Kayıt yok.</div>';
+
+  var uretimHtml = uretimler.length ?
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
+      tblHead({label:'Üretim Kodu'},{label:'Ürün Adı'},{label:'Kapasite',align:'right'},{label:'Fiili Miktar',align:'right'},{label:'Birim'},{label:'% Oran',align:'right'}) +
+      '<tbody>' +
+        uretimler.map(function(u){ return '<tr>'+tblCell(u.uretimKodu)+tblCell(u.aciklama,'left',true)+tblCell(u.yillikKapasite,'right')+tblCell(u.miktar,'right')+tblCell(u.birim)+tblCell(u.kullanimOrani?u.kullanimOrani+'%':null,'right')+'</tr>'; }).join('') +
+      '</tbody></table></div>' :
+    '<div style="font-size:12px;color:var(--text2);padding:10px 14px">Kayıt yok.</div>';
+
+  var tuketimHtml = tuketimler.length ?
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
+      tblHead({label:'Tüketim Kodu'},{label:'Hammadde / Girdi'},{label:'Miktar',align:'right'},{label:'Birim'},{label:'Tedarik'}) +
+      '<tbody>' +
+        tuketimler.map(function(t){ return '<tr>'+tblCell(t.tuketimKodu)+tblCell(t.aciklama,'left',true)+tblCell(t.miktar,'right')+tblCell(t.birim)+tblCell(t.tedarikSekli)+'</tr>'; }).join('') +
+      '</tbody></table></div>' :
+    '<div style="font-size:12px;color:var(--text2);padding:10px 14px">Kayıt yok.</div>';
+
+  var bolum = function(baslik,ikon,icerik){
+    return '<div style="border-bottom:0.5px solid var(--border)">' +
+      '<div style="padding:9px 14px;background:var(--surface2);font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;display:flex;align-items:center;gap:6px">' +
+        '<i class="ti '+ikon+'" style="font-size:13px;color:var(--blue)"></i>'+baslik +
+      '</div>' +
+      icerik +
+    '</div>';
+  };
+
+  return bolum('Rapor Bilgileri','ti-calendar',
+    '<table style="width:100%;border-collapse:collapse">' +
+      satir('Rapor Tarihi',    fmtDate(v.rapor_tarihi||v.raporTarihi)) +
+      satir('Geçerlilik Tarihi', fmtDate(v.gecerlilik_suresi||v.gecerlilikSuresi)) +
+      satir('PDF Dosyası',     v.dosya_adi||'') +
+      satir('Tescilli Markalar', v.tescilli_markalar||'') +
+      satir('Sertifikalar',    v.sertifikalar||'') +
+      satir('Yabancı Sermaye', v.yabanci_sermaye||'') +
+    '</table>') +
+  bolum('Üretim Tesisi','ti-building',
+    '<table style="width:100%;border-collapse:collapse">' +
+      satir('Toplam Arazi (m²)', tesis.toplamArazi||'') +
+      satir('Kapalı Alan (m²)',  tesis.kapaliSaha||'') +
+      satir('Bina İnşaat Tipi', tesis.binaInsaatTipi||'') +
+      satir('Mülkiyet Durumu',  tesis.mulkiyet||'') +
+      satir('Makine Değeri (TL)',v.makine_degeri_tl||'') +
+    '</table>') +
+  bolum('Personel','ti-users',
+    '<table style="width:100%;border-collapse:collapse">' +
+      satir('Toplam',          p.toplam?p.toplam+' kişi':'') +
+      satir('Mühendis',        p.muhendis?p.muhendis+' kişi':'') +
+      satir('Teknisyen',       p.teknisyen?p.teknisyen+' kişi':'') +
+      satir('Usta',            p.usta?p.usta+' kişi':'') +
+      satir('İşçi',            p.isci?p.isci+' kişi':'') +
+      satir('İdari Personel',  p.idariPersonel?p.idariPersonel+' kişi':'') +
+      satir('Taşeron İşçi',    p.taseronIsci?p.taseronIsci+' kişi':'') +
+    '</table>') +
+  bolum('Makine ve Teçhizat','ti-settings', makineHtml) +
+  bolum('Yıllık Üretim Kapasitesi','ti-packages', uretimHtml) +
+  bolum('Yıllık Tüketim Kapasitesi','ti-flask', tuketimHtml);
+}
+
+window.slDuzenle = function(uid, ad){
+  sbYukle(uid).then(function(v){
+    window._skPaneVeri = v;
+    window._skPaneUyeId = uid;
+    var _no = (v&&v.uye_no)||uid;
+    var _ad = (v&&(v.uye_adi||v.firma_adi))||ad||uid;
+
+    _aktifCrmSekme = 'sanayi';
+    document.querySelectorAll('#crm-nav-sub .nav-sub').forEach(function(b){b.classList.remove('active');});
+    var _btn=document.getElementById('nav-crm-sanayi'); if(_btn) _btn.classList.add('active');
+    var _sub=document.getElementById('crm-nav-sub'); if(_sub) _sub.style.display='block';
+    document.getElementById('nav-crm')&&document.getElementById('nav-crm').classList.add('active');
+    document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
+    document.getElementById('s-sanayi-main')&&document.getElementById('s-sanayi-main').classList.add('active');
+    var _t=document.getElementById('tb-title'); if(_t) _t.textContent='Sanayi Bilgi Sistemi';
+    var _s=document.getElementById('tb-sub');   if(_s) _s.textContent='Kapasite raporu yükleme ve sanayi veri takibi';
+    var _m=document.querySelector('.main');     if(_m) _m.scrollTop=0;
+
+    setTimeout(function(){
+      if(window.sanayiSecKapasite) window.sanayiSecKapasite();
+      setTimeout(function(){
+        if(window._skFirmaGoster){
+          window._skFirmaGoster(uid,_no,_ad).then(function(){
+            setTimeout(function(){ if(v&&window.skFormDoldur) skFormDoldur(v); },200);
+          });
+        }
+      },300);
+    },80);
+  }).catch(function(e){ alert('Veri yüklenemedi: '+e.message); });
+};
+
+window.slFirmaSil = async function(uid){
   if(!confirm('Bu firmaya ait kapasite raporu Supabase\'den silinecek?')) return;
   try {
     await sbSil(uid);
     if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(uid);
-    const root=document.getElementById('sanayi-main-root');
-    if(root) await sanayiRenderListe(root);
+    _slTumItems = _slTumItems.filter(function(v){ return (v.uye_no||'')!==uid; });
+    if(_slAcikKart===uid) _slAcikKart=null;
+    slRenderYilBar();
+    slRenderKartlar();
   } catch(e){ alert(e.message); }
 };
+
 
 /* ══════════════════════════════════════════════════════════
    CRM PROFİL — Sanayi Bilgi özet kartı (Supabase'den)
@@ -22410,21 +22685,33 @@ window.skPaneDetayToggle = function(){
 window.skPaneDuzenle = function(uyeId){
   const v = window._skPaneVeri;
   const cf = window.currentFirm;
-  const no = cf?.no || uyeId;
+  const no = cf?.no || (v && v.uye_no) || uyeId;
   const ad = cf?.firma || cf?.name || (v && (v.uye_adi||v.firma_adi)) || '';
-  // Sanayi sekmesine geç
-  crmNavSec('sanayi', document.getElementById('nav-crm-sanayi'));
+
+  // Sekmeyi dogrudan aktif et (crmNavSec sanayiMainAc ü tetikler, biz bunu bypass ediyoruz)
+  if(typeof _aktifCrmSekme !== 'undefined') window._aktifCrmSekme_saver = _aktifCrmSekme;
+  document.querySelectorAll('#crm-nav-sub .nav-sub').forEach(b=>b.classList.remove('active'));
+  const _btn = document.getElementById('nav-crm-sanayi');
+  if(_btn) _btn.classList.add('active');
+  const _sub = document.getElementById('crm-nav-sub'); if(_sub) _sub.style.display='block';
+  document.getElementById('nav-crm')?.classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-sanayi-main')?.classList.add('active');
+  const _tbTitle = document.getElementById('tb-title'); if(_tbTitle) _tbTitle.textContent='Sanayi Bilgi Sistemi';
+  const _tbSub = document.getElementById('tb-sub'); if(_tbSub) _tbSub.textContent='Kapasite raporu yükleme ve sanayi veri takibi';
+  const _main = document.querySelector('.main'); if(_main) _main.scrollTop=0;
+
+  // Kapasite formunu ac ve firmayı yerlestir
   setTimeout(()=>{
-    // Kapasite raporu ekleme formunu doğrudan aç
     if(window.sanayiSecKapasite) window.sanayiSecKapasite();
     setTimeout(()=>{
       if(window._skFirmaGoster) {
         window._skFirmaGoster(uyeId, no, ad).then(()=>{
-          setTimeout(()=>{ if(v && window.skFormDoldur) skFormDoldur(v); }, 150);
+          setTimeout(()=>{ if(v && window.skFormDoldur) skFormDoldur(v); }, 200);
         });
       }
-    }, 250);
-  }, 120);
+    }, 300);
+  }, 80);
 };
 
 function skPaneDetayHtml(v){
