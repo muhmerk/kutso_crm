@@ -21917,7 +21917,7 @@ window.sanayiMainAc = function(firmaId, firmaNo, firmaAdi){
   }
   _mod = 'home';
   root.innerHTML = `
-<div style="max-width:680px;margin:0 auto;padding:8px 0">
+<div style="max-width:900px;padding:8px 0">
   <div style="margin-bottom:24px">
     <div style="font-size:16px;font-weight:500;margin-bottom:4px">Sanayi Bilgi Sistemi</div>
     <div style="font-size:13px;color:var(--text2)">Üye firmalara ait kapasite raporu verilerini yönetin</div>
@@ -21968,7 +21968,7 @@ window.sanayiSecListe = async function(){
 function sanayiRenderKapasite(root){
   _mod = 'kapasite';
   root.innerHTML = `
-<div style="max-width:760px;margin:0 auto;padding:8px 0">
+<div style="width:100%;padding:4px 0">
 
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
     <button class="btn btn-sm" onclick="window.sanayiMainAc()" style="gap:4px"><i class="ti ti-arrow-left"></i> Geri</button>
@@ -22018,7 +22018,7 @@ function sanayiRenderKapasite(root){
     <!-- Rapor Meta -->
     <div class="card" style="padding:18px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-calendar" style="margin-right:5px"></i>Rapor Bilgileri</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Rapor Tarihi</div>
           <input id="sk-rapor-tarihi" type="date" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Geçerlilik Tarihi</div>
@@ -22035,7 +22035,7 @@ function sanayiRenderKapasite(root){
     <!-- Personel -->
     <div class="card" style="padding:18px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-users" style="margin-right:5px"></i>Personel Durumu</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px">
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Mühendis</div>
           <input id="sk-p-muhendis" type="number" min="0" placeholder="0" oninput="skPersonelTopla()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box;text-align:center" /></div>
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Teknisyen</div>
@@ -22061,7 +22061,7 @@ function sanayiRenderKapasite(root){
     <!-- Tesis -->
     <div class="card" style="padding:18px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-building" style="margin-right:5px"></i>Üretim Tesisi Bilgileri</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Toplam Arazi (m²)</div><input id="sk-t-arazi" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
         <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px">Toplam Kapalı Alan (m²)</div><input id="sk-t-kapali" type="number" style="width:100%;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
 
@@ -22078,14 +22078,22 @@ function sanayiRenderKapasite(root){
         <button class="btn btn-sm" onclick="skMakineSatirEkle()" style="gap:5px"><i class="ti ti-plus"></i> Satır Ekle</button>
       </div>
       <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">
+          <colgroup>
+            <col style="width:110px">
+            <col style="width:auto">
+            <col style="width:70px">
+            <col style="width:90px">
+            <col style="width:80px">
+            <col style="width:36px">
+          </colgroup>
           <thead><tr style="background:var(--surface2)">
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Makine Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Makine Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Açıklama</th>
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Adet</th>
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Güç (kW)</th>
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Y/İ</th>
-            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border);width:32px"></th>
+            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Adet</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Güç (kW)</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Y/İ</th>
+            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border)"></th>
           </tr></thead>
           <tbody id="sk-makine-body"></tbody>
         </table>
@@ -22100,16 +22108,26 @@ function sanayiRenderKapasite(root){
         <button class="btn btn-sm" onclick="skUretimSatirEkle()" style="gap:5px"><i class="ti ti-plus"></i> Ürün Ekle</button>
       </div>
       <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">
+          <colgroup>
+            <col style="width:40px">
+            <col style="width:140px">
+            <col style="width:auto">
+            <col style="width:100px">
+            <col style="width:100px">
+            <col style="width:75px">
+            <col style="width:70px">
+            <col style="width:36px">
+          </colgroup>
           <thead><tr style="background:var(--surface2)">
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Üretim Kodu</th>
+            <th style="padding:8px 6px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">S.No</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Üretim Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Ürün Adı / Açıklama</th>
-            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Kapasite</th>
-            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Fiili Miktar</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Birim</th>
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">% Oran</th>
-            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border);width:32px"></th>
+            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Kapasite</th>
+            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Fiili Miktar</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Birim</th>
+            <th style="padding:8px 6px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">% Oran</th>
+            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border)"></th>
           </tr></thead>
           <tbody id="sk-uretim-body"></tbody>
         </table>
@@ -22123,15 +22141,24 @@ function sanayiRenderKapasite(root){
         <button class="btn btn-sm" onclick="skTuketimSatirEkle()" style="gap:5px"><i class="ti ti-plus"></i> Girdi Ekle</button>
       </div>
       <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">
+          <colgroup>
+            <col style="width:40px">
+            <col style="width:115px">
+            <col style="width:auto">
+            <col style="width:100px">
+            <col style="width:80px">
+            <col style="width:110px">
+            <col style="width:36px">
+          </colgroup>
           <thead><tr style="background:var(--surface2)">
-            <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Tüketim Kodu</th>
+            <th style="padding:8px 6px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">S.No</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Tüketim Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Hammadde / Girdi Adı</th>
-            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Miktar</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Birim</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Tedarik Şekli</th>
-            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border);width:32px"></th>
+            <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Miktar</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Birim</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Tedarik Şekli</th>
+            <th style="padding:8px 4px;border-bottom:0.5px solid var(--border)"></th>
           </tr></thead>
           <tbody id="sk-tuketim-body"></tbody>
         </table>
@@ -22183,14 +22210,14 @@ window.skMakineSatirEkle = function(m){
   const aciklamaInput = document.createElement('input');
   aciklamaInput.type='text'; aciklamaInput.placeholder='Makine adı ve açıklaması'; aciklamaInput.autocomplete='off';
   aciklamaInput.value=m?.aciklama||'';
-  aciklamaInput.style.cssText='width:100%;min-width:220px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box';
+  aciklamaInput.style.cssText='width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box';
   const adetInput = document.createElement('input');
   adetInput.type='number'; adetInput.placeholder='0'; adetInput.value=m?.adet||'';
-  adetInput.style.cssText='width:60px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:center';
+  adetInput.style.cssText='width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:center';
   adetInput.addEventListener('input',skGucTopla);
   const gucInput = document.createElement('input');
   gucInput.type='number'; gucInput.placeholder='0'; gucInput.value=m?.gucKW||'';
-  gucInput.style.cssText='width:70px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:center';
+  gucInput.style.cssText='width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:center';
   gucInput.addEventListener('input',skGucTopla);
   const sel=document.createElement('select');
   sel.style.cssText='padding:5px 6px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px';
@@ -22250,24 +22277,24 @@ window.skUretimSatirEkle = function(u){
   function numInput(val){
     const el=document.createElement('input');
     el.type='number'; el.placeholder='0'; el.value=val||'';
-    el.style.cssText='width:80px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:right';
+    el.style.cssText='width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:right';
     return el;
   }
   function txtInput(ph, val, minw){
     const el=document.createElement('input');
     el.type='text'; el.placeholder=ph; el.value=val||''; el.autocomplete='off';
-    el.style.cssText='width:100%;min-width:'+(minw||'80px')+';padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box';
+    el.style.cssText='width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box';
     return el;
   }
 
   // Üretim kodu: 00.00.00.00.00 (10 rakam, 2'şer gruplar, tek alan)
   const uretimKoduEl = maskeliInput('00.00.00.00.00', 10, '.', u?.uretimKodu||u?.gtkKodu||u?.naceKodu);
-  uretimKoduEl.style.width='130px';
-  const acikEl = txtInput('Ürün adı ve açıklaması (uzun girebilirsiniz)', u?.aciklama, '260px');
-  const kapEl  = numInput(u?.yillikKapasite);
-  const mktEl  = numInput(u?.miktar);
-  const birimEl= txtInput('Ton/Adet', u?.birim, '65px'); birimEl.style.width='75px';
-  const oranEl = numInput(u?.kullanimOrani); oranEl.style.width='55px';
+  uretimKoduEl.style.cssText+='width:100%;';
+  const acikEl = txtInput('Ürün adı ve açıklaması', u?.aciklama, '100%');
+  const kapEl  = numInput(u?.yillikKapasite); kapEl.style.width='100%';
+  const mktEl  = numInput(u?.miktar); mktEl.style.width='100%';
+  const birimEl= txtInput('Ton/Adet', u?.birim, '100%'); birimEl.style.width='100%';
+  const oranEl = numInput(u?.kullanimOrani); oranEl.style.width='100%';
   const delBtn = document.createElement('button');
   delBtn.innerHTML='<i class="ti ti-trash"></i>';
   delBtn.style.cssText='background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px';
@@ -22298,7 +22325,7 @@ window.skTuketimSatirEkle = function(t){
     const el=document.createElement('input');
     el.type='text'; el.placeholder='00.00.00'; el.autocomplete='off';
     el.value=val||'';
-    el.style.cssText='width:90px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;font-family:monospace';
+    el.style.cssText='width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;font-family:monospace';
     el.addEventListener('input',function(){
       const digits=this.value.replace(/[^0-9]/g,'').slice(0,6);
       let masked='';
@@ -22329,22 +22356,22 @@ window.skTuketimSatirEkle = function(t){
   }
   function numEl(val){
     const el=document.createElement('input'); el.type='number'; el.placeholder='0'; el.value=val||'';
-    el.style.cssText='width:80px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:right';
+    el.style.cssText='width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;text-align:right';
     return el;
   }
   function txtEl(ph,val,minw){
     const el=document.createElement('input'); el.type='text'; el.placeholder=ph; el.value=val||''; el.autocomplete='off';
-    el.style.cssText='width:100%;min-width:'+(minw||'80px')+';padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box';
+    el.style.cssText='width:100%;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box';
     return el;
   }
 
   // Tüketim kodu: 00.00.00 (6 rakam, tek alan)
   const tuketimKoduEl = maskeliInput6(t?.tuketimKodu||t?.gtkKodu||t?.naceKodu);
-  tuketimKoduEl.style.width='100px';
-  const acikEl2  = txtEl('Hammadde / girdi adı ve açıklaması', t?.aciklama, '260px');
-  const mktEl2   = numEl(t?.miktar);
-  const birimEl2 = txtEl('Ton/Lt', t?.birim, '65px'); birimEl2.style.width='75px';
-  const tedEl    = txtEl('Yerli/İthal', t?.tedarikSekli, '90px'); tedEl.style.width='90px';
+  tuketimKoduEl.style.cssText+='width:100%;';
+  const acikEl2  = txtEl('Hammadde / girdi adı ve açıklaması', t?.aciklama, '100%');
+  const mktEl2   = numEl(t?.miktar); mktEl2.style.width='100%';
+  const birimEl2 = txtEl('Ton/Lt', t?.birim, '100%'); birimEl2.style.width='100%';
+  const tedEl    = txtEl('Yerli/İthal', t?.tedarikSekli, '100%'); tedEl.style.width='100%';
   const delBtn2  = document.createElement('button');
   delBtn2.innerHTML='<i class="ti ti-trash"></i>';
   delBtn2.style.cssText='background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:2px';
@@ -22607,7 +22634,7 @@ window.skRaporSil=async function(){
 ══════════════════════════════════════════════════════════ */
 async function sanayiRenderListe(root){
   _mod='liste';
-  root.innerHTML=`<div style="max-width:700px;margin:0 auto;padding:8px 0">
+  root.innerHTML=`<div style="width:100%;padding:4px 0">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
       <button class="btn btn-sm" onclick="window.sanayiMainAc()" style="gap:4px"><i class="ti ti-arrow-left"></i> Geri</button>
       <div>
