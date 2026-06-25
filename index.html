@@ -21979,125 +21979,7 @@ window.skFirmaSecById = async function(id, no, ad){
   await _skFirmaGoster(id, no, ad);
 };
 
-async function _skFirmaGoster(id, no, ad){
-  _seciliFirmaId=id; _seciliFirmaNo=no; _seciliFirmaAdi=ad;
-  const chip=document.getElementById('sk-secili'); if(chip) chip.style.display='flex';
-  const av=document.getElementById('sk-avatar');
-  if(av) av.textContent=ad.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
-  const adEl=document.getElementById('sk-firma-adi'); if(adEl) adEl.textContent=ad;
-  // Form göster
-  const fw=document.getElementById('sk-form-wrap'); if(fw) fw.style.display='block';
-  // Rapor durumu + mevcut veri
-  const dur=document.getElementById('sk-rapor-durumu');
-  if(dur) dur.textContent='Kontrol ediliyor...';
-  try {
-    const mevcut=await sbYukle(id);
-    if(dur) dur.textContent = mevcut
-      ? 'Mevcut rapor: '+(mevcut.dosya_adi||'—')+' · '+new Date(mevcut.yukleme_tarihi).toLocaleString('tr-TR')
-      : 'Henüz rapor girilmemiş — formu doldurun';
-    if(mevcut) skFormDoldur(mevcut);
-  } catch(e){ if(dur) dur.textContent='Kontrol edilemedi'; }
-}
 
-window.skTemizle = function(){
-  _seciliFirmaId=null; _seciliFirmaNo=null; _seciliFirmaAdi=null;
-  const chip=document.getElementById('sk-secili'); if(chip) chip.style.display='none';
-  const fw=document.getElementById('sk-form-wrap'); if(fw) fw.style.display='none';
-  const se=document.getElementById('sk-sonuc-ekrani'); if(se) se.style.display='none';
-};
-
-/* ── PDF Seç (sadece isim kaydediliyor) ── */
-window.skPdfSec = function(inp){
-  const f=inp?.files?.[0]; if(!f) return;
-  window._skPdfDosyaAdi = f.name;
-  const el=document.getElementById('sk-pdf-bilgi'); if(el) el.textContent=f.name+' ('+( f.size/1024).toFixed(0)+' KB)';
-};
-
-/* ── Kaydet ── */
-window.skKaydet = async function(){
-  if(!_seciliFirmaId){ alert('Önce firma seçin.'); return; }
-  const btn = document.querySelector('[onclick="skKaydet()"]');
-  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Kaydediliyor...'; }
-  try {
-    const veri = skFormVeriTopla();
-    const dosyaAdi = window._skPdfDosyaAdi || document.getElementById('sk-pdf-bilgi')?.textContent?.replace(/\\(.*\\)/,'').trim() || '';
-    await sbKaydet(_seciliFirmaId, _seciliFirmaNo, _seciliFirmaAdi, veri, dosyaAdi);
-    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaId);
-    const dur=document.getElementById('sk-rapor-durumu');
-    if(dur) dur.textContent='Kaydedildi · '+new Date().toLocaleString('tr-TR');
-    // Sonucu göster
-    const kayitli = await sbYukle(_seciliFirmaId);
-    skSonucGoster(kayitli||veri);
-    // Başarı mesajı
-    alert('Kapasite raporu başarıyla kaydedildi.');
-  } catch(e){
-    alert('Kayıt hatası: '+(e.message||e));
-  } finally {
-    if(btn){ btn.disabled=false; btn.innerHTML='<i class="ti ti-device-floppy"></i> Supabase\'e Kaydet'; }
-  }
-};
-
-window.skRaporSil = async function(){
-  if(!confirm('Bu firmaya ait kapasite raporu Supabase\'den silinecek. Emin misiniz?')) return;
-  try {
-    await sbSil(_seciliFirmaId);
-    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaId);
-    document.getElementById('sk-sonuc-ekrani').style.display='none';
-    const dur=document.getElementById('sk-rapor-durumu');
-    if(dur) dur.textContent='Rapor silindi — formu yeniden doldurun';
-    // Formu sıfırla
-    ['sk-makine-body','sk-uretim-body','sk-tuketim-body'].forEach(id=>{
-      const el=document.getElementById(id); if(el) el.innerHTML='';
-    });
-    _mId=0; _uId=0; _tId=0;
-  } catch(e){ alert(e.message); }
-};
-
-/* ── Arama ── */
-// _skTimer zaten tanımlı
-window.skAra = function(q){
-  const son = document.getElementById('sk-sonuclar');
-  if(!son) return;
-  const qt = (q||'').trim();
-  if(!qt){ son.style.display='none'; return; }
-  son.style.display='block';
-  son.innerHTML='<div style="padding:12px 16px;color:var(--text2);font-size:13px;display:flex;align-items:center;gap:8px"><i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Aranıyor...</div>';
-  clearTimeout(_skTimer);
-  _skTimer = setTimeout(async()=>{
-    try {
-      const hits = await sbFirmaAra(qt);
-      if(!hits.length){
-        son.innerHTML='<div style="padding:12px 16px;color:var(--text2);font-size:13px;text-align:center"><i class="ti ti-mood-empty" style="font-size:18px;display:block;margin-bottom:4px"></i>Kayıt bulunamadı</div>';
-        return;
-      }
-      // Önce container'ı temizle, sonra her hit için element oluştur
-      son.innerHTML = '';
-      hits.forEach(f=>{
-        const ad=f.firma||'?', no=String(f.no||''), vn=f.vergi||'';
-        const av=ad.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
-        const el=document.createElement('div');
-        el.style.cssText='padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--border);transition:background .1s';
-        el.onmouseenter=function(){this.style.background='var(--surface2)';};
-        el.onmouseleave=function(){this.style.background='';};
-        el.addEventListener('click', function(){ skFirmaSecById(f.id, no, ad); });
-        el.innerHTML=
-          '<div style="width:32px;height:32px;border-radius:50%;background:var(--blue-bg,#E6F1FB);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0">'+av+'</div>'+
-          '<div style="flex:1;min-width:0">'+
-            '<div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+ad+'</div>'+
-            '<div style="font-size:11px;color:var(--text2);margin-top:1px">'+(no?'Sicil: '+no:'')+((no&&vn)?' · ':'')+(vn?'VN: '+vn:'')+'</div>'+
-          '</div>';
-        son.appendChild(el);
-      });
-    } catch(e){ console.error('[skAra] hata:', e); son.innerHTML='<div style="padding:12px 16px;color:var(--red);font-size:12px">Arama hatası: '+e.message+'</div>'; }
-  }, 300);
-};
-
-/* ── Firma Seç ── */
-window.skFirmaSecById = async function(id, no, ad){
-  document.getElementById('sk-sonuclar').style.display='none';
-  const inp = document.getElementById('sk-search'); if(inp) inp.value='';
-  await _skFirmaGoster(id, no, ad);
-};
 
 async function _skFirmaGoster(id, no, ad){
   _seciliFirmaId  = id;
@@ -22107,6 +21989,9 @@ async function _skFirmaGoster(id, no, ad){
   const chip = document.getElementById('sk-secili');    if(chip) chip.style.display='flex';
   const av   = document.getElementById('sk-avatar');    if(av)   av.textContent = (ad||'?').split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
   const adEl = document.getElementById('sk-firma-adi'); if(adEl) adEl.textContent = ad;
+
+  // Formu göster
+  const fw = document.getElementById('sk-form-wrap'); if(fw) fw.style.display='block';
 
   // Supabase'de mevcut rapor var mı?
   const dur = document.getElementById('sk-rapor-durumu');
@@ -22119,12 +22004,34 @@ async function _skFirmaGoster(id, no, ad){
     if(mevcut) skSonucGoster(mevcut);
   } catch(e){ if(dur) dur.textContent='Kontrol edilemedi'; }
 
-  // Adım 2'yi aktif et
+  // Adım 2'yi aktif et (varsa)
   const a2 = document.getElementById('sk-adim2');
   if(a2){ a2.style.opacity='1'; a2.style.pointerEvents='auto'; }
   const a2no = document.getElementById('sk-adim2-no');
   if(a2no){ a2no.style.background='var(--blue)'; a2no.style.color='#fff'; a2no.style.border='none'; }
 }
+
+/* ── Kaydet ── */
+window.skKaydet = async function(){
+  if(!_seciliFirmaId){ alert('Önce firma seçin.'); return; }
+  const btn = document.querySelector('[onclick="skKaydet()"]');
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Kaydediliyor...'; }
+  try {
+    const veri = skFormVeriTopla();
+    const dosyaAdi = window._skPdfDosyaAdi || '';
+    await sbKaydet(_seciliFirmaId, _seciliFirmaNo, _seciliFirmaAdi, veri, dosyaAdi);
+    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaId);
+    const dur=document.getElementById('sk-rapor-durumu');
+    if(dur) dur.textContent='Kaydedildi · '+new Date().toLocaleString('tr-TR');
+    const kayitli = await sbYukle(_seciliFirmaId);
+    skSonucGoster(kayitli||veri);
+    alert('Kapasite raporu başarıyla kaydedildi.');
+  } catch(e){
+    alert('Kayıt hatası: '+(e.message||e));
+  } finally {
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="ti ti-device-floppy"></i> Supabase\'e Kaydet'; }
+  }
+};
 
 window.skTemizle = function(){
   _seciliFirmaId=null; _seciliFirmaNo=null; _seciliFirmaAdi=null;
