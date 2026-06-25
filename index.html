@@ -6482,6 +6482,9 @@ function toggleTpl(header) {
     if(pane === 'ziyaret') {
       if(window.crmRenderZiyaret) window.crmRenderZiyaret(currentFirm?.id);
     }
+    if(pane === 'sanayi') {
+      if(window.crmSanayiPaneYukle) window.crmSanayiPaneYukle(currentFirm?.id);
+    }
   };
 
   /* Dışarı tıklayınca sonuçları kapat */
@@ -22349,6 +22352,191 @@ window.slFirmaSil=async function(uid){
 /* ══════════════════════════════════════════════════════════
    CRM PROFİL — Sanayi Bilgi özet kartı (Supabase'den)
 ══════════════════════════════════════════════════════════ */
+/* ══ CRM Profil — Sanayi Bilgi sekmesi tam görünümü ══ */
+window.crmSanayiPaneYukle = async function(uyeId){
+  const el = document.getElementById('sanayi-pane-inner');
+  if(!el) return;
+  if(!uyeId){ el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text2)">Firma seçilmedi.</div>'; return; }
+
+  el.innerHTML='<div style="padding:32px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite;font-size:22px"></i><div style="margin-top:10px;font-size:13px">Yükleniyor...</div></div>';
+
+  let v;
+  try { v = await sbYukle(uyeId); } catch(e){ v=null; }
+
+  if(!v){
+    el.innerHTML=`<div style="padding:32px;text-align:center;color:var(--text2)">
+      <i class="ti ti-file-off" style="font-size:32px;display:block;margin-bottom:10px;opacity:.4"></i>
+      <div style="font-size:14px;font-weight:500;margin-bottom:6px">Kapasite raporu bulunamadı</div>
+      <div style="font-size:12px">Bu firmaya henüz rapor eklenmemiş.</div>
+      <button class="btn btn-p btn-sm" onclick="crmNavSec('sanayi',document.getElementById('nav-crm-sanayi'))" style="margin-top:14px"><i class="ti ti-plus"></i> Rapor Ekle</button>
+    </div>`;
+    return;
+  }
+
+  const satir = (lbl,val,icon)=>val?`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border)">
+      <div style="width:26px;height:26px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ${icon}" style="font-size:12px;color:var(--blue)"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:2px">${lbl}</div>
+        <div style="font-size:13px;font-weight:500;word-break:break-word">${val}</div>
+      </div>
+    </div>`:'';
+
+  const baslik = (t,icon)=>`
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin:18px 0 8px;display:flex;align-items:center;gap:6px">
+      <i class="ti ${icon}" style="font-size:13px;color:var(--blue)"></i>${t}
+    </div>`;
+
+  const tesis = (v.tesisler||[])[0]||{};
+  const p = v.personel||{};
+  const uretimler = v.yillik_uretim||[];
+  const tuketimler = v.yillik_tuketim||[];
+  const makineler = v.makineler||[];
+  const toplam_guc = v.makine_toplam_guc_kw||'';
+
+  // PDF bölümü
+  const pdfHtml = v.dosya_adi ? `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border-radius:8px;border:0.5px solid var(--border);margin-bottom:4px">
+      <i class="ti ti-file-type-pdf" style="font-size:22px;color:#E24B4A;flex-shrink:0"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.dosya_adi}</div>
+        <div style="font-size:11px;color:var(--text2)">${v.yukleme_tarihi?new Date(v.yukleme_tarihi).toLocaleString('tr-TR'):''}</div>
+      </div>
+    </div>` : `<div style="font-size:12px;color:var(--text2);padding:8px 0">PDF eklenmemiş.</div>`;
+
+  // Üretim tablosu
+  const uretimHtml = uretimler.length ? `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px">
+      <thead><tr style="background:var(--surface2)">
+        <th style="padding:6px 8px;text-align:left;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Üretim Kodu</th>
+        <th style="padding:6px 8px;text-align:left;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Ürün Adı</th>
+        <th style="padding:6px 8px;text-align:right;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Kapasite</th>
+        <th style="padding:6px 8px;text-align:right;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Fiili Miktar</th>
+        <th style="padding:6px 8px;text-align:left;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Birim</th>
+        <th style="padding:6px 8px;text-align:right;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">% Oran</th>
+      </tr></thead>
+      <tbody>${uretimler.map(u=>`<tr>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);color:var(--text2)">${u.uretimKodu||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);font-weight:500">${u.aciklama||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);text-align:right">${u.yillikKapasite||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);text-align:right">${u.miktar||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border)">${u.birim||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);text-align:right">${u.kullanimOrani?u.kullanimOrani+'%':'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>` : '<div style="font-size:12px;color:var(--text2);padding:6px 0">Kayıt yok.</div>';
+
+  // Tüketim tablosu
+  const tuketimHtml = tuketimler.length ? `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px">
+      <thead><tr style="background:var(--surface2)">
+        <th style="padding:6px 8px;text-align:left;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Tüketim Kodu</th>
+        <th style="padding:6px 8px;text-align:left;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Hammadde / Girdi</th>
+        <th style="padding:6px 8px;text-align:right;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Miktar</th>
+        <th style="padding:6px 8px;text-align:left;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Birim</th>
+        <th style="padding:6px 8px;text-align:left;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Tedarik</th>
+      </tr></thead>
+      <tbody>${tuketimler.map(t=>`<tr>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);color:var(--text2)">${t.tuketimKodu||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);font-weight:500">${t.aciklama||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);text-align:right">${t.miktar||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border)">${t.birim||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border)">${t.tedarikSekli||'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>` : '<div style="font-size:12px;color:var(--text2);padding:6px 0">Kayıt yok.</div>';
+
+  // Makine tablosu
+  const makineHtml = makineler.length ? `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px">
+      <thead><tr style="background:var(--surface2)">
+        <th style="padding:6px 8px;text-align:left;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Makine Kodu</th>
+        <th style="padding:6px 8px;text-align:left;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Açıklama</th>
+        <th style="padding:6px 8px;text-align:center;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Adet</th>
+        <th style="padding:6px 8px;text-align:right;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Güç (kW)</th>
+        <th style="padding:6px 8px;text-align:center;color:var(--text2);font-weight:500;border-bottom:0.5px solid var(--border)">Y/İ</th>
+      </tr></thead>
+      <tbody>${makineler.map(m=>`<tr>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);color:var(--text2)">${m.makineKodu||m.kod||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);font-weight:500">${m.aciklama||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);text-align:center">${m.adet||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);text-align:right">${m.gucKW||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:0.5px solid var(--border);text-align:center">${m.yerliIthal||'—'}</td>
+      </tr>`).join('')}
+      ${toplam_guc?`<tr><td colspan="5" style="padding:7px 8px;text-align:right;font-size:12px;font-weight:600;color:var(--blue)">Toplam Kurulu Güç: ${toplam_guc} kW</td></tr>`:''}
+      </tbody>
+    </table>` : '<div style="font-size:12px;color:var(--text2);padding:6px 0">Kayıt yok.</div>';
+
+  el.innerHTML = `<div style="padding:4px 0">
+
+    <!-- Üst başlık -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:15px;font-weight:600">Kapasite Raporu</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">${v.yukleme_tarihi?'Son güncelleme: '+new Date(v.yukleme_tarihi).toLocaleDateString('tr-TR'):''}</div>
+      </div>
+      <button class="btn btn-sm" onclick="crmNavSec('sanayi',document.getElementById('nav-crm-sanayi'))" style="gap:5px"><i class="ti ti-edit"></i> Düzenle</button>
+    </div>
+
+    <!-- Genel Bilgiler -->
+    <div class="card" style="padding:16px;margin-bottom:12px">
+      ${baslik('Rapor Bilgileri','ti-calendar')}
+      ${satir('Rapor Tarihi', v.rapor_tarihi, 'ti-calendar')}
+      ${satir('Geçerlilik Tarihi', v.gecerlilik_suresi, 'ti-calendar-check')}
+      ${satir('Tescilli Markalar', v.tescilli_markalar, 'ti-certificate')}
+      ${satir('Sertifikalar', v.sertifikalar, 'ti-award')}
+      ${satir('Yabancı Sermaye', v.yabanci_sermaye, 'ti-world')}
+    </div>
+
+    <!-- PDF -->
+    <div class="card" style="padding:16px;margin-bottom:12px">
+      ${baslik('Kapasite Raporu PDF','ti-file-type-pdf')}
+      ${pdfHtml}
+    </div>
+
+    <!-- Tesis -->
+    <div class="card" style="padding:16px;margin-bottom:12px">
+      ${baslik('Üretim Tesisi','ti-building')}
+      ${satir('Toplam Arazi (m²)', tesis.toplamArazi, 'ti-map')}
+      ${satir('Kapalı Alan (m²)', tesis.kapaliSaha, 'ti-building')}
+      ${satir('Bina İnşaat Tipi', tesis.binaInsaatTipi, 'ti-building-skyscraper')}
+      ${satir('Mülkiyet Durumu', tesis.mulkiyet, 'ti-home')}
+      ${satir('Makine Değeri (TL)', v.makine_degeri_tl, 'ti-currency-lira')}
+    </div>
+
+    <!-- Personel -->
+    <div class="card" style="padding:16px;margin-bottom:12px">
+      ${baslik('Personel','ti-users')}
+      ${satir('Toplam', p.toplam?p.toplam+' kişi':'', 'ti-users')}
+      ${satir('Mühendis', p.muhendis?p.muhendis+' kişi':'', 'ti-user')}
+      ${satir('Teknisyen', p.teknisyen?p.teknisyen+' kişi':'', 'ti-user')}
+      ${satir('Usta', p.usta?p.usta+' kişi':'', 'ti-user')}
+      ${satir('İşçi', p.isci?p.isci+' kişi':'', 'ti-user')}
+      ${satir('İdari Personel', p.idariPersonel?p.idariPersonel+' kişi':'', 'ti-user')}
+      ${satir('Taşeron İşçi', p.taseronIsci?p.taseronIsci+' kişi':'', 'ti-user')}
+    </div>
+
+    <!-- Makine -->
+    <div class="card" style="padding:16px;margin-bottom:12px">
+      ${baslik('Makine ve Teçhizat','ti-settings')}
+      ${makineHtml}
+    </div>
+
+    <!-- Üretim -->
+    <div class="card" style="padding:16px;margin-bottom:12px">
+      ${baslik('Yıllık Üretim Kapasitesi','ti-packages')}
+      ${uretimHtml}
+    </div>
+
+    <!-- Tüketim -->
+    <div class="card" style="padding:16px;margin-bottom:12px">
+      ${baslik('Yıllık Tüketim Kapasitesi','ti-flask')}
+      ${tuketimHtml}
+    </div>
+
+  </div>`;
+};
+
 window.crmSanayiOzetGuncelle = async function(uyeId){
   const card=document.getElementById('crm-sanayi-bilgi-card');
   const ozet=document.getElementById('crm-sanayi-ozet-fields');
