@@ -22313,7 +22313,7 @@ async function sanayiRenderListe(root){
       const uid = v.uye_id||'';
       const idE = String(uid).replace(/'/g,"\\\'");
       const noE = String(no).replace(/'/g,"\\\'");
-      const adE = ad.replace(/\\\\/g,'\\\\\\\').replace(/'/g,"\\\'");
+      const adE = ad.replace(/'/g,"\\'");
       return '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:0.5px solid var(--border);transition:background .1s" onmouseenter="this.style.background=\'var(--surface2)\'" onmouseleave="this.style.background=\'\'">'+
         '<div style="width:38px;height:38px;border-radius:50%;background:'+col.bg+';color:'+col.c+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0">'+av+'</div>'+
         '<div style="flex:1;min-width:0">'+
