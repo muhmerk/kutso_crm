@@ -22103,8 +22103,7 @@ function sanayiRenderKapasite(root){
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead><tr style="background:var(--surface2)">
             <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">NACE Kodu</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">GTK Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Üretim Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Ürün Adı / Açıklama</th>
             <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Kapasite</th>
             <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Fiili Miktar</th>
@@ -22127,8 +22126,7 @@ function sanayiRenderKapasite(root){
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead><tr style="background:var(--surface2)">
             <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">NACE Kodu</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">GTK Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Tüketim Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Hammadde / Girdi Adı</th>
             <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Miktar</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Birim</th>
@@ -22262,10 +22260,9 @@ window.skUretimSatirEkle = function(u){
     return el;
   }
 
-  // Üretim kodu: 00.00.00.00.00 (10 rakam, 2'şer gruplar)
-  const naceEl = maskeliInput('00.00', 4, '.', u?.naceKodu);
-  naceEl.style.width='70px';
-  const gtkEl  = maskeliInput('00.00.00.00.00', 10, '.', u?.gtkKodu);
+  // Üretim kodu: 00.00.00.00.00 (10 rakam, 2'şer gruplar, tek alan)
+  const uretimKoduEl = maskeliInput('00.00.00.00.00', 10, '.', u?.uretimKodu||u?.gtkKodu||u?.naceKodu);
+  uretimKoduEl.style.width='130px';
   const acikEl = txtInput('Ürün adı ve açıklaması (uzun girebilirsiniz)', u?.aciklama, '260px');
   const kapEl  = numInput(u?.yillikKapasite);
   const mktEl  = numInput(u?.miktar);
@@ -22277,9 +22274,9 @@ window.skUretimSatirEkle = function(u){
   delBtn.onclick=()=>skSatirSil('sk-u-'+id,'sk-uretim-body');
 
   const tdSira=document.createElement('td'); tdSira.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px;white-space:nowrap'; tdSira.textContent=sira;
-  [[naceEl],[gtkEl],[acikEl],[kapEl],[mktEl],[birimEl],[oranEl],[delBtn]].forEach((els,i)=>{
+  [[uretimKoduEl],[acikEl],[kapEl],[mktEl],[birimEl],[oranEl],[delBtn]].forEach((els,i)=>{
     const td=document.createElement('td');
-    td.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'+(i===7?';text-align:center':'');
+    td.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'+(i===6?';text-align:center':'');
     els.forEach(e=>td.appendChild(e));
     tr.appendChild(td);
   });
@@ -22341,8 +22338,9 @@ window.skTuketimSatirEkle = function(t){
     return el;
   }
 
-  const naceEl2  = maskeliNace4(t?.naceKodu);
-  const gtkEl2   = maskeliInput6(t?.gtkKodu);
+  // Tüketim kodu: 00.00.00 (6 rakam, tek alan)
+  const tuketimKoduEl = maskeliInput6(t?.tuketimKodu||t?.gtkKodu||t?.naceKodu);
+  tuketimKoduEl.style.width='100px';
   const acikEl2  = txtEl('Hammadde / girdi adı ve açıklaması', t?.aciklama, '260px');
   const mktEl2   = numEl(t?.miktar);
   const birimEl2 = txtEl('Ton/Lt', t?.birim, '65px'); birimEl2.style.width='75px';
@@ -22354,9 +22352,9 @@ window.skTuketimSatirEkle = function(t){
 
   const tdSira2=document.createElement('td'); tdSira2.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px;white-space:nowrap'; tdSira2.textContent=sira;
   tr.appendChild(tdSira2);
-  [[naceEl2],[gtkEl2],[acikEl2],[mktEl2],[birimEl2],[tedEl],[delBtn2]].forEach((els,i)=>{
+  [[tuketimKoduEl],[acikEl2],[mktEl2],[birimEl2],[tedEl],[delBtn2]].forEach((els,i)=>{
     const td=document.createElement('td');
-    td.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'+(i===6?';text-align:center':'');
+    td.style.cssText='padding:5px 6px;border-bottom:0.5px solid var(--border)'+(i===5?';text-align:center':'');
     els.forEach(e=>td.appendChild(e));
     tr.appendChild(td);
   });
@@ -22397,29 +22395,27 @@ function skFormVeriTopla(){
   const yillikUretim=[];
   document.getElementById('sk-uretim-body')?.querySelectorAll('tr').forEach((tr,i)=>{
     const inp=tr.querySelectorAll('input');
-    if(inp.length>=7) yillikUretim.push({
+    if(inp.length>=6) yillikUretim.push({
       siraNo:String(i+1),
-      naceKodu:inp[0]?.value?.trim()||'',
-      gtkKodu:inp[1]?.value?.trim()||'',
-      aciklama:inp[2]?.value?.trim()||'',
-      yillikKapasite:inp[3]?.value?.trim()||'',
-      miktar:inp[4]?.value?.trim()||'',
-      birim:inp[5]?.value?.trim()||'',
-      kullanimOrani:inp[6]?.value?.trim()||'',
+      uretimKodu:inp[0]?.value?.trim()||'',
+      aciklama:inp[1]?.value?.trim()||'',
+      yillikKapasite:inp[2]?.value?.trim()||'',
+      miktar:inp[3]?.value?.trim()||'',
+      birim:inp[4]?.value?.trim()||'',
+      kullanimOrani:inp[5]?.value?.trim()||'',
       teknolojiSinifi: skNaceSiniflandir(inp[0]?.value?.trim()||'')
     });
   });
   const yillikTuketim=[];
   document.getElementById('sk-tuketim-body')?.querySelectorAll('tr').forEach((tr,i)=>{
     const inp=tr.querySelectorAll('input');
-    if(inp.length>=6) yillikTuketim.push({
+    if(inp.length>=5) yillikTuketim.push({
       siraNo:String(i+1),
-      naceKodu:inp[0]?.value?.trim()||'',
-      gtkKodu:inp[1]?.value?.trim()||'',
-      aciklama:inp[2]?.value?.trim()||'',
-      miktar:inp[3]?.value?.trim()||'',
-      birim:inp[4]?.value?.trim()||'',
-      tedarikSekli:inp[5]?.value?.trim()||''
+      tuketimKodu:inp[0]?.value?.trim()||'',
+      aciklama:inp[1]?.value?.trim()||'',
+      miktar:inp[2]?.value?.trim()||'',
+      birim:inp[3]?.value?.trim()||'',
+      tedarikSekli:inp[4]?.value?.trim()||''
     });
   });
   let toplamGuc=0;
@@ -22461,9 +22457,16 @@ function skFormDoldur(v){
   (v.makineler||[]).forEach(m=>skMakineSatirEkle(m));
   setTimeout(skGucTopla,50);
   const ub=document.getElementById('sk-uretim-body'); if(ub){ub.innerHTML='';_uId=0;}
-  (v.yillik_uretim||v.yillikUretim||[]).forEach(u=>skUretimSatirEkle(u));
+  (v.yillik_uretim||v.yillikUretim||[]).forEach(u=>{
+    // eski kayıtlarda naceKodu/gtkKodu varsa uretimKodu'ya taşı
+    if(!u.uretimKodu) u.uretimKodu = u.gtkKodu||u.naceKodu||'';
+    skUretimSatirEkle(u);
+  });
   const tb=document.getElementById('sk-tuketim-body'); if(tb){tb.innerHTML='';_tId=0;}
-  (v.yillik_tuketim||v.yillikTuketim||[]).forEach(t=>skTuketimSatirEkle(t));
+  (v.yillik_tuketim||v.yillikTuketim||[]).forEach(t=>{
+    if(!t.tuketimKodu) t.tuketimKodu = t.gtkKodu||t.naceKodu||'';
+    skTuketimSatirEkle(t);
+  });
   const dosya=v.dosya_adi||'';
   if(dosya){const el=document.getElementById('sk-pdf-bilgi'); if(el) el.textContent='Mevcut: '+dosya;}
 }
@@ -22533,12 +22536,13 @@ window.skPdfSec=function(inp){
 
 
 /* ── Eurostat Teknoloji Sınıflandırması ── */
-function skNaceSiniflandir(naceKodu){
-  if(!naceKodu) return '';
-  // NACE kodundan baş kısmı al (nokta öncesi veya ilk 2 rakam)
-  const k = naceKodu.replace('.','').replace('.','');
-  const bas2 = parseInt(k.slice(0,2))||0;
-  const full = naceKodu.replace(/\./g,'');
+function skNaceSiniflandir(uretimKodu){
+  if(!uretimKodu) return '';
+  // Üretim kodunun ilk 2 rakamına bak (noktalar rakam değil)
+  const digits = uretimKodu.replace(/[^0-9]/g,'');
+  const bas2 = parseInt(digits.slice(0,2))||0;
+  // Noktalı formda startsWith için
+  const naceKodu = uretimKodu;
 
   // Yüksek Teknoloji
   if(bas2===21 || bas2===26 || bas2===62) return 'Yüksek Teknoloji';
