@@ -21605,8 +21605,7 @@ function sanayiRenderKapasite(root){
         <table style="width:100%;border-collapse:collapse;font-size:12px" id="sk-uretim-tablo">
           <thead><tr style="background:var(--surface2)">
             <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">NACE Kodu</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">GTK Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Üretim Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Ürün Adı / Açıklama</th>
             <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Kapasite</th>
             <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Fiili Miktar</th>
@@ -21629,8 +21628,7 @@ function sanayiRenderKapasite(root){
         <table style="width:100%;border-collapse:collapse;font-size:12px" id="sk-tuketim-tablo">
           <thead><tr style="background:var(--surface2)">
             <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">NACE Kodu</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">GTK Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Tüketim Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Hammadde / Girdi Adı</th>
             <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Miktar</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Birim</th>
@@ -21695,8 +21693,11 @@ window.skMakineSatirEkle = function(m){
   const inp = (ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
     style="width:${w||'100%'};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:center':''}"
     oninput="skGucTopla()" />`;
+  const mkKodInp = (val)=>`<input type="text" value="${val||''}" placeholder="00.00.00" autocomplete="off" maxlength="8"
+    style="width:90px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
+    oninput="(function(el){var v=el.value.replace(/[^0-9]/g,'');var r='';if(v.length>0)r+=v.slice(0,2);if(v.length>2)r+='.'+v.slice(2,4);if(v.length>4)r+='.'+v.slice(4,6);el.value=r;})(this);skGucTopla()" />`;
   tr.innerHTML = `
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Kod','100px','text',m?.kod)}</td>
+    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${mkKodInp(m?.makineKodu||m?.kod)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Açıklama','100%','text',m?.aciklama)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','60px','number',m?.adet)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','70px','number',m?.gucKW)}</td>
@@ -21736,10 +21737,12 @@ window.skUretimSatirEkle = function(u){
   tr.id = 'sk-u-'+id;
   const inp = (ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
     style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
+  const uKodInp = (val)=>`<input type="text" value="${val||''}" placeholder="00.00.00.00.00" autocomplete="off" maxlength="14"
+    style="width:130px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
+    oninput="(function(el){var v=el.value.replace(/[^0-9]/g,'');var r='';if(v.length>0)r+=v.slice(0,2);if(v.length>2)r+='.'+v.slice(2,4);if(v.length>4)r+='.'+v.slice(4,6);if(v.length>6)r+='.'+v.slice(6,8);if(v.length>8)r+='.'+v.slice(8,10);el.value=r;})(this)" />`;
   tr.innerHTML = `
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">${siraNo}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0000',  '80px','text',u?.naceKodu)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('000000','80px','text',u?.gtkKodu)}</td>
+    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${uKodInp(u?.uretimKodu||u?.naceKodu)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Ürün adı','100%','text',u?.aciklama)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','80px','number',u?.yillikKapasite)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','80px','number',u?.miktar)}</td>
@@ -21761,10 +21764,12 @@ window.skTuketimSatirEkle = function(t){
   tr.id = 'sk-t-'+id;
   const inp = (ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
     style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
+  const tKodInp = (val)=>`<input type="text" value="${val||''}" placeholder="00.00.00" autocomplete="off" maxlength="8"
+    style="width:100px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
+    oninput="(function(el){var v=el.value.replace(/[^0-9]/g,'');var r='';if(v.length>0)r+=v.slice(0,2);if(v.length>2)r+='.'+v.slice(2,4);if(v.length>4)r+='.'+v.slice(4,6);el.value=r;})(this)" />`;
   tr.innerHTML = `
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">${siraNo}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0000',  '80px','text',t?.naceKodu)}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('000000','80px','text',t?.gtkKodu)}</td>
+    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${tKodInp(t?.tuketimKodu||t?.naceKodu)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Hammadde adı','100%','text',t?.aciklama)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','80px','number',t?.miktar)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Ton/Lt','70px','text',t?.birim)}</td>
@@ -21815,7 +21820,7 @@ function skFormVeriTopla(){
     const inputs = tr.querySelectorAll('input');
     const sel    = tr.querySelector('select');
     makineler.push({
-      kod:        inputs[0]?.value?.trim()||'',
+      makineKodu: inputs[0]?.value?.trim()||'',
       aciklama:   inputs[1]?.value?.trim()||'',
       adet:       inputs[2]?.value?.trim()||'',
       gucKW:      inputs[3]?.value?.trim()||'',
@@ -21830,13 +21835,12 @@ function skFormVeriTopla(){
     const inputs = tr.querySelectorAll('input');
     yillikUretim.push({
       siraNo:         String(i+1),
-      naceKodu:       inputs[0]?.value?.trim()||'',
-      gtkKodu:        inputs[1]?.value?.trim()||'',
-      aciklama:       inputs[2]?.value?.trim()||'',
-      yillikKapasite: inputs[3]?.value?.trim()||'',
-      miktar:         inputs[4]?.value?.trim()||'',
-      birim:          inputs[5]?.value?.trim()||'',
-      kullanimOrani:  inputs[6]?.value?.trim()||'',
+      uretimKodu:     inputs[0]?.value?.trim()||'',
+      aciklama:       inputs[1]?.value?.trim()||'',
+      yillikKapasite: inputs[2]?.value?.trim()||'',
+      miktar:         inputs[3]?.value?.trim()||'',
+      birim:          inputs[4]?.value?.trim()||'',
+      kullanimOrani:  inputs[5]?.value?.trim()||'',
     });
   });
 
@@ -21847,12 +21851,11 @@ function skFormVeriTopla(){
     const inputs = tr.querySelectorAll('input');
     yillikTuketim.push({
       siraNo:       String(i+1),
-      naceKodu:     inputs[0]?.value?.trim()||'',
-      gtkKodu:      inputs[1]?.value?.trim()||'',
-      aciklama:     inputs[2]?.value?.trim()||'',
-      miktar:       inputs[3]?.value?.trim()||'',
-      birim:        inputs[4]?.value?.trim()||'',
-      tedarikSekli: inputs[5]?.value?.trim()||'',
+      tuketimKodu:  inputs[0]?.value?.trim()||'',
+      aciklama:     inputs[1]?.value?.trim()||'',
+      miktar:       inputs[2]?.value?.trim()||'',
+      birim:        inputs[3]?.value?.trim()||'',
+      tedarikSekli: inputs[4]?.value?.trim()||'',
     });
   });
 
