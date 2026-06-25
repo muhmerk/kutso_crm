@@ -21383,25 +21383,25 @@ async function sbFirmaAra(q){
   const birlestik = [];
   try {
     const { data: d1, error: e1 } = await _supa.from('uyeler')
-      .select('id, uye_oda_sicil_no, unvan, vergi_no, mersis_no, durum')
+      .select('id, uye_oda_sicil_no, unvan, vergi_no, mersis_no')
       .ilike('unvan', '%'+qt+'%').limit(10);
     if(e1) console.warn('[SanayiAra] ünvan hatası:', e1.message);
     (d1||[]).forEach(r=>{ if(!birlestik.find(x=>x.id===r.id)) birlestik.push(r); });
 
     const { data: d2, error: e2 } = await _supa.from('uyeler')
-      .select('id, uye_oda_sicil_no, unvan, vergi_no, mersis_no, durum')
+      .select('id, uye_oda_sicil_no, unvan, vergi_no, mersis_no')
       .eq('uye_oda_sicil_no', qt).limit(5);
     if(e2) console.warn('[SanayiAra] sicil hatası:', e2.message);
     (d2||[]).forEach(r=>{ if(!birlestik.find(x=>x.id===r.id)) birlestik.push(r); });
 
     const { data: d3, error: e3 } = await _supa.from('uyeler')
-      .select('id, uye_oda_sicil_no, unvan, vergi_no, mersis_no, durum')
+      .select('id, uye_oda_sicil_no, unvan, vergi_no, mersis_no')
       .eq('vergi_no', qt).limit(5);
     if(e3) console.warn('[SanayiAra] vergi hatası:', e3.message);
     (d3||[]).forEach(r=>{ if(!birlestik.find(x=>x.id===r.id)) birlestik.push(r); });
 
     const { data: d4, error: e4 } = await _supa.from('uyeler')
-      .select('id, uye_oda_sicil_no, unvan, vergi_no, mersis_no, durum')
+      .select('id, uye_oda_sicil_no, unvan, vergi_no, mersis_no')
       .eq('mersis_no', qt).limit(5);
     if(e4) console.warn('[SanayiAra] mersis hatası:', e4.message);
     (d4||[]).forEach(r=>{ if(!birlestik.find(x=>x.id===r.id)) birlestik.push(r); });
@@ -21414,7 +21414,6 @@ async function sbFirmaAra(q){
     firma:  r.unvan||'',
     vergi:  r.vergi_no||'',
     mersis: r.mersis_no||'',
-    durum:  r.durum||''
   }));
 }
 
