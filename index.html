@@ -21860,11 +21860,23 @@ async function sbListele(){
 async function sbFirmaAra(q){
   const qt = (q||'').trim();
   if(!qt) return [];
-  const { data } = await _supa.from('uyeler')
+
+  // Ünvan araması (ilike)
+  const { data: d1 } = await _supa.from('uyeler')
     .select('id, no, firma, vergi, mersis, sektor, durum')
-    .or(`firma.ilike.%${qt}%,no.eq.${qt},vergi.eq.${qt},mersis.eq.${qt}`)
+    .ilike('firma', '%'+qt+'%')
     .limit(10);
-  return data || [];
+
+  // Sicil / vergi / mersis eşitlik araması (sadece rakam/kısa string için)
+  const { data: d2 } = await _supa.from('uyeler')
+    .select('id, no, firma, vergi, mersis, sektor, durum')
+    .or('no.eq.'+qt+',vergi.eq.'+qt+',mersis.eq.'+qt)
+    .limit(5);
+
+  // Birleştir, duplike çıkar
+  const birlestik = [...(d1||[])];
+  (d2||[]).forEach(r=>{ if(!birlestik.find(x=>x.id===r.id)) birlestik.push(r); });
+  return birlestik.slice(0,10);
 }
 
 /* ══════════════════════════════════════════════════════════
