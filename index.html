@@ -21483,7 +21483,7 @@ window.sanayiSecListe = async function(){
 function sanayiRenderKapasite(root){
   _mod = 'kapasite';
   root.innerHTML = `
-<div style="max-width:760px;margin:0 auto;padding:8px 0">
+<div style="max-width:1100px;margin:0 auto;padding:8px 0">
 
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
     <button class="btn btn-sm" onclick="window.sanayiMainAc()" style="gap:4px"><i class="ti ti-arrow-left"></i> Geri</button>
@@ -21564,14 +21564,9 @@ function sanayiRenderKapasite(root){
     <!-- Tesis -->
     <div class="card" style="padding:18px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="ti ti-building" style="margin-right:5px"></i>Üretim Tesisi Bilgileri</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
         ${skInput('Toplam Arazi (m²)','sk-t-arazi','number')}
         ${skInput('Toplam Kapalı Alan (m²)','sk-t-kapali','number')}
-        ${skInput('Zemin Kat (m²)','sk-t-zemin','number')}
-        ${skInput('Bodrum Kat (m²)','sk-t-bodrum','number')}
-        ${skInput('1. Kat (m²)','sk-t-kat1','number')}
-        ${skInput('2. Kat (m²)','sk-t-kat2','number')}
-        ${skInput('Diğer Alanlar (m²)','sk-t-diger','number')}
         ${skInput('Bina İnşaat Tipi','sk-t-insaat','text','Betonarme / Çelik vb.')}
         ${skInput('Mülkiyet Durumu','sk-t-mulkiyet','text','Kira / Mülk vb.')}
         ${skInput('Makine Değeri (TL)','sk-t-makine-deger','text')}
@@ -21610,7 +21605,8 @@ function sanayiRenderKapasite(root){
         <table style="width:100%;border-collapse:collapse;font-size:12px" id="sk-uretim-tablo">
           <thead><tr style="background:var(--surface2)">
             <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Üretim Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">NACE Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">GTK Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Ürün Adı / Açıklama</th>
             <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Kapasite</th>
             <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Fiili Miktar</th>
@@ -21633,7 +21629,8 @@ function sanayiRenderKapasite(root){
         <table style="width:100%;border-collapse:collapse;font-size:12px" id="sk-tuketim-tablo">
           <thead><tr style="background:var(--surface2)">
             <th style="padding:8px 10px;text-align:center;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);width:36px">S.No</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Tüketim Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">NACE Kodu</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">GTK Kodu</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border)">Hammadde / Girdi Adı</th>
             <th style="padding:8px 10px;text-align:right;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Miktar</th>
             <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);white-space:nowrap">Birim</th>
@@ -21646,9 +21643,12 @@ function sanayiRenderKapasite(root){
     </div>
 
     <!-- Kaydet Butonu -->
-    <button class="btn btn-p" onclick="skKaydet()" style="width:100%;padding:13px;font-size:14px;justify-content:center;gap:8px;margin-bottom:24px">
+    <button class="btn btn-p" onclick="skKaydet()" style="width:100%;padding:13px;font-size:14px;justify-content:center;gap:8px;margin-bottom:16px">
       <i class="ti ti-device-floppy"></i> Supabase'e Kaydet
     </button>
+
+    <!-- Eurostat sınıflandırma paneli (kaydet sonrası otomatik dolar) -->
+    <div id="sk-sinif-panel" style="display:none"></div>
 
   </div><!-- /sk-form-wrap -->
 
@@ -21695,14 +21695,8 @@ window.skMakineSatirEkle = function(m){
   const inp = (ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
     style="width:${w||'100%'};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:center':''}"
     oninput="skGucTopla()" />`;
-  const mkKodInp = (val)=>{
-    const v = val||'';
-    return `<input type="text" value="${v}" placeholder="00.00.00" autocomplete="off" maxlength="8"
-      style="width:90px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
-      oninput="this.value=this.value.replace(/[^0-9.]/g,'').replace(/^(\\d{0,2})\\.?(\\d{0,2})\\.?(\\d{0,2}).*$/,function(m,a,b,c){return (a||'')+(b?'.'+b:'')+(c?'.'+c:'')});skGucTopla()" />`;
-  };
   tr.innerHTML = `
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${mkKodInp(m?.makineKodu||m?.kod)}</td>
+    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Kod','100px','text',m?.kod)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Açıklama','100%','text',m?.aciklama)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','60px','number',m?.adet)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','70px','number',m?.gucKW)}</td>
@@ -21742,15 +21736,10 @@ window.skUretimSatirEkle = function(u){
   tr.id = 'sk-u-'+id;
   const inp = (ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
     style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
-  const uKodInp = (val)=>{
-    const v = val||'';
-    return `<input type="text" value="${v}" placeholder="00.00.00.00.00" autocomplete="off" maxlength="14"
-      style="width:130px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
-      oninput="this.value=this.value.replace(/[^0-9.]/g,'').replace(/^(\\d{0,2})\\.?(\\d{0,2})\\.?(\\d{0,2})\\.?(\\d{0,2})\\.?(\\d{0,2}).*$/,function(m,a,b,c,d,e){var r=a||'';if(b)r+='.'+b;if(c)r+='.'+c;if(d)r+='.'+d;if(e)r+='.'+e;return r;});" />`;
-  };
   tr.innerHTML = `
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">${siraNo}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${uKodInp(u?.uretimKodu)}</td>
+    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0000',  '80px','text',u?.naceKodu)}</td>
+    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('000000','80px','text',u?.gtkKodu)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Ürün adı','100%','text',u?.aciklama)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','80px','number',u?.yillikKapasite)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','80px','number',u?.miktar)}</td>
@@ -21772,15 +21761,10 @@ window.skTuketimSatirEkle = function(t){
   tr.id = 'sk-t-'+id;
   const inp = (ph,w,type,val)=>`<input type="${type||'text'}" value="${val||''}" placeholder="${ph}" autocomplete="off"
     style="width:${w};padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box${type==='number'?';text-align:right':''}" />`;
-  const tKodInp = (val)=>{
-    const v = val||'';
-    return `<input type="text" value="${v}" placeholder="00.00.00" autocomplete="off" maxlength="8"
-      style="width:100px;padding:5px 7px;border:0.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box"
-      oninput="this.value=this.value.replace(/[^0-9.]/g,'').replace(/^(\\d{0,2})\\.?(\\d{0,2})\\.?(\\d{0,2}).*$/,function(m,a,b,c){return (a||'')+(b?'.'+b:'')+(c?'.'+c:'')});" />`;
-  };
   tr.innerHTML = `
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text2);font-size:11px">${siraNo}</td>
-    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${tKodInp(t?.tuketimKodu)}</td>
+    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0000',  '80px','text',t?.naceKodu)}</td>
+    <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('000000','80px','text',t?.gtkKodu)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Hammadde adı','100%','text',t?.aciklama)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('0','80px','number',t?.miktar)}</td>
     <td style="padding:5px 6px;border-bottom:0.5px solid var(--border)">${inp('Ton/Lt','70px','text',t?.birim)}</td>
@@ -21820,11 +21804,6 @@ function skFormVeriTopla(){
   const tesisler = [{
     toplamArazi:    g('sk-t-arazi'),
     kapaliSaha:     g('sk-t-kapali'),
-    zemin:          g('sk-t-zemin'),
-    bodrum:         g('sk-t-bodrum'),
-    kat1:           g('sk-t-kat1'),
-    kat2:           g('sk-t-kat2'),
-    digerAlanlar:   g('sk-t-diger'),
     binaInsaatTipi: g('sk-t-insaat'),
     mulkiyet:       g('sk-t-mulkiyet'),
   }];
@@ -21836,7 +21815,7 @@ function skFormVeriTopla(){
     const inputs = tr.querySelectorAll('input');
     const sel    = tr.querySelector('select');
     makineler.push({
-      makineKodu: inputs[0]?.value?.trim()||'',
+      kod:        inputs[0]?.value?.trim()||'',
       aciklama:   inputs[1]?.value?.trim()||'',
       adet:       inputs[2]?.value?.trim()||'',
       gucKW:      inputs[3]?.value?.trim()||'',
@@ -21851,12 +21830,13 @@ function skFormVeriTopla(){
     const inputs = tr.querySelectorAll('input');
     yillikUretim.push({
       siraNo:         String(i+1),
-      uretimKodu:     inputs[0]?.value?.trim()||'',
-      aciklama:       inputs[1]?.value?.trim()||'',
-      yillikKapasite: inputs[2]?.value?.trim()||'',
-      miktar:         inputs[3]?.value?.trim()||'',
-      birim:          inputs[4]?.value?.trim()||'',
-      kullanimOrani:  inputs[5]?.value?.trim()||'',
+      naceKodu:       inputs[0]?.value?.trim()||'',
+      gtkKodu:        inputs[1]?.value?.trim()||'',
+      aciklama:       inputs[2]?.value?.trim()||'',
+      yillikKapasite: inputs[3]?.value?.trim()||'',
+      miktar:         inputs[4]?.value?.trim()||'',
+      birim:          inputs[5]?.value?.trim()||'',
+      kullanimOrani:  inputs[6]?.value?.trim()||'',
     });
   });
 
@@ -21867,11 +21847,12 @@ function skFormVeriTopla(){
     const inputs = tr.querySelectorAll('input');
     yillikTuketim.push({
       siraNo:       String(i+1),
-      tuketimKodu:  inputs[0]?.value?.trim()||'',
-      aciklama:     inputs[1]?.value?.trim()||'',
-      miktar:       inputs[2]?.value?.trim()||'',
-      birim:        inputs[3]?.value?.trim()||'',
-      tedarikSekli: inputs[4]?.value?.trim()||'',
+      naceKodu:     inputs[0]?.value?.trim()||'',
+      gtkKodu:      inputs[1]?.value?.trim()||'',
+      aciklama:     inputs[2]?.value?.trim()||'',
+      miktar:       inputs[3]?.value?.trim()||'',
+      birim:        inputs[4]?.value?.trim()||'',
+      tedarikSekli: inputs[5]?.value?.trim()||'',
     });
   });
 
@@ -21917,11 +21898,6 @@ function skFormDoldur(v){
   const t = (v.tesisler||[])[0]||{};
   set('sk-t-arazi',        t.toplamArazi    ||'');
   set('sk-t-kapali',       t.kapaliSaha     ||'');
-  set('sk-t-zemin',        t.zemin          ||'');
-  set('sk-t-bodrum',       t.bodrum         ||'');
-  set('sk-t-kat1',         t.kat1           ||'');
-  set('sk-t-kat2',         t.kat2           ||'');
-  set('sk-t-diger',        t.digerAlanlar   ||'');
   set('sk-t-insaat',       t.binaInsaatTipi ||'');
   set('sk-t-mulkiyet',     t.mulkiyet       ||'');
   set('sk-t-makine-deger', v.makine_degeri_tl || v.makineDegeriTL ||'');
@@ -21945,6 +21921,15 @@ function skFormDoldur(v){
   // PDF bilgisi
   const dosya = v.dosya_adi||v._dosyaAdi||'';
   if(dosya){ const el=document.getElementById('sk-pdf-bilgi'); if(el) el.textContent='Mevcut: '+dosya; }
+
+  // Mevcut kayıt yüklenince Eurostat sınıflandırmasını da göster
+  const uretimVerisi = v.yillik_uretim || v.yillikUretim || [];
+  const sinifPanel = document.getElementById('sk-sinif-panel');
+  if(sinifPanel) {
+    const html = EUROSTAT_SINIF.panelOlustur(uretimVerisi);
+    sinifPanel.innerHTML = html;
+    sinifPanel.style.display = html ? '' : 'none';
+  }
 }
 
 /* ── Arama ── */
@@ -22023,6 +22008,109 @@ async function _skFirmaGoster(id, no, ad){
   if(a2no){ a2no.style.background='var(--blue)'; a2no.style.color='#fff'; a2no.style.border='none'; }
 }
 
+/* ── Eurostat Teknoloji Sınıflandırması ── */
+const EUROSTAT_SINIF = (function(){
+  const Y  = 'Yüksek Teknoloji';
+  const OY = 'Orta-Yüksek Teknoloji';
+  const OD = 'Orta-Düşük Teknoloji';
+  const D  = 'Düşük Teknoloji';
+  // Anahtar: NACE bölüm kodu (2 haneli string)
+  const MAP = {
+    '21': Y,  '26': Y,  '30': OY, // 30.30 özel ama 30 genel OY
+    '62': Y,
+    '20': OY, '25': OY, '27': OY, '28': OY, '29': OY, '32': D,
+    '18': OD, // 18.20 OD, genel 18 D → 2 haneli kod 18 gelirse önce OD'ye düşeceğiz — sonuç üretim koduna göre
+    '19': OD, '22': OD, '23': OD, '24': OD, '33': OD,
+    '10': D,  '11': D,  '12': D,  '13': D,  '14': D,  '15': D,
+    '16': D,  '17': D,  '31': D,  '35': D,
+    '01': D,  '03': D,
+    '05': D,  '06': D,  '07': D,  '08': D,
+  };
+  // Özel alt kodlar (4 haneli — ilk karakter grubu tam eşleşme)
+  const ALT = {
+    '30.30': Y,
+    '25.40': OY,
+    '32.50': OY,
+    '30.11': OD,
+    '30.12': OD,
+    '18.20': OD,
+  };
+  // Renk ve ikon
+  const RENK = {
+    [Y]:  {bg:'#E8F1FB',c:'#0C447C',dot:'#2563EB'},
+    [OY]: {bg:'#E8FAF0',c:'#05512A',dot:'#16A34A'},
+    [OD]: {bg:'#FEF3DE',c:'#633806',dot:'#D97706'},
+    [D]:  {bg:'#F3F3F3',c:'#444',   dot:'#9CA3AF'},
+  };
+
+  function sinifla(uretimKodu) {
+    if(!uretimKodu) return null;
+    const temiz = uretimKodu.trim();
+    // Alt kod kontrolü (örn. 30.30, 25.40)
+    for(const altKod of Object.keys(ALT)) {
+      if(temiz.startsWith(altKod)) return ALT[altKod];
+    }
+    // 2 haneli NACE bölüm kodu
+    const iki = temiz.replace(/\./g,'').slice(0,2);
+    return MAP[iki] || null;
+  }
+
+  function panelOlustur(yillikUretim) {
+    const satirlar = (yillikUretim||[]).filter(u => u.aciklama || u.uretimKodu);
+    if(!satirlar.length) return '';
+
+    const gruplar = {};
+    satirlar.forEach(u => {
+      const s = sinifla(u.uretimKodu);
+      if(!s) return;
+      if(!gruplar[s]) gruplar[s] = [];
+      gruplar[s].push(u);
+    });
+
+    const sira = [Y, OY, OD, D];
+    const var_sinif = sira.filter(s => gruplar[s]);
+    if(!var_sinif.length) return '';
+
+    let html = `<div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">
+        <i class="ti ti-chart-bar" style="margin-right:5px;color:var(--blue)"></i>Eurostat Teknoloji Sınıflandırması
+      </div>`;
+
+    var_sinif.forEach(s => {
+      const r = RENK[s];
+      const urunler = gruplar[s];
+      html += `<div style="margin-bottom:10px;padding:12px 14px;background:${r.bg};border-radius:8px;border-left:3px solid ${r.dot}">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${r.dot};flex-shrink:0"></span>
+          <span style="font-size:12px;font-weight:600;color:${r.c}">${s}</span>
+        </div>
+        <div style="padding-left:14px">
+          ${urunler.map(u=>`<div style="font-size:12px;color:${r.c};margin-bottom:2px;display:flex;align-items:center;gap:6px">
+            <span style="font-size:10px;font-weight:500;opacity:.7;min-width:80px">${u.uretimKodu||'—'}</span>
+            <span>${u.aciklama||'—'}</span>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    });
+
+    // Sınıflandırılamayanlar
+    const sinifsizilar = satirlar.filter(u => !sinifla(u.uretimKodu));
+    if(sinifsizilar.length) {
+      html += `<div style="margin-bottom:10px;padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--border2)">
+        <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:4px">Sınıflandırılamadı</div>
+        <div style="padding-left:14px">
+          ${sinifsizilar.map(u=>`<div style="font-size:12px;color:var(--text2);margin-bottom:2px">${u.uretimKodu||'—'} · ${u.aciklama||'—'}</div>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  return { sinifla, panelOlustur };
+})();
+
 /* ── Kaydet ── */
 window.skKaydet = async function(){
   if(!_seciliFirmaId){ alert('Önce firma seçin.'); return; }
@@ -22037,6 +22125,16 @@ window.skKaydet = async function(){
     if(dur) dur.textContent='Kaydedildi · '+new Date().toLocaleString('tr-TR');
     const kayitli = await sbYukle(_seciliFirmaId);
     skSonucGoster(kayitli||veri);
+
+    // Eurostat sınıflandırmasını göster
+    const uretimVerisi = (kayitli?.yillik_uretim || veri.yillikUretim || []);
+    const sinifPanel = document.getElementById('sk-sinif-panel');
+    if(sinifPanel) {
+      const html = EUROSTAT_SINIF.panelOlustur(uretimVerisi);
+      sinifPanel.innerHTML = html;
+      sinifPanel.style.display = html ? '' : 'none';
+    }
+
     alert('Kapasite raporu başarıyla kaydedildi.');
   } catch(e){
     alert('Kayıt hatası: '+(e.message||e));
