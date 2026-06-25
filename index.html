@@ -21355,7 +21355,7 @@ async function sbSil(uyeId){
 
 async function sbListele(){
   const { data, error } = await _supa.from('sanayi_bilgi')
-    .select('uye_id, uye_no, uye_adi, dosya_adi, yukleme_tarihi, firma_adi, personel, yillik_uretim, makine_toplam_guc_kw, makineler')
+    .select('uye_id, uye_no, uye_adi, dosya_adi, yukleme_tarihi, personel, yillik_uretim, makine_toplam_guc_kw, makineler, updated_at')
     .order('updated_at', { ascending: false });
   if(error) console.warn('sbListele:', error.message);
   return data || [];
