@@ -5777,7 +5777,7 @@ function toggleTpl(header) {
     crmTimelineRender(f.id);
     crmGorevlerYukle(f.id);
     /* Sanayi bilgisi özeti — Supabase sanayi_bilgi tablosundan */
-    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(f.id);
+    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(f.no||f.id);
     renderSik(f.id);
     renderMem(f.id);
     renderEtk(f.id);
@@ -6483,7 +6483,7 @@ function toggleTpl(header) {
       if(window.crmRenderZiyaret) window.crmRenderZiyaret(currentFirm?.id);
     }
     if(pane === 'sanayi') {
-      if(window.crmSanayiPaneYukle) window.crmSanayiPaneYukle(currentFirm?.id);
+      if(window.crmSanayiPaneYukle) window.crmSanayiPaneYukle(currentFirm?.no||currentFirm?.id);
     }
   };
 
@@ -21308,8 +21308,7 @@ let _mod = 'home';
 ══════════════════════════════════════════════════════════ */
 async function sbKaydet(uyeId, uyeNo, uyeAdi, veri, dosyaAdi){
   const satirVeri = {
-    uye_id:            uyeId,
-    uye_no:            String(uyeNo||''),
+    uye_no:            String(uyeNo||uyeId||''),
     uye_adi:           uyeAdi||'',
     dosya_adi:         dosyaAdi||'',
     yukleme_tarihi:    new Date().toISOString(),
@@ -21329,13 +21328,14 @@ async function sbKaydet(uyeId, uyeNo, uyeAdi, veri, dosyaAdi){
   };
 
   // Mevcut kayıt var mı?
+  const uyeNoStr = String(uyeNo||uyeId||'');
   const { data: mevcut } = await _supa.from('sanayi_bilgi')
-    .select('id').eq('uye_id', uyeId).maybeSingle();
+    .select('id').eq('uye_no', uyeNoStr).maybeSingle();
 
   let err;
   if(mevcut){
     ({ error: err } = await _supa.from('sanayi_bilgi')
-      .update(satirVeri).eq('uye_id', uyeId));
+      .update(satirVeri).eq('uye_no', uyeNoStr));
   } else {
     satirVeri.created_at = new Date().toISOString();
     ({ error: err } = await _supa.from('sanayi_bilgi').insert([satirVeri]));
@@ -21345,20 +21345,22 @@ async function sbKaydet(uyeId, uyeNo, uyeAdi, veri, dosyaAdi){
 }
 
 async function sbYukle(uyeId){
+  const no = String(uyeId||'');
   const { data, error } = await _supa.from('sanayi_bilgi')
-    .select('*').eq('uye_id', uyeId).maybeSingle();
+    .select('*').eq('uye_no', no).maybeSingle();
   if(error) console.warn('sbYukle:', error.message);
   return data || null;
 }
 
 async function sbSil(uyeId){
-  const { error } = await _supa.from('sanayi_bilgi').delete().eq('uye_id', uyeId);
+  const no = String(uyeId||'');
+  const { error } = await _supa.from('sanayi_bilgi').delete().eq('uye_no', no);
   if(error) throw new Error('Silme hatası: ' + error.message);
 }
 
 async function sbListele(){
   const { data, error } = await _supa.from('sanayi_bilgi')
-    .select('uye_id, uye_no, uye_adi, dosya_adi, yukleme_tarihi, personel, yillik_uretim, makine_toplam_guc_kw, makineler, updated_at')
+    .select('uye_no, uye_adi, dosya_adi, yukleme_tarihi, personel, yillik_uretim, makine_toplam_guc_kw, makineler, updated_at')
     .order('updated_at', { ascending: false });
   if(error) console.warn('sbListele:', error.message);
   return data || [];
@@ -22027,7 +22029,7 @@ async function _skFirmaGoster(id, no, ad){
   const dur = document.getElementById('sk-rapor-durumu');
   if(dur) dur.textContent='Kontrol ediliyor...';
   try {
-    const mevcut = await sbYukle(id);
+    const mevcut = await sbYukle(no||id);
     if(dur) dur.textContent = mevcut
       ? 'Mevcut rapor: '+(mevcut.dosya_adi||'—')+' · '+(mevcut.yukleme_tarihi ? new Date(mevcut.yukleme_tarihi).toLocaleString('tr-TR') : '—')
       : 'Henüz rapor yüklenmemiş';
@@ -22184,11 +22186,11 @@ window.skKaydet = async function(){
   try {
     const veri = skFormVeriTopla();
     const dosyaAdi = window._skPdfDosyaAdi || '';
-    await sbKaydet(_seciliFirmaId, _seciliFirmaNo, _seciliFirmaAdi, veri, dosyaAdi);
-    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaId);
+    await sbKaydet(_seciliFirmaNo||_seciliFirmaId, _seciliFirmaNo, _seciliFirmaAdi, veri, dosyaAdi);
+    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaNo||_seciliFirmaId);
     const dur=document.getElementById('sk-rapor-durumu');
     if(dur) dur.textContent='Kaydedildi · '+new Date().toLocaleString('tr-TR');
-    const kayitli = await sbYukle(_seciliFirmaId);
+    const kayitli = await sbYukle(_seciliFirmaNo||_seciliFirmaId);
     skSonucGoster(kayitli||veri);
 
     // Eurostat sınıflandırmasını göster
@@ -22250,8 +22252,8 @@ window.skDosyaTemizle=function(){
 window.skRaporSil = async function(){
   if(!confirm('Bu firmaya ait kapasite raporu Supabase\'den silinecek. Emin misiniz?')) return;
   try {
-    await sbSil(_seciliFirmaId);
-    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaId);
+    await sbSil(_seciliFirmaNo||_seciliFirmaId);
+    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaNo||_seciliFirmaId);
     document.getElementById('sk-sonuc-ekrani').style.display='none';
     const dur=document.getElementById('sk-rapor-durumu'); if(dur) dur.textContent='Rapor silindi';
     const a2no=document.getElementById('sk-adim2-no');
@@ -22313,7 +22315,7 @@ async function sanayiRenderListe(root){
       const meta=[ur,ps,gk].filter(Boolean).join(' · ');
       const tar = v.yukleme_tarihi?new Date(v.yukleme_tarihi).toLocaleString('tr-TR'):'';
       const dos = v.dosya_adi||'';
-      const uid = v.uye_id||'';
+      const uid = v.uye_no||'';
       const idE = String(uid).replace(/'/g,"\\\'");
       const noE = String(no).replace(/'/g,"\\\'");
       const adE = ad.replace(/'/g,"\\'");
