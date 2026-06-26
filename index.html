@@ -12523,19 +12523,14 @@ function mkRenderListe(){
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">`+
     filtreliT.map(t=>{
       const tG=MK_DB.gundemler.filter(g=>g.toplantıId===t.id);
-      const tam=tG.filter(g=>g.durum==='tamamlandi').length;
       return `<div class="yk-card" style="cursor:pointer" onclick="mkAcToplantı('${t.id}')">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
           <div><div style="font-size:12px;color:var(--text2)">${t.tarih}</div>
             <div style="font-size:14px;font-weight:500;margin-top:2px">${t.ad}</div>
             ${t.komite?`<div style="font-size:11px;color:var(--purple);margin-top:3px"><i class="ti ti-building-community" style="font-size:11px;margin-right:3px"></i>${t.komite}</div>`:''}
           </div>
-          <span class="badge ${t.durum==='tamamlandi'?'b-green':'b-blue'}">${t.durum==='tamamlandi'?'Tamamlandı':'Planlandı'}</span>
+          ${tG.length?`<span class="badge b-gray" style="font-size:10px">${tG.length} gündem</span>`:''}
         </div>
-        ${tG.length?`<div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-          <div class="pb" style="flex:1"><div class="pf" style="width:${tG.length?Math.round(tam/tG.length*100):0}%;background:var(--teal)"></div></div>
-          <span style="font-size:11px;color:var(--text2)">${tam}/${tG.length} tamamlandı</span>
-        </div>`:'<div style="font-size:12px;color:var(--text2)">Henüz gündem eklenmedi</div>'}
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
@@ -12679,7 +12674,7 @@ function mkGundemEkraniRender(toplantıId, kararEl){
         ${mkYeniSatirHtml(sira, toplantıId)}
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-        <button class="btn btn-sm" onclick="mkGeriListe()"><i class="ti ti-x"></i> Kapat</button>
+        <button class="btn btn-sm" onclick="mkGundemYonetKapat('${toplantıId}')"><i class="ti ti-x"></i> Kapat</button>
         <button class="btn btn-p btn-sm" id="mk-gundem-kaydet-btn" onclick="mkGundemSatirKaydet('${toplantıId}')">
           <i class="ti ti-device-floppy"></i> Kaydet
         </button>
@@ -12881,6 +12876,12 @@ window.mkGundemSil = async function(gId, toplantıId){
 };
 
 window.mkGeriListe = function(){ mkAktifToplantı=null; mkRenderListe(); };
+
+/* Gündem ekranından kapat — boş input varsa geç, listeye dön */
+window.mkGundemYonetKapat = function(toplantıId){
+  // Açık boş input varsa kaydetmeden çık
+  mkRenderListe();
+};
 
 window.mkToplantıEkle = function(){
   document.getElementById('yk-modal-title').textContent='Meslek Komitesi Toplantısı Ekle';
