@@ -12819,7 +12819,7 @@ window.mkGundemGuncelle = async function(gId, toplantıId){
   const oncelik = document.getElementById('mk-ge-oncelik-'+gId)?.value||'normal';
   const durum   = document.getElementById('mk-ge-durum-'+gId)?.value||'planlandi';
 
-  const btn = document.querySelector('[onclick*="mkGundemGuncelle(\''+gId)');
+  const btn = document.querySelector('[onclick*="mkGundemGuncelle"]');
   if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i>'; }
 
   try {
