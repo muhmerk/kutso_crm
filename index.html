@@ -13298,22 +13298,20 @@ function meclisRenderListe(){
   el.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+
     filtreliMeclis.map(t=>{
       const tG=MECLIS_DB.gundemler.filter(g=>g.toplantıId===t.id);
-      const tam=tG.filter(g=>g.durum==='tamamlandi').length;
       return `<div class="yk-card" style="cursor:pointer" onclick="meclisAcToplantı('${t.id}')">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-          <div><div style="font-size:12px;color:var(--text2)">${t.tarih}</div><div style="font-size:14px;font-weight:500;margin-top:2px">${t.ad}</div>
-            ${t.donem?`<div style="font-size:11px;color:var(--blue);margin-top:3px">${t.donem}. Dönem</div>`:''}
+          <div><div style="font-size:12px;color:var(--text2)">${t.tarih}</div>
+            <div style="font-size:14px;font-weight:500;margin-top:2px">${t.ad}</div>
           </div>
-          <span class="badge ${t.durum==='tamamlandi'?'b-green':'b-blue'}">${t.durum==='tamamlandi'?'Tamamlandı':'Planlandı'}</span>
+          <div style="display:flex;gap:6px;align-items:center">
+            ${t.durum==='tamamlandi'?'<span class="badge b-green" style="font-size:10px">Tamamlandı</span>':'<span class="badge b-blue" style="font-size:10px">Planlandı</span>'}
+            ${tG.length?`<span class="badge b-gray" style="font-size:10px">${tG.length} gündem</span>`:''}
+          </div>
         </div>
-        ${tG.length?`<div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-          <div class="pb" style="flex:1"><div class="pf" style="width:${tG.length?Math.round(tam/tG.length*100):0}%;background:var(--teal)"></div></div>
-          <span style="font-size:11px;color:var(--text2)">${tam}/${tG.length}</span>
-        </div>`:'<div style="font-size:12px;color:var(--text2)">Henüz karar girilmedi</div>'}
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
-          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','meclis','${t.ad.replace(/'/g,"\\'")}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none" class="badge b-blue"></span></button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','meclis','${t.ad.replace(/'/g,"\\'")}')" ><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none" class="badge b-blue"></span></button>
           ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();meclisToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
