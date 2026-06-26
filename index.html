@@ -11789,7 +11789,7 @@ function ykRenderToplantıListesi(){
         ` : `<div style="font-size:12px;color:var(--text2)">Henüz gündem eklenmedi — <span style="color:var(--blue);cursor:pointer" onclick="event.stopPropagation();ykAcToplantı('${t.id}')">gündem ekle</span></div>`}
         <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();ykAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay & Gündemler</button>
-          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','yk','${t.ad.replace(/'/g,'\\&apos;')}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none" class="badge b-blue" style="font-size:9px"></span></button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','yk','${t.ad.replace(/'/g,'\\&apos;')}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
           ${ykYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();ykToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();ykToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
@@ -12550,7 +12550,7 @@ function mkRenderListe(){
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
-          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','mk','${t.ad.replace(/'/g,"\\'")}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none" class="badge b-blue"></span></button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','mk','${t.ad.replace(/'/g,"\\'")}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
           ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();mkToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
@@ -13311,7 +13311,7 @@ function meclisRenderListe(){
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
-          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','meclis','${t.ad.replace(/'/g,"\\'")}')" ><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none" class="badge b-blue"></span></button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','meclis','${t.ad.replace(/'/g,"\\'")}')" ><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
           ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();meclisToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
@@ -14308,6 +14308,8 @@ window.meclisKararDuzenle = function(toplantıId, kararId){
   });
 };
 function kararlarBadgeGuncelle(){
+  /* Evrak sayılarını da güncelle */
+  if(window.evrakBadgeGuncelle) window.evrakBadgeGuncelle();
   const ykBadge = document.getElementById('yk-badge');
   const gorevBadge = document.getElementById('gorev-badge');
   if(!currentUser) {
@@ -18749,12 +18751,17 @@ window.evrakBadgeGuncelle = async function(){
     (data||[]).forEach(e=>{
       window._evrakSayilari[e.toplanti_id] = (window._evrakSayilari[e.toplanti_id]||0) + 1;
     });
-    /* Kartlardaki badge'leri güncelle */
+    /* Kartlardaki badge span'larını güncelle */
     document.querySelectorAll('[data-evrak-badge]').forEach(el=>{
       const tid = el.getAttribute('data-evrak-badge');
       const say = window._evrakSayilari[tid]||0;
-      el.textContent = say ? say+' evrak' : '';
-      el.style.display = say ? '' : 'none';
+      if(say > 0){
+        el.textContent = say;
+        el.style.display = '';
+      } else {
+        el.textContent = '';
+        el.style.display = 'none';
+      }
     });
   }catch(e){ console.warn('Evrak badge hatası:', e); }
 };
