@@ -99,7 +99,7 @@ async function supaYukleMeclis() {
       if(window.MECLIS_DB) {
         window.MECLIS_DB.toplantılar = mappedT;
         window.MECLIS_DB.gundemler = mappedG;
-        if(window.meclisRender) window.meclisRender();
+        if(!window._meclisGundemEkraniAcik && window.meclisRender) window.meclisRender();
         if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
         console.log('✓ Meclis verileri yüklendi:', toplantılar.length);
       } else { setTimeout(trySet, 300); }
@@ -452,7 +452,7 @@ function supaEkranYenile(modul) {
     const aktifPanel = window._aktifKararPanel || 'yk';
     if (aktifPanel === 'yk') { if(window.ykRender) window.ykRender(); }
     else if (aktifPanel === 'mk') { if(!window._mkGundemEkraniAcik && window.mkRender) window.mkRender(); }
-    else if (aktifPanel === 'meclis') { if(window.meclisRender) window.meclisRender(); }
+    else if (aktifPanel === 'meclis') { if(!window._meclisGundemEkraniAcik && window.meclisRender) window.meclisRender(); }
     else if (aktifPanel === 'gorev') { if(window.ykRender) window.ykRender(); }
     if(window.ykBadgeGuncelle) window.ykBadgeGuncelle();
     if(window.gorevBadgeGuncelle) window.gorevBadgeGuncelle();
@@ -13144,6 +13144,11 @@ window.mkToplantıDuzenle = function(id){
     }).eq('id', id);
     if(error){ console.error('MK toplantı güncelleme hatası:', error.message); alert('Güncelleme hatası: '+error.message); return; }
 
+    // Filtreyi güncellenen tarihin yılına çek
+    if(window._mkYilFilter && window._mkYilFilter.size > 0){
+      window._mkYilFilter = new Set([yy]);
+      window._kararYil = yy;
+    }
     ykModalKapat(); mkRender();
   };
   document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
@@ -13305,6 +13310,7 @@ function meclisRenderListe(){
         </div>`:'<div style="font-size:12px;color:var(--text2)">Henüz karar girilmedi</div>'}
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','meclis','${t.ad.replace(/'/g,"\\'")}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none" class="badge b-blue"></span></button>
           ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();meclisToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
@@ -13344,7 +13350,138 @@ window.meclisAcToplantı = function(id){
     </div>`).join('');
 };
 
-window.meclisGeriListe=function(){meclisAktifToplantı=null;meclisRenderListe();};
+/* ══════════════════════════════════════════════════════════
+   MECLİS GÜNDEM YÖNETİM EKRANI (MK ile aynı sistem)
+══════════════════════════════════════════════════════════ */
+window.meclisGundemYonetAc = function(toplantıId){
+  const t = MECLIS_DB.toplantılar.find(x=>x.id===toplantıId);
+  if(!t) return;
+  meclisAktifToplantı = toplantıId;
+  window._meclisGundemEkraniAcik = true;
+
+  const el = document.getElementById('meclis-karar-list');
+  const hd = document.getElementById('meclis-karar-baslik');
+  const hb = document.getElementById('meclis-header-btn');
+
+  hd.innerHTML = `
+    <button class="btn btn-sm" onclick="meclisGundemYonetKapat()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button>
+    <span style="font-size:14px;font-weight:500">${t.ad}</span>
+    <span style="font-size:12px;color:var(--text2)">${t.tarih||''}</span>`;
+  if(hb) hb.innerHTML = '';
+
+  meclisGundemEkraniRender(toplantıId, el);
+};
+
+function meclisGundemEkraniRender(toplantıId, el){
+  const gundemler = MECLIS_DB.gundemler.filter(g=>g.toplantıId===toplantıId);
+  const sira = gundemler.length + 1;
+
+  el.innerHTML = `
+    <div style="max-width:700px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:0" id="meclis-gundem-satirlar">
+        ${gundemler.map((g,i) => meclisGundemSatirHtml(g, i+1, toplantıId)).join('')}
+        ${meclisYeniSatirHtml(sira, toplantıId)}
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+        <button class="btn btn-sm" onclick="meclisGundemYonetKapat()"><i class="ti ti-x"></i> Kapat</button>
+        <button class="btn btn-p btn-sm" id="meclis-gundem-kaydet-btn" onclick="meclisGundemSatirKaydet('${toplantıId}')">
+          <i class="ti ti-device-floppy"></i> Kaydet
+        </button>
+      </div>
+    </div>`;
+}
+
+function meclisGundemSatirHtml(g, sira, toplantıId){
+  const idE = g.id.replace(/'/g,"\'");
+  const konuE = (g.konu||'').replace(/"/g,'&quot;');
+  return `<div class="mk-gundem-satir" id="meclis-gs-${g.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+    <div style="width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
+    <input class="yk-inp" style="flex:1;margin:0" value="${konuE}"
+      onblur="meclisGundemSatirGuncelle('${idE}','${toplantıId}',this.value)"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();meclisGundemSatirGuncelle('${idE}','${toplantıId}',this.value);}">
+    <button class="btn btn-sm" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="meclisGundemSatirSil('${idE}','${toplantıId}')" title="Sil"><i class="ti ti-trash"></i></button>
+  </div>`;
+}
+
+function meclisYeniSatirHtml(sira, toplantıId){
+  return `<div id="meclis-yeni-satir" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+    <div style="width:24px;height:24px;border-radius:50%;background:var(--border);color:var(--text2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
+    <input id="meclis-gf-konu" class="yk-inp" style="flex:1;margin:0" placeholder="Gündem yazın..."
+      onkeydown="if(event.key==='Enter'){event.preventDefault();meclisGundemSatirKaydet('${toplantıId}');}">
+    <div style="width:32px;flex-shrink:0"></div>
+  </div>`;
+}
+
+window.meclisGundemSatirKaydet = async function(toplantıId){
+  const inp = document.getElementById('meclis-gf-konu');
+  if(!inp) return;
+  const konu = inp.value.trim();
+  if(!konu){ inp.focus(); return; }
+
+  const btn = document.getElementById('meclis-gundem-kaydet-btn');
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i>'; }
+
+  try {
+    const mgId = genUUID();
+    const {error} = await _supa.from('karar_gundemler').insert([{
+      id: mgId, toplanti_id: toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi'
+    }]);
+    if(error) throw error;
+
+    MECLIS_DB.gundemler.push({ id:mgId, toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi', atananlar:[], komiteNo:0 });
+
+    const yeniSatirEl = document.getElementById('meclis-yeni-satir');
+    if(yeniSatirEl){
+      const sira = MECLIS_DB.gundemler.filter(g=>g.toplantıId===toplantıId).length;
+      const yeniDoluHtml = meclisGundemSatirHtml(MECLIS_DB.gundemler.find(g=>g.id===mgId), sira, toplantıId);
+      const yeniBoşHtml  = meclisYeniSatirHtml(sira+1, toplantıId);
+      yeniSatirEl.insertAdjacentHTML('beforebegin', yeniDoluHtml);
+      yeniSatirEl.outerHTML = yeniBoşHtml;
+    }
+    setTimeout(()=>{ const ni=document.getElementById('meclis-gf-konu'); if(ni) ni.focus(); }, 30);
+    if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+  } catch(e){
+    alert('Kayıt hatası: '+e.message);
+  }
+  const b2 = document.getElementById('meclis-gundem-kaydet-btn');
+  if(b2){ b2.disabled=false; b2.innerHTML='<i class="ti ti-device-floppy"></i> Kaydet'; }
+};
+
+window.meclisGundemSatirGuncelle = async function(gId, toplantıId, konu){
+  konu = konu.trim();
+  if(!konu) return;
+  const g = MECLIS_DB.gundemler.find(x=>x.id===gId);
+  if(!g || g.konu === konu) return;
+  g.konu = konu;
+  await _supa.from('karar_gundemler').update({konu}).eq('id', gId);
+};
+
+window.meclisGundemSatirSil = async function(gId, toplantıId){
+  if(!confirm('Bu gündem silinecek. Emin misiniz?')) return;
+  try {
+    await _supa.from('karar_atamalar').delete().eq('gundem_id', gId);
+    const {error} = await _supa.from('karar_gundemler').delete().eq('id', gId);
+    if(error) throw error;
+    MECLIS_DB.gundemler = MECLIS_DB.gundemler.filter(x=>x.id!==gId);
+    if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+    const satir = document.getElementById('meclis-gs-'+gId);
+    if(satir) satir.remove();
+    const satirlar = document.querySelectorAll('#meclis-gundem-satirlar .mk-gundem-satir');
+    satirlar.forEach((s,i)=>{
+      const numEl = s.querySelector('div[style*="border-radius:50%"]');
+      if(numEl) numEl.textContent = i+1;
+    });
+    const yeniNum = document.querySelector('#meclis-yeni-satir div[style*="border-radius:50%"]');
+    if(yeniNum) yeniNum.textContent = satirlar.length + 1;
+  } catch(e){ alert('Silme hatası: '+e.message); }
+};
+
+window.meclisGundemYonetKapat = function(){
+  window._meclisGundemEkraniAcik = false;
+  meclisGeriListe();
+};
+
+window.meclisGeriListe=function(){meclisAktifToplantı=null;window._meclisGundemEkraniAcik=false;meclisRenderListe();};
 
 window.meclisToplantıEkle=function(){
   document.getElementById('yk-modal-title').textContent='Meclis Toplantısı Ekle';
@@ -13575,6 +13712,14 @@ window.meclisToplantıDuzenle = function(id){
       ad: t.ad, tarih: t.tarih, tarih_iso: t.tarihIso,
       saat: t.saat, bitis_saat: t.bitisSaat, durum: t.durum
     }).eq('id', id).then(({error})=>{ if(error) console.error('Meclis güncelleme hatası:', error.message); });
+    // Filtreyi güncellenen tarihin yılına çek
+    if(tarihVal){
+      const _yeni = parseInt(tarihVal.slice(0,4));
+      if(_yeni && window._meclisYilFilter && window._meclisYilFilter.size > 0){
+        window._meclisYilFilter = new Set([_yeni]);
+        window._kararYil = _yeni;
+      }
+    }
     ykModalKapat(); meclisRender();
   };
   document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
