@@ -12429,8 +12429,8 @@ window.kararlarSec = function(tip, btn){
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.ykRender) window.ykRender(); }, 30);
   }
   else if(tip==='mk'){
-    window._mkYilFilter = new Set([new Date().getFullYear()]);
-    if(window.YD_STATE) window.YD_STATE['mk'] = new Set([new Date().getFullYear()]);
+    // Filtreyi sıfırlama — mevcut seçimi koru ya da tüm yılları göster
+    if(!window._mkYilFilter) window._mkYilFilter = null; // null = filtre yok, tümü göster
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.mkRender) window.mkRender(); else mkRender(); }, 30);
   }
   else if(tip==='meclis'){
@@ -12502,8 +12502,12 @@ function mkRenderListe(){
   let filtreliT = [...MK_DB.toplantılar];
   /* Tarih sıralaması — en eski en üstte */
   filtreliT.sort((a,b)=>{ const da=new Date(a.tarihIso||a.tarih||0), db=new Date(b.tarihIso||b.tarih||0); return da-db; });
-  if(mkYF && mkYF.size>0 && mkYF.size<11){
-    filtreliT = filtreliT.filter(t=>{ const y=parseInt((t.tarih||'').match(/\b(20\d{2})\b/)?.[1]); return !y||mkYF.has(y); });
+  // _mkYilFilter null veya boş ise tümünü göster; Set doluysa filtrele
+  if(mkYF && mkYF.size>0){
+    filtreliT = filtreliT.filter(t=>{
+      const y = parseInt((t.tarihIso||t.tarih||'').slice(0,4)) || parseInt((t.tarih||'').match(/\b(20\d{2})\b/)?.[1]);
+      return !y || mkYF.has(y);
+    });
   }
   const mkListeAy=(window._kararAy&&window._kararAy.mk)||0;
   if(mkListeAy){ filtreliT=filtreliT.filter(t=>window.kararAyOk&&window.kararAyOk(t.tarih||t.tarihIso||'',mkListeAy)); }
@@ -12512,7 +12516,7 @@ function mkRenderListe(){
       <div style="width:52px;height:52px;border-radius:12px;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
         <i class="ti ti-building-community" style="font-size:24px;color:var(--purple)"></i>
       </div>
-      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${window._kararYil} yılı için komite toplantısı girilmedi</div>
+      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${window._kararYil ? window._kararYil+' yılı için komite' : 'Henüz meslek komitesi'} toplantısı girilmedi</div>
       <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
     </div>`; return;
   }
@@ -13895,9 +13899,12 @@ window.gorevRender = gorevRender;
 
 /* ── Kararlar yıl filtresi — tüm alt menüler için ── */
 window._kararYil = new Date().getFullYear(); /* Mevcut yıl otomatik seçili */
+window._mkYilFilter = null; /* Başlangıçta filtre yok — tüm yıllar görünür */
 
 window.kararYilSec = function(yil){
   window._kararYil = yil;
+  // MK yıl filtresiyle senkronize et
+  window._mkYilFilter = yil ? new Set([yil]) : null;
   /* Aktif paneli yenile */
   const aktif = window._aktifKararPanel;
   if(aktif==='yk'){ kararYilPikerGuncelle(); if(window.ykRender) window.ykRender(); }
@@ -13910,7 +13917,13 @@ function kararYilPikerGuncelle(){
   const mevcutYil = new Date().getFullYear();
   const yillar = [mevcutYil-2, mevcutYil-1, mevcutYil, mevcutYil+1];
   document.querySelectorAll('.karar-yil-tab-bar').forEach(el=>{
-    el.innerHTML = yillar.map(y=>`
+    const tumBtn = `<button onclick="kararYilSec(null)" style="
+        padding:4px 11px;border-radius:6px;font-size:11px;font-family:var(--font);
+        border:0.5px solid ${!window._kararYil?'var(--blue)':'var(--border2)'};
+        background:${!window._kararYil?'var(--blue)':'var(--surface2)'};
+        color:${!window._kararYil?'#fff':'var(--text2)'};
+        cursor:pointer;transition:all .1s;">Tümü</button>`;
+    el.innerHTML = tumBtn + yillar.map(y=>`
       <button onclick="kararYilSec(${y})" style="
         padding:4px 11px;border-radius:6px;font-size:11px;font-family:var(--font);
         border:0.5px solid ${y===window._kararYil?'var(--blue)':'var(--border2)'};
@@ -15172,7 +15185,8 @@ window.updateTopbarUser = function(user){
     if(!window._ykYilFilter) window._ykYilFilter = new Set([mevcutYil]);
     /* Eğitim filtresi daima mevcut yıl ile başlar */
     window._etkYilFilter = new Set([mevcutYil]);
-    window._mkYilFilter = window._mkYilFilter || new Set([mevcutYil]);
+    // _mkYilFilter: null ise tüm yıllar görünür, sıfırlanmaz
+    if(window._mkYilFilter === undefined) window._mkYilFilter = null;
     window._meclisYilFilter = window._meclisYilFilter || new Set([mevcutYil]);
     /* Memnuniyet — her açılışta mevcut yıl */
     if(window.YD_STATE) window.YD_STATE['memnuniyet'] = new Set([mevcutYil]);
