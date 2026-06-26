@@ -12650,7 +12650,10 @@ window.mkToplantıEkle = function(){
     const saat     = document.getElementById('mk-f-saat')?.value||'';
     const bitisSaat= document.getElementById('mk-f-bitis-saat')?.value||'';
     const adGiris  = document.getElementById('mk-f-ad').value.trim();
-    const tarih    = new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+    // Tarihi güvenli parse et (new Date('yyyy-MM-dd') timezone kaymasına neden olabilir)
+    const [_yy,_mm,_dd] = tarihVal.split('-').map(Number);
+    const _aylar=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const tarih    = (_dd && _mm && _yy) ? (_dd+' '+_aylar[_mm-1]+' '+_yy) : tarihVal;
     const ad       = adGiris || `Meslek Komitesi Toplantısı — ${tarih}`;
     const mkId     = genUUID();
     MK_DB.toplantılar.push({id:mkId, ad, tarih, tarihIso:tarihVal, saat, bitisSaat, komite:'', komiteNo:0, durum:'planlandi'});
@@ -12809,7 +12812,7 @@ window.mkToplantıDuzenle = function(id){
   document.getElementById('yk-modal-title').textContent='Komite Toplantısını Düzenle';
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div><label class="yk-lbl">Toplantı Adı</label><input id="mk-d-ad" class="yk-inp" value="${t.ad||''}"></div>
+      <div><label class="yk-lbl">Toplantı Adı</label><input id="mk-d-ad" class="yk-inp" value="${(t.ad||'').replace(/"/g,'&quot;')}"></div>
       <div><label class="yk-lbl">Tarih</label><input id="mk-d-tarih" type="date" class="yk-inp" value="${t.tarihIso||''}"></div>
       <div><label class="yk-lbl">Meslek Komitesi</label><input id="mk-d-komite" class="yk-inp" value="${t.komite||''}"></div>
       <div><label class="yk-lbl">Durum</label>
@@ -12817,14 +12820,38 @@ window.mkToplantıDuzenle = function(id){
           ${['planlandi','tamamlandi'].map(d=>`<option value="${d}" ${t.durum===d?'selected':''}>${d==='planlandi'?'Planlandı':'Tamamlandı'}</option>`).join('')}
         </select></div>
     </div>`;
-  document.getElementById('yk-modal-kaydet').onclick=()=>{
+  document.getElementById('yk-modal-kaydet').onclick= async ()=>{
     const ad=document.getElementById('mk-d-ad').value.trim();
     if(!ad){alert('Ad zorunludur.');return;}
-    t.ad=ad;
     const tarihVal=document.getElementById('mk-d-tarih').value;
-    if(tarihVal){ t.tarih=new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}); t.tarihIso=tarihVal; }
-    t.komite=document.getElementById('mk-d-komite').value.trim();
-    t.durum=document.getElementById('mk-d-durum').value;
+    // Tarihi güvenli parse et — new Date('2026-xx-xx') timezone kaymasını önlemek için
+    let tarihGoster = t.tarih; // mevcut değeri koru
+    let tarihIso    = t.tarihIso;
+    if(tarihVal){
+      const [yy,mm,dd] = tarihVal.split('-').map(Number);
+      if(yy && mm && dd){
+        const aylar=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+        tarihGoster = dd+' '+aylar[mm-1]+' '+yy;
+        tarihIso    = tarihVal;
+      }
+    }
+    // Lokal güncelle
+    t.ad       = ad;
+    t.tarih    = tarihGoster;
+    t.tarihIso = tarihIso;
+    t.komite   = document.getElementById('mk-d-komite').value.trim();
+    t.durum    = document.getElementById('mk-d-durum').value;
+
+    // Supabase'e kaydet
+    const {error} = await _supa.from('karar_toplantilari').update({
+      ad      : t.ad,
+      tarih   : t.tarih,
+      tarih_iso: t.tarihIso,
+      komite  : t.komite,
+      durum   : t.durum
+    }).eq('id', id);
+    if(error){ console.error('MK toplantı güncelleme hatası:', error.message); alert('Güncelleme hatası: '+error.message); return; }
+
     ykModalKapat(); mkRender();
   };
   document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
@@ -21303,6 +21330,13 @@ let _seciliFirmaNo  = null;   // uyeler.no
 let _seciliFirmaAdi = null;
 let _mod = 'home';
 
+/* Disaridan firma set etmek icin (skPaneDuzenle tarafindan kullanilir) */
+window._skSetFirma = function(id, no, ad){
+  _seciliFirmaId  = id;
+  _seciliFirmaNo  = no;
+  _seciliFirmaAdi = ad;
+};
+
 /* ══════════════════════════════════════════════════════════
    SUPABASE YARDIMCILARI
 ══════════════════════════════════════════════════════════ */
@@ -22006,12 +22040,15 @@ window.skAra = function(q){
 window.skFirmaSecById = async function(id, no, ad){
   document.getElementById('sk-sonuclar').style.display='none';
   const inp=document.getElementById('sk-search'); if(inp) inp.value='';
-  await _skFirmaGoster(id, no, ad);
+  await _skFirmaGosterImpl(id, no, ad);
 };
 
 
 
-async function _skFirmaGoster(id, no, ad){
+window._skFirmaGoster = async function(id, no, ad){
+  return _skFirmaGosterImpl(id, no, ad);
+};
+async function _skFirmaGosterImpl(id, no, ad){
   _seciliFirmaId  = id;
   _seciliFirmaNo  = no;
   _seciliFirmaAdi = ad;
@@ -22688,8 +22725,7 @@ window.skPaneDuzenle = function(uyeId){
   const no = cf?.no || (v && v.uye_no) || uyeId;
   const ad = cf?.firma || cf?.name || (v && (v.uye_adi||v.firma_adi)) || '';
 
-  // Sekmeyi dogrudan aktif et (crmNavSec sanayiMainAc ü tetikler, biz bunu bypass ediyoruz)
-  if(typeof _aktifCrmSekme !== 'undefined') window._aktifCrmSekme_saver = _aktifCrmSekme;
+  // 1) Sekmeyi manuel aktif et — crmNavSec cagrilmaz (o sanayiMainAc->ana menu akisini tetikler)
   document.querySelectorAll('#crm-nav-sub .nav-sub').forEach(b=>b.classList.remove('active'));
   const _btn = document.getElementById('nav-crm-sanayi');
   if(_btn) _btn.classList.add('active');
@@ -22699,19 +22735,32 @@ window.skPaneDuzenle = function(uyeId){
   document.getElementById('s-sanayi-main')?.classList.add('active');
   const _tbTitle = document.getElementById('tb-title'); if(_tbTitle) _tbTitle.textContent='Sanayi Bilgi Sistemi';
   const _tbSub = document.getElementById('tb-sub'); if(_tbSub) _tbSub.textContent='Kapasite raporu yükleme ve sanayi veri takibi';
-  const _main = document.querySelector('.main'); if(_main) _main.scrollTop=0;
+  const _mainEl = document.querySelector('.main'); if(_mainEl) _mainEl.scrollTop=0;
 
-  // Kapasite formunu ac ve firmayı yerlestir
+  // 2) Kapasite formunu render et — sanayiSecKapasite'yi KULLANMIYORUZ (o _seciliFirma*'yi sifirlar)
+  const root = document.getElementById('sanayi-main-root');
+  if(!root) return;
+  sanayiRenderKapasite(root);
+
+  // 3) IIFE icindeki durum degiskenlerini set et
+  if(window._skSetFirma) window._skSetFirma(uyeId, no, ad);
+
+  // 4) Chip + form'u goster
   setTimeout(()=>{
-    if(window.sanayiSecKapasite) window.sanayiSecKapasite();
-    setTimeout(()=>{
-      if(window._skFirmaGoster) {
-        window._skFirmaGoster(uyeId, no, ad).then(()=>{
-          setTimeout(()=>{ if(v && window.skFormDoldur) skFormDoldur(v); }, 200);
-        });
-      }
-    }, 300);
-  }, 80);
+    const chip = document.getElementById('sk-secili');
+    const fw   = document.getElementById('sk-form-wrap');
+    const avEl = document.getElementById('sk-avatar');
+    const adEl = document.getElementById('sk-firma-adi');
+    const durEl= document.getElementById('sk-rapor-durumu');
+    if(chip) chip.style.display = 'flex';
+    if(fw)   fw.style.display   = 'block';
+    if(avEl) avEl.textContent   = ad.split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+    if(adEl) adEl.textContent   = ad;
+    if(durEl) durEl.textContent = 'Mevcut rapor düzenleniyor…';
+
+    // 5) Formu kayitli veriyle doldur
+    if(v && window.skFormDoldur) skFormDoldur(v);
+  }, 100);
 };
 
 function skPaneDetayHtml(v){
