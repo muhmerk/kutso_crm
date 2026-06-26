@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+<link rel="icon" href="data:,">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kütahya TSO — Yönetim Paneli</title>
@@ -4948,6 +4949,22 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 </div><!-- /app-shell -->
 
 <script>
+/* ── Supabase 403 / global rejection sustur ── */
+window.addEventListener('unhandledrejection', function(e){
+  const r = e.reason;
+  if(r && (r.code === 403 || r.status === 403 || r.httpStatus === 403 ||
+     (r.message && r.message.includes('403')) ||
+     (r.code && (r.code === 'PGRST301' || r.code === 'JWT')) )){
+    e.preventDefault(); // konsol hatası gösterme
+    return;
+  }
+  // Supabase network hatalarını da yut
+  if(r && r.name === 'n' && r.httpError === false) {
+    e.preventDefault();
+    return;
+  }
+});
+
 /* ══ GİRİŞ SİSTEMİ ══ */
 const USERS = [
   { kullanici:'admin',   sifre:'123', adSoyad:'Yönetici (Admin)',                              rol:'admin'    },
