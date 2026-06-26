@@ -12435,7 +12435,7 @@ window.kararlarSec = function(tip, btn){
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.mkRender) window.mkRender(); else mkRender(); }, 30);
   }
   else if(tip==='meclis'){
-    window._meclisYilFilter = new Set([new Date().getFullYear()]);
+    if(!window._meclisYilFilter) window._meclisYilFilter = null;
     if(window.YD_STATE) window.YD_STATE['meclis'] = new Set([new Date().getFullYear()]);
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.meclisRender) window.meclisRender(); else meclisRender(); }, 30);
   }
@@ -13284,7 +13284,7 @@ function meclisRenderListe(){
       <div style="width:52px;height:52px;border-radius:12px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
         <i class="ti ti-users-group" style="font-size:24px;color:var(--blue)"></i>
       </div>
-      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${window._kararYil} yılı için meclis toplantısı girilmedi</div>
+      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${window._kararYil ? window._kararYil+' yılı için meclis' : 'Henüz meclis'} toplantısı girilmedi</div>
       <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
     </div>`; return;
   }
@@ -13360,6 +13360,12 @@ window.meclisToplantıEkle=function(){
         <div><label class="yk-lbl">Dönem</label><input id="meclis-f-donem" class="yk-inp" placeholder="Kaçıncı dönem..."></div>
       </div>
       <div><label class="yk-lbl">Tür</label><select id="meclis-f-tur" class="yk-inp"><option value="olagan">Olağan</option><option value="olaganustu">Olağanüstü</option></select></div>
+      <div><label class="yk-lbl">Durum</label>
+        <select id="meclis-f-durum" class="yk-inp">
+          <option value="planlandi" selected>Planlandı</option>
+          <option value="tamamlandi">Tamamlandı</option>
+        </select>
+      </div>
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick=()=>{
     const ad=document.getElementById('meclis-f-ad').value.trim();
@@ -13367,11 +13373,14 @@ window.meclisToplantıEkle=function(){
     const saat=document.getElementById('meclis-f-saat')?.value||'';
     const bitisSaat=document.getElementById('meclis-f-bitis-saat')?.value||'';
     if(!ad||!tarihVal){alert('Ad ve tarih zorunludur.');return;}
-    const tarih=new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+    const [_yy,_mm,_dd]=tarihVal.split('-').map(Number);
+    const _aylar=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const tarih=(_dd&&_mm&&_yy)?(_dd+' '+_aylar[_mm-1]+' '+_yy):tarihVal;
     const mtId = genUUID();
     const donem=document.getElementById('meclis-f-donem').value.trim();
-    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,saat,bitisSaat,donem,durum:'planlandi'});
-    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,saat,bitis_saat:bitisSaat,durum:'planlandi'}])
+    const durum=document.getElementById('meclis-f-durum')?.value||'planlandi';
+    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,tarihIso:tarihVal,saat,bitisSaat,donem,durum});
+    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,saat,bitis_saat:bitisSaat,donem,durum}])
       .then(({error})=>{if(error) console.error('Meclis toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); meclisRender();
   };
@@ -13534,9 +13543,18 @@ window.meclisToplantıDuzenle = function(id){
     if(!ad){alert('Ad zorunludur.');return;}
     t.ad=ad;
     const tarihVal=document.getElementById('meclis-d-tarih').value;
-    if(tarihVal){ t.tarih=new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}); t.tarihIso=tarihVal; }
+    if(tarihVal){
+      const [_y,_m,_d]=tarihVal.split('-').map(Number);
+      const _ay=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+      t.tarih=(_d&&_m&&_y)?(_d+' '+_ay[_m-1]+' '+_y):tarihVal;
+      t.tarihIso=tarihVal;
+    }
     t.donem=document.getElementById('meclis-d-donem').value.trim();
     t.durum=document.getElementById('meclis-d-durum').value;
+    // Supabase'e kaydet
+    _supa.from('karar_toplantilari').update({
+      ad: t.ad, tarih: t.tarih, tarih_iso: t.tarihIso, donem: t.donem, durum: t.durum
+    }).eq('id', id).then(({error})=>{ if(error) console.error('Meclis güncelleme hatası:', error.message); });
     ykModalKapat(); meclisRender();
   };
   document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
@@ -13936,11 +13954,13 @@ window.gorevRender = gorevRender;
 /* ── Kararlar yıl filtresi — tüm alt menüler için ── */
 window._kararYil = new Date().getFullYear(); /* Mevcut yıl otomatik seçili */
 window._mkYilFilter = null; /* Başlangıçta filtre yok — tüm yıllar görünür */
+window._meclisYilFilter = null; /* Başlangıçta filtre yok — tüm yıllar görünür */
 
 window.kararYilSec = function(yil){
   window._kararYil = yil;
-  // MK yıl filtresiyle senkronize et
+  // Yıl filtreleriyle senkronize et
   window._mkYilFilter = yil ? new Set([yil]) : null;
+  window._meclisYilFilter = yil ? new Set([yil]) : null;
   /* Aktif paneli yenile */
   const aktif = window._aktifKararPanel;
   if(aktif==='yk'){ kararYilPikerGuncelle(); if(window.ykRender) window.ykRender(); }
@@ -15223,7 +15243,7 @@ window.updateTopbarUser = function(user){
     window._etkYilFilter = new Set([mevcutYil]);
     // _mkYilFilter: null ise tüm yıllar görünür, sıfırlanmaz
     if(window._mkYilFilter === undefined) window._mkYilFilter = null;
-    window._meclisYilFilter = window._meclisYilFilter || new Set([mevcutYil]);
+    if(window._meclisYilFilter === undefined) window._meclisYilFilter = null;
     /* Memnuniyet — her açılışta mevcut yıl */
     if(window.YD_STATE) window.YD_STATE['memnuniyet'] = new Set([mevcutYil]);
     if(window.YD_STATE) window.YD_STATE['sikayet'] = window.YD_STATE['sikayet'] || new Set([mevcutYil]);
