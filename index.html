@@ -13351,20 +13351,24 @@ window.meclisToplantıEkle=function(){
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Toplantı Adı</label><input id="meclis-f-ad" class="yk-inp" placeholder="Meclis toplantısı adı..."></div>
+      <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="meclis-f-tarih" type="date" class="yk-inp"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="yk-lbl">Tarih</label><input id="meclis-f-tarih" type="date" class="yk-inp"></div>
         <div><label class="yk-lbl">Başlangıç Saati</label><input id="meclis-f-saat" type="time" class="yk-inp"></div>
+        <div><label class="yk-lbl">Bitiş Saati</label><input id="meclis-f-bitis-saat" type="time" class="yk-inp"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="yk-lbl">Bitiş Saati</label><input id="meclis-f-bitis-saat" type="time" class="yk-inp"></div>
-        <div><label class="yk-lbl">Dönem</label><input id="meclis-f-donem" class="yk-inp" placeholder="Kaçıncı dönem..."></div>
-      </div>
-      <div><label class="yk-lbl">Tür</label><select id="meclis-f-tur" class="yk-inp"><option value="olagan">Olağan</option><option value="olaganustu">Olağanüstü</option></select></div>
-      <div><label class="yk-lbl">Durum</label>
-        <select id="meclis-f-durum" class="yk-inp">
-          <option value="planlandi" selected>Planlandı</option>
-          <option value="tamamlandi">Tamamlandı</option>
-        </select>
+        <div><label class="yk-lbl">Tür</label>
+          <select id="meclis-f-tur" class="yk-inp">
+            <option value="olagan">Olağan</option>
+            <option value="olaganustu">Olağanüstü</option>
+          </select>
+        </div>
+        <div><label class="yk-lbl">Durum</label>
+          <select id="meclis-f-durum" class="yk-inp">
+            <option value="planlandi" selected>Planlandı</option>
+            <option value="tamamlandi">Tamamlandı</option>
+          </select>
+        </div>
       </div>
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick=()=>{
@@ -13377,10 +13381,10 @@ window.meclisToplantıEkle=function(){
     const _aylar=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
     const tarih=(_dd&&_mm&&_yy)?(_dd+' '+_aylar[_mm-1]+' '+_yy):tarihVal;
     const mtId = genUUID();
-    const donem=document.getElementById('meclis-f-donem').value.trim();
+    const tur=document.getElementById('meclis-f-tur')?.value||'olagan';
     const durum=document.getElementById('meclis-f-durum')?.value||'planlandi';
-    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,tarihIso:tarihVal,saat,bitisSaat,donem,durum});
-    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,saat,bitis_saat:bitisSaat,donem,durum}])
+    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,tarihIso:tarihVal,saat,bitisSaat,donem:'',durum,tur});
+    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,saat,bitis_saat:bitisSaat,durum}])
       .then(({error})=>{if(error) console.error('Meclis toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); meclisRender();
   };
@@ -13530,13 +13534,26 @@ window.meclisToplantıDuzenle = function(id){
   document.getElementById('yk-modal-title').textContent='Meclis Toplantısını Düzenle';
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div><label class="yk-lbl">Toplantı Adı</label><input id="meclis-d-ad" class="yk-inp" value="${t.ad||''}"></div>
-      <div><label class="yk-lbl">Tarih</label><input id="meclis-d-tarih" type="date" class="yk-inp" value="${t.tarihIso||''}"></div>
-      <div><label class="yk-lbl">Dönem</label><input id="meclis-d-donem" class="yk-inp" value="${t.donem||''}"></div>
-      <div><label class="yk-lbl">Durum</label>
-        <select id="meclis-d-durum" class="yk-inp">
-          ${['planlandi','tamamlandi'].map(d=>`<option value="${d}" ${t.durum===d?'selected':''}>${d==='planlandi'?'Planlandı':'Tamamlandı'}</option>`).join('')}
-        </select></div>
+      <div><label class="yk-lbl">Toplantı Adı</label><input id="meclis-d-ad" class="yk-inp" value="${(t.ad||'').replace(/"/g,'&quot;')}" placeholder="Meclis toplantısı adı..."></div>
+      <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="meclis-d-tarih" type="date" class="yk-inp" value="${t.tarihIso||''}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Başlangıç Saati</label><input id="meclis-d-saat" type="time" class="yk-inp" value="${t.saat||''}"></div>
+        <div><label class="yk-lbl">Bitiş Saati</label><input id="meclis-d-bitis-saat" type="time" class="yk-inp" value="${t.bitisSaat||''}"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Tür</label>
+          <select id="meclis-d-tur" class="yk-inp">
+            <option value="olagan" ${(t.toplantıTuru||t.tur||'olagan')==='olagan'?'selected':''}>Olağan</option>
+            <option value="olaganustu" ${(t.toplantıTuru||t.tur||'')==='olaganustu'?'selected':''}>Olağanüstü</option>
+          </select>
+        </div>
+        <div><label class="yk-lbl">Durum</label>
+          <select id="meclis-d-durum" class="yk-inp">
+            <option value="planlandi" ${(t.durum||'planlandi')==='planlandi'?'selected':''}>Planlandı</option>
+            <option value="tamamlandi" ${t.durum==='tamamlandi'?'selected':''}>Tamamlandı</option>
+          </select>
+        </div>
+      </div>
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick=()=>{
     const ad=document.getElementById('meclis-d-ad').value.trim();
@@ -13549,11 +13566,14 @@ window.meclisToplantıDuzenle = function(id){
       t.tarih=(_d&&_m&&_y)?(_d+' '+_ay[_m-1]+' '+_y):tarihVal;
       t.tarihIso=tarihVal;
     }
-    t.donem=document.getElementById('meclis-d-donem').value.trim();
-    t.durum=document.getElementById('meclis-d-durum').value;
-    // Supabase'e kaydet
+    t.saat      = document.getElementById('meclis-d-saat')?.value||t.saat||'';
+    t.bitisSaat = document.getElementById('meclis-d-bitis-saat')?.value||t.bitisSaat||'';
+    t.durum     = document.getElementById('meclis-d-durum').value;
+    t.toplantıTuru = document.getElementById('meclis-d-tur')?.value||'olagan';
+    // Supabase'e kaydet (tur='meclis' korunur)
     _supa.from('karar_toplantilari').update({
-      ad: t.ad, tarih: t.tarih, tarih_iso: t.tarihIso, donem: t.donem, durum: t.durum
+      ad: t.ad, tarih: t.tarih, tarih_iso: t.tarihIso,
+      saat: t.saat, bitis_saat: t.bitisSaat, durum: t.durum
     }).eq('id', id).then(({error})=>{ if(error) console.error('Meclis güncelleme hatası:', error.message); });
     ykModalKapat(); meclisRender();
   };
