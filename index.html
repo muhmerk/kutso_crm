@@ -13089,22 +13089,21 @@ window.mkToplantıDuzenle = function(id){
     const tarihGoster = (dd&&mm&&yy) ? (dd+' '+aylar[mm-1]+' '+yy) : tarihVal;
     const ad        = adGiris || ('Meslek Komitesi Toplantısı — '+tarihGoster);
 
-    // Lokal güncelle
-    t.ad        = ad;
-    t.tarih     = tarihGoster;
-    t.tarihIso  = tarihVal;
-    t.saat      = saat;
-    t.bitisSaat = bitisSaat;
-    t.tur       = tur;
+    // Lokal güncelle (tur='mk' korunur, sadece toplantıTuru değişir)
+    t.ad           = ad;
+    t.tarih        = tarihGoster;
+    t.tarihIso     = tarihVal;
+    t.saat         = saat;
+    t.bitisSaat    = bitisSaat;
+    t.toplantıTuru = tur; // 'olagan' / 'olaganustu' — tur:'mk' değişmez
 
-    // Supabase'e kaydet
+    // Supabase'e kaydet (tur alanına dokunmuyoruz — 'mk' olarak kalır)
     const {error} = await _supa.from('karar_toplantilari').update({
       ad        : t.ad,
       tarih     : t.tarih,
       tarih_iso : t.tarihIso,
       saat      : t.saat,
-      bitis_saat: t.bitisSaat,
-      tur       : t.tur
+      bitis_saat: t.bitisSaat
     }).eq('id', id);
     if(error){ console.error('MK toplantı güncelleme hatası:', error.message); alert('Güncelleme hatası: '+error.message); return; }
 
