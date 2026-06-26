@@ -12431,11 +12431,18 @@ window.kararlarSec = function(tip, btn){
   }
   else if(tip==='mk'){
     // Filtreyi sıfırlama — mevcut seçimi koru ya da tüm yılları göster
-    if(!window._mkYilFilter) window._mkYilFilter = null; // null = filtre yok, tümü göster
+    // İlk girişte mevcut yıl seçili, sonraki girişlerde mevcut filtre korunur
+    if(window._mkYilFilter === null && !window._mkYilFilterBaslatildi){
+      window._mkYilFilter = new Set([new Date().getFullYear()]);
+      window._mkYilFilterBaslatildi = true;
+    }
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.mkRender) window.mkRender(); else mkRender(); }, 30);
   }
   else if(tip==='meclis'){
-    if(!window._meclisYilFilter) window._meclisYilFilter = null;
+    if(window._meclisYilFilter === null && !window._meclisYilFilterBaslatildi){
+      window._meclisYilFilter = new Set([new Date().getFullYear()]);
+      window._meclisYilFilterBaslatildi = true;
+    }
     if(window.YD_STATE) window.YD_STATE['meclis'] = new Set([new Date().getFullYear()]);
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.meclisRender) window.meclisRender(); else meclisRender(); }, 30);
   }
@@ -13144,11 +13151,6 @@ window.mkToplantıDuzenle = function(id){
     }).eq('id', id);
     if(error){ console.error('MK toplantı güncelleme hatası:', error.message); alert('Güncelleme hatası: '+error.message); return; }
 
-    // Filtreyi güncellenen tarihin yılına çek
-    if(window._mkYilFilter && window._mkYilFilter.size > 0){
-      window._mkYilFilter = new Set([yy]);
-      window._kararYil = yy;
-    }
     ykModalKapat(); mkRender();
   };
   document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
@@ -13712,14 +13714,6 @@ window.meclisToplantıDuzenle = function(id){
       ad: t.ad, tarih: t.tarih, tarih_iso: t.tarihIso,
       saat: t.saat, bitis_saat: t.bitisSaat, durum: t.durum
     }).eq('id', id).then(({error})=>{ if(error) console.error('Meclis güncelleme hatası:', error.message); });
-    // Filtreyi güncellenen tarihin yılına çek
-    if(tarihVal){
-      const _yeni = parseInt(tarihVal.slice(0,4));
-      if(_yeni && window._meclisYilFilter && window._meclisYilFilter.size > 0){
-        window._meclisYilFilter = new Set([_yeni]);
-        window._kararYil = _yeni;
-      }
-    }
     ykModalKapat(); meclisRender();
   };
   document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
@@ -14118,8 +14112,10 @@ window.gorevRender = gorevRender;
 
 /* ── Kararlar yıl filtresi — tüm alt menüler için ── */
 window._kararYil = new Date().getFullYear(); /* Mevcut yıl otomatik seçili */
-window._mkYilFilter = null; /* Başlangıçta filtre yok — tüm yıllar görünür */
-window._meclisYilFilter = null; /* Başlangıçta filtre yok — tüm yıllar görünür */
+window._mkYilFilter = null; /* Sekmeye ilk girişte mevcut yıl set edilecek */
+window._mkYilFilterBaslatildi = false;
+window._meclisYilFilter = null; /* Sekmeye ilk girişte mevcut yıl set edilecek */
+window._meclisYilFilterBaslatildi = false;
 
 window.kararYilSec = function(yil){
   window._kararYil = yil;
