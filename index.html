@@ -12141,8 +12141,10 @@ function ykToplantıKaydet(){
   const tur      = document.getElementById('yf-toplanti-tur').value;
   const aciklama = document.getElementById('yf-toplanti-aciklama').value.trim();
   if(!ad || !tarihVal){ alert('Toplantı adı ve tarih zorunludur.'); return; }
-  const tarihStr = new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-  const yil = new Date(tarihVal).getFullYear();
+  const [_yy2,_mm2,_dd2]=tarihVal.split('-').map(Number);
+  const _aylar2=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  const tarihStr=(_dd2&&_mm2&&_yy2)?(_dd2+' '+_aylar2[_mm2-1]+' '+_yy2):tarihVal;
+  const yil=_yy2||new Date(tarihVal).getFullYear();
   const olagan = YK_DB.toplantılar.filter(t=>!t.ad.includes('Olağanüstü')).length;
   const no = tur==='olaganustu' ? 'OÜ' : olagan+1;
   const id = genUUID();
@@ -12176,22 +12178,35 @@ window.ykToplantıDuzenle = function(id){
     const tarihVal=document.getElementById('yf-toplanti-tarih').value;
     if(!ad){alert('Ad zorunludur.');return;}
     t.ad=ad;
-    if(tarihVal){ t.tarih=new Date(tarihVal).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}); t.tarihIso=tarihVal; t.yil=new Date(tarihVal).getFullYear(); }
+    if(tarihVal){
+      const [_y,_m,_d]=tarihVal.split('-').map(Number);
+      const _ay=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+      t.tarih=(_d&&_m&&_y)?(_d+' '+_ay[_m-1]+' '+_y):tarihVal;
+      t.tarihIso=tarihVal; t.yil=_y;
+    }
     t.durum=document.getElementById('yf-toplanti-durum').value||t.durum;
     t.aciklama=document.getElementById('yf-toplanti-aciklama').value.trim();
+    // Supabase'e kaydet
+    _supa.from('karar_toplantilari').update({
+      ad: t.ad, tarih: t.tarih, tarih_iso: t.tarihIso, durum: t.durum
+    }).eq('id', id).then(({error})=>{ if(error) console.error('YK toplantı güncelleme hatası:', error.message); });
     ykModalKapat(); ykRender();
   };
   document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
   document.getElementById('yk-modal-overlay').classList.add('yk-modal-visible');
 };
 
-window.ykToplantıSil = function(id){
+window.ykToplantıSil = async function(id){
   if(!confirm('Bu toplantıyı ve tüm gündemlerini silmek istiyor musunuz?')) return;
+  const gundemIdler = YK_DB.gundemler.filter(g=>g.toplantıId===id).map(g=>g.id);
+  if(gundemIdler.length){
+    await _supa.from('karar_atamalar').delete().in('gundem_id', gundemIdler);
+    await _supa.from('karar_gundemler').delete().eq('toplanti_id', id);
+  }
+  const {error} = await _supa.from('karar_toplantilari').delete().eq('id', id);
+  if(error){ console.error('YK toplantı silme hatası:', error.message); alert('Silme hatası: '+error.message); return; }
   YK_DB.toplantılar = YK_DB.toplantılar.filter(x=>x.id!==id);
   YK_DB.gundemler   = YK_DB.gundemler.filter(x=>x.toplantıId!==id);
-  /* Supabase'den sil — cascade ile gündemler ve atamalar da silinir */
-  _supa.from('karar_toplantilari').delete().eq('id',id)
-    .then(({error})=>{ if(error) console.error('YK toplantı silme hatası:',error.message); });
   ykRender();
   if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 };
@@ -13157,12 +13172,17 @@ window.mkToplantıDuzenle = function(id){
   document.getElementById('yk-modal-overlay').classList.add('yk-modal-visible');
 };
 
-window.mkToplantıSil = function(id){
+window.mkToplantıSil = async function(id){
   if(!confirm('Bu toplantıyı ve tüm gündemlerini silmek istiyor musunuz?')) return;
+  const gundemIdler = MK_DB.gundemler.filter(g=>g.toplantıId===id).map(g=>g.id);
+  if(gundemIdler.length){
+    await _supa.from('karar_atamalar').delete().in('gundem_id', gundemIdler);
+    await _supa.from('karar_gundemler').delete().eq('toplanti_id', id);
+  }
+  const {error} = await _supa.from('karar_toplantilari').delete().eq('id', id);
+  if(error){ console.error('MK toplantı silme hatası:', error.message); alert('Silme hatası: '+error.message); return; }
   MK_DB.toplantılar = MK_DB.toplantılar.filter(x=>x.id!==id);
   MK_DB.gundemler   = MK_DB.gundemler.filter(x=>x.toplantıId!==id);
-  _supa.from('karar_toplantilari').delete().eq('id',id)
-    .then(({error})=>{ if(error) console.error('MK toplantı silme hatası:',error.message); });
   mkRender();
   if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 };
@@ -13718,12 +13738,17 @@ window.meclisToplantıDuzenle = function(id){
   document.getElementById('yk-modal-overlay').classList.add('yk-modal-visible');
 };
 
-window.meclisToplantıSil = function(id){
-  if(!confirm('Bu toplantıyı ve tüm kararlarını silmek istiyor musunuz?')) return;
+window.meclisToplantıSil = async function(id){
+  if(!confirm('Bu toplantıyı ve tüm gündemlerini silmek istiyor musunuz?')) return;
+  const gundemIdler = MECLIS_DB.gundemler.filter(g=>g.toplantıId===id).map(g=>g.id);
+  if(gundemIdler.length){
+    await _supa.from('karar_atamalar').delete().in('gundem_id', gundemIdler);
+    await _supa.from('karar_gundemler').delete().eq('toplanti_id', id);
+  }
+  const {error} = await _supa.from('karar_toplantilari').delete().eq('id', id);
+  if(error){ console.error('Meclis toplantı silme hatası:', error.message); alert('Silme hatası: '+error.message); return; }
   MECLIS_DB.toplantılar = MECLIS_DB.toplantılar.filter(x=>x.id!==id);
   MECLIS_DB.gundemler   = MECLIS_DB.gundemler.filter(x=>x.toplantıId!==id);
-  _supa.from('karar_toplantilari').delete().eq('id',id)
-    .then(({error})=>{ if(error) console.error('Meclis toplantı silme hatası:',error.message); });
   meclisRender();
   if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 };
@@ -14263,6 +14288,22 @@ function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikI
     });
     if(!yeniAtananlar.length){ alert('En az bir atama gereklidir.'); return; }
     g.atananlar=yeniAtananlar;
+
+    // Gündem Supabase güncellemesi
+    _supa.from('karar_gundemler').update({
+      no: g.no, konu: g.konu, ozet: g.ozet, son_tarih: g.sonTarih||null, oncelik: g.oncelik
+    }).eq('id', g.id).then(({error})=>{ if(error) console.error('Gündem güncelleme hatası:', error.message); });
+
+    // Atamalar: mevcut atamaları sil, yeniden ekle
+    (async ()=>{
+      await _supa.from('karar_atamalar').delete().eq('gundem_id', g.id);
+      for(const a of yeniAtananlar){
+        await _supa.from('karar_atamalar').insert([{
+          gundem_id: g.id, kullanici: a.kullanici, ad: a.ad, gorev: a.gorev, durum: a.durum
+        }]);
+      }
+    })().catch(e=>console.error('Atama güncelleme hatası:', e));
+
     onKaydet();
     if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
     if(window.ykBadgeGuncelle) window.ykBadgeGuncelle();
