@@ -12667,59 +12667,42 @@ window.mkGundemYonetAc = function(toplantıId){
 
 function mkGundemEkraniRender(toplantıId, kararEl){
   const gundemler = MK_DB.gundemler.filter(g=>g.toplantıId===toplantıId);
+  const sira = gundemler.length + 1;
+
+  // Mevcut gündemler listesi + ilk boş input satırı
+  const gundemSatirlariHtml = gundemler.map((g,i) => mkGundemSatirHtml(g, i+1, toplantıId)).join('');
 
   kararEl.innerHTML = `
     <div style="max-width:700px;margin:0 auto">
-
-      <!-- Gündem listesi -->
-      <div id="mk-gundem-liste" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
-        ${gundemler.length === 0
-          ? '<div style="font-size:13px;color:var(--text2);padding:16px 0;text-align:center">Henüz gündem eklenmedi</div>'
-          : gundemler.map((g,i) => mkGundemKartHtml(g, i+1, toplantıId)).join('')
-        }
+      <div style="display:flex;flex-direction:column;gap:0" id="mk-gundem-satirlar">
+        ${gundemSatirlariHtml}
+        ${mkYeniSatirHtml(sira, toplantıId)}
       </div>
-
-      <!-- Yeni gündem ekleme formu -->
-      <div class="card" id="mk-gundem-form-wrap" style="padding:16px">
-        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">
-          <i class="ti ti-plus" style="color:var(--blue)"></i> Gündem Ekle
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div>
-            <label class="yk-lbl">Gündem Konusu <span style="color:var(--red)">*</span></label>
-            <input id="mk-gf-konu" class="yk-inp" placeholder="Gündem başlığını yazın...">
-          </div>
-          <div>
-            <label class="yk-lbl">Açıklama / Karar Özeti</label>
-            <textarea id="mk-gf-ozet" class="yk-inp" style="min-height:56px;resize:vertical" placeholder="İsteğe bağlı açıklama..."></textarea>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label class="yk-lbl">Öncelik</label>
-              <select id="mk-gf-oncelik" class="yk-inp">
-                <option value="normal" selected>Normal</option>
-                <option value="acil">Acil</option>
-                <option value="dusuk">Düşük</option>
-              </select>
-            </div>
-            <div>
-              <label class="yk-lbl">Durum</label>
-              <select id="mk-gf-durum" class="yk-inp">
-                <option value="planlandi" selected>Planlandı</option>
-                <option value="tamamlandi">Tamamlandı</option>
-              </select>
-            </div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
-            <button class="btn btn-sm" onclick="mkGundemFormTemizle()"><i class="ti ti-x"></i> Temizle</button>
-            <button class="btn btn-p btn-sm" onclick="mkGundemKaydet('${toplantıId}')">
-              <i class="ti ti-device-floppy"></i> Kaydet ve Sıradaki Gündem
-            </button>
-          </div>
-        </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+        <button class="btn btn-sm" onclick="mkGeriListe()"><i class="ti ti-x"></i> Kapat</button>
+        <button class="btn btn-p btn-sm" id="mk-gundem-kaydet-btn" onclick="mkGundemSatirKaydet('${toplantıId}')">
+          <i class="ti ti-device-floppy"></i> Kaydet
+        </button>
       </div>
-
     </div>`;
+}
+
+function mkGundemSatirHtml(g, sira, toplantıId){
+  const idE = g.id.replace(/'/g,"\'");
+  const konuE = (g.konu||'').replace(/"/g,'&quot;');
+  return `<div class="mk-gundem-satir" id="mk-gs-${g.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+    <div style="width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
+    <input class="yk-inp" style="flex:1;margin:0" value="${konuE}" onblur="mkGundemSatirGuncelle('${idE}','${toplantıId}',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();mkGundemSatirGuncelle('${idE}','${toplantıId}',this.value);}">
+    <button class="btn btn-sm" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="mkGundemSil('${idE}','${toplantıId}')" title="Sil"><i class="ti ti-trash"></i></button>
+  </div>`;
+}
+
+function mkYeniSatirHtml(sira, toplantıId){
+  return `<div id="mk-yeni-satir" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+    <div style="width:24px;height:24px;border-radius:50%;background:var(--border);color:var(--text2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
+    <input id="mk-gf-konu" class="yk-inp" style="flex:1;margin:0" placeholder="Gündem yazın..." onkeydown="if(event.key==='Enter'){event.preventDefault();mkGundemSatirKaydet('${toplantıId}');}">
+    <div style="width:32px;flex-shrink:0"></div>
+  </div>`;
 }
 
 function mkGundemKartHtml(g, sira, toplantıId){
@@ -12777,44 +12760,56 @@ function mkGundemKartHtml(g, sira, toplantıId){
   </div>`;
 }
 
-window.mkGundemKaydet = async function(toplantıId){
-  const konu = document.getElementById('mk-gf-konu')?.value.trim();
-  if(!konu){ alert('Gündem konusu zorunludur.'); return; }
-  const ozet    = document.getElementById('mk-gf-ozet')?.value.trim()||'';
-  const oncelik = document.getElementById('mk-gf-oncelik')?.value||'normal';
-  const durum   = document.getElementById('mk-gf-durum')?.value||'planlandi';
+/* mkGundemSatirKaydet — aktif input'u kaydet, yeni satır ekle */
+window.mkGundemSatirKaydet = async function(toplantıId){
+  const inp = document.getElementById('mk-gf-konu');
+  if(!inp) return;
+  const konu = inp.value.trim();
+  if(!konu){ inp.focus(); return; }
 
-  const btn = document.querySelector('[onclick*="mkGundemKaydet"]');
-  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Kaydediliyor...'; }
+  const btn = document.getElementById('mk-gundem-kaydet-btn');
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i>'; }
 
   try {
     const mkgId = genUUID();
     const {error} = await _supa.from('karar_gundemler').insert([{
-      id: mkgId, toplanti_id: toplantıId, konu, ozet,
-      oncelik, durum
+      id: mkgId, toplanti_id: toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi'
     }]);
     if(error) throw error;
 
-    MK_DB.gundemler.push({ id:mkgId, toplantıId, konu, ozet, oncelik, durum, atananlar:[], komiteNo:0 });
+    MK_DB.gundemler.push({ id:mkgId, toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi', atananlar:[], komiteNo:0 });
     if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 
-    // Formu temizle, listeye yeni kartı ekle
-    mkGundemFormTemizle();
-    const listeEl = document.getElementById('mk-gundem-liste');
-    if(listeEl){
-      // "Henüz gündem eklenmedi" metnini kaldır
-      if(listeEl.innerHTML.includes('Henüz gündem')) listeEl.innerHTML='';
-      const sira = MK_DB.gundemler.filter(g=>g.toplantıId===toplantıId).length;
-      listeEl.insertAdjacentHTML('beforeend', mkGundemKartHtml(MK_DB.gundemler.find(g=>g.id===mkgId), sira, toplantıId));
+    // Yeni satırı dolu satıra çevir, altına yeni boş satır ekle
+    const yeniSatirEl = document.getElementById('mk-yeni-satir');
+    const satirlarEl  = document.getElementById('mk-gundem-satirlar');
+    const sira = MK_DB.gundemler.filter(g=>g.toplantıId===toplantıId).length;
+    if(yeniSatirEl && satirlarEl){
+      yeniSatirEl.outerHTML = mkGundemSatirHtml(MK_DB.gundemler.find(g=>g.id===mkgId), sira-1+1, toplantıId)
+        + mkYeniSatirHtml(sira+1, toplantıId);
     }
-    // Konuya odaklan
-    document.getElementById('mk-gf-konu')?.focus();
+    // Yeni input'a odaklan
+    const yeniInp = document.getElementById('mk-gf-konu');
+    if(yeniInp) yeniInp.focus();
   } catch(e){
     alert('Kayıt hatası: '+e.message);
   } finally {
-    if(btn){ btn.disabled=false; btn.innerHTML='<i class="ti ti-device-floppy"></i> Kaydet ve Sıradaki Gündem'; }
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="ti ti-device-floppy"></i> Kaydet'; }
   }
 };
+
+/* Kaydedilmiş satır konu güncelleme (blur/enter) */
+window.mkGundemSatirGuncelle = async function(gId, toplantıId, konu){
+  konu = konu.trim();
+  if(!konu) return;
+  const g = MK_DB.gundemler.find(x=>x.id===gId);
+  if(!g || g.konu === konu) return; // değişmemişse geç
+  g.konu = konu;
+  await _supa.from('karar_gundemler').update({konu}).eq('id', gId);
+};
+
+/* Eski kaydet fonksiyonu — alias */
+window.mkGundemKaydet = window.mkGundemSatirKaydet;
 
 window.mkGundemFormTemizle = function(){
   const konu = document.getElementById('mk-gf-konu'); if(konu) konu.value='';
@@ -12863,15 +12858,25 @@ window.mkGundemGuncelle = async function(gId, toplantıId){
 window.mkGundemSil = async function(gId, toplantıId){
   if(!confirm('Bu gündem silinecek. Emin misiniz?')) return;
   try {
-    // Önce atamaları sil (FK kısıtı varsa)
     await _supa.from('karar_atamalar').delete().eq('gundem_id', gId);
     const {error} = await _supa.from('karar_gundemler').delete().eq('id', gId);
     if(error) throw error;
 
     MK_DB.gundemler = MK_DB.gundemler.filter(x=>x.id!==gId);
-    const kararEl = document.getElementById('mk-karar-list');
-    mkGundemEkraniRender(toplantıId, kararEl);
     if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+
+    // Satırı DOM'dan kaldır, numaraları güncelle
+    const satir = document.getElementById('mk-gs-'+gId);
+    if(satir) satir.remove();
+    // Numaraları yenile
+    const satirlar = document.querySelectorAll('.mk-gundem-satir');
+    satirlar.forEach((s,i)=>{
+      const numEl = s.querySelector('div[style*="border-radius:50%"]');
+      if(numEl) numEl.textContent = i+1;
+    });
+    // Yeni satır sıra numarasını güncelle
+    const yeniSatirNum = document.querySelector('#mk-yeni-satir div[style*="border-radius:50%"]');
+    if(yeniSatirNum) yeniSatirNum.textContent = satirlar.length + 1;
   } catch(e){ alert('Silme hatası: '+e.message); }
 };
 
