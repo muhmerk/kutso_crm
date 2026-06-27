@@ -3932,16 +3932,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   </div>
 
   <div id="s-akreditasyon" class="section">
-    <!-- Başlık -->
-    <div style="text-align:center;padding-bottom:16px;border-bottom:0.5px solid var(--border);margin-bottom:20px">
-      <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:6px">
-        <div style="width:38px;height:38px;border-radius:10px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <i class="ti ti-certificate" style="font-size:20px;color:var(--blue)"></i>
-        </div>
-        <div style="font-size:17px;font-weight:700;color:var(--text)">TOBB ODA BORSA AKREDİTASYON SİSTEMİ</div>
-      </div>
-      <div style="font-size:12px;font-weight:500;color:var(--blue);letter-spacing:.5px;text-transform:uppercase">YENİ STANDART MADDELERİ</div>
-    </div>
+
 
     <!-- Yıl seçici + istatistikler -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
@@ -5148,8 +5139,14 @@ function sw(id, btn) {
     /* Personel artık accordion — personelSec ile yönetiliyor */
     if(window.personelSec) window.personelSec('bilgi', document.getElementById('nav-personel-bilgi'));
     return;
+  } else if (id === 'bildirim') {
+    document.getElementById('tb-title').textContent='Bildirim Şablonları';
+    document.getElementById('tb-sub').textContent='E-posta ve SMS şablonları';
   } else if (id === 'takvim') {
     if(window.takvimAcildi) window.takvimAcildi();
+  } else if (id === 'raporlar') {
+    document.getElementById('tb-title').textContent='Raporlar';
+    document.getElementById('tb-sub').textContent='Hazır rapor şablonları';
   } else if (id === 'gs') {
     if(window.gsAcildi) window.gsAcildi();
   }
@@ -9286,6 +9283,8 @@ window.kurulGundemSil = async function(tId, gId){
 
 /* Sekme açılınca init */
 window.kurulAcildi = function(){
+  const _t=document.getElementById('tb-title'); _t.textContent='Personel Kurul Kararları';
+  const _s=document.getElementById('tb-sub');   _s.textContent='Kurul kararları ve yönetim bildirileri';
   kurulYilDoldur();
   const ekleBtn = document.getElementById('kurul-ekle-btn');
   if(ekleBtn) ekleBtn.style.display = kurulYetkiVar() ? '' : 'none';
@@ -16093,6 +16092,8 @@ window.ipYilSec = function(yil){
 };
 
 function ipRenderPlan(){
+  const _t=document.getElementById('tb-title'); _t.textContent='İş Planı Takibi';
+  const _s=document.getElementById('tb-sub');   _s.textContent=new Date().getFullYear()+' stratejik hedefler';
   const el=document.getElementById('ip-yil-icerik');
   if(!el) return;
   if(!aktifYil){
@@ -18380,7 +18381,9 @@ window.addEventListener('load', ()=>{ setTimeout(window.evrakBadgeGuncelle, 2000
 
 let _gsAktifTab = 'yk';
 
-window.gsAcildi = function(){ gsTab(_gsAktifTab); };
+window.gsAcildi = function(){
+  const _t=document.getElementById('tb-title'); _t.textContent='Üye Yönetimi';
+  const _s=document.getElementById('tb-sub');   _s.textContent='YK, Meclis ve Meslek Komitesi üye yönetimi'; gsTab(_gsAktifTab); };
 
 window.gsTab = function(tab){
   _gsAktifTab = tab;
@@ -20995,6 +20998,9 @@ window.akrRenderYilTabs=akrRenderYilTabs;
 
 function akrRender(){
   akrRenderYilTabs();
+  // Topbar title garantile
+  const _t=document.getElementById('tb-title'); _t.textContent='Akreditasyon';
+  const _s=document.getElementById('tb-sub');   _s.textContent="Odanın TOBB'dan aldığı akreditasyonlar";
   const el=document.getElementById('akr-icerik');
   if(!el) return;
   el.innerHTML=AKR_YAPI.map(b=>renderBaslik(b)).join('');
