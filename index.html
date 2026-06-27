@@ -23359,11 +23359,11 @@ async function sicilGecmisYukle(oid, sicilNo){
   if(!el) return;
   el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>';
   try{
-    let { data } = await _supa.from('ticaret_sicil_hizmetleri')
-      .select('*').eq('uye_oid', oid).order('tarih', {ascending:false});
-    if((!data||data.length===0) && sicilNo){
-      const r2 = await _supa.from('ticaret_sicil_hizmetleri').select('*').eq('sicil_no', sicilNo).order('tarih',{ascending:false});
-      data = r2.data;
+    // sicil_no ile ara (tablonun asıl alanı bu)
+    let data = null;
+    if(sicilNo){
+      const r = await _supa.from('ticaret_sicil_hizmetleri').select('*').eq('sicil_no', sicilNo).order('tescil_tarihi',{ascending:false});
+      data = r.data;
     }
     if(!data||data.length===0){
       el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)">Henüz kayıt bulunmuyor</div>';
@@ -23377,7 +23377,7 @@ async function sicilGecmisYukle(oid, sicilNo){
       +'<th style="padding:6px 8px;border:0.5px solid var(--border)"></th>'
       +'</tr></thead><tbody>'
       +(data||[]).map(r=>`<tr style="font-size:12px">
-        <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.tarih||'—'}</td>
+        <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.tescil_tarihi ? new Date(r.tescil_tarihi).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : (r.tarih||'—')}</td>
         <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.islem_turu||r.talep_turu||'—'}</td>
         <td style="padding:7px 8px;border:0.5px solid var(--border);color:var(--text2)">${r.detay||r.aciklama||'—'}</td>
         <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">
@@ -23411,13 +23411,11 @@ window.sicilKaydet = async function(){
   if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Kaydediliyor...'; }
   try{
     const { error } = await _supa.from('ticaret_sicil_hizmetleri').insert([{
-      uye_oid   : _sicilSeciliFirma.oid,
-      sicil_no  : _sicilSeciliFirma.ticaretSicilNo||'',
-      uye_no    : _sicilSeciliFirma.uyeNo||'',
-      islem_turu: tur,
-      tarih,
-      detay,
-      olusturan : currentUser?.adSoyad||currentUser?.kullanici||'Sistem'
+      sicil_no     : _sicilSeciliFirma.ticaretSicilNo||'',
+      islem_turu   : tur,
+      tescil_tarihi: tarih,
+      detay        : detay,
+      unvan        : _sicilSeciliFirma.ad||''
     }]);
     if(error) throw error;
     // Formu temizle
