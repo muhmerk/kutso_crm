@@ -3547,327 +3547,16 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
   <!-- ══ ZİYARET FORM MODALI (section dışında — hangi ekran aktif olursa olsun çalışmalı) ══ -->
   <!-- ══ EĞİTİM SİLME SEÇENEK MODALI (global — hangi ekranda olunursa olsun çalışır) ══ -->
-  <div id="egitim-sil-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:420px;box-shadow:0 8px 40px rgba(0,0,0,.3);overflow:hidden">
-      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:15px;font-weight:600">Eğitimi Sil</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="egitim-sil-baslik"></div>
-        </div>
-        <button onclick="document.getElementById('egitim-sil-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-      </div>
-      <div style="padding:20px">
-        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Bu eğitim kaydı için nasıl bir işlem yapmak istiyorsunuz?</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <button onclick="egitimSilSadeceBen()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--border);border-radius:10px;backg:12px;padding:20px;text-align:center;cursor:pointer;transition:all .15s"
-          onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue-bg)'"
-          onmouseout="this.style.borderColor='var(--border2)';this.style.background=''">
-          <i class="ti ti-cloud-upload" style="font-size:28px;color:var(--text2);display:block;margin-bottom:8px"></i>
-          <div style="font-size:13px;font-weight:500">Dosya seç veya buraya sürükle</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:4px">PDF, Word, Excel, Resim — maks. 50MB</div>
-        </div>
-        <input type="file" id="evrak-file-input" multiple style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
-          onchange="evrakDosyaSecildi(this.files)">
-        <div id="evrak-yukleme-durumu" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
-      </div>
-      <!-- Mevcut evraklar -->
-      <div style="flex:1;overflow-y:auto;padding:16px 20px">
-        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">MEVCUT EVRAKLAR</div>
-        <div id="evrak-liste"></div>
-      </div>
-    </div>
-  </div>
 
   <!-- ══ KURUL TOPLANTI MODAL ══ -->
-  <div id="kurul-toplanti-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:480px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div style="font-size:15px;font-weight:600" id="kurul-t-modal-title">Kurul Toplantısı Ekle</div>
-        <button onclick="kurulModalKapat('kurul-toplanti-modal')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-      </div>
-      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
-        <input type="hidden" id="kurul-t-id">
-        <div>
-          <label class="yk-lbl">Toplantı Adı / Başlığı <span style="color:var(--red)">*</span></label>
-          <input id="kurul-t-ad" class="yk-inp" placeholder="Örn: 2026 Yılı 1. Personel Kurul Toplantısı" autocomplete="off">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <inp" placeholder="1" min="1" style="width:   <input id="izin-f-hak" type="number"ption>
-            </select>
-          </div>
-          <div>
-            <label class="yk-lbl">Öneri No <span style="color:var(--red)">*</span></label>
-            <input id="oneri-f-no" class="yk-inp" placeholder="ÖNERİ-2026-001" autocomplete="off">
-          </div>
-          <div>
-            <label class="yk-lbl">Birimi <span style="color:var(--red)">*</span></label>
-            <select id="oneri-f-birim" class="yk-inp">
-              <option value="">Birim seçin...</option>
-            </select>
-          </div>
-          <div>
-            <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
-            <input id="oneri-f-tarih" type="date" class="yk-inp">
-          </div>
-        </div>
-
-        <!-- Temel Nitelik -->
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Önerinin Temel Niteliği <span style="font-weight:400;text-transform:none">(uygun olanları işaretleyiniz)</span></div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Zaman İyileştirici"> Zaman İyileştirici</label>
-            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Maliyet Azaltıcı"> Maliyet Azaltıcı</label>
-            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Kalite İyileştirici"> Kalite İyileştirici</label>
-            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Ortam İyileştirici"> Ortam İyileştirici</label>
-            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Müşteri Memnuniyeti Artırıcı"> Müşteri Memnuniyeti Artırıcı</label>
-            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Proses İyileştirici"> Proses İyileştirici</label>
-            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Verimlilik Artırıcı"> Verimlilik Artırıcı</label>
-            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer" id="oneri-diger-label"><input type="checkbox" class="oneri-nitelik" value="Diğer" onchange="document.getElementById('oneri-diger-text').style.display=this.checked?'':'none'"> Diğer</label>
-          </div>
-          <input id="oneri-diger-text" class="yk-inp" placeholder="Diğer niteliği belirtin..." style="margin-top:6px;display:none">
-        </div>
-
-        <!-- Konu -->
-        <div>
-          <label class="yk-lbl">Önerinin Konusu <span style="color:var(--red)">*</span></label>
-          <input id="oneri-f-konu" class="yk-inp" placeholder="Önerinin kısa başlığı..." autocomplete="off">
-        </div>
-
-        <!-- Gerekçe -->
-        <div>
-          <label class="yk-lbl">Gerekçe <span style="color:var(--red)">*</span></label>
-          <textarea id="oneri-f-gerekcе" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Mevcut durumun neden sorun oluşturduğunu açıklayın..."></textarea>
-        </div>
-
-        <!-- Çözüm -->
-        <div>
-          <label class="yk-lbl">Sunulan Çözüm <span style="color:var(--red)">*</span></label>
-          <textarea id="oneri-f-cozum" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Önerilen çözümü detaylıca açıklayın..."></textarea>
-        </div>
-
-        <!-- Detay eki var mı? -->
-        <div style="display:flex;align-items:center;gap:8px">
-          <input type="checkbox" id="oneri-f-detay-eki" style="width:15px;height:15px;cursor:pointer">
-          <label for="oneri-f-detay-eki" style="font-size:12px;cursor:pointer;color:var(--text2)">Öneri ile ilgili detay ektedir</label>
-        </div>
-
-      </div>
-      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-        <button class="btn btn-sm" onclick="oneriModalKapat()">İptal</button>
-        <button class="btn btn-p btn-sm" id="oneri-kaydet-btn" onclick="oneriKaydet()"><i class="ti ti-send"></i> Öneriyi Gönder</button>
-      </div>
-    </div>
 
   <!-- ══ PERSONEL ÖNERİ DEĞERLENDİRME MODAL ══ -->
-  <div id="oneri-deg-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:480px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div style="font-size:15px;font-weight:600">Değerlendirme Sonucu</div>
-        <button onclick="document.getElementById('oneri-deg-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-      </div>
-      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
-        <input type="hidden" id="oneri-deg-id">
-
-        <!-- 3 Ana Seçenek -->
-        <div>
-          <label class="yk-lbl">Değerlendirme Sonucu</label>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-            <label onclick="oneriDegSonucDeg('Kabul-Uygulama')" id="oneri-deg-lbl-1" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s">
-              <input type="radio" name="oneri-deg-sonuc" value="Kabul-Uygulama" style="margin-top:2px;cursor:pointer">
-              <div>
-                <div style="font-size:13px;font-weight:600;color:var(--teal)">✓ Uygundur</div>
-                <div style="font-size:11px;color:var(--text2);margin-top:2px">Öneri uygulamaya alınsın</div>
-              </div>
-            </label>
-            <label onclick="oneriDegSonucDeg('Kabul-YK')" id="oneri-deg-lbl-2" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s">
-              <input type="radio" name="oneri-deg-sonuc" value="Kabul-YK" style="margin-top:2px;cursor:pointer">
-              <div>
-                <div style="font-size:13px;font-weight:600;color:var(--blue)">✓ Uygundur</div>
-                <div style="font-size:11px;color:var(--text2);margin-top:2px">Yön. Kur. Gündemine alınsın</div>
-              </div>
-            </label>
-            <label onclick="oneriDegSonucDeg('Red')" id="oneri-deg-lbl-3" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s">
-              <input type="radio" name="oneri-deg-sonuc" value="Red" style="margin-top:2px;cursor:pointer">
-              <div>
-                <div style="font-size:13px;font-weight:600;color:var(--red)">✗ Uygun Değildir</div>
-                <div style="font-size:11px;color:var(--text2);margin-top:2px">Ret nedeni belirtilecek</div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- Red nedenleri — sadece Red seçilince açılır -->
-        <div id="oneri-deg-red-nedenler" style="display:none">
-          <label class="yk-lbl">Uygun Değilse Nedenleri</label>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px;hover:background:var(--surface2)"><input type="radio" name="oneri-red-neden" value="Yakınma ve şikayet kapsamında"> Yakınma ve şikayet kapsamında</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="İdari süreçlerle ilgili bir öneri değil"> İdari süreçlerle ilgili bir öneri değil</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Çözüm önerisi yok"> Çözüm önerisi yok</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Kişisel bir talep"> Kişisel bir talep</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Belirsiz veya gerçekleşmesi mümkün değil"> Belirsiz veya gerçekleşmesi mümkün değil</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Önceki önerinin tekrarı"> Önceki önerinin tekrarı</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Mevzuata aykırı"> Mevzuata aykırı</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Diğer"> Diğer</label>
-          </div>
-        </div>
-
-        <div>
-          <label class="yk-lbl">Değerlendirme Notu (isteğe bağlı)</label>
-          <textarea id="oneri-deg-not" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Ek açıklama..."></textarea>
-        </div>
-        <div>
-          <label class="yk-lbl">Değerlendirme Tarihi</label>
-          <input id="oneri-deg-tarih" type="date" class="yk-inp">
-        </div>
-      </div>
-      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-        <button class="btn btn-sm" onclick="document.getElementById('oneri-deg-modal').style.display='none'">İptal</button>
-        <button class="btn btn-p btn-sm" onclick="oneriDegerlendir()"><i class="ti ti-check"></i> Kaydet</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ══ GENEL SEKRETERLİK MODAL ══ -->
 
   <!-- ══ KATILIM ÖZET MODALI ══ -->
 
   <!-- ══ KATILIM TAKİBİ MODALI ══ -->
-  <div id="katilim-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:580px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div>
-          <div style="font-size:15px;font-weight:600" id="katilim-baslik">Katılım Takibi</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="katilim-alt-baslik"></div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <div style="font-size:12px;color:var(--text2)" id="katilim-ozet"></div>
-          <button onclick="katilimKaydet()" class="btn btn-p btn-sm"><i class="ti ti-check"></i> Kaydet</button>
-          <button onclick="document.getElementById('katilim-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-        </div>
-      </div>
-      <!-- Hızlı işlem -->
-      <div style="padding:10px 22px;border-bottom:0.5px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;background:var(--surface2)">
-        <span style="font-size:11px;color:var(--text2)">Toplu:</span>
-        <button class="btn btn-sm" style="font-size:11px" onclick="katilimTopluSec('katildi')"><i class="ti ti-circle-check" style="color:var(--teal)"></i> Hepsi Katıldı</button>
-        <button class="btn btn-sm" style="font-size:11px" onclick="katilimTopluSec('katilmadi')"><i class="ti ti-circle-x" style="color:var(--red)"></i> Hepsi Katılmadı</button>
-        <button class="btn btn-sm" style="font-size:11px" onclick="katilimTopluSec(null)"><i class="ti ti-circle-dashed" style="color:var(--text2)"></i> Temizle</button>
-      </div>
-      <div id="katilim-liste" style="padding:16px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px"></div>
-    </div>
-  </div>
-
-<div id="sik-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:620px;max-height:93vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
-        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-          <div>
-            <div style="font-size:15px;font-weight:600" id="sik-modal-title">Yeni Şikayet Kaydı</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px">FPS 08-01 Şikayet Kayıt Formu</div>
-          </div>
-          <button onclick="sikModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-        </div>
-        <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
-
-          <!-- ŞİKAYETÇİYE AİT BİLGİLER -->
-          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyetçi   <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="SMS" style="cursor:pointer"> SMS</label>
-            </div>
-          </div>
-
-          <!-- ŞİKAYET YAPILAN BİRİM -->
-          <div>
-            <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:8px">Şikâyet Yapılan İlgili Birim</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Yönetim Kurulu"> Yönetim Kurulu</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Genel Sekreterlik"> Genel Sekreterlik</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Dış Ticaret"> Dış Ticaret</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Kapasite ve Ekspertiz"> Kapasite ve Ekspertiz</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="İş Makineleri Tescili"> İş Makineleri Tescili</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Satın Alma"> Satın Alma</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Muhasebe"> Muhasebe</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Vezne"> Vezne</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Ticaret Sicil"> Ticaret Sicil</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Oda Sicil"> Oda Sicil</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Bilgi İşlem"> Bilgi İşlem</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="K Belgeleri"> K Belgeleri</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sayısal Takograf Belgeleri"> Sayısal Takograf Belgeleri</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sigorta Acenteliği"> Sigorta Acenteliği</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Türk Malı - Yerli Malı"> Türk Malı - Yerli Malı</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Basın Yayın"> Basın Yayın</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Eğitim, Toplantı, Seminer"> Eğitim, Toplantı, Seminer</label>
-              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Diğer"> Diğer</label>
-            </div>
-          </div>
-
-          <!-- ŞİKAYET BİLGİLERİ -->
-          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyet Bilgileri</div>
-          <div>
-            <label class="yk-lbl">Firma / Şikâyetçi Firma</label>
-            <input type="hidden" id="sik-f-firma-id">
-            <div style="position:relative">
-              <input id="sik-f-firma" class="yk-inp" placeholder="Firma adı yazın..." autocomplete="off"
-                oninput="sikFirmaAra(this.value)">
-              <div id="sik-firma-sonuclar" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:var(--shadow-md)"></div>
-            </div>
-          </div>
-          <div>
-            <label class="yk-lbl">Şikâyetin Konusu (Karşılaşılan Sorun) <span style="color:var(--red)">*</span></label>
-            <input id="sik-f-konu" class="yk-inp" placeholder="Kısa konu başlığı...">
-          </div>
-          <div>
-            <label class="yk-lbl">Detaylı Açıklama</label>
-            <textarea id="sik-f-detay" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Şikayetin ayrıntılı açıklaması..."></textarea>
-          </div>
-          <div>
-            <label class="yk-lbl">Düzeltme Talebiniz Var Mı?</label>
-            <div style="display:flex;gap:10px;margin-bottom:8px">
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="evet" onchange="document.getElementById('sik-duzeltme-detay').style.display=''"> Evet</label>
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="hayir" checked onchange="document.getElementById('sik-duzeltme-detay').style.display='none'"> Hayır</label>
-            </div>
-            <textarea id="sik-duzeltme-detay" class="yk-inp" style="min-height:60px;resize:vertical;display:none" placeholder="Ne tip bir düzeltme istiyorsunuz?"></textarea>
-          </div>
-
-          <!-- Tarih, Saat, Öncelik -->
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-            <div>
-              <label class="yk-lbl">Şikayet Tarihi</label>
-              <input id="sik-f-tarih" type="date" class="yk-inp">
-            </div>
-            <div>
-              <label class="yk-lbl">Saati</label>
-              <input id="sik-f-saat" type="time" class="yk-inp">
-            </div>
-            <div>
-              <label class="yk-lbl">Öncelik</label>
-              <select id="sik-f-oncelik" class="yk-inp">
-                <option value="kritik">Kritik</option>
-                <option value="normal" selected>Normal</option>
-                <option value="dusuk">Düşük</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Personel bilgileri -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label class="yk-lbl">Şikayeti Alan Personel</label>
-              <select id="sik-f-alan-personel" class="yk-inp"></select>
-            </div>
-            <div>
-              <label class="yk-lbl">Takip Sorumlusu</label>
-              <select id="sik-f-takip-sorumlu" class="yk-inp"></select>
-            </div>
-          </div>
-
-          <!-- İlk Not -->
-          <div>
-            <label class="yk-lbl">İlk Temas Notu (isteğe bağlı)</label>
-            <textarea id="sik-f-not" class="yk-inp" style="min-height:56px;resize:vertical" placeholder="Ek bilgi, ilk temas notu..."></textarea>
-          </div>
-        </div>
-        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-          <button class="btn btn-sm" onclick="sikModalKapat()">İptal</button>
-          <button class="btn btn-p btn-sm" onclick="sikayetKaydet()"><i class="ti ti-check"></i> Şikayet Kaydet</button>
-        </div>
-      </div>
   </div>
 
   <!-- Şikayet Detay Modalı — 3 Sekme -->
@@ -4761,11 +4450,10 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         Yıl seçin
       </div>
     </div>
+  </div><!-- /content -->
 
   </div>
-  </div><!-- /content -->
 
-  </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /shell -->
 
@@ -23482,19 +23170,6 @@ window.sikayetSilById = async function(id, btn){
   </div>
 
 <!-- gs-modal -->
-<div id="gs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:440px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div style="font-size:15px;font-weight:600" id="gs-modal-baslik"></div>
-        <button onclick="gsModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-      </div>
-      <div id="gs-modal-icerik" style="padding:20px;overflow-y:auto;flex:1"></div>
-      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-        <button class="btn btn-sm" onclick="gsModalKapat()">İptal</button>
-        <button class="btn btn-p btn-sm" onclick="gsModalKaydet()"><i class="ti ti-check"></i> Kaydet</button>
-      </div>
-    </div>
-  </div>
 
 <!-- katilim-ozet-modal -->
 <div id="katilim-ozet-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
@@ -23508,37 +23183,7 @@ window.sikayetSilById = async function(id, btn){
           <!-- MK komite seçici — sadece MK'da görünür -->
           <select id="katilim-ozet-komite" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:180px;display:none">
           </select>
-          <select id="katilim-ozet-yil" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:90px"></select>
-          <select id="katilim-ozet-ay" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:110px;display:none">
-            <option value="">Tüm yıl</option>
-            <option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option>
-            <option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option>
-            <option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option>
-            <option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option>
-          </select>
-          <button onclick="document.getElementById('katilim-ozet-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-        </div>
-      </div>
-      <div id="katilim-ozet-icerik" style="padding:18px 22px;overflow-y:auto;flex:1"></div>
-    </div>
-  </div>
-
-
-<!-- izin-modal -->
-<div id="izin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border-radius:16px;width:420px;max-width:95vw;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
-    <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:15px;font-weight:500" id="izin-modal-title">İzin Ekle</div>
-      <button onclick="izinModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
-    </div>
-    <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
-      <input type="hidden" id="izin-f-id">
-      <div>
-        <label class="yk-lbl">Yıl <span style="color:var(--red)">*</span></label>
-        <input type="number" id="izin-f-yil" class="yk-inp" placeholder="2025">
-      </div>
-      <div>
-        <label class="yk-lbl">Hak Edilen İzin (gün)</label>
+          <select id="katilim-ozet-yil" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;pa Edilen İzin (gün)</label>
         <input type="number" id="izin-f-hak" class="yk-inp" placeholder="14" min="0">
       </div>
       <div>
@@ -23619,6 +23264,365 @@ window.sikayetSilById = async function(id, btn){
     </div>
   </div>
 </div>
+
+
+<!-- MODALLER -->
+
+<div id="egitim-sil-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:420px;box-shadow:0 8px 40px rgba(0,0,0,.3);overflow:hidden">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:15px;font-weight:600">Eğitimi Sil</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="egitim-sil-baslik"></div>
+        </div>
+        <button onclick="document.getElementById('egitim-sil-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:20px">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Bu eğitim kaydı için nasıl bir işlem yapmak istiyorsunuz?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button onclick="egitimSilSadeceBen()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--border);border-radius:10px;backg:12px;padding:20px;text-align:center;cursor:pointer;transition:all .15s"
+          onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue-bg)'"
+          onmouseout="this.style.borderColor='var(--border2)';this.style.background=''">
+          <i class="ti ti-cloud-upload" style="font-size:28px;color:var(--text2);display:block;margin-bottom:8px"></i>
+          <div style="font-size:13px;font-weight:500">Dosya seç veya buraya sürükle</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">PDF, Word, Excel, Resim — maks. 50MB</div>
+        </div>
+        <input type="file" id="evrak-file-input" multiple style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+          onchange="evrakDosyaSecildi(this.files)">
+        <div id="evrak-yukleme-durumu" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <!-- Mevcut evraklar -->
+      <div style="flex:1;overflow-y:auto;padding:16px 20px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">MEVCUT EVRAKLAR</div>
+        <div id="evrak-liste"></div>
+      </div>
+    </div>
+  </div>
+
+<div id="kurul-toplanti-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:480px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div style="font-size:15px;font-weight:600" id="kurul-t-modal-title">Kurul Toplantısı Ekle</div>
+        <button onclick="kurulModalKapat('kurul-toplanti-modal')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="kurul-t-id">
+        <div>
+          <label class="yk-lbl">Toplantı Adı / Başlığı <span style="color:var(--red)">*</span></label>
+          <input id="kurul-t-ad" class="yk-inp" placeholder="Örn: 2026 Yılı 1. Personel Kurul Toplantısı" autocomplete="off">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <inp" placeholder="1" min="1" style="width:   <input id="izin-f-hak" type="number"ption>
+            </select>
+          </div>
+          <div>
+            <label class="yk-lbl">Öneri No <span style="color:var(--red)">*</span></label>
+            <input id="oneri-f-no" class="yk-inp" placeholder="ÖNERİ-2026-001" autocomplete="off">
+          </div>
+          <div>
+            <label class="yk-lbl">Birimi <span style="color:var(--red)">*</span></label>
+            <select id="oneri-f-birim" class="yk-inp">
+              <option value="">Birim seçin...</option>
+            </select>
+          </div>
+          <div>
+            <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
+            <input id="oneri-f-tarih" type="date" class="yk-inp">
+          </div>
+        </div>
+
+        <!-- Temel Nitelik -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Önerinin Temel Niteliği <span style="font-weight:400;text-transform:none">(uygun olanları işaretleyiniz)</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Zaman İyileştirici"> Zaman İyileştirici</label>
+            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Maliyet Azaltıcı"> Maliyet Azaltıcı</label>
+            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Kalite İyileştirici"> Kalite İyileştirici</label>
+            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Ortam İyileştirici"> Ortam İyileştirici</label>
+            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Müşteri Memnuniyeti Artırıcı"> Müşteri Memnuniyeti Artırıcı</label>
+            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Proses İyileştirici"> Proses İyileştirici</label>
+            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer"><input type="checkbox" class="oneri-nitelik" value="Verimlilik Artırıcı"> Verimlilik Artırıcı</label>
+            <label style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer" id="oneri-diger-label"><input type="checkbox" class="oneri-nitelik" value="Diğer" onchange="document.getElementById('oneri-diger-text').style.display=this.checked?'':'none'"> Diğer</label>
+          </div>
+          <input id="oneri-diger-text" class="yk-inp" placeholder="Diğer niteliği belirtin..." style="margin-top:6px;display:none">
+        </div>
+
+        <!-- Konu -->
+        <div>
+          <label class="yk-lbl">Önerinin Konusu <span style="color:var(--red)">*</span></label>
+          <input id="oneri-f-konu" class="yk-inp" placeholder="Önerinin kısa başlığı..." autocomplete="off">
+        </div>
+
+        <!-- Gerekçe -->
+        <div>
+          <label class="yk-lbl">Gerekçe <span style="color:var(--red)">*</span></label>
+          <textarea id="oneri-f-gerekcе" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Mevcut durumun neden sorun oluşturduğunu açıklayın..."></textarea>
+        </div>
+
+        <!-- Çözüm -->
+        <div>
+          <label class="yk-lbl">Sunulan Çözüm <span style="color:var(--red)">*</span></label>
+          <textarea id="oneri-f-cozum" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Önerilen çözümü detaylıca açıklayın..."></textarea>
+        </div>
+
+        <!-- Detay eki var mı? -->
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="oneri-f-detay-eki" style="width:15px;height:15px;cursor:pointer">
+          <label for="oneri-f-detay-eki" style="font-size:12px;cursor:pointer;color:var(--text2)">Öneri ile ilgili detay ektedir</label>
+        </div>
+
+      </div>
+      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-sm" onclick="oneriModalKapat()">İptal</button>
+        <button class="btn btn-p btn-sm" id="oneri-kaydet-btn" onclick="oneriKaydet()"><i class="ti ti-send"></i> Öneriyi Gönder</button>
+      </div>
+    </div>
+
+<div id="oneri-deg-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:480px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div style="font-size:15px;font-weight:600">Değerlendirme Sonucu</div>
+        <button onclick="document.getElementById('oneri-deg-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
+        <input type="hidden" id="oneri-deg-id">
+
+        <!-- 3 Ana Seçenek -->
+        <div>
+          <label class="yk-lbl">Değerlendirme Sonucu</label>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <label onclick="oneriDegSonucDeg('Kabul-Uygulama')" id="oneri-deg-lbl-1" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s">
+              <input type="radio" name="oneri-deg-sonuc" value="Kabul-Uygulama" style="margin-top:2px;cursor:pointer">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--teal)">✓ Uygundur</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Öneri uygulamaya alınsın</div>
+              </div>
+            </label>
+            <label onclick="oneriDegSonucDeg('Kabul-YK')" id="oneri-deg-lbl-2" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s">
+              <input type="radio" name="oneri-deg-sonuc" value="Kabul-YK" style="margin-top:2px;cursor:pointer">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--blue)">✓ Uygundur</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Yön. Kur. Gündemine alınsın</div>
+              </div>
+            </label>
+            <label onclick="oneriDegSonucDeg('Red')" id="oneri-deg-lbl-3" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s">
+              <input type="radio" name="oneri-deg-sonuc" value="Red" style="margin-top:2px;cursor:pointer">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--red)">✗ Uygun Değildir</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Ret nedeni belirtilecek</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Red nedenleri — sadece Red seçilince açılır -->
+        <div id="oneri-deg-red-nedenler" style="display:none">
+          <label class="yk-lbl">Uygun Değilse Nedenleri</label>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px;hover:background:var(--surface2)"><input type="radio" name="oneri-red-neden" value="Yakınma ve şikayet kapsamında"> Yakınma ve şikayet kapsamında</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="İdari süreçlerle ilgili bir öneri değil"> İdari süreçlerle ilgili bir öneri değil</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Çözüm önerisi yok"> Çözüm önerisi yok</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Kişisel bir talep"> Kişisel bir talep</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Belirsiz veya gerçekleşmesi mümkün değil"> Belirsiz veya gerçekleşmesi mümkün değil</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Önceki önerinin tekrarı"> Önceki önerinin tekrarı</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Mevzuata aykırı"> Mevzuata aykırı</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:5px 8px;border-radius:6px"><input type="radio" name="oneri-red-neden" value="Diğer"> Diğer</label>
+          </div>
+        </div>
+
+        <div>
+          <label class="yk-lbl">Değerlendirme Notu (isteğe bağlı)</label>
+          <textarea id="oneri-deg-not" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Ek açıklama..."></textarea>
+        </div>
+        <div>
+          <label class="yk-lbl">Değerlendirme Tarihi</label>
+          <input id="oneri-deg-tarih" type="date" class="yk-inp">
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-sm" onclick="document.getElementById('oneri-deg-modal').style.display='none'">İptal</button>
+        <button class="btn btn-p btn-sm" onclick="oneriDegerlendir()"><i class="ti ti-check"></i> Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+<div id="katilim-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:580px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div>
+          <div style="font-size:15px;font-weight:600" id="katilim-baslik">Katılım Takibi</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="katilim-alt-baslik"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:12px;color:var(--text2)" id="katilim-ozet"></div>
+          <button onclick="katilimKaydet()" class="btn btn-p btn-sm"><i class="ti ti-check"></i> Kaydet</button>
+          <button onclick="document.getElementById('katilim-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+      <!-- Hızlı işlem -->
+      <div style="padding:10px 22px;border-bottom:0.5px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;background:var(--surface2)">
+        <span style="font-size:11px;color:var(--text2)">Toplu:</span>
+        <button class="btn btn-sm" style="font-size:11px" onclick="katilimTopluSec('katildi')"><i class="ti ti-circle-check" style="color:var(--teal)"></i> Hepsi Katıldı</button>
+        <button class="btn btn-sm" style="font-size:11px" onclick="katilimTopluSec('katilmadi')"><i class="ti ti-circle-x" style="color:var(--red)"></i> Hepsi Katılmadı</button>
+        <button class="btn btn-sm" style="font-size:11px" onclick="katilimTopluSec(null)"><i class="ti ti-circle-dashed" style="color:var(--text2)"></i> Temizle</button>
+      </div>
+      <div id="katilim-liste" style="padding:16px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
+
+<div id="sik-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:620px;max-height:93vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div>
+            <div style="font-size:15px;font-weight:600" id="sik-modal-title">Yeni Şikayet Kaydı</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">FPS 08-01 Şikayet Kayıt Formu</div>
+          </div>
+          <button onclick="sikModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+        </div>
+        <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
+
+          <!-- ŞİKAYETÇİYE AİT BİLGİLER -->
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyetçi   <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px"><input type="radio" name="sik-iletisim" value="SMS" style="cursor:pointer"> SMS</label>
+            </div>
+          </div>
+
+          <!-- ŞİKAYET YAPILAN BİRİM -->
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:8px">Şikâyet Yapılan İlgili Birim</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Yönetim Kurulu"> Yönetim Kurulu</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Genel Sekreterlik"> Genel Sekreterlik</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Dış Ticaret"> Dış Ticaret</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Kapasite ve Ekspertiz"> Kapasite ve Ekspertiz</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="İş Makineleri Tescili"> İş Makineleri Tescili</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Satın Alma"> Satın Alma</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Muhasebe"> Muhasebe</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Vezne"> Vezne</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Ticaret Sicil"> Ticaret Sicil</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Oda Sicil"> Oda Sicil</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Bilgi İşlem"> Bilgi İşlem</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="K Belgeleri"> K Belgeleri</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sayısal Takograf Belgeleri"> Sayısal Takograf Belgeleri</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Sigorta Acenteliği"> Sigorta Acenteliği</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Türk Malı - Yerli Malı"> Türk Malı - Yerli Malı</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Basın Yayın"> Basın Yayın</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Eğitim, Toplantı, Seminer"> Eğitim, Toplantı, Seminer</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;white-space:nowrap"><input type="radio" name="sik-birim" value="Diğer"> Diğer</label>
+            </div>
+          </div>
+
+          <!-- ŞİKAYET BİLGİLERİ -->
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;background:var(--surface2);border-radius:6px">Şikâyet Bilgileri</div>
+          <div>
+            <label class="yk-lbl">Firma / Şikâyetçi Firma</label>
+            <input type="hidden" id="sik-f-firma-id">
+            <div style="position:relative">
+              <input id="sik-f-firma" class="yk-inp" placeholder="Firma adı yazın..." autocomplete="off"
+                oninput="sikFirmaAra(this.value)">
+              <div id="sik-firma-sonuclar" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:var(--shadow-md)"></div>
+            </div>
+          </div>
+          <div>
+            <label class="yk-lbl">Şikâyetin Konusu (Karşılaşılan Sorun) <span style="color:var(--red)">*</span></label>
+            <input id="sik-f-konu" class="yk-inp" placeholder="Kısa konu başlığı...">
+          </div>
+          <div>
+            <label class="yk-lbl">Detaylı Açıklama</label>
+            <textarea id="sik-f-detay" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Şikayetin ayrıntılı açıklaması..."></textarea>
+          </div>
+          <div>
+            <label class="yk-lbl">Düzeltme Talebiniz Var Mı?</label>
+            <div style="display:flex;gap:10px;margin-bottom:8px">
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="evet" onchange="document.getElementById('sik-duzeltme-detay').style.display=''"> Evet</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="radio" name="sik-duzeltme" value="hayir" checked onchange="document.getElementById('sik-duzeltme-detay').style.display='none'"> Hayır</label>
+            </div>
+            <textarea id="sik-duzeltme-detay" class="yk-inp" style="min-height:60px;resize:vertical;display:none" placeholder="Ne tip bir düzeltme istiyorsunuz?"></textarea>
+          </div>
+
+          <!-- Tarih, Saat, Öncelik -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div>
+              <label class="yk-lbl">Şikayet Tarihi</label>
+              <input id="sik-f-tarih" type="date" class="yk-inp">
+            </div>
+            <div>
+              <label class="yk-lbl">Saati</label>
+              <input id="sik-f-saat" type="time" class="yk-inp">
+            </div>
+            <div>
+              <label class="yk-lbl">Öncelik</label>
+              <select id="sik-f-oncelik" class="yk-inp">
+                <option value="kritik">Kritik</option>
+                <option value="normal" selected>Normal</option>
+                <option value="dusuk">Düşük</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Personel bilgileri -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="yk-lbl">Şikayeti Alan Personel</label>
+              <select id="sik-f-alan-personel" class="yk-inp"></select>
+            </div>
+            <div>
+              <label class="yk-lbl">Takip Sorumlusu</label>
+              <select id="sik-f-takip-sorumlu" class="yk-inp"></select>
+            </div>
+          </div>
+
+          <!-- İlk Not -->
+          <div>
+            <label class="yk-lbl">İlk Temas Notu (isteğe bağlı)</label>
+            <textarea id="sik-f-not" class="yk-inp" style="min-height:56px;resize:vertical" placeholder="Ek bilgi, ilk temas notu..."></textarea>
+          </div>
+        </div>
+        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+          <button class="btn btn-sm" onclick="sikModalKapat()">İptal</button>
+          <button class="btn btn-p btn-sm" onclick="sikayetKaydet()"><i class="ti ti-check"></i> Şikayet Kaydet</button>
+        </div>
+      </div>
+
+<div id="katilim-ozet-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:780px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:15px;font-weight:600" id="katilim-ozet-baslik">Katılım Özeti</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="katilim-ozet-alt"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- MK komite seçici — sadece MK'da görünür -->
+          <select id="katilim-ozet-komite" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:180px;display:none">
+          </select>
+          <select id="katilim-ozet-yil" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:90px"></select>
+          <select id="katilim-ozet-ay" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:110px;display:none">
+            <option value="">Tüm yıl</option>
+            <option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option>
+            <option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option>
+            <option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option>
+            <option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option>
+          </select>
+          <button onclick="document.getElementById('katilim-ozet-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+      <div id="katilim-ozet-icerik" style="padding:18px 22px;overflow-y:auto;flex:1"></div>
+    </div>
+  </div>
+
+<div id="gs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:440px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div style="font-size:15px;font-weight:600" id="gs-modal-baslik"></div>
+        <button onclick="gsModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="gs-modal-icerik" style="padding:20px;overflow-y:auto;flex:1"></div>
+      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-sm" onclick="gsModalKapat()">İptal</button>
+        <button class="btn btn-p btn-sm" onclick="gsModalKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
+
 
