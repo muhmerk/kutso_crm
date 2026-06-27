@@ -23316,9 +23316,10 @@ window.sicilSearch = async function(q){
   resEl.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i></div>';
   resEl.style.display = 'block';
   try {
+    // Metin araması — sadece ilike kullan, eq ile tip uyumsuzluğu hata verir
     const { data } = await _supa.from('uyeler')
       .select('uye_oid,unvan,tabela_unvani,uye_oda_sicil_no,ticaret_sicil_no')
-      .or(`unvan.ilike.%${q}%,tabela_unvani.ilike.%${q}%,uye_oda_sicil_no.eq.${q},ticaret_sicil_no.eq.${q}`)
+      .or(`unvan.ilike.%${q}%,tabela_unvani.ilike.%${q}%,uye_oda_sicil_no.ilike.%${q}%,ticaret_sicil_no.ilike.%${q}%`)
       .limit(8);
     if(!data||data.length===0){
       resEl.innerHTML='<div style="padding:12px;text-align:center;color:var(--text2)">Sonuç bulunamadı</div>';
