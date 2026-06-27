@@ -1329,7 +1329,7 @@ async function supaIpProjeKaydet(p, hId) {
 }
 
 /* İlk veri aktarımı — konsol üzerinden çalıştırılır */
-/* supaIlkVeriAktar kaldırıldı */
+
 </script>
 <style>
 /* ─── RESET & TOKENS ─── */
@@ -5476,14 +5476,7 @@ function toggleTpl(header) {
     if(!hits[i]) return;
     const f = hits[i];
     crmSelect(f.no || f.id);
-  };
-
-  window.crmSelectById = function(elId) {
-    const el = document.getElementById(elId);
-    if(!el) return;
-    const id = decodeURIComponent(el.dataset.crmid);
-    crmSelect(id);
-  };
+  };;
 
   /* Firma seç */
   window.crmSelect = async function(id, tab) {
@@ -6270,50 +6263,7 @@ function toggleTpl(header) {
         crmGorevlerYukle(currentFirm?.id);
       }
     );
-  };
-
-  window.crmSikayetEkle = function() {
-    if(!currentFirm){ alert('Önce bir firma seçin.'); return; }
-    const kategoriler = ['Hizmet Kalitesi','Aidat/Finans','Bilgilendirme','Etkinlik','Personel','Diğer'];
-    crmModalAc('Şikayet Ekle', currentFirm.firma, `
-      <div><label class="yk-lbl">Şikayet Konusu *</label><input id="crm-sik-konu" class="yk-inp" placeholder="Kısa konu başlığı..."></div>
-      <div><label class="yk-lbl">Detay *</label><textarea id="crm-sik-detay" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Şikayeti detaylıca açıklayın..."></textarea></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="yk-lbl">Kategori</label>
-          <select id="crm-sik-kat" class="yk-inp">${kategoriler.map(k=>`<option>${k}</option>`).join('')}</select>
-        </div>
-        <div><label class="yk-lbl">Öncelik</label>
-          <select id="crm-sik-oncelik" class="yk-inp">
-            <option value="İncelemede">İncelemede</option>
-            <option value="Kritik">Kritik</option>
-            <option value="Beklemede">Beklemede</option>
-          </select>
-        </div>
-      </div>`,
-      async () => {
-        const konu = document.getElementById('crm-sik-konu')?.value.trim();
-        const detay = document.getElementById('crm-sik-detay')?.value.trim();
-        if(!konu || !detay){ alert('Konu ve detay zorunludur.'); return; }
-        const tarih = new Date().toLocaleDateString('tr-TR');
-        const yil = new Date().getFullYear();
-        const sikayet_no = 'SK'+Date.now().toString().slice(-6);
-        const id = genUUID();
-        const durum = document.getElementById('crm-sik-oncelik')?.value||'İncelemede';
-        const { error } = await _supa.from('sikayetler').insert([{
-          id, sikayet_no, konu, aciklama: detay,
-          kategori: document.getElementById('crm-sik-kat')?.value||'Diğer',
-          oncelik: durum, durum, tarih, yil,
-          firma_adi: currentFirm.firma,
-          uye_id: String(currentFirm.no||currentFirm.id),
-        }]);
-        if(error){ alert('Şikayet kaydedilemedi: '+error.message); return; }
-        crmModalKapat();
-        renderSik(currentFirm.id);
-        if(window.supaYukleSikayetler) window.supaYukleSikayetler();
-        alert('✓ Şikayet kaydedildi!');
-      }
-    );
-  };
+  };;
 
   window.crmRenderMem = function(firmaId){ renderMem(firmaId); };
   window.crmRenderSik = function(firmaId){ renderSik(firmaId); };
@@ -6582,8 +6532,7 @@ window.crmNavSec = function(sekme, btn){
       const kat = etk.katilimcilar.length;
       const kotaPct = Math.min(100, Math.round((kat/etk.kontenjan)*100));
       const kotaColor = kotaPct>80?'var(--amber)':kotaPct>50?'var(--teal)':'#85B7EB';
-      /* Gerçek durum — tarihe göre otomatik (tamamlandi koruma altında) */
-      if(etk.durum !== 'tamamlandi') etk.durum = etkOtoDurum(etk);
+if(etk.durum !== 'tamamlandi') etk.durum = etkOtoDurum(etk);
       const dBadge = durumBadge[etk.durum]||'b-amber';
       const dLabel = durumLabel[etk.durum]||etk.durum;
       const stars = mem ? '★'.repeat(Math.round(mem/20)).padEnd(5,'☆') : '';
@@ -6673,9 +6622,7 @@ window.crmNavSec = function(sekme, btn){
     if(window.etkRender) window.etkRender(); else renderList();
     if(window.etkMetrikleriGuncelle) window.etkMetrikleriGuncelle();
   };
-
-  /* ── Evrak Yönetimi ── */
-  let _etkEvrakAktif = null;
+let _etkEvrakAktif = null;
   window._etkEvrakAktif = null;
 
   function etkEvrakIkon(ad){
@@ -6971,8 +6918,7 @@ window.crmNavSec = function(sekme, btn){
     const basEl = document.getElementById('etk-f-saat-bas'); if(basEl) basEl.value='09:00';
     const bitEl = document.getElementById('etk-f-saat-bit'); if(bitEl) bitEl.value='17:00';
     document.getElementById('etk-ekle-title').textContent = 'Yeni Etkinlik Ekle';
-    /* Kaydet butonunu sıfırla */
-    const kaydetBtn = document.querySelector('#etk-ekle-overlay [onclick*="etkYeniKaydet"]') ||
+const kaydetBtn = document.querySelector('#etk-ekle-overlay [onclick*="etkYeniKaydet"]') ||
                       document.querySelector('#etk-ekle-overlay [onclick*="etkDuzenlemeKaydet"]');
     if(kaydetBtn) kaydetBtn.setAttribute('onclick','etkYeniKaydet()');
     document.getElementById('etk-ekle-overlay').style.display = 'flex';
@@ -7409,9 +7355,7 @@ window.crmNavSec = function(sekme, btn){
     } else {
       formHtml = `<div style="padding:10px 14px;background:var(--amber-bg);border-radius:8px;font-size:12px;color:var(--amber);margin-bottom:12px"><i class="ti ti-lock" style="font-size:12px;margin-right:4px"></i>Anket yalnızca yöneticiler tarafından doldurulabilir.</div>`;
     }
-
-    /* ─ Geçmiş anketler ─ */
-    let gecmisHtml = '';
+let gecmisHtml = '';
     if(etk.anketler.length>0){
       gecmisHtml = `<div style="margin-top:8px">
         <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Doldurulmuş Anketler</div>
@@ -7461,34 +7405,12 @@ window.crmNavSec = function(sekme, btn){
   
 
   /* ─── Accordion (katılımcı tab) ─── */
-  const _etkAccordion = new Set();
-  window.etkAccToggle = function(etkId,idx){
-    const key=etkId+'-'+idx;
-    if(_etkAccordion.has(key)) _etkAccordion.delete(key);
-    else { _etkAccordion.clear(); _etkAccordion.add(key); }
-    const etk=ETK_DATA.etkinlikler.find(e=>e.id===etkId);
-    if(etk) renderKatilimciList(etk);
-  };
+  const _etkAccordion = new Set();;
 
   function renderMemUyeList(etk){
     const el=document.getElementById('etk-mem-uye-list');
     if(el) el.innerHTML='';
   }
-
-  window.etkSetPuan = function(etkId, idx, baslik, puan) {
-    if (!etkMemYetkiMi()) { alert('Memnuniyet puanı girme yetkiniz yok.'); return; }
-    const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
-    if (!etk) return;
-    if(!etk.katilimcilar[idx].puanlar) etk.katilimcilar[idx].puanlar={};
-    etk.katilimcilar[idx].puanlar[baslik] = puan;
-    /* Gerçek ort. puan /5 cinsinden */
-    const puanlar=etk.katilimcilar[idx].puanlar;
-    const ort=Object.values(puanlar).reduce((s,v)=>s+v,0)/Object.values(puanlar).length;
-    etk.katilimcilar[idx].memnuniyet = Math.round(ort/5*100);
-    renderMemUyeList(etk);     /* yıldızları güncelle */
-    renderMemBasliklar(etk);   /* genel ortalamayı güncelle */
-    renderKatilimciList(etk);  /* katılımcı listesi puanı güncelle */
-  };
 
   window.etkRemoveKatilimci = async function(etkId, idx) {
     const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
@@ -7790,8 +7712,6 @@ window.etkPrsYilKarToggle=function(){
   };
 
 })();
-
-/* ══ ÜYE MODÜLÜ JS ══ */
 (function(){
   const SEKTORLER = ['Seramik','İnşaat','Üretim / Makine','Tarım','Kimya / Boya','Enerji','Tekstil','Gıda','Hizmet'];
   const ILCELER   = ['Merkez','Tavşanlı','Gediz','Simav','Emet','Altıntaş'];
@@ -8648,9 +8568,7 @@ window.sw = function(id, btn) {
   const CALISAN_ARALIKLARI = ['Tümü','1-9','10-49','50-149','150-249','250+'];
   const ILCELER = ['Tümü','Merkez','Tavşanlı','Gediz','Simav','Emet','Altıntaş'];
   const ILETISIM_SURELERI = ['Tüm zaman','Son 1 ay','Son 3 ay','Son 6 ay','Son 1 yıl','Hiç iletişim yok'];
-
-  /* Rapor şablonlarının filtre tanımları */
-  const TEMPLATES = {
+const TEMPLATES = {
     uye_filtre: {
       title: 'Gelişmiş Üye Filtresi',
       desc:  'Çok kriterli üye listesi oluşturun',
@@ -9805,14 +9723,7 @@ window.oneriEkleAc = function(){
   document.getElementById('oneri-modal').style.display='flex';
 };
 
-/* Personel seçilince birimi otomatik doldur */
-window.oneriPersonelSec = function(adSoyad){
-  const prs = (window.PERSONEL||[]).find(p=>`${p.ad} ${p.soyad}`===adSoyad);
-  if(prs?.birim){
-    const birimEl = document.getElementById('oneri-f-birim');
-    if(birimEl) birimEl.value = prs.birim;
-  }
-};
+/* Personel seçilince birimi otomatik doldur */;
 
 window.oneriModalKapat = function(){ document.getElementById('oneri-modal').style.display='none'; };
 
@@ -10044,8 +9955,7 @@ window.personelToggle = function(btn){
 window.personelSec = function(sekme, btn){
   _aktifPersonelSekme = sekme;
   document.querySelectorAll('#personel-sub .nav-sub').forEach(b=>b.classList.remove('active'));
-  /* btn null gelebilir — id'den bul */
-  const aktifBtn = btn || document.getElementById('nav-personel-'+sekme);
+const aktifBtn = btn || document.getElementById('nav-personel-'+sekme);
   if(aktifBtn) aktifBtn.classList.add('active');
   document.getElementById('nav-personel-toggle').classList.add('active');
   const sub = document.getElementById('personel-sub');
@@ -11079,8 +10989,7 @@ window.etkPrsKatilimciCikar=function(etkId,idx){
     const p=(window.PERSONEL||[]).find(pp=>pp.kullanici===k.kullanici);
     if(p){ const eid=p.id; if(window.EGITIMLER&&window.EGITIMLER[eid]) window.EGITIMLER[eid]=window.EGITIMLER[eid].filter(e=>e._etkPrsId!==etkId); }
   }
-  /* Supabase'den sil */
-  if(k) _supa.from('etk_katilimcilar').delete().eq('etkinlik_id',etkId).eq('kullanici',k.kullanici||'')
+if(k) _supa.from('etk_katilimcilar').delete().eq('etkinlik_id',etkId).eq('kullanici',k.kullanici||'')
     .then(({error})=>{if(error) console.error('Personel katılımcı silme hatası:',error.message);});
   etk.katilimcilar.splice(idx,1);
   const prsSelect=document.getElementById('etk-prs-personel-sec');
@@ -11738,7 +11647,7 @@ window.ykGundemSil = async function(gundemId, toplantıId){
   if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 };
 
-/* mkGundemSil: 12644'de tanımlı */
+
 
 window.meclisGundemSil = async function(gundemId, toplantıId){
   if(!confirm('Bu kararı silmek istiyor musunuz? Atamalar da silinecek.')) return;
@@ -12542,7 +12451,7 @@ function mkYeniSatirHtml(sira, toplantıId){
   </div>`;
 }
 
-/* mkGundemKartHtml kaldırıldı */
+
 
 /* mkGundemSatirKaydet — aktif input'u kaydet, yeni satır ekle */
 window.mkGundemSatirKaydet = async function(toplantıId){
@@ -12596,7 +12505,7 @@ window.mkGundemSatirGuncelle = async function(gId, toplantıId, konu){
   await _supa.from('karar_gundemler').update({konu}).eq('id', gId);
 };
 
-/* Eski kaydet fonksiyonu — alias */
+
 window.mkGundemKaydet = window.mkGundemSatirKaydet;
 
 
@@ -12836,21 +12745,7 @@ window.mkAtamaGeriAl=function(gId,kul){
     .then(({error})=>{if(error)console.error('MK gündem geri alma hatası:',error.message);});
   mkRender();
   if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
-};
-
-window.mkGundemTam=function(gId){
-  const g=MK_DB.gundemler.find(x=>x.id===gId);
-  if(!g)return;
-  g.durum='tamamlandi';
-  g.atananlar.forEach(a=>a.durum='tamamlandi');
-  /* Supabase güncelle */
-  _supa.from('karar_gundemler').update({durum:'tamamlandi'}).eq('id',gId)
-    .then(({error})=>{if(error)console.error('MK gündem tamamlama hatası:',error.message);});
-  _supa.from('karar_atamalar').update({durum:'tamamlandi'}).eq('gundem_id',gId)
-    .then(({error})=>{if(error)console.error('MK atama tamamlama hatası:',error.message);});
-  mkAcToplantı(g.toplantıId);
-  if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
-};
+};;
 
 window.mkToplantıDuzenle = function(id){
   const t=MK_DB.toplantılar.find(x=>x.id===id);
@@ -14069,19 +13964,7 @@ window.ykGundemDuzenle = function(toplantıId, gundemId){
     g,
     onKaydet(){ ykModalKapat(); if(typeof ykRenderToplantıDetay==='function') ykRenderToplantıDetay(); else if(typeof ykRender==='function') ykRender(); }
   });
-};
-
-window.mkGundemDuzenle = function(toplantıId, gundemId){
-  const g=(window.MK_DB||{}).gundemler?.find(x=>x.id===gundemId);
-  if(!g){ alert('Gündem bulunamadı.'); return; }
-  _gundemDuzenleModalAc({
-    baslik:'MK Gündem Düzenle',
-    noId:'mkd-no', konuId:'mkd-konu', ozetId:'mkd-ozet', tarihId:'mkd-tarih', oncelikId:'mkd-oncelik',
-    atamaContId:'mkd-atama-cont', ekleId:'mkd-atama-ekle',
-    g,
-    onKaydet(){ ykModalKapat(); if(typeof mkAcToplantı==='function') mkAcToplantı(toplantıId); else if(typeof mkRender==='function') mkRender(); }
-  });
-};
+};;
 
 window.meclisKararDuzenle = function(toplantıId, kararId){
   const g=(window.MECLIS_DB||{}).gundemler?.find(x=>x.id===kararId);
@@ -14228,33 +14111,7 @@ window.meclisRenderPersonel = meclisRenderPersonel;
 (function(){
 let _aktifMemSekme = null;
 
-;
-
-window.memNavSec = function(sekme, btn){
-  _aktifMemSekme=sekme;
-  document.querySelectorAll('#mem-nav-sub .nav-sub').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  const sub=document.getElementById('mem-nav-sub'); if(sub) sub.style.display='block';
-  const chev=document.getElementById('mem-nav-chev'); if(chev) chev.style.transform='rotate(90deg)';
-  document.getElementById('nav-mem')?.classList.add('active');
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  const mevcutYil=new Date().getFullYear();
-  if(sekme==='uye'){
-    document.getElementById('s-memnuniyet')?.classList.add('active');
-    document.getElementById('tb-title').textContent='Memnuniyet — Üye';
-    document.getElementById('tb-sub').textContent='Üye memnuniyet anket takibi';
-    document.querySelector('.main').scrollTop=0;
-    if(window.YD_STATE) window.YD_STATE['memnuniyet']=new Set([mevcutYil]);
-    setTimeout(()=>{ if(window.initYilPickers)window.initYilPickers(); if(window.memSayfaGuncelle)window.memSayfaGuncelle(); if(window.memYilSiralamaGuncelle)window.memYilSiralamaGuncelle(); },30);
-  } else {
-    document.getElementById('s-mem-prs')?.classList.add('active');
-    document.getElementById('tb-title').textContent='Memnuniyet — Personel';
-    document.getElementById('tb-sub').textContent='Personel memnuniyet anket takibi';
-    document.querySelector('.main').scrollTop=0;
-    if(window.YD_STATE) window.YD_STATE['mem-prs']=window.YD_STATE['mem-prs']||new Set([mevcutYil]);
-    setTimeout(()=>{ if(window.initYilPickers)window.initYilPickers(); if(window.memPrsSayfaGuncelle)window.memPrsSayfaGuncelle(); },30);
-  }
-};
+;;
 })();
 
 /* ══ PERSONEL MEMNUNİYET MODÜLÜ ══ */
@@ -15002,19 +14859,7 @@ window.updateTopbarUser = function(user){
       if(m.id !== 'ydm-'+secId) m.classList.remove('open');
     });
     document.getElementById('ydm-'+secId)?.classList.toggle('open');
-  };
-
-  window.ydCheck = function(secId, yil, checked){
-    if(!YD_STATE[secId]) YD_STATE[secId] = new Set();
-    if(checked) YD_STATE[secId].add(yil);
-    else         YD_STATE[secId].delete(yil);
-  };
-
-  window.ydRadio = function(secId, yil, checked){
-    /* Tek seçim: öncekini temizle, sadece seçileni koy */
-    YD_STATE[secId] = new Set();
-    if(checked) YD_STATE[secId].add(yil);
-  };
+  };;;
 
   window.ydTumunu = function(secId){
     YD_STATE[secId] = new Set(YILLAR);
@@ -16551,33 +16396,7 @@ window.ipGostergeTakipGuncelle = async function(projId, gosNo, quarter, value, y
   }
 };
 
-/* Hedef değeri güncelle */
-window.ipGostergeHedefGuncelle = async function(projId, gosNo, value, yil){
-  const val = parseFloat(value)||0;
-  const { data: mevcut } = await _supa.from('ip_proje_gosterge_takip')
-    .select('id').eq('proje_id',projId).eq('gosterge_no',gosNo).eq('yil',yil).maybeSingle();
-  if(mevcut?.id) {
-    await _supa.from('ip_proje_gosterge_takip').update({hedef:val}).eq('id',mevcut.id);
-  }
-  /* % yeniden hesapla */
-  const { data: takiplar } = await _supa.from('ip_proje_gosterge_takip').select('*').eq('proje_id',projId).eq('yil',yil);
-  const pctler = [];
-  (takiplar||[]).forEach(t=>{
-    const h=parseFloat(t.hedef||0);
-    const g=parseFloat(t.q1||0)+parseFloat(t.q2||0)+parseFloat(t.q3||0)+parseFloat(t.q4||0);
-    if(h>0) pctler.push(Math.min(100,Math.round(g/h*100)));
-  });
-  if(pctler.length>0){
-    const yeniPct = Math.round(pctler.reduce((a,b)=>a+b,0)/pctler.length);
-    await _supa.from('ip_projeler').update({pct:yeniPct}).eq('id',projId);
-    for(const str of IP_PLAN.stratejiler) for(const h of str.hedefler){
-      const p=h.projeler.find(x=>x.id===projId); if(p){p.pct=yeniPct;break;}
-    }
-    if(window.ipRenderPlan) window.ipRenderPlan();
-    const pctEl = document.querySelector('.ip-detay-pct');
-    if(pctEl) pctEl.textContent='%'+yeniPct;
-  }
-};
+/* Hedef değeri güncelle */;
 
 /* ═══════════ EKLE / DÜZENLE ═══════════ */
 function projeFormHtml(p){
@@ -20679,21 +20498,7 @@ window.crmRenderZiyaret = function(firmaId){
       </div>
       ${z.sonuc_ozet?`<div style="font-size:12px;color:var(--text2);margin-top:6px">${z.sonuc_ozet.slice(0,120)}${z.sonuc_ozet.length>120?'...':''}</div>`:''}
     </div>`).join('');
-};
-
-window.crmZiyaretEkle = function(){
-  if(!currentFirm){ return; }
-  ziyaretYeniModal();
-  setTimeout(()=>{
-    _ziySecilenFirma = { id: currentFirm.id, _uye_oid: currentFirm.uye_oid, firma: currentFirm.firma, no: currentFirm.no, nace: currentFirm.nace, sektor: currentFirm.sektor, dereceTanimi: currentFirm.dereceTanimi, durum: currentFirm.durum };
-    const inp = document.getElementById('ziy-f-firma-ara'); if(inp) inp.value = currentFirm.firma+' ('+currentFirm.no+')';
-    ziyOtomatikAlanlariDoldur(_ziySecilenFirma);
-  }, 80);
-};
-
-window.crmZiyaretDuzenle = function(id){
-  ziyaretYeniModal(id);
-};
+};;;
 
 window.ziyDetayAc = function(id, sadeceGoruntule){
   const z = window.ZIY_DB[id];
@@ -21169,9 +20974,7 @@ function akrRenderYilTabs(){
     const calisma=tumMaddeler.filter(m=>(AKR_ST.calismalar[m.id]?.[AKR_ST.yil]?.length||0)>0).length;
     istatEl.innerHTML=`<span>${atanan}/${tumMaddeler.length} madde atandı</span><span>·</span><span>${calisma} madde çalışma örneği var</span>`;
   }
-}
-
-window.akrYilSec=function(y){ AKR_ST.yil=y; akrRender(); };
+};
 window.akrRender=akrRender;
 window.akrRenderYilTabs=akrRenderYilTabs;
 
@@ -22333,7 +22136,7 @@ async function _skFirmaGosterImpl(id, no, ad){
     if(dur) dur.textContent = mevcut
       ? 'Mevcut rapor: '+(mevcut.dosya_adi||'—')+' · '+(mevcut.yukleme_tarihi ? new Date(mevcut.yukleme_tarihi).toLocaleString('tr-TR') : '—')
       : 'Henüz rapor yüklenmemiş';
-    // (kaydedilen özet kaldırıldı)
+    
   } catch(e){ if(dur) dur.textContent='Kontrol edilemedi'; }
 
   // Adım 2'yi aktif et (varsa)
@@ -22501,30 +22304,12 @@ function _skDosyaSecilenAyarla(f){
 
 window.skPdfSec = function(inp){
   _skDosyaSecilenAyarla(inp?.files?.[0]);
-};
-window.skDosyaSec = function(inp){
-  _skDosyaSecilenAyarla(inp?.files?.[0]);
-};
-window.skDrop=function(e){
-  e.preventDefault();
-  _skDosyaSecilenAyarla(e.dataTransfer?.files?.[0]);
-};
+};;;
 window.skDosyaTemizle=function(){
   _secilenDosya=null; _secilenDosyaAdi=''; window._skPdfDosyaAdi='';
   const bilgi=document.getElementById('sk-pdf-bilgi'); if(bilgi) bilgi.textContent='Henüz dosya seçilmedi';
   const fi=document.getElementById('sk-pdf-input'); if(fi) fi.value='';
-};
-
-window.skRaporSil = async function(){
-  if(!confirm('Bu firmaya ait kapasite raporu Supabase\'den silinecek. Emin misiniz?')) return;
-  try {
-    await sbSil(_seciliFirmaNo||_seciliFirmaId);
-    if(window.crmSanayiOzetGuncelle) window.crmSanayiOzetGuncelle(_seciliFirmaNo||_seciliFirmaId);
-    const dur=document.getElementById('sk-rapor-durumu'); if(dur) dur.textContent='Rapor silindi';
-    const a2no=document.getElementById('sk-adim2-no');
-    if(a2no){a2no.style.background='var(--surface2)';a2no.style.color='var(--text2)';a2no.style.border='0.5px solid var(--border)';}
-  } catch(e){ alert(e.message); }
-};
+};;
 
 /* ══════════════════════════════════════════════════════════
    LISTE MODÜLÜ — Yıl filtreli, kart tasarımlı
