@@ -3299,19 +3299,6 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div><!-- /kararlar-panel -->
 
     <!-- Modal (tüm alt menüler için ortak) -->
-    <div id="yk-modal-overlay" class="yk-modal-hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:540px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-          <div style="font-size:15px;font-weight:500" id="yk-modal-title">Toplantı Ekle</div>
-          <button onclick="ykModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
-        </div>
-        <div id="yk-modal-body" style="padding:18px 20px;overflow-y:auto;flex:1"></div>
-        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-          <button class="btn btn-sm" onclick="ykModalKapat()">İptal</button>
-          <button class="btn btn-p btn-sm" id="yk-modal-kaydet"><i class="ti ti-check"></i> Kaydet</button>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- ══════════ GENEL SEKRETERLİK — ÜYE YÖNETİMİ ══════════ -->
@@ -3508,39 +3495,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div style="padding:20px">
         <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Bu eğitim kaydı için nasıl bir işlem yapmak istiyorsunuz?</div>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <button onclick="egitimSilSadeceBen()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--border);border-radius:10px;background:var(--surface2);cursor:pointer;text-align:left;width:100%">
-            <i class="ti ti-user-minus" style="font-size:20px;color:var(--amber);flex-shrink:0;margin-top:1px"></i>
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text)">Sadece beni listeden çıkar</div>
-              <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Diğer katılımcılar etkilenmez. Sadece bu personelin kaydı silinir.</div>
-            </div>
-          </button>
-          <button onclick="egitimSilTumunuSil()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--red);border-radius:10px;background:var(--red-bg);cursor:pointer;text-align:left;width:100%">
-            <i class="ti ti-trash" style="font-size:20px;color:var(--red);flex-shrink:0;margin-top:1px"></i>
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--red)">Eğitimi tamamen sil</div>
-              <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Tüm katılımcıların eğitim kaydı silinir. Eğitim iptal edildi.</div>
-            </div>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ TOPLANTI EVRAK MODALI ══ -->
-  <div id="evrak-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:540px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div>
-          <div style="font-size:15px;font-weight:600" id="evrak-modal-baslik">Toplantı Evrakları</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="evrak-modal-alt"></div>
-        </div>
-        <button onclick="document.getElementById('evrak-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-      </div>
-      <!-- Yükleme alanı -->
-      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);flex-shrink:0">
-        <div id="evrak-yukle-alan" onclick="document.getElementById('evrak-file-input').click()"
-          style="border:2px dashed var(--border2);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .15s"
+          <button onclick="egitimSilSadeceBen()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--border);border-radius:10px;backg:12px;padding:20px;text-align:center;cursor:pointer;transition:all .15s"
           onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue-bg)'"
           onmouseout="this.style.borderColor='var(--border2)';this.style.background=''">
           <i class="ti ti-cloud-upload" style="font-size:28px;color:var(--text2);display:block;margin-bottom:8px"></i>
@@ -3573,122 +3528,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <input id="kurul-t-ad" class="yk-inp" placeholder="Örn: 2026 Yılı 1. Personel Kurul Toplantısı" autocomplete="off">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div>
-            <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
-            <input id="kurul-t-tarih" type="date" class="yk-inp">
-          </div>
-          <div>
-            <label class="yk-lbl">Saat</label>
-            <input id="kurul-t-saat" type="time" class="yk-inp" value="10:00">
-          </div>
-        </div>
-        <div>
-          <label class="yk-lbl">Toplantı Yeri</label>
-          <input id="kurul-t-yer" class="yk-inp" placeholder="TSO Toplantı Salonu...">
-        </div>
-        <div>
-          <label class="yk-lbl">Katılımcılar</label>
-          <input id="kurul-t-katilimci" class="yk-inp" placeholder="İsim, İsim, İsim...">
-        </div>
-      </div>
-      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-        <button class="btn btn-sm" onclick="kurulModalKapat('kurul-toplanti-modal')">İptal</button>
-        <button class="btn btn-p btn-sm" id="kurul-t-kaydet-btn" onclick="kurulToplantıKaydet()"><i class="ti ti-check"></i> Kaydet</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ KURUL GÜNDEM MODAL ══ -->
-  <div id="kurul-gundem-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:520px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div>
-          <div style="font-size:15px;font-weight:600" id="kurul-g-modal-title">Gündem Ekle</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="kurul-g-modal-sub"></div>
-        </div>
-        <button onclick="kurulModalKapat('kurul-gundem-modal')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-      </div>
-      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
-        <input type="hidden" id="kurul-g-toplanti-id">
-        <input type="hidden" id="kurul-g-id">
-        <div>
-          <label class="yk-lbl">Gündem Maddesi No</label>
-          <input id="kurul-g-no" type="number" class="yk-inp" placeholder="1" min="1" style="width:80px">
-        </div>
-        <div>
-          <label class="yk-lbl">Gündem Konusu <span style="color:var(--red)">*</span></label>
-          <input id="kurul-g-konu" class="yk-inp" placeholder="Gündem konusu başlığı...">
-        </div>
-        <div>
-          <label class="yk-lbl">Açıklama (isteğe bağlı)</label>
-          <textarea id="kurul-g-aciklama" class="yk-inp" style="min-height:70px;resize:vertical" placeholder="Gündem detayı..."></textarea>
-        </div>
-        <div>
-          <label class="yk-lbl">Alınan Karar</label>
-          <textarea id="kurul-g-karar" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Bu gündem maddesinde alınan karar..."></textarea>
-        </div>
-      </div>
-      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-        <button class="btn btn-sm" onclick="kurulModalKapat('kurul-gundem-modal')">İptal</button>
-        <button class="btn btn-p btn-sm" id="kurul-g-kaydet-btn" onclick="kurulGundemKaydet()"><i class="ti ti-check"></i> Kaydet</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ PERSONEL İZİN MODAL ══ -->
-  <div id="izin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:440px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div style="font-size:15px;font-weight:600" id="izin-modal-title">İzin Ekle</div>
-        <button onclick="izinModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-      </div>
-      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
-        <input type="hidden" id="izin-f-id">
-        <div>
-          <label class="yk-lbl">Yıl <span style="color:var(--red)">*</span></label>
-          <input id="izin-f-yil" type="number" class="yk-inp" placeholder="2026" min="2000" max="2099">
-        </div>
-        <div>
-          <label class="yk-lbl">Hak Edilen İzin (gün) <span style="color:var(--red)">*</span></label>
-          <input id="izin-f-hak" type="number" class="yk-inp" placeholder="14" min="0">
-        </div>
-        <div>
-          <label class="yk-lbl">Kullanılan İzin (gün)</label>
-          <input id="izin-f-kullanilan" type="number" class="yk-inp" placeholder="0" min="0" value="0">
-        </div>
-        <div style="padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2)">
-          Kalan izin otomatik hesaplanır: Hak edilen − Kullanılan
-        </div>
-        <div>
-          <label class="yk-lbl">Not (isteğe bağlı)</label>
-          <input id="izin-f-aciklama" class="yk-inp" placeholder="Açıklama...">
-        </div>
-      </div>
-      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-        <button class="btn btn-sm" onclick="izinModalKapat()">İptal</button>
-        <button class="btn btn-p btn-sm" id="izin-kaydet-btn" onclick="izinKaydet()"><i class="ti ti-check"></i> Kaydet</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ PERSONEL ÖNERİ MODAL ══ -->
-  <div id="oneri-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:600px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div>
-          <div style="font-size:15px;font-weight:600" id="oneri-modal-title">Personel Öneri Formu</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">FPS 11-01 Personel Öneri Formu</div>
-        </div>
-        <button onclick="oneriModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-      </div>
-      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
-
-        <!-- Üst bilgiler -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div>
-            <label class="yk-lbl">Adı Soyadı <span style="color:var(--red)">*</span></label>
-            <select id="oneri-f-adsoyad" class="yk-inp" onchange="oneriPersonelSec(this.value)">
-              <option value="">Personel seçin...</option>
+          <inp" placeholder="1" min="1" style="width:   <input id="izin-f-hak" type="number"ption>
             </select>
           </div>
           <div>
@@ -23629,5 +23469,164 @@ window.sikayetSilById = async function(id, btn){
 
 })();
 </script>
+
+
+<!-- ══ GLOBAL MODALLER (tüm section'lardan erişilebilir) ══ -->
+
+<!-- evrak-modal -->
+<div id="evrak-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:540px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div>
+          <div style="font-size:15px;font-weight:600" id="evrak-modal-baslik">Toplantı Evrakları</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="evrak-modal-alt"></div>
+        </div>
+        <button onclick="document.getElementById('evrak-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <!-- Yükleme alanı -->
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);flex-shrink:0">
+        <div id="evrak-yukle-alan" onclick="document.getElementById('evrak-file-input').click()"
+          style="border:2px dashed var(--border2);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .15s"
+          onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue-bg)'"
+          onmouseout="this.style.borderColor='var(--border2)';this.style.background=''">
+          <i class="ti ti-cloud-upload" style="font-size:28px;color:var(--text2);display:block;margin-bottom:8px"></i>
+          <div style="font-size:13px;font-weight:500">Dosya seç veya buraya sürükle</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">PDF, Word, Excel, Resim — maks. 50MB</div>
+        </div>
+        <input type="file" id="evrak-file-input" multiple style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+          onchange="evrakDosyaSecildi(this.files)">
+        <div id="evrak-yukleme-durumu" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <!-- Mevcut evraklar -->
+      <div style="flex:1;overflow-y:auto;padding:16px 20px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">MEVCUT EVRAKLAR</div>
+        <div id="evrak-liste"></div>
+      </div>
+    </div>
+  </div>
+
+<!-- kurul-toplanti-modal -->
+<div id="kurul-toplanti-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:480px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div style="font-size:15px;font-weight:600" id="kurul-t-modal-title">Kurul Toplantısı Ekle</div>
+        <button onclick="kurulModalKapat('kurul-toplanti-modal')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="kurul-t-id">
+        <div>
+          <label class="yk-lbl">Toplantı Adı / Başlığı <span style="color:var(--red)">*</span></label>
+          <input id="kurul-t-ad" class="yk-inp" placeholder="Örn: 2026 Yılı 1. Personel Kurul Toplantısı" autocomplete="off">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label>
+            <input id="kurul-t-tarih" type="date" class="yk-inp">
+          </div>
+          <div>
+            <label class="yk-lbl">Saat</label>
+            <input id="kurul-t-saat" type="time" class="yk-inp" value="10:00">
+          </div>
+        </div>
+        <div>
+          <label class="yk-lbl">Toplantı Yeri</label>
+          <input id="kurul-t-yer" class="yk-inp" placeholder="TSO Toplantı Salonu...">
+        </div>
+        <div>
+          <label class="yk-lbl">Katılımcılar</label>
+          <input id="kurul-t-katilimci" class="yk-inp" placeholder="İsim, İsim, İsim...">
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-sm" onclick="kurulModalKapat('kurul-toplanti-modal')">İptal</button>
+        <button class="btn btn-p btn-sm" id="kurul-t-kaydet-btn" onclick="kurulToplantıKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+<!-- kurul-gundem-modal -->
+<div id="kurul-gundem-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:520px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div>
+          <div style="font-size:15px;font-weight:600" id="kurul-g-modal-title">Gündem Ekle</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="kurul-g-modal-sub"></div>
+        </div>
+        <button onclick="kurulModalKapat('kurul-gundem-modal')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="kurul-g-toplanti-id">
+        <input type="hidden" id="kurul-g-id">
+        <div>
+          <label class="yk-lbl">Gündem Maddesi No</label>
+          <input id="kurul-g-no" type="number" class="yk-inp" placeholder="1" min="1" style="width:80px">
+        </div>
+        <div>
+          <label class="yk-lbl">Gündem Konusu <span style="color:var(--red)">*</span></label>
+          <input id="kurul-g-konu" class="yk-inp" placeholder="Gündem konusu başlığı...">
+        </div>
+        <div>
+          <label class="yk-lbl">Açıklama (isteğe bağlı)</label>
+          <textarea id="kurul-g-aciklama" class="yk-inp" style="min-height:70px;resize:vertical" placeholder="Gündem detayı..."></textarea>
+        </div>
+        <div>
+          <label class="yk-lbl">Alınan Karar</label>
+          <textarea id="kurul-g-karar" class="yk-inp" style="min-height:80px;resize:vertical" placeholder="Bu gündem maddesinde alınan karar..."></textarea>
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-sm" onclick="kurulModalKapat('kurul-gundem-modal')">İptal</button>
+        <button class="btn btn-p btn-sm" id="kurul-g-kaydet-btn" onclick="kurulGundemKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+<!-- egitim-sil-modal -->
+<div id="egitim-sil-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:420px;box-shadow:0 8px 40px rgba(0,0,0,.3);overflow:hidden">
+      <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:15px;font-weight:600">Eğitimi Sil</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="egitim-sil-baslik"></div>
+        </div>
+        <button onclick="document.getElementById('egitim-sil-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:20px">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Bu eğitim kaydı için nasıl bir işlem yapmak istiyorsunuz?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button onclick="egitimSilSadeceBen()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--border);border-radius:10px;background:var(--surface2);cursor:pointer;text-align:left;width:100%">
+            <i class="ti ti-user-minus" style="font-size:20px;color:var(--amber);flex-shrink:0;margin-top:1px"></i>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Sadece beni listeden çıkar</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Diğer katılımcılar etkilenmez. Sadece bu personelin kaydı silinir.</div>
+            </div>
+          </button>
+          <button onclick="egitimSilTumunuSil()" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:0.5px solid var(--red);border-radius:10px;background:var(--red-bg);cursor:pointer;text-align:left;width:100%">
+            <i class="ti ti-trash" style="font-size:20px;color:var(--red);flex-shrink:0;margin-top:1px"></i>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--red)">Eğitimi tamamen sil</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">Tüm katılımcıların eğitim kaydı silinir. Eğitim iptal edildi.</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- yk-modal-overlay -->
+<div id="yk-modal-overlay" class="yk-modal-hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:540px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div style="font-size:15px;font-weight:500" id="yk-modal-title">Toplantı Ekle</div>
+          <button onclick="ykModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+        </div>
+        <div id="yk-modal-body" style="padding:18px 20px;overflow-y:auto;flex:1"></div>
+        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+          <button class="btn btn-sm" onclick="ykModalKapat()">İptal</button>
+          <button class="btn btn-p btn-sm" id="yk-modal-kaydet"><i class="ti ti-check"></i> Kaydet</button>
+        </div>
+      </div>
+    </div>
+
 </body>
 </html>
