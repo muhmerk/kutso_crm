@@ -941,6 +941,70 @@ function supaRealtimeBaslat() {
     })
     .subscribe();
 
+  /* ── CRM İletişim / Notlar ── */
+  _supa.channel('db-crm-iletisim')
+    .on('postgres_changes',{event:'*',schema:'public',table:'crm_iletisim'},()=>{
+      if(window.currentFirm && window.crmTimelineRender){
+        window.TIMELINE_CACHE = {};
+        window.crmTimelineRender(window.currentFirm.id);
+      }
+    })
+    .subscribe();
+
+  /* ── Toplantı Evrakları ── */
+  _supa.channel('db-toplanti-evraklar')
+    .on('postgres_changes',{event:'*',schema:'public',table:'toplanti_evraklar'},()=>{
+      if(window.evrakBadgeGuncelle) window.evrakBadgeGuncelle();
+    })
+    .subscribe();
+
+  /* ── Toplantı Katılım ── */
+  _supa.channel('db-toplanti-katilim')
+    .on('postgres_changes',{event:'*',schema:'public',table:'toplanti_katilim'},()=>{
+      if(window._katilimToplantıId && window.katilimListeYukle)
+        window.katilimListeYukle(window._katilimToplantıId, window._katilimTur);
+    })
+    .subscribe();
+
+  /* ── Kurul Toplantıları & Gündemleri ── */
+  _supa.channel('db-kurul')
+    .on('postgres_changes',{event:'*',schema:'public',table:'kurul_toplantılar'},()=>{
+      if(window.kurulAcildi) window.kurulAcildi();
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'kurul_gundemler'},()=>{
+      if(window.kurulListeRender) window.kurulListeRender();
+    })
+    .subscribe();
+
+  /* ── Personel İzinleri ── */
+  _supa.channel('db-personel-izinler')
+    .on('postgres_changes',{event:'*',schema:'public',table:'personel_izinler'},()=>{
+      if(window.izinListeYukle) window.izinListeYukle();
+    })
+    .subscribe();
+
+  /* ── Sanayi Bilgi Sistemi ── */
+  _supa.channel('db-sanayi-bilgi')
+    .on('postgres_changes',{event:'*',schema:'public',table:'sanayi_bilgi'},()=>{
+      if(window.skListeYukle) window.skListeYukle();
+    })
+    .subscribe();
+
+  /* ── Ticaret Sicil ── */
+  _supa.channel('db-ticaret-sicil')
+    .on('postgres_changes',{event:'*',schema:'public',table:'ticaret_sicil_hizmetleri'},()=>{
+      if(window._sicilSeciliFirma && window.sicilGecmisYukle)
+        window.sicilGecmisYukle(window._sicilSeciliFirma.oid, window._sicilSeciliFirma.ticaretSicilNo||window._sicilSeciliFirma.sicilNo);
+    })
+    .subscribe();
+
+  /* ── IP Gösterge Takip ── */
+  _supa.channel('db-ip-gosterge')
+    .on('postgres_changes',{event:'*',schema:'public',table:'ip_proje_gosterge_takip'},()=>{
+      if(window.ipRender) window.ipRender();
+    })
+    .subscribe();
+
   console.log('✓ Realtime bağlantısı kuruldu');
 }
 
