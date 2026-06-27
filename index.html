@@ -1265,27 +1265,7 @@ async function supaIpProjeKaydet(p, hId) {
 }
 
 /* İlk veri aktarımı — konsol üzerinden çalıştırılır */
-window.supaIlkVeriAktar = async function() {
-  console.log('⏳ İlk veri aktarımı başlıyor...');
-  /* Kullanıcılar */
-  for (const u of (window.USERS||[])) {
-    await _supa.from('kullanicilar').upsert(
-      [{ kullanici: u.kullanici, sifre: u.sifre, ad_soyad: u.adSoyad, rol: u.rol||'personel' }],
-      { onConflict: 'kullanici' }
-    );
-  }
-  console.log('✓ Kullanıcılar aktarıldı');
-  /* Personel */
-  for (const p of (window.PERSONEL||[])) {
-    await _supa.from('personel').upsert([{
-      id: p.id, ad: p.ad, soyad: p.soyad, unvan: p.unvan, birim: p.birim,
-      tel: p.tel, email: p.email, baslama: p.baslama, durum: p.durum,
-      tc: p.tc, kullanici: p.kullanici
-    }]);
-  }
-  console.log('✓ Personel aktarıldı');
-  console.log('✅ İlk veri aktarımı tamamlandı! Sayfayı yenileyin.');
-};
+/* supaIlkVeriAktar kaldırıldı */
 </script>
 <style>
 /* ─── RESET & TOKENS ─── */
@@ -6957,7 +6937,7 @@ window.crmNavSec = function(sekme, btn){
     if(window.etkRender) window.etkRender(); else renderList();
   };
 
-  window.etkEvrakKaydet = function(){ /* artık etkEvrakDrop kullanılıyor */ };
+  
 
   window.etkEvrakSil = async function(etkId, evrakId){
     const etk = ETK_DATA.etkinlikler.find(e=>e.id===etkId);
@@ -7618,7 +7598,7 @@ window.crmNavSec = function(sekme, btn){
   };
 
   /* Eski setPuan — artık kullanılmıyor ama hata vermemesi için tut */
-  window.etkSetPuan = function(){ /* deprecated */ };
+  
 
   /* ─── Accordion (katılımcı tab) ─── */
   const _etkAccordion = new Set();
@@ -11062,7 +11042,7 @@ window.etkPrsEvrakDrop = async function(files, etkId){
   if(window.etkPrsRender) window.etkPrsRender();
 };
 
-window.etkPrsEvrakKaydet=function(etkId){ /* artık etkPrsEvrakDrop kullanılıyor */ };
+
 
 window.etkPrsEvrakSil=async function(etkId,evrakId){
   const etk=ETK_PRS_DATA.etkinlikler.find(e=>e.id===etkId);
@@ -11543,28 +11523,7 @@ window.prsEgitimLoad = function(id) {
     </div>`;
 };
 
-window.prsYkLoad = function(id) {
-  const el = document.getElementById('prs-yk-content');
-  if (!id) { el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-gavel" style="font-size:28px;display:block;margin-bottom:8px"></i>Personel seçin</div>'; return; }
-  const p = PERSONEL.find(x=>x.id==id);
-  const list = YK_KARARLAR[id]||YK_KARARLAR.default;
-  if (!list.length) { el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-gavel" style="font-size:28px;display:block;margin-bottom:8px"></i>Bu personele atanmış YK kararı yok</div>'; return; }
-  const durumBadge={acil:'b-red',devam:'b-amber',tamamlandi:'b-green'};
-  const durumLabel={acil:'Acil',devam:'Devam Ediyor',tamamlandi:'Tamamlandı'};
-  el.innerHTML=`
-    <div class="card" style="padding:0;overflow:hidden">
-      <div style="padding:10px 14px;background:var(--surface2);border-bottom:0.5px solid var(--border);font-size:12px;font-weight:500">${p?p.ad+' '+p.soyad+' — YK Karar Görevleri':''}</div>
-      ${list.map(k=>`<div class="prs-doc-row">
-        <div class="prs-doc-icon" style="background:var(--blue-bg)"><i class="ti ti-gavel" style="color:var(--blue);font-size:15px"></i></div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:500">${k.konu}</div>
-          <div style="font-size:10px;color:var(--text2)">${k.karar_no} · Görev: ${k.gorev}</div>
-          <div style="font-size:10px;color:var(--text2)">Son: ${k.son_tarih}</div>
-        </div>
-        <span class="badge ${durumBadge[k.durum]}">${durumLabel[k.durum]}</span>
-      </div>`).join('')}
-    </div>`;
-};
+;
 
 window.prsSozlesmeLoad = function(id) {
   const el = document.getElementById('prs-soz-content');
@@ -12732,60 +12691,7 @@ function mkYeniSatirHtml(sira, toplantıId){
   </div>`;
 }
 
-function mkGundemKartHtml(g, sira, toplantıId){
-  const oncelikBadge = g.oncelik==='acil'
-    ? '<span class="badge b-red" style="font-size:10px">Acil</span>'
-    : g.oncelik==='dusuk'
-      ? '<span class="badge b-gray" style="font-size:10px">Düşük</span>'
-      : '<span class="badge b-blue" style="font-size:10px">Normal</span>';
-  const durumBadge = g.durum==='tamamlandi'
-    ? '<span class="badge b-green" style="font-size:10px">Tamamlandı</span>'
-    : '<span class="badge b-amber" style="font-size:10px">Planlandı</span>';
-
-  const idE = g.id.replace(/'/g,"\'");
-  const konuE = (g.konu||'').replace(/"/g,'&quot;');
-  const ozetE = (g.ozet||'').replace(/"/g,'&quot;');
-
-  return `<div class="card" id="mk-gk-${g.id}" style="padding:14px;border:0.5px solid var(--border)">
-    <div id="mk-gk-view-${g.id}">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
-          <div style="width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.konu}</div>
-            ${g.ozet ? `<div style="font-size:11px;color:var(--text2);margin-top:3px">${g.ozet}</div>` : ''}
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-          ${oncelikBadge}${durumBadge}
-          <button class="btn btn-sm" style="font-size:11px;padding:3px 7px" onclick="mkGundemDuzenleAc('${idE}','${toplantıId}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-sm" style="font-size:11px;padding:3px 7px;color:var(--red)" onclick="mkGundemSil('${idE}','${toplantıId}')" title="Sil"><i class="ti ti-trash"></i></button>
-        </div>
-      </div>
-    </div>
-    <div id="mk-gk-edit-${g.id}" style="display:none;margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px">
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <input id="mk-ge-konu-${g.id}" class="yk-inp" value="${konuE}" placeholder="Gündem konusu">
-        <textarea id="mk-ge-ozet-${g.id}" class="yk-inp" style="min-height:48px;resize:vertical">${ozetE}</textarea>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <select id="mk-ge-oncelik-${g.id}" class="yk-inp">
-            <option value="normal" ${g.oncelik==='normal'?'selected':''}>Normal</option>
-            <option value="acil"   ${g.oncelik==='acil'?'selected':''}>Acil</option>
-            <option value="dusuk"  ${g.oncelik==='dusuk'?'selected':''}>Düşük</option>
-          </select>
-          <select id="mk-ge-durum-${g.id}" class="yk-inp">
-            <option value="planlandi"   ${g.durum==='planlandi'?'selected':''}>Planlandı</option>
-            <option value="tamamlandi"  ${g.durum==='tamamlandi'?'selected':''}>Tamamlandı</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:6px;justify-content:flex-end">
-          <button class="btn btn-sm" onclick="mkGundemDuzenlePtal('${idE}')"><i class="ti ti-x"></i> İptal</button>
-          <button class="btn btn-p btn-sm" onclick="mkGundemGuncelle('${idE}','${toplantıId}')"><i class="ti ti-check"></i> Kaydet</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
+/* mkGundemKartHtml kaldırıldı */
 
 /* mkGundemSatirKaydet — aktif input'u kaydet, yeni satır ekle */
 window.mkGundemSatirKaydet = async function(toplantıId){
@@ -12842,22 +12748,11 @@ window.mkGundemSatirGuncelle = async function(gId, toplantıId, konu){
 /* Eski kaydet fonksiyonu — alias */
 window.mkGundemKaydet = window.mkGundemSatirKaydet;
 
-window.mkGundemFormTemizle = function(){
-  const konu = document.getElementById('mk-gf-konu'); if(konu) konu.value='';
-  const ozet = document.getElementById('mk-gf-ozet'); if(ozet) ozet.value='';
-  const oncelik = document.getElementById('mk-gf-oncelik'); if(oncelik) oncelik.value='normal';
-  const durum   = document.getElementById('mk-gf-durum');   if(durum)   durum.value='planlandi';
-};
 
-window.mkGundemDuzenleAc = function(gId, toplantıId){
-  document.getElementById('mk-gk-view-'+gId).style.display='none';
-  document.getElementById('mk-gk-edit-'+gId).style.display='block';
-};
 
-window.mkGundemDuzenlePtal = function(gId){
-  document.getElementById('mk-gk-edit-'+gId).style.display='none';
-  document.getElementById('mk-gk-view-'+gId).style.display='block';
-};
+;
+
+;
 
 window.mkGundemGuncelle = async function(gId, toplantıId){
   const konu    = document.getElementById('mk-ge-konu-'+gId)?.value.trim();
@@ -14450,8 +14345,8 @@ if(_ykRenderOrig){
   };
 }
 /* MK/Meclis badge hook'ları — function declaration yerine window.* kullan */
-window._mkRenderWrapper = function(){ mkRender(); setTimeout(kararlarBadgeGuncelle,50); };
-window._meclisRenderWrapper = function(){ meclisRender(); setTimeout(kararlarBadgeGuncelle,50); };
+
+
 
 /* Login sonrası badge */
 const _origUTU_karar = window.updateTopbarUser;
@@ -14482,13 +14377,7 @@ window.meclisRenderPersonel = meclisRenderPersonel;
 (function(){
 let _aktifMemSekme = null;
 
-window.memNavToggle = function(btn){
-  /* Artık tek sekme (Üye) — direkt aç */
-  memNavSec('uye', document.getElementById('nav-mem-uye'));
-  document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('nav-mem-uye')?.classList.add('active');
-};
+;
 
 window.memNavSec = function(sekme, btn){
   _aktifMemSekme=sekme;
@@ -17116,14 +17005,9 @@ window.ipEvrakDrop = async function(files) {
   if(inp) inp.value = '';
 };
 
-window.ipEvrakSil = function(idx, btn) {
-  btn.closest('.ip-evrak-satir')?.remove();
-};
+;
 
-window.ipEvrakEkle = function() {
-  /* Artık kullanılmıyor — dosya seçici var */
-  document.getElementById('ip-evrak-input')?.click();
-};
+;
 
 window.ipGosEkle = function(){
   const list = document.getElementById('ip-gos-list');
@@ -17550,9 +17434,7 @@ window.updateTopbarUser=function(user){
 
 })();
 
-window.sikayetModalKapat = function(){
-  document.getElementById('sik-modal-overlay').style.display = 'none';
-};
+;
 
 /* ══ PERSONEL EĞİTİM EKLE ══ */
 let _prsEgitimEditId = null; /* Düzenleme modunda olan kaydın ID'si */
@@ -18060,11 +17942,7 @@ window.sikKategoriToggle=function(){
 
 /* Şikayet kaydedilince grafikleri güncelle */
 const _origSikayetEkleKaydet2 = window.sikayetKaydet;
-window.sikayetKaydet2 = function(){
-  if(window.sikayetKaydet) window.sikayetKaydet();
-  const yil=new Date().getFullYear();
-  sikMetrikleriGuncelle(yil); sikTrendGuncelle(); sikKarsilastirmaGuncelle();
-};
+;
 
 window.SIK_DB = {};
 const SIK_TAKIP = 'meric';
@@ -23419,9 +23297,240 @@ window.crmSanayiOzetGuncelle = async function(uyeId){
 };
 
 /* crmNavSec('sanayi') uyumluluğu */
-window.sanayiNavOpen = function(){
-  const cf=window.currentFirm;
-  if(window.sanayiMainAc) window.sanayiMainAc(cf?cf.id:null, cf?cf.no:null, cf?(cf.firma||cf.name):null);
+;
+
+
+/* ══════════════════════════════════════════════════════════
+   EKSİK FONKSİYONLAR — sicilSearch, sicilGeri, sicilKaydet,
+   prsDuzenleModal, sifreDegistirModal, sikayetSilById
+══════════════════════════════════════════════════════════ */
+
+/* ── Ticaret Sicil Modülü ── */
+let _sicilSeciliFirma = null; // { oid, no, uyeNo, ad }
+
+window.sicilSearch = async function(q){
+  q = (q||'').trim();
+  const resEl = document.getElementById('sicil-results');
+  if(!resEl) return;
+  if(q.length < 2){ resEl.style.display='none'; resEl.innerHTML=''; return; }
+  resEl.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i></div>';
+  resEl.style.display = 'block';
+  try {
+    const { data } = await _supa.from('uyeler')
+      .select('uye_oid,unvan,tabela_unvani,uye_oda_sicil_no,ticaret_sicil_no')
+      .or(`unvan.ilike.%${q}%,tabela_unvani.ilike.%${q}%,uye_oda_sicil_no.eq.${q},ticaret_sicil_no.eq.${q}`)
+      .limit(8);
+    if(!data||data.length===0){
+      resEl.innerHTML='<div style="padding:12px;text-align:center;color:var(--text2)">Sonuç bulunamadı</div>';
+      return;
+    }
+    resEl.innerHTML = data.map(u=>`
+      <div onclick="sicilFirmaSec('${u.uye_oid}','${(u.uye_oda_sicil_no||'').replace(/'/g,"\'")}','${(u.unvan||u.tabela_unvani||'').replace(/'/g,"\'")}','${(u.ticaret_sicil_no||'').replace(/'/g,"\'")}','${(u.uye_oda_sicil_no||'').replace(/'/g,"\'")}' )"
+        style="padding:10px 14px;cursor:pointer;border-bottom:0.5px solid var(--border);font-size:13px;transition:background .1s"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <div style="font-weight:500">${u.unvan||u.tabela_unvani||'—'}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Üye No: ${u.uye_oda_sicil_no||'—'} · Ticaret Sicil: ${u.ticaret_sicil_no||'—'}</div>
+      </div>`).join('');
+  } catch(e){ resEl.innerHTML='<div style="padding:12px;color:var(--red)">Arama hatası</div>'; }
+};
+
+window.sicilFirmaSec = async function(oid, sicilNo, ad, ticaretSicilNo, uyeNo){
+  _sicilSeciliFirma = { oid, sicilNo, ad, ticaretSicilNo, uyeNo };
+  // UI güncelle
+  const adEl  = document.getElementById('sicil-firma-ad');
+  const noEl  = document.getElementById('sicil-firma-no');
+  const uyeEl = document.getElementById('sicil-firma-uyeno');
+  const avEl  = document.getElementById('sicil-firma-avatar');
+  if(adEl)  adEl.textContent  = ad||'—';
+  if(noEl)  noEl.textContent  = ticaretSicilNo||'—';
+  if(uyeEl) uyeEl.textContent = uyeNo||'—';
+  if(avEl)  avEl.textContent  = (ad||'?').substring(0,2).toUpperCase();
+  // Görünümü değiştir
+  const sv = document.getElementById('sicil-search-view');
+  const dv = document.getElementById('sicil-detay-view');
+  if(sv) sv.style.display='none';
+  if(dv) dv.style.display='block';
+  // Geçmiş kayıtları yükle
+  sicilGecmisYukle(oid, sicilNo);
+};
+
+async function sicilGecmisYukle(oid, sicilNo){
+  const el = document.getElementById('sicil-gecmis-content');
+  if(!el) return;
+  el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i></div>';
+  try{
+    let { data } = await _supa.from('ticaret_sicil_hizmetleri')
+      .select('*').eq('uye_oid', oid).order('tarih', {ascending:false});
+    if((!data||data.length===0) && sicilNo){
+      const r2 = await _supa.from('ticaret_sicil_hizmetleri').select('*').eq('sicil_no', sicilNo).order('tarih',{ascending:false});
+      data = r2.data;
+    }
+    if(!data||data.length===0){
+      el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)">Henüz kayıt bulunmuyor</div>';
+      return;
+    }
+    el.innerHTML='<table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="font-size:11px;color:var(--text2)">'
+      +'<th style="padding:6px 8px;border:0.5px solid var(--border);text-align:left">Tarih</th>'
+      +'<th style="padding:6px 8px;border:0.5px solid var(--border);text-align:left">İşlem Türü</th>'
+      +'<th style="padding:6px 8px;border:0.5px solid var(--border);text-align:left">Detay</th>'
+      +'<th style="padding:6px 8px;border:0.5px solid var(--border)"></th>'
+      +'</tr></thead><tbody>'
+      +(data||[]).map(r=>`<tr style="font-size:12px">
+        <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.tarih||'—'}</td>
+        <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.islem_turu||r.talep_turu||'—'}</td>
+        <td style="padding:7px 8px;border:0.5px solid var(--border);color:var(--text2)">${r.detay||r.aciklama||'—'}</td>
+        <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">
+          <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" onclick="sicilKayitSil('${r.id}')"><i class="ti ti-trash"></i></button>
+        </td>
+      </tr>`).join('')
+      +'</tbody></table>';
+  }catch(e){ el.innerHTML='<div style="color:var(--red);padding:12px">Yükleme hatası: '+e.message+'</div>'; }
+}
+
+window.sicilGeri = function(){
+  _sicilSeciliFirma = null;
+  const sv = document.getElementById('sicil-search-view');
+  const dv = document.getElementById('sicil-detay-view');
+  if(sv) sv.style.display='block';
+  if(dv) dv.style.display='none';
+  const q = document.getElementById('sicil-q');
+  if(q){ q.value=''; }
+  const res = document.getElementById('sicil-results');
+  if(res){ res.style.display='none'; res.innerHTML=''; }
+};
+
+window.sicilKaydet = async function(){
+  if(!_sicilSeciliFirma){ alert('Önce firma seçiniz.'); return; }
+  const tur    = document.getElementById('sicil-talep-turu')?.value;
+  const tarih  = document.getElementById('sicil-tarih')?.value;
+  const detay  = document.getElementById('sicil-detay')?.value.trim()||'';
+  if(!tur){ alert('İşlem türü zorunludur.'); return; }
+  if(!tarih){ alert('Tarih zorunludur.'); return; }
+  const btn = document.querySelector('[onclick="sicilKaydet()"]');
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Kaydediliyor...'; }
+  try{
+    const { error } = await _supa.from('ticaret_sicil_hizmetleri').insert([{
+      uye_oid   : _sicilSeciliFirma.oid,
+      sicil_no  : _sicilSeciliFirma.ticaretSicilNo||'',
+      uye_no    : _sicilSeciliFirma.uyeNo||'',
+      islem_turu: tur,
+      tarih,
+      detay,
+      olusturan : currentUser?.adSoyad||currentUser?.kullanici||'Sistem'
+    }]);
+    if(error) throw error;
+    // Formu temizle
+    if(document.getElementById('sicil-talep-turu')) document.getElementById('sicil-talep-turu').value='';
+    if(document.getElementById('sicil-tarih'))      document.getElementById('sicil-tarih').value='';
+    if(document.getElementById('sicil-detay'))      document.getElementById('sicil-detay').value='';
+    // Geçmişi yenile
+    sicilGecmisYukle(_sicilSeciliFirma.oid, _sicilSeciliFirma.ticaretSicilNo);
+  }catch(e){ alert('Kayıt hatası: '+e.message); }
+  finally{
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="ti ti-plus"></i> Kaydet'; }
+  }
+};
+
+window.sicilKayitSil = async function(id){
+  if(!confirm('Bu kayıt silinecek. Emin misiniz?')) return;
+  const { error } = await _supa.from('ticaret_sicil_hizmetleri').delete().eq('id', id);
+  if(error){ alert('Silme hatası: '+error.message); return; }
+  if(_sicilSeciliFirma) sicilGecmisYukle(_sicilSeciliFirma.oid, _sicilSeciliFirma.ticaretSicilNo);
+};
+
+/* ── Personel Düzenleme Modalı ── */
+window.prsDuzenleModal = function(prsId){
+  const p = (window.PERSONEL||[]).find(x=>x.id===prsId||String(x.id)===String(prsId));
+  if(!p){ alert('Personel bulunamadı.'); return; }
+  const titleEl=document.getElementById('yk-modal-title');
+  const bodyEl=document.getElementById('yk-modal-body');
+  const kaydetEl=document.getElementById('yk-modal-kaydet');
+  const overlayEl=document.getElementById('yk-modal-overlay');
+  if(!titleEl||!bodyEl||!kaydetEl||!overlayEl){ alert('Modal bulunamadı.'); return; }
+  titleEl.textContent='Personel Düzenle';
+  bodyEl.innerHTML='<div style="display:flex;flex-direction:column;gap:12px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div><label class="yk-lbl">Ad *</label><input id="prs-d-ad" class="yk-inp" value="'+(p.ad||'').replace(/"/g,'&quot;')+'"></div>'
+    +'<div><label class="yk-lbl">Soyad *</label><input id="prs-d-soyad" class="yk-inp" value="'+(p.soyad||'').replace(/"/g,'&quot;')+'"></div></div>'
+    +'<div><label class="yk-lbl">Unvan *</label><input id="prs-d-unvan" class="yk-inp" value="'+(p.unvan||'').replace(/"/g,'&quot;')+'"></div>'
+    +'<div><label class="yk-lbl">Birim</label><input id="prs-d-birim" class="yk-inp" value="'+(p.birim||'').replace(/"/g,'&quot;')+'"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div><label class="yk-lbl">Tel</label><input id="prs-d-tel" class="yk-inp" value="'+(p.tel||'').replace(/"/g,'&quot;')+'"></div>'
+    +'<div><label class="yk-lbl">İşe Başlama</label><input id="prs-d-baslama" class="yk-inp" value="'+(p.baslama||'').replace(/"/g,'&quot;')+'"></div></div>'
+    +'<div><label class="yk-lbl">Durum</label><select id="prs-d-durum" class="yk-inp">'
+    +'<option value="aktif" '+(p.durum==='aktif'?'selected':'')+'>Aktif</option>'
+    +'<option value="pasif" '+(p.durum==='pasif'?'selected':'')+'>Pasif</option>'
+    +'</select></div>'
+    +'</div>';
+  kaydetEl.onclick = async function(){
+    const ad   = document.getElementById('prs-d-ad')?.value.trim();
+    const soyad= document.getElementById('prs-d-soyad')?.value.trim().toUpperCase();
+    const unvan= document.getElementById('prs-d-unvan')?.value.trim();
+    if(!ad||!soyad||!unvan){ alert('Ad, soyad ve unvan zorunludur.'); return; }
+    const updates = {
+      ad, soyad, unvan,
+      birim  : document.getElementById('prs-d-birim')?.value.trim()||p.birim,
+      tel    : document.getElementById('prs-d-tel')?.value.trim()||p.tel,
+      baslama: document.getElementById('prs-d-baslama')?.value.trim()||p.baslama,
+      durum  : document.getElementById('prs-d-durum')?.value||p.durum
+    };
+    await supaPersonelGuncelle(p.id, updates);
+    Object.assign(p, updates);
+    ykModalKapat();
+    if(window.prsRenderListe) window.prsRenderListe();
+    else if(window.prsRender) window.prsRender();
+  };
+  overlayEl.classList.remove('yk-modal-hidden');
+  overlayEl.classList.add('yk-modal-visible');
+};
+
+/* ── Şifre Değiştir Modalı ── */
+window.sifreDegistirModal = function(){
+  const titleEl=document.getElementById('yk-modal-title');
+  const bodyEl=document.getElementById('yk-modal-body');
+  const kaydetEl=document.getElementById('yk-modal-kaydet');
+  const overlayEl=document.getElementById('yk-modal-overlay');
+  if(!titleEl||!bodyEl||!kaydetEl||!overlayEl){ alert('Modal bulunamadı.'); return; }
+  titleEl.textContent='Şifre Değiştir';
+  bodyEl.innerHTML='<div style="display:flex;flex-direction:column;gap:12px">'
+    +'<div><label class="yk-lbl">Mevcut Şifre</label><input type="password" id="sf-mevcut" class="yk-inp" placeholder="Mevcut şifreniz"></div>'
+    +'<div><label class="yk-lbl">Yeni Şifre *</label><input type="password" id="sf-yeni" class="yk-inp" placeholder="Yeni şifre"></div>'
+    +'<div><label class="yk-lbl">Yeni Şifre Tekrar *</label><input type="password" id="sf-tekrar" class="yk-inp" placeholder="Yeni şifreyi tekrar girin"></div>'
+    +'</div>';
+  kaydetEl.onclick = async function(){
+    const mevcut = document.getElementById('sf-mevcut')?.value||'';
+    const yeni   = document.getElementById('sf-yeni')?.value||'';
+    const tekrar = document.getElementById('sf-tekrar')?.value||'';
+    if(!yeni){ alert('Yeni şifre zorunludur.'); return; }
+    if(yeni !== tekrar){ alert('Yeni şifreler eşleşmiyor.'); return; }
+    if(mevcut && currentUser?.sifre && mevcut !== currentUser.sifre){ alert('Mevcut şifre hatalı.'); return; }
+    await supaKullaniciGuncelle(currentUser.kullanici, null, yeni);
+    if(currentUser) currentUser.sifre = yeni;
+    // USERS listesini güncelle
+    const u = (window.USERS||[]).find(x=>x.kullanici===currentUser.kullanici);
+    if(u) u.sifre = yeni;
+    ykModalKapat();
+    alert('Şifreniz başarıyla güncellendi.');
+  };
+  overlayEl.classList.remove('yk-modal-hidden');
+  overlayEl.classList.add('yk-modal-visible');
+};
+
+/* ── Şikayet Sil (ID ile) ── */
+window.sikayetSilById = async function(id, btn){
+  if(!confirm('Bu şikayet silinecek. Emin misiniz?')) return;
+  if(btn) btn.disabled=true;
+  try{
+    await _supa.from('sikayet_notlar').delete().eq('sikayet_id', id);
+    const { error } = await _supa.from('sikayetler').delete().eq('id', id);
+    if(error) throw error;
+    if(window.SIKAYET_DB) window.SIKAYET_DB = (window.SIKAYET_DB||[]).filter(s=>s.id!==id);
+    // Kartı DOM'dan kaldır
+    const kart = btn?.closest('[data-sikayet-id]') || btn?.closest('.sikayet-kart') || btn?.closest('.card');
+    if(kart) kart.remove();
+    else if(window.supaYukleSikayetler) window.supaYukleSikayetler();
+  }catch(e){ alert('Silme hatası: '+e.message); if(btn) btn.disabled=false; }
 };
 
 })();
