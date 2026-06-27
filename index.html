@@ -23382,14 +23382,21 @@ async function sicilGecmisYukle(oid, sicilNo){
       +'<th style="padding:6px 8px;border:0.5px solid var(--border);text-align:left">Detay</th>'
       +'<th style="padding:6px 8px;border:0.5px solid var(--border)"></th>'
       +'</tr></thead><tbody>'
-      +(data||[]).map(r=>`<tr style="font-size:12px">
-        <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.tescil_tarihi ? new Date(r.tescil_tarihi).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : (r.tarih||'—')}</td>
-        <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.talep_turu||r.islem_turu||'—'}</td>
-        <td style="padding:7px 8px;border:0.5px solid var(--border);color:var(--text2)">${r.detay||r.aciklama||'—'}</td>
-        <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">
-          <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" onclick="sicilKayitSil('${r.id}')"><i class="ti ti-trash"></i></button>
-        </td>
-      </tr>`).join('')
+      +(data||[]).map(r=>{
+        const tarihGoster = r.tescil_tarihi ? new Date(r.tescil_tarihi).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : (r.tarih||'—');
+        const tarihVal = (r.tescil_tarihi||'').slice(0,10);
+        const turE = (r.talep_turu||'').replace(/"/g,'&quot;');
+        const detayE = (r.detay||'').replace(/"/g,'&quot;').split('\n').join(' ');
+        return `<tr id="sicil-row-${r.id}" style="font-size:12px">
+          <td style="padding:7px 8px;border:0.5px solid var(--border)">${tarihGoster}</td>
+          <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.talep_turu||'—'}</td>
+          <td style="padding:7px 8px;border:0.5px solid var(--border);color:var(--text2)">${r.detay||'—'}</td>
+          <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center;white-space:nowrap">
+            <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;margin-right:3px" onclick="sicilKayitDuzenle('${r.id}','${tarihVal}','${turE}','${detayE}')"><i class="ti ti-edit"></i></button>
+            <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" onclick="sicilKayitSil('${r.id}')"><i class="ti ti-trash"></i></button>
+          </td>
+        </tr>`;
+      }).join('')
       +'</tbody></table>';
   }catch(e){ el.innerHTML='<div style="color:var(--red);padding:12px">Yükleme hatası: '+e.message+'</div>'; }
 }
@@ -23435,6 +23442,49 @@ window.sicilKaydet = async function(){
   finally{
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="ti ti-plus"></i> Kaydet'; }
   }
+};
+
+window.sicilKayitDuzenle = function(id, tarih, tur, detay){
+  const titleEl = document.getElementById('yk-modal-title');
+  const bodyEl  = document.getElementById('yk-modal-body');
+  const kaydetEl= document.getElementById('yk-modal-kaydet');
+  const overlayEl=document.getElementById('yk-modal-overlay');
+  if(!titleEl||!bodyEl||!kaydetEl||!overlayEl){ alert('Modal bulunamadı.'); return; }
+  titleEl.textContent = 'Sicil İşlemini Düzenle';
+
+  const turSecenekleri = ['Kuruluş','Değişiklik','Terkin','Toplu Terkin','Tasfiye','Ek Tasfiye',
+    'Ticaret Sicil Tasdiknamesi','İflas Konkordato Belgesi','Acentelik','Acente İptal',
+    'Merkez Nakli','Merkez Nakli Sonucu Silinme','Durum Belgesi','Nevi Değişikliği',
+    'Ad/Soyad Değişikliği','İflas Başlatma','İnternet Sitesi Tescili'];
+
+  bodyEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px">'
+    +'<div><label class="yk-lbl">İşlem Türü</label>'
+    +'<select id="sicil-d-tur" class="yk-inp">'
+    + turSecenekleri.map(t=>`<option value="${t}" ${t===tur?'selected':''}>${t}</option>`).join('')
+    +'</select></div>'
+    +'<div><label class="yk-lbl">Tarih</label>'
+    +'<input type="date" id="sicil-d-tarih" class="yk-inp" value="'+tarih+'"></div>'
+    +'<div><label class="yk-lbl">Detay / Açıklama</label>'
+    +'<textarea id="sicil-d-detay" class="yk-inp" style="min-height:70px;resize:vertical">'+detay+'</textarea></div>'
+    +'</div>';
+
+  kaydetEl.onclick = async function(){
+    const yeniTur   = document.getElementById('sicil-d-tur')?.value||'';
+    const yeniTarih = document.getElementById('sicil-d-tarih')?.value||'';
+    const yeniDetay = document.getElementById('sicil-d-detay')?.value.trim()||'';
+    if(!yeniTur||!yeniTarih){ alert('İşlem türü ve tarih zorunludur.'); return; }
+    const { error } = await _supa.from('ticaret_sicil_hizmetleri').update({
+      talep_turu   : yeniTur,
+      tescil_tarihi: yeniTarih,
+      detay        : yeniDetay
+    }).eq('id', id);
+    if(error){ alert('Güncelleme hatası: '+error.message); return; }
+    ykModalKapat();
+    if(_sicilSeciliFirma) sicilGecmisYukle(_sicilSeciliFirma.oid, _sicilSeciliFirma.ticaretSicilNo||_sicilSeciliFirma.sicilNo);
+  };
+
+  overlayEl.classList.remove('yk-modal-hidden');
+  overlayEl.classList.add('yk-modal-visible');
 };
 
 window.sicilKayitSil = async function(id){
