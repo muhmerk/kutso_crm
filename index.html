@@ -23351,7 +23351,7 @@ window.sicilFirmaSec = async function(oid, sicilNo, ad, ticaretSicilNo, uyeNo){
   if(sv) sv.style.display='none';
   if(dv) dv.style.display='block';
   // Geçmiş kayıtları yükle
-  sicilGecmisYukle(oid, sicilNo);
+  sicilGecmisYukle(oid, ticaretSicilNo||sicilNo);
 };
 
 async function sicilGecmisYukle(oid, sicilNo){
@@ -23364,6 +23364,11 @@ async function sicilGecmisYukle(oid, sicilNo){
     if(sicilNo){
       const r = await _supa.from('ticaret_sicil_hizmetleri').select('*').eq('sicil_no', sicilNo).order('tescil_tarihi',{ascending:false});
       data = r.data;
+    }
+    // Ticaret sicil no ile bulunamazsa üye sicil noyu dene
+    if((!data||data.length===0) && oid){
+      const r2 = await _supa.from('ticaret_sicil_hizmetleri').select('*').eq('sicil_no', oid.replace(/^TS/,'')).order('tescil_tarihi',{ascending:false});
+      if(r2.data && r2.data.length) data = r2.data;
     }
     if(!data||data.length===0){
       el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)">Henüz kayıt bulunmuyor</div>';
@@ -23434,7 +23439,7 @@ window.sicilKayitSil = async function(id){
   if(!confirm('Bu kayıt silinecek. Emin misiniz?')) return;
   const { error } = await _supa.from('ticaret_sicil_hizmetleri').delete().eq('id', id);
   if(error){ alert('Silme hatası: '+error.message); return; }
-  if(_sicilSeciliFirma) sicilGecmisYukle(_sicilSeciliFirma.oid, _sicilSeciliFirma.ticaretSicilNo);
+  if(_sicilSeciliFirma) sicilGecmisYukle(_sicilSeciliFirma.oid, _sicilSeciliFirma.ticaretSicilNo||_sicilSeciliFirma.sicilNo);
 };
 
 /* ── Personel Düzenleme Modalı ── */
