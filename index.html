@@ -14853,6 +14853,21 @@ window.updateTopbarUser = function(user){
     ydLabelGuncelle(secId);
   }
 
+  window.ydRadio = function(secId, yil, checked){
+    // Tek seçim (radio) — seçileni set'e ekle, diğerlerini çıkar
+    YD_STATE[secId] = new Set([yil]);
+    YILLAR.forEach(y=>{
+      const inp = document.getElementById('ydc-'+secId+'-'+y);
+      if(inp) inp.checked = (y === yil);
+    });
+  };
+
+  window.ydCheck = function(secId, yil, checked){
+    // Çoklu seçim (checkbox) — set'e ekle veya çıkar
+    if(checked) YD_STATE[secId].add(yil);
+    else YD_STATE[secId].delete(yil);
+  };
+
   window.ydToggle = function(secId){
     /* Diğer açıkları kapat */
     document.querySelectorAll('.yd-menu.open').forEach(m=>{
