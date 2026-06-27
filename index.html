@@ -3557,67 +3557,10 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   <!-- ══ KATILIM ÖZET MODALI ══ -->
 
   <!-- ══ KATILIM TAKİBİ MODALI ══ -->
-  </div>
 
-  <!-- Şikayet Detay Modalı — 3 Sekme -->
-  <div id="sik-surec-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:680px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
-        <!-- Başlık -->
-        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);flex-shrink:0">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div>
-              <div style="font-size:15px;font-weight:600" id="sik-surec-baslik"></div>
-              <div style="font-size:11px;color:var(--text2);margin-top:2px" id="sik-surec-no"></div>
-            </div>
-            <button onclick="sikSurecKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
-          </div>
-          <!-- Sekmeler -->
-          <div style="display:flex;gap:0;margin-top:12px;border-bottom:2px solid var(--border)">
-            <button id="sik-tab-btn-bilgi" onclick="sikTabSec('bilgi')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;font-family:var(--font)">Bilgiler</button>
-            <button id="sik-tab-btn-surec" onclick="sikTabSec('surec')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Süreç Takibi</button>
-            <button id="sik-tab-btn-not" onclick="sikTabSec('not')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Notlar</button>
-          </div>
-        </div>
-        <!-- Sekme içerikleri -->
-      <div id="sik-surec-body" style="overflow-y:auto;flex:1;padding:18px 20px;display:flex;flex-direction:column;gap:12px"></div>
-        <!-- Alt butonlar -->
-        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0" id="sik-surec-footer"></div>
-      </div>
-    </div>
-
-    <div id="ziy-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:760px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
-      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div>
-          <div style="font-size:15px;font-weight:500" id="ziy-modal-title">Yeni Üye Ziyareti</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Ziyaret öncesi bilgileri doldurun, ziyaret sonrası tekrar açıp tamamlayın</div>
-        </div>
-        <button onclick="ziyModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
-      </div>
-      <div id="ziy-modal-body" style="padding:20px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px"></div>
-      <div style="padding:13px 22px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-sm" id="ziy-pdf-once-btn" onclick="ziyPdfOlustur('once')"><i class="ti ti-file-text"></i> Ziyaret Öncesi Brief (PDF)</button>
-          <button class="btn btn-sm" id="ziy-pdf-sonra-btn" onclick="ziyPdfOlustur('sonra')"><i class="ti ti-file-check"></i> Tamamlandı Raporu (PDF)</button>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-sm" onclick="ziyModalKapat()">İptal</button>
-          <button class="btn btn-p btn-sm" onclick="ziyaretKaydet()"><i class="ti ti-check"></i> Kaydet</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Şikayet Detay Modalı — 3 Sekme --><!-- /sik-surec-body -->
 
   <!-- Detay görüntüleme overlay (section dışında) -->
-  <div id="ziy-detay-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:720px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
-      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div style="font-size:15px;font-weight:500" id="ziy-detay-title">Ziyaret Detayı</div>
-        <button onclick="document.getElementById('ziy-detay-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
-      </div>
-      <div id="ziy-detay-body" style="padding:20px 22px;overflow-y:auto;flex:1"></div>
-    </div>
-  </div>
 
   <div id="s-akreditasyon" class="section">
 
@@ -23620,6 +23563,66 @@ window.sikayetSilById = async function(id, btn){
         <button class="btn btn-sm" onclick="gsModalKapat()">İptal</button>
         <button class="btn btn-p btn-sm" onclick="gsModalKaydet()"><i class="ti ti-check"></i> Kaydet</button>
       </div>
+    </div>
+  </div>
+
+
+
+<div id="sik-surec-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:680px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+        <!-- Başlık -->
+        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);flex-shrink:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:15px;font-weight:600" id="sik-surec-baslik"></div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px" id="sik-surec-no"></div>
+            </div>
+            <button onclick="sikSurecKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
+          </div>
+          <!-- Sekmeler -->
+          <div style="display:flex;gap:0;margin-top:12px;border-bottom:2px solid var(--border)">
+            <button id="sik-tab-btn-bilgi" onclick="sikTabSec('bilgi')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;font-family:var(--font)">Bilgiler</button>
+            <button id="sik-tab-btn-surec" onclick="sikTabSec('surec')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Süreç Takibi</button>
+            <button id="sik-tab-btn-not" onclick="sikTabSec('not')" style="padding:7px 18px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font)">Notlar</button>
+          </div>
+        </div>
+        <!-- Sekme içerikleri -->
+      <div id="sik-surec-body" style="overflow-y:auto;flex:1;padding:18px 20px;display:flex;flex-direction:column;gap:12px"></div>
+        <!-- Alt butonlar -->
+        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0" id="sik-surec-footer"></div>
+      </div>
+      </div>
+
+<div id="ziy-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:760px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div>
+          <div style="font-size:15px;font-weight:500" id="ziy-modal-title">Yeni Üye Ziyareti</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Ziyaret öncesi bilgileri doldurun, ziyaret sonrası tekrar açıp tamamlayın</div>
+        </div>
+        <button onclick="ziyModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="ziy-modal-body" style="padding:20px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px"></div>
+      <div style="padding:13px 22px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm" id="ziy-pdf-once-btn" onclick="ziyPdfOlustur('once')"><i class="ti ti-file-text"></i> Ziyaret Öncesi Brief (PDF)</button>
+          <button class="btn btn-sm" id="ziy-pdf-sonra-btn" onclick="ziyPdfOlustur('sonra')"><i class="ti ti-file-check"></i> Tamamlandı Raporu (PDF)</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm" onclick="ziyModalKapat()">İptal</button>
+          <button class="btn btn-p btn-sm" onclick="ziyaretKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div id="ziy-detay-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border-radius:16px;width:720px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div style="font-size:15px;font-weight:500" id="ziy-detay-title">Ziyaret Detayı</div>
+        <button onclick="document.getElementById('ziy-detay-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="ziy-detay-body" style="padding:20px 22px;overflow-y:auto;flex:1"></div>
     </div>
   </div>
 </body>
