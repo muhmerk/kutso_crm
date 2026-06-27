@@ -23384,7 +23384,7 @@ async function sicilGecmisYukle(oid, sicilNo){
       +'</tr></thead><tbody>'
       +(data||[]).map(r=>`<tr style="font-size:12px">
         <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.tescil_tarihi ? new Date(r.tescil_tarihi).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : (r.tarih||'—')}</td>
-        <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.islem_turu||r.talep_turu||'—'}</td>
+        <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.talep_turu||r.islem_turu||'—'}</td>
         <td style="padding:7px 8px;border:0.5px solid var(--border);color:var(--text2)">${r.detay||r.aciklama||'—'}</td>
         <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center">
           <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" onclick="sicilKayitSil('${r.id}')"><i class="ti ti-trash"></i></button>
@@ -23417,11 +23417,12 @@ window.sicilKaydet = async function(){
   if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Kaydediliyor...'; }
   try{
     const { error } = await _supa.from('ticaret_sicil_hizmetleri').insert([{
-      sicil_no     : _sicilSeciliFirma.ticaretSicilNo||'',
-      islem_turu   : tur,
+      sicil_no     : _sicilSeciliFirma.ticaretSicilNo||_sicilSeciliFirma.sicilNo||'',
+      talep_turu   : tur,
       tescil_tarihi: tarih,
       detay        : detay,
-      unvan        : _sicilSeciliFirma.ad||''
+      unvan        : _sicilSeciliFirma.ad||'',
+      giren_kul    : currentUser?.adSoyad||currentUser?.kullanici||'Sistem'
     }]);
     if(error) throw error;
     // Formu temizle
