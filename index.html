@@ -23375,6 +23375,10 @@ async function sicilGecmisYukle(oid, sicilNo){
       el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)">Henüz kayıt bulunmuyor</div>';
       return;
     }
+    // Veriyi global map'e sakla — onclick string sorununu önler
+    window._sicilKayitMap = {};
+    (data||[]).forEach(r=>{ window._sicilKayitMap[r.id] = r; });
+
     el.innerHTML='<table style="width:100%;border-collapse:collapse">'
       +'<thead><tr style="font-size:11px;color:var(--text2)">'
       +'<th style="padding:6px 8px;border:0.5px solid var(--border);text-align:left">Tarih</th>'
@@ -23384,16 +23388,13 @@ async function sicilGecmisYukle(oid, sicilNo){
       +'</tr></thead><tbody>'
       +(data||[]).map(r=>{
         const tarihGoster = r.tescil_tarihi ? new Date(r.tescil_tarihi).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : (r.tarih||'—');
-        const tarihVal = (r.tescil_tarihi||'').slice(0,10);
-        const turE = (r.talep_turu||'').replace(/"/g,'&quot;');
-        const detayE = (r.detay||'').replace(/"/g,'&quot;').split('\n').join(' ');
         return `<tr id="sicil-row-${r.id}" style="font-size:12px">
           <td style="padding:7px 8px;border:0.5px solid var(--border)">${tarihGoster}</td>
           <td style="padding:7px 8px;border:0.5px solid var(--border)">${r.talep_turu||'—'}</td>
           <td style="padding:7px 8px;border:0.5px solid var(--border);color:var(--text2)">${r.detay||'—'}</td>
           <td style="padding:7px 8px;border:0.5px solid var(--border);text-align:center;white-space:nowrap">
-            <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;margin-right:3px" onclick="sicilKayitDuzenle('${r.id}','${tarihVal}','${turE}','${detayE}')"><i class="ti ti-edit"></i></button>
-            <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" onclick="sicilKayitSil('${r.id}')"><i class="ti ti-trash"></i></button>
+            <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;margin-right:3px" data-sicil-id="${r.id}" onclick="sicilKayitDuzenle(this.dataset.sicilId)"><i class="ti ti-edit"></i></button>
+            <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red)" data-sicil-id="${r.id}" onclick="sicilKayitSil(this.dataset.sicilId)"><i class="ti ti-trash"></i></button>
           </td>
         </tr>`;
       }).join('')
@@ -23444,41 +23445,65 @@ window.sicilKaydet = async function(){
   }
 };
 
-window.sicilKayitDuzenle = function(id, tarih, tur, detay){
-  const titleEl = document.getElementById('yk-modal-title');
-  const bodyEl  = document.getElementById('yk-modal-body');
-  const kaydetEl= document.getElementById('yk-modal-kaydet');
-  const overlayEl=document.getElementById('yk-modal-overlay');
+window.sicilKayitDuzenle = function(id){
+  const r = (window._sicilKayitMap||{})[id];
+  if(!r){ alert('Kayıt bulunamadı.'); return; }
+
+  const titleEl  = document.getElementById('yk-modal-title');
+  const bodyEl   = document.getElementById('yk-modal-body');
+  const kaydetEl = document.getElementById('yk-modal-kaydet');
+  const overlayEl= document.getElementById('yk-modal-overlay');
   if(!titleEl||!bodyEl||!kaydetEl||!overlayEl){ alert('Modal bulunamadı.'); return; }
   titleEl.textContent = 'Sicil İşlemini Düzenle';
 
+  const mevcutTarih = (r.tescil_tarihi||r.tarih||'').slice(0,10);
+  const mevcutTur   = r.talep_turu||r.islem_turu||'';
+  const mevcutDetay = r.detay||r.aciklama||'';
+
   const turSecenekleri = ['Kuruluş','Değişiklik','Terkin','Toplu Terkin','Tasfiye','Ek Tasfiye',
     'Ticaret Sicil Tasdiknamesi','İflas Konkordato Belgesi','Acentelik','Acente İptal',
-    'Merkez Nakli','Merkez Nakli Sonucu Silinme','Durum Belgesi','Nevi Değişikliği',
-    'Ad/Soyad Değişikliği','İflas Başlatma','İnternet Sitesi Tescili'];
+    'Merkez Nakli','Merkez Nakli Sonucu Silinme','Merkez Nakli Belgesi (TSY md 111)',
+    'Durum Belgesi','Nevi Değişikliği','İntibak/Nevi Değişikliği','Ad/Soyad Değişikliği',
+    'Tapu Yetki Belgesi','Konkordato Mühleti Reddi','Konkordato Tasdiki',
+    'Konkordato Tasdiki Talebinin Reddi','Geçici Konkordato Mühleti Verilmesi',
+    'Yönetim Kayyımı İşlemleri','İflas Başlatma','Kuruluş Bölünme (Devir Alan)',
+    'Kısmi Bölünme (Devir Olan)','Değişiklik Birleşme (Devir Alan)',
+    'Değişiklik Birleşme (Devir Olan)','İnternet Sitesi Tescili'];
 
   bodyEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px">'
-    +'<div><label class="yk-lbl">İşlem Türü</label>'
+    +'<div><label class="yk-lbl">İşlem Türü <span style="color:var(--red)">*</span></label>'
     +'<select id="sicil-d-tur" class="yk-inp">'
-    + turSecenekleri.map(t=>`<option value="${t}" ${t===tur?'selected':''}>${t}</option>`).join('')
+    + turSecenekleri.map(t=>`<option value="${t}" ${t===mevcutTur?'selected':''}>${t}</option>`).join('')
+    +(mevcutTur && !turSecenekleri.includes(mevcutTur) ? `<option value="${mevcutTur}" selected>${mevcutTur}</option>` : '')
     +'</select></div>'
-    +'<div><label class="yk-lbl">Tarih</label>'
-    +'<input type="date" id="sicil-d-tarih" class="yk-inp" value="'+tarih+'"></div>'
+    +'<div><label class="yk-lbl">Tescil Tarihi <span style="color:var(--red)">*</span></label>'
+    +'<input type="date" id="sicil-d-tarih" class="yk-inp" value="'+mevcutTarih+'"></div>'
     +'<div><label class="yk-lbl">Detay / Açıklama</label>'
-    +'<textarea id="sicil-d-detay" class="yk-inp" style="min-height:70px;resize:vertical">'+detay+'</textarea></div>'
+    +'<textarea id="sicil-d-detay" class="yk-inp" style="min-height:80px;resize:vertical"></textarea></div>'
     +'</div>';
+
+  // Textarea'ya değeri sonradan ata (XSS güvenli)
+  document.getElementById('sicil-d-detay').value = mevcutDetay;
 
   kaydetEl.onclick = async function(){
     const yeniTur   = document.getElementById('sicil-d-tur')?.value||'';
     const yeniTarih = document.getElementById('sicil-d-tarih')?.value||'';
     const yeniDetay = document.getElementById('sicil-d-detay')?.value.trim()||'';
     if(!yeniTur||!yeniTarih){ alert('İşlem türü ve tarih zorunludur.'); return; }
+    kaydetEl.disabled = true;
     const { error } = await _supa.from('ticaret_sicil_hizmetleri').update({
       talep_turu   : yeniTur,
       tescil_tarihi: yeniTarih,
       detay        : yeniDetay
     }).eq('id', id);
+    kaydetEl.disabled = false;
     if(error){ alert('Güncelleme hatası: '+error.message); return; }
+    // Local map güncelle
+    if(window._sicilKayitMap && window._sicilKayitMap[id]){
+      window._sicilKayitMap[id].talep_turu = yeniTur;
+      window._sicilKayitMap[id].tescil_tarihi = yeniTarih;
+      window._sicilKayitMap[id].detay = yeniDetay;
+    }
     ykModalKapat();
     if(_sicilSeciliFirma) sicilGecmisYukle(_sicilSeciliFirma.oid, _sicilSeciliFirma.ticaretSicilNo||_sicilSeciliFirma.sicilNo);
   };
@@ -23533,8 +23558,7 @@ window.prsDuzenleModal = function(prsId){
     await supaPersonelGuncelle(p.id, updates);
     Object.assign(p, updates);
     ykModalKapat();
-    if(window.prsRenderListe) window.prsRenderListe();
-    else if(window.prsRender) window.prsRender();
+    if(window.renderPrsList) window.renderPrsList();
   };
   overlayEl.classList.remove('yk-modal-hidden');
   overlayEl.classList.add('yk-modal-visible');
@@ -23580,11 +23604,13 @@ window.sikayetSilById = async function(id, btn){
     await _supa.from('sikayet_notlar').delete().eq('sikayet_id', id);
     const { error } = await _supa.from('sikayetler').delete().eq('id', id);
     if(error) throw error;
-    if(window.SIKAYET_DB) window.SIKAYET_DB = (window.SIKAYET_DB||[]).filter(s=>s.id!==id);
+    // SIK_DB'den kaldır
+    if(window.SIK_DB && window.SIK_DB[id]) delete window.SIK_DB[id];
     // Kartı DOM'dan kaldır
     const kart = btn?.closest('[data-sikayet-id]') || btn?.closest('.sikayet-kart') || btn?.closest('.card');
     if(kart) kart.remove();
-    else if(window.supaYukleSikayetler) window.supaYukleSikayetler();
+    // Listeyi yenile
+    if(window.supaYukleSikayetler) window.supaYukleSikayetler();
   }catch(e){ alert('Silme hatası: '+e.message); if(btn) btn.disabled=false; }
 };
 
