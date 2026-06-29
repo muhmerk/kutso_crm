@@ -1573,7 +1573,7 @@ body {
 
 /* ─── SECTIONS ─── */
 .section { display: none; }
-.section.active { display: flex; flex-direction: column; gap: 18px; }
+.section.active { display: flex; flex-direction: column; gap: 14px; }
 
 /* ─── METRIC GRID ─── */
 .mg  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -3059,8 +3059,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   </div>
 
   <div id="s-memnuniyet" class="section">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div id="yd-placeholder-memnuniyet" style="margin-bottom:0"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0;flex-wrap:wrap">
+      <div id="yd-placeholder-memnuniyet" style="margin-bottom:0;display:flex;align-items:center;gap:6px"></div>
       <div style="flex:1"></div>
       <button class="btn btn-p btn-sm" onclick="memEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
     </div>
@@ -3204,8 +3204,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
   <!-- ══════════ ŞİKAYET ══════════ -->
   <div id="s-sikayet" class="section">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div id="yd-placeholder-sikayet" style="margin-bottom:0"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0;flex-wrap:wrap">
+      <div id="yd-placeholder-sikayet" style="margin-bottom:0;display:flex;align-items:center;gap:6px"></div>
       <div style="flex:1"></div>
       <button class="btn btn-p btn-sm" onclick="sikayetEkleModal()"><i class="ti ti-plus"></i> Şikayet Ekle</button>
     </div>
@@ -3525,8 +3525,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   </div>
   <div id="s-uye-ziyaret" class="section">
     <!-- Liste görünümü -->
-    <div id="ziy-list-view">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><div id="yd-placeholder-ziyaret" style="display:inline-flex;align-items:center;flex-shrink:0"></div><select id="ay-sec-ziyaret" onchange="kararAySec('ziyaret',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:center"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
+    <div id="ziy-list-view" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:6px"><div id="yd-placeholder-ziyaret" style="display:inline-flex;align-items:center;flex-shrink:0"></div><select id="ay-sec-ziyaret" onchange="kararAySec('ziyaret',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:center"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
         <div style="display:flex;gap:8px;flex-wrap:wrap" id="ziy-filtre-bar">
           <button class="btn btn-sm ziy-filtre-on" onclick="ziyFiltrele('tum',this)">Tümü</button>
