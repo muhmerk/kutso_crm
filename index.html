@@ -23115,35 +23115,6 @@ window.sikayetSilById = async function(id, btn){
 <!-- gs-modal -->
 
 <!-- katilim-ozet-modal -->
-<div id="katilim-ozet-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border-radius:16px;width:780px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-size:15px;font-weight:600" id="katilim-ozet-baslik">Katılım Özeti</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="katilim-ozet-alt"></div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <!-- MK komite seçici — sadece MK'da görünür -->
-          <select id="katilim-ozet-komite" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:180px;display:none">
-          </select>
-          <select id="katilim-ozet-yil" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;pa Edilen İzin (gün)</label>
-        <input type="number" id="izin-f-hak" class="yk-inp" placeholder="14" min="0">
-      </div>
-      <div>
-        <label class="yk-lbl">Kullanılan İzin (gün)</label>
-        <input type="number" id="izin-f-kullanilan" class="yk-inp" placeholder="0" min="0">
-      </div>
-      <div>
-        <label class="yk-lbl">Açıklama</label>
-        <textarea id="izin-f-aciklama" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="İsteğe bağlı açıklama..."></textarea>
-      </div>
-    </div>
-    <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn btn-sm" onclick="izinModalKapat()">İptal</button>
-      <button class="btn btn-p btn-sm" id="izin-kaydet-btn" onclick="izinKaydet()"><i class="ti ti-check"></i> Kaydet</button>
-    </div>
-  </div>
-</div>
 
 <!-- oneri-modal -->
 <div id="oneri-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center">
@@ -23465,6 +23436,35 @@ window.sikayetSilById = async function(id, btn){
       <div id="ziy-detay-body" style="padding:20px 22px;overflow-y:auto;flex:1"></div>
     </div>
   </div>
+
+<!-- katilim-ozet-modal -->
+<div id="katilim-ozet-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:320;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:16px;width:780px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="padding:16px 22px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:600" id="katilim-ozet-baslik">Katılım Özeti</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px" id="katilim-ozet-alt"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="katilim-ozet-komite" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;width:180px;display:none"></select>
+        <select id="katilim-ozet-yil" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px"></select>
+        <select id="katilim-ozet-ay" onchange="katilimOzetYenile()" class="yk-inp" style="height:30px;padding:0 8px;font-size:12px;display:none">
+          <option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option>
+          <option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option>
+          <option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option>
+          <option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option>
+        </select>
+        <button onclick="document.getElementById('katilim-ozet-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+      </div>
+    </div>
+    <div id="katilim-ozet-icerik" style="overflow-y:auto;flex:1;padding:16px 22px"></div>
+    <div style="padding:12px 22px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+      <button class="btn btn-sm" onclick="document.getElementById('katilim-ozet-modal').style.display='none'">Kapat</button>
+      <button class="btn btn-p btn-sm" onclick="katilimOzetYenile()"><i class="ti ti-refresh"></i> Yenile</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
 
