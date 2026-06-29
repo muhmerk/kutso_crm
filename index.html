@@ -2220,7 +2220,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 #yd-placeholder-yk .yd-wrap, #yd-placeholder-mk .yd-wrap,
 #yd-placeholder-meclis .yd-wrap, #yd-placeholder-gorev .yd-wrap,
 #yd-placeholder-egitim .yd-wrap, #yd-placeholder-egitim-prs .yd-wrap,
-#yd-placeholder-ziyaret .yd-wrap {
+#yd-placeholder-ziyaret .yd-wrap, #yd-placeholder-oneri .yd-wrap,
+#yd-placeholder-kurul .yd-wrap {
   margin-bottom:0 !important;
 }
 </style>
@@ -4232,7 +4233,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <!-- Üst bar -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start">
-        <div id="oneri-yil-placeholder"></div>
+        <div id="yd-placeholder-oneri" style="display:inline-flex;align-items:flex-start;align-self:flex-start;flex-shrink:0"></div>
         <select id="oneri-filter-durum" class="yk-inp" style="height:32px;font-size:12px;width:130px;align-self:flex-start" onchange="oneriRender()">
           <option value="">Tüm Durumlar</option>
           <option value="Beklemede">Beklemede</option>
@@ -4271,9 +4272,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <!-- Üst bar -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
       <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap">
-        <select id="kurul-yil-sec" class="yk-inp" style="height:32px;font-size:12px;width:90px" onchange="kurulYilSec(this.value)">
-          <option value="">Yıl</option>
-        </select>
+        <div id="yd-placeholder-kurul" style="display:inline-flex;align-items:flex-start;align-self:flex-start;flex-shrink:0"></div>
       </div>
       <button class="btn btn-p btn-sm" id="kurul-ekle-btn" onclick="kurulToplantıEkle()" style="display:none">
         <i class="ti ti-plus"></i> Personel Kurul Toplantısı Ekle
@@ -9047,18 +9046,7 @@ window.supaYukleOneriler = async function(){
 };
 
 /* Yıl seçici */
-function oneriYilSeciciOlustur(){
-  const el = document.getElementById('oneri-yil-placeholder');
-  if(!el) return;
-  const yillar = [...new Set(window.ONERI_DATA.map(o=>new Date(o.tarih_iso||o.created_at).getFullYear()))];
-  const buYil = new Date().getFullYear();
-  if(!yillar.includes(buYil)) yillar.unshift(buYil);
-  yillar.sort((a,b)=>b-a);
-  el.innerHTML = `<select class="yk-inp" style="height:32px;font-size:12px;width:90px" onchange="window._oneriYilFilter=this.value?parseInt(this.value):0;oneriRender();oneriMetrikGuncelle();oneriYillikTablo()">
-    <option value="">Tüm Yıllar</option>
-    ${yillar.map(y=>`<option value="${y}" ${y===window._oneriYilFilter?'selected':''}>${y}</option>`).join('')}
-  </select>`;
-}
+function oneriYilSeciciOlustur(){ /* yd-placeholder-oneri kullanıyor */ }
 
 /* Render listesi */
 window.oneriRender = function(){
@@ -14566,6 +14554,8 @@ window.updateTopbarUser = function(user){
     gorev:       function(yillar){ const y=yillar.size?Math.max(...Array.from(yillar)):new Date().getFullYear(); window._kararYil=y; kararYilPikerGuncelle(); if(window.gorevRender) window.gorevRender(); },
     'mem-prs':    function(yillar){ if(window.memPrsSayfaGuncelle) window.memPrsSayfaGuncelle(); },
     ziyaret:     function(yillar){ const y=yillar.size?Math.max(...Array.from(yillar)):new Date().getFullYear(); window._ziyaretYil=y; if(window.ziyRenderListe) window.ziyRenderListe(); },
+    oneri:       function(yillar){ const y=yillar.size?Math.max(...Array.from(yillar)):0; window._oneriYilFilter=y||0; if(window.oneriRender) window.oneriRender(); if(window.oneriMetrikGuncelle) window.oneriMetrikGuncelle(); if(window.oneriYillikTablo) window.oneriYillikTablo(); },
+    kurul:       function(yillar){ const y=yillar.size?Math.max(...Array.from(yillar)):new Date().getFullYear(); if(window.kurulYilSec) window.kurulYilSec(y); },
   };
 
   function initYilPickers(){
@@ -14581,6 +14571,8 @@ window.updateTopbarUser = function(user){
     if(window.YD_STATE) window.YD_STATE['memnuniyet'] = new Set([mevcutYil]);
     if(window.YD_STATE) window.YD_STATE['sikayet'] = window.YD_STATE['sikayet'] || new Set([mevcutYil]);
     if(!window._ziyaretYil) window._ziyaretYil = mevcutYil;
+    if(!window.YD_STATE['oneri']) window.YD_STATE['oneri'] = new Set([mevcutYil]);
+    if(!window.YD_STATE['kurul']) window.YD_STATE['kurul'] = new Set([mevcutYil]);
     Object.entries(TANIMLAR).forEach(([sec, cb])=>{
       buildPicker(sec, cb);
     });
