@@ -9131,7 +9131,7 @@ window.izinSil = async function(prsId, izinId){
 (function(){
 
 window.ONERI_DATA = [];
-let _oneriYilFilter = new Date().getFullYear();
+window._oneriYilFilter = new Date().getFullYear();
 
 /* DB'den yükle */
 window.supaYukleOneriler = async function(){
@@ -9153,9 +9153,9 @@ function oneriYilSeciciOlustur(){
   const buYil = new Date().getFullYear();
   if(!yillar.includes(buYil)) yillar.unshift(buYil);
   yillar.sort((a,b)=>b-a);
-  el.innerHTML = `<select class="yk-inp" style="height:32px;font-size:12px;width:90px" onchange="window._oneriYilFilter=parseInt(this.value);oneriRender();oneriMetrikGuncelle();oneriYillikTablo()">
+  el.innerHTML = `<select class="yk-inp" style="height:32px;font-size:12px;width:90px" onchange="window._oneriYilFilter=this.value?parseInt(this.value):0;oneriRender();oneriMetrikGuncelle();oneriYillikTablo()">
     <option value="">Tüm Yıllar</option>
-    ${yillar.map(y=>`<option value="${y}" ${y===_oneriYilFilter?'selected':''}>${y}</option>`).join('')}
+    ${yillar.map(y=>`<option value="${y}" ${y===window._oneriYilFilter?'selected':''}>${y}</option>`).join('')}
   </select>`;
 }
 
@@ -9168,7 +9168,7 @@ window.oneriRender = function(){
   if(!liste) return;
 
   let data = window.ONERI_DATA;
-  if(yilFilter) data = data.filter(o=>new Date(o.tarih_iso||o.created_at).getFullYear()===parseInt(yilFilter));
+  if(yilFilter && !isNaN(yilFilter)) data = data.filter(o=>new Date(o.tarih_iso||o.created_at).getFullYear()===parseInt(yilFilter));
   if(durumFilter) data = data.filter(o=>o.durum===durumFilter);
 
   const GS = ['admin','feyyaz','umran','orhan','haver'];
