@@ -18515,13 +18515,7 @@ window.katilimOzetAc = function(tur, mod){
 
   const yilSel = document.getElementById('katilim-ozet-yil');
   const buYil = new Date().getFullYear();
-  yilSel.innerHTML = '';
-  for(let y=buYil-2; y<=buYil+1; y++){
-    const o = document.createElement('option');
-    o.value = y; o.textContent = y;
-    if(y===buYil) o.selected=true;
-    yilSel.appendChild(o);
-  }
+  if(!yilSel.value || yilSel.value == '0') yilSel.value = buYil;
   yilSel.style.display = mod==='6aylik' ? 'none' : '';
 
   const aySel = document.getElementById('katilim-ozet-ay');
@@ -23456,8 +23450,8 @@ window.sikayetSilById = async function(id, btn){
     <div style="padding:12px 22px;border-bottom:0.5px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex-shrink:0;background:var(--surface2)">
       <select id="katilim-ozet-komite" onchange="katilimOzetYenile()" class="yk-inp"
         style="height:32px;padding:0 10px;font-size:12px;width:190px;display:none"></select>
-      <select id="katilim-ozet-yil" onchange="katilimOzetYenile()" class="yk-inp"
-        style="height:32px;padding:0 10px;font-size:12px;width:110px"></select>
+      <input type="number" id="katilim-ozet-yil" onchange="katilimOzetYenile()" class="yk-inp"
+        style="height:32px;padding:0 10px;font-size:12px;width:90px" min="2000" max="2100" step="1">
       <select id="katilim-ozet-ay" onchange="katilimOzetYenile()" class="yk-inp"
         style="height:32px;padding:0 10px;font-size:12px;width:120px;display:none">
         <option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option>
