@@ -3149,7 +3149,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
     <!-- Ana içerik -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div id="yd-placeholder-mem-prs" style="margin-bottom:0"></div>
+      <div id="yd-placeholder-mem-prs" style="margin-bottom:0;display:inline-flex;align-items:flex-start;align-self:flex-start"></div>
       <div style="flex:1"></div>
       <button class="btn btn-p btn-sm" onclick="memPrsEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
     </div>
@@ -3483,7 +3483,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
 
     <!-- Personel ETK ana içerik -->
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:0"><div id="yd-placeholder-egitim-prs" style="display:inline-flex;align-items:center;flex-shrink:0;margin-bottom:0"></div><select id="ay-sec-egitim-prs" onchange="etkAySec('egitim-prs',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:center"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
+    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:0"><div id="yd-placeholder-egitim-prs" style="display:inline-flex;align-items:flex-start;align-self:flex-start;flex-shrink:0;margin-bottom:0"></div><select id="ay-sec-egitim-prs" onchange="etkAySec('egitim-prs',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:flex-start"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
     <div class="mg" id="etk-prs-metrics" style="margin-bottom:14px;min-height:72px">
       <div class="mc"><div class="mc-lbl">Toplam etkinlik</div><div class="mc-val" id="etk-prs-m-toplam">0</div><div class="mc-sub">Seçilen yıl</div></div>
       <div class="mc"><div class="mc-lbl">Gerçekleşen</div><div class="mc-val" id="etk-prs-m-gerceklesen">0</div><div class="mc-sub up"></div></div>
@@ -4231,9 +4231,9 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
     <!-- Üst bar -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start">
         <div id="oneri-yil-placeholder"></div>
-        <select id="oneri-filter-durum" class="yk-inp" style="height:32px;font-size:12px;width:130px" onchange="oneriRender()">
+        <select id="oneri-filter-durum" class="yk-inp" style="height:32px;font-size:12px;width:130px;align-self:flex-start" onchange="oneriRender()">
           <option value="">Tüm Durumlar</option>
           <option value="Beklemede">Beklemede</option>
           <option value="Kabul">Kabul</option>
@@ -4270,7 +4270,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
     <!-- Üst bar -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap">
         <select id="kurul-yil-sec" class="yk-inp" style="height:32px;font-size:12px;width:90px" onchange="kurulYilSec(this.value)">
           <option value="">Yıl</option>
         </select>
