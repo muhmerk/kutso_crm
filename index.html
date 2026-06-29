@@ -3615,105 +3615,6 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
   <div id="s-egitim" class="section">
 
     <!-- Etkinlik EKLE Modalı — katılımcı/memnuniyet modalından ayrı -->
-    <div id="etk-ekle-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
-      <div style="background:var(--surface);border-radius:16px;width:560px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-          <div>
-            <div style="font-size:15px;font-weight:500" id="etk-ekle-title">Yeni Etkinlik Ekle</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px">Etkinlik bilgilerini doldurun</div>
-          </div>
-          <button onclick="etkYeniKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
-        </div>
-        <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
-          <div>
-            <label class="yk-lbl"><span class="etk-f-baslik-text">Etkinlik</span> Adı <span style="color:var(--red)">*</span></label>
-            <input id="etk-f-ad" class="yk-inp" placeholder="Etkinlik adı..." autocomplete="new-password">
-          </div>
-          <div>
-            <label class="yk-lbl">Etkinlik Numarası</label>
-            <input id="etk-f-no" class="yk-inp" placeholder="ETK-2026-001">
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label class="yk-lbl">Tür</label>
-              <select id="etk-f-tur" class="yk-inp" onchange="etkTurDegisti(this.value)">
-                <option value="Eğitim">Eğitim</option>
-                <option value="Seminer">Seminer</option>
-                <option value="Fuar">Fuar</option>
-                <option value="Toplantı">Toplantı</option>
-                <option value="Etkinlik">Etkinlik</option>
-              </select>
-            </div>
-            <div>
-              <label class="yk-lbl">Başlangıç Tarihi <span style="color:var(--red)">*</span></label>
-              <input id="etk-f-tarih" type="date" class="yk-inp">
-            </div>
-          </div>
-          <!-- Bitiş tarihi — sadece Fuar'da görünür -->
-          <div id="etk-row-fuar-tarih-bit" style="display:none">
-            <label class="yk-lbl">Bitiş Tarihi</label>
-            <input id="etk-f-tarih-bit" type="date" class="yk-inp">
-          </div>
-          <!-- Saat — Fuar hariç -->
-          <div id="etk-row-saat" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label class="yk-lbl">Başlangıç Saati</label>
-              <input id="etk-f-saat-bas" type="time" class="yk-inp" value="09:00">
-            </div>
-            <div>
-              <label class="yk-lbl">Bitiş Saati</label>
-              <input id="etk-f-saat-bit" type="time" class="yk-inp" value="17:00">
-            </div>
-          </div>
-          <!-- Eğitimci / Konuşmacı / Organizatör -->
-          <div id="etk-row-egitimci" style="display:block">
-            <label class="yk-lbl" id="etk-lbl-egitimci">Eğitimci / Konuşmacı</label>
-            <input id="etk-f-egitimci" class="yk-inp" placeholder="Ad veya kurum adı...">
-          </div>
-          <div id="etk-row-unvan">
-            <label class="yk-lbl">Ünvan / Görev</label>
-            <input id="etk-f-egitimci-unvan" class="yk-inp" placeholder="Dr., Uzman, Müdür...">
-          </div>
-          <div id="etk-row-kurum">
-            <label class="yk-lbl" id="etk-lbl-kurum">Kuruluş</label>
-            <input id="etk-f-egitimci-kurum" class="yk-inp" placeholder="Üniversite, Şirket adı...">
-          </div>
-          <!-- Fuar'a özel -->
-          <div id="etk-row-fuar-sehir" style="display:none">
-            <label class="yk-lbl">Şehir / Ülke</label>
-            <input id="etk-f-fuar-sehir" class="yk-inp" placeholder="İstanbul, Türkiye...">
-          </div>
-          <div id="etk-row-fuar-stand" style="display:none">
-            <label class="yk-lbl">Stand No / Hall</label>
-            <input id="etk-f-fuar-stand" class="yk-inp" placeholder="Hall 3, Stand B-24...">
-          </div>
-          <!-- Toplantı gündem alanı -->
-          <div id="etk-row-gundem" style="display:none">
-            <label class="yk-lbl">Gündem / Konu</label>
-            <textarea id="etk-f-gundem" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Toplantı gündemi..."></textarea>
-          </div>
-          <!-- Kontenjan + Yer -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div id="etk-row-kontenjan">
-              <label class="yk-lbl">Kontenjan</label>
-              <input id="etk-f-kontenjan" type="number" class="yk-inp" placeholder="50" min="1">
-            </div>
-            <div>
-              <label class="yk-lbl">Yer</label>
-              <input id="etk-f-yer" class="yk-inp" placeholder="TSO Konferans Salonu...">
-            </div>
-          </div>
-          <div>
-            <label class="yk-lbl">Sorumlu Personel</label>
-            <select id="etk-f-sorumlu" class="yk-inp"></select>
-          </div>
-        </div>
-        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
-          <button class="btn btn-sm" onclick="etkYeniKapat()">İptal</button>
-          <button class="btn btn-p btn-sm" onclick="etkYeniKaydet()"><i class="ti ti-check"></i> Kaydet</button>
-        </div>
-      </div>
-    </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:0"><div id="yd-placeholder-egitim" style="display:inline-flex;align-items:center;flex-shrink:0;margin-bottom:0"></div><select id="ay-sec-egitim" onchange="etkAySec('egitim',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:center"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
     <div class="mg" id="etk-metrics" style="margin-bottom:14px;min-height:72px">
       <div class="mc"><div class="mc-lbl">Toplam etkinlik</div><div class="mc-val" id="etk-m-toplam">—</div><div class="mc-sub" id="etk-m-toplam-sub">Seçilen yıl</div></div>
@@ -23477,6 +23378,106 @@ window.sikayetSilById = async function(id, btn){
   </div>
 </div>
 
+
+<div id="etk-ekle-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:16px;width:560px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+        <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div>
+            <div style="font-size:15px;font-weight:500" id="etk-ekle-title">Yeni Etkinlik Ekle</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">Etkinlik bilgilerini doldurun</div>
+          </div>
+          <button onclick="etkYeniKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:2px;border-radius:6px"><i class="ti ti-x"></i></button>
+        </div>
+        <div style="padding:18px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label class="yk-lbl"><span class="etk-f-baslik-text">Etkinlik</span> Adı <span style="color:var(--red)">*</span></label>
+            <input id="etk-f-ad" class="yk-inp" placeholder="Etkinlik adı..." autocomplete="new-password">
+          </div>
+          <div>
+            <label class="yk-lbl">Etkinlik Numarası</label>
+            <input id="etk-f-no" class="yk-inp" placeholder="ETK-2026-001">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="yk-lbl">Tür</label>
+              <select id="etk-f-tur" class="yk-inp" onchange="etkTurDegisti(this.value)">
+                <option value="Eğitim">Eğitim</option>
+                <option value="Seminer">Seminer</option>
+                <option value="Fuar">Fuar</option>
+                <option value="Toplantı">Toplantı</option>
+                <option value="Etkinlik">Etkinlik</option>
+              </select>
+            </div>
+            <div>
+              <label class="yk-lbl">Başlangıç Tarihi <span style="color:var(--red)">*</span></label>
+              <input id="etk-f-tarih" type="date" class="yk-inp">
+            </div>
+          </div>
+          <!-- Bitiş tarihi — sadece Fuar'da görünür -->
+          <div id="etk-row-fuar-tarih-bit" style="display:none">
+            <label class="yk-lbl">Bitiş Tarihi</label>
+            <input id="etk-f-tarih-bit" type="date" class="yk-inp">
+          </div>
+          <!-- Saat — Fuar hariç -->
+          <div id="etk-row-saat" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="yk-lbl">Başlangıç Saati</label>
+              <input id="etk-f-saat-bas" type="time" class="yk-inp" value="09:00">
+            </div>
+            <div>
+              <label class="yk-lbl">Bitiş Saati</label>
+              <input id="etk-f-saat-bit" type="time" class="yk-inp" value="17:00">
+            </div>
+          </div>
+          <!-- Eğitimci / Konuşmacı / Organizatör -->
+          <div id="etk-row-egitimci" style="display:block">
+            <label class="yk-lbl" id="etk-lbl-egitimci">Eğitimci / Konuşmacı</label>
+            <input id="etk-f-egitimci" class="yk-inp" placeholder="Ad veya kurum adı...">
+          </div>
+          <div id="etk-row-unvan">
+            <label class="yk-lbl">Ünvan / Görev</label>
+            <input id="etk-f-egitimci-unvan" class="yk-inp" placeholder="Dr., Uzman, Müdür...">
+          </div>
+          <div id="etk-row-kurum">
+            <label class="yk-lbl" id="etk-lbl-kurum">Kuruluş</label>
+            <input id="etk-f-egitimci-kurum" class="yk-inp" placeholder="Üniversite, Şirket adı...">
+          </div>
+          <!-- Fuar'a özel -->
+          <div id="etk-row-fuar-sehir" style="display:none">
+            <label class="yk-lbl">Şehir / Ülke</label>
+            <input id="etk-f-fuar-sehir" class="yk-inp" placeholder="İstanbul, Türkiye...">
+          </div>
+          <div id="etk-row-fuar-stand" style="display:none">
+            <label class="yk-lbl">Stand No / Hall</label>
+            <input id="etk-f-fuar-stand" class="yk-inp" placeholder="Hall 3, Stand B-24...">
+          </div>
+          <!-- Toplantı gündem alanı -->
+          <div id="etk-row-gundem" style="display:none">
+            <label class="yk-lbl">Gündem / Konu</label>
+            <textarea id="etk-f-gundem" class="yk-inp" style="min-height:60px;resize:vertical" placeholder="Toplantı gündemi..."></textarea>
+          </div>
+          <!-- Kontenjan + Yer -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div id="etk-row-kontenjan">
+              <label class="yk-lbl">Kontenjan</label>
+              <input id="etk-f-kontenjan" type="number" class="yk-inp" placeholder="50" min="1">
+            </div>
+            <div>
+              <label class="yk-lbl">Yer</label>
+              <input id="etk-f-yer" class="yk-inp" placeholder="TSO Konferans Salonu...">
+            </div>
+          </div>
+          <div>
+            <label class="yk-lbl">Sorumlu Personel</label>
+            <select id="etk-f-sorumlu" class="yk-inp"></select>
+          </div>
+        </div>
+        <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+          <button class="btn btn-sm" onclick="etkYeniKapat()">İptal</button>
+          <button class="btn btn-p btn-sm" onclick="etkYeniKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+        </div>
+      </div>
+    </div>
 </body>
 </html>
 
