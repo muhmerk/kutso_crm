@@ -18704,20 +18704,39 @@ window.gsMkDonemEkle = function(){
 window.gsMkDonemDuzenle = async function(donemId){
   const d = (window.MK_DONEMLER||[]).find(x=>x.id===donemId);
   if(!d){ alert('Dönem bulunamadı.'); return; }
+  const eskiBaslangic = (d.baslangic||'').slice(0,10);
   gsModalAc('Dönemi Düzenle',
     `<div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Dönem Adı *</label><input id="gs-f-donem-ad" class="yk-inp" value="${(d.ad||'').replace(/"/g,'&quot;')}"></div>
-      <div><label class="yk-lbl">Başlangıç Tarihi *</label><input id="gs-f-donem-bas" type="date" class="yk-inp" value="${(d.baslangic||'').slice(0,10)}"></div>
+      <div><label class="yk-lbl">Başlangıç Tarihi *</label><input id="gs-f-donem-bas" type="date" class="yk-inp" value="${eskiBaslangic}"></div>
       <div><label class="yk-lbl">Bitiş Tarihi (boş = aktif dönem)</label><input id="gs-f-donem-bit" type="date" class="yk-inp" value="${(d.bitis||'').slice(0,10)}"></div>
+      <div style="background:var(--surface2);border-radius:8px;padding:9px 11px;font-size:11px;color:var(--text2)">
+        <i class="ti ti-info-circle"></i> Başlangıç tarihini değiştirirseniz, dönem başından beri görevde olan üyelerin görev başlangıcı da bu tarihe güncellenir. Sonradan rol değişikliğiyle (yedek→asıl, asıl→başkan) göreve geçenlerin tarihleri korunur.
+      </div>
     </div>`,
     async ()=>{
       const ad = document.getElementById('gs-f-donem-ad')?.value.trim();
       const bas = document.getElementById('gs-f-donem-bas')?.value;
       const bit = document.getElementById('gs-f-donem-bit')?.value||null;
       if(!ad || !bas){ alert('Dönem adı ve başlangıç tarihi zorunludur.'); return; }
+
       await _supa.from('donemler').update({ad, baslangic:bas, bitis:bit}).eq('id',donemId);
+
+      // Başlangıç değiştiyse: dönem-başı üyelerin baslangic'ini de güncelle
+      if(bas !== eskiBaslangic){
+        // Sadece baslangic'i eski dönem başlangıcına eşit olan kayıtlar (yani dönem başından beri görevde olanlar)
+        await _supa.from('mk_uyelik')
+          .update({baslangic:bas})
+          .eq('donem_id',donemId)
+          .eq('baslangic',eskiBaslangic);
+      }
+
       await gsYukleDonemler();
+      await supaYukleKatilimUyeler();
       gsModalKapat(); gsRenderMK();
+      if(bas !== eskiBaslangic){
+        alert('✓ Dönem güncellendi. Dönem başından beri görevde olan üyelerin başlangıç tarihi de değiştirildi.');
+      }
     }
   );
 };
