@@ -67,7 +67,7 @@ async function supaYukleMK() {
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
-    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', komite:t.komite||'', komiteNo:parseInt(t.komite)||0, durum:t.durum||'planlandi' }));
+    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', komite:t.komite||'', komiteNo:parseInt(t.komite)||0, durum:t.durum||'planlandi', toplantıTuru:t.toplanti_turu||'olagan' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MK_DB) {
@@ -11796,6 +11796,7 @@ function mkRenderListe(){
             ${t.komite?`<div style="font-size:11px;color:var(--purple);margin-top:3px"><i class="ti ti-building-community" style="font-size:11px;margin-right:3px"></i>${t.komite}</div>`:''}
           </div>
           <div style="display:flex;gap:6px;align-items:center">
+            <span class="badge ${t.toplantıTuru==='olaganustu'?'b-purple':'b-gray'}" style="font-size:10px">${t.toplantıTuru==='olaganustu'?'Olağanüstü':'Olağan'}</span>
             ${t.durum==='tamamlandi'?'<span class="badge b-green" style="font-size:10px">Tamamlandı</span>':'<span class="badge b-blue" style="font-size:10px">Planlandı</span>'}
             ${tG.length?`<span class="badge b-gray" style="font-size:10px">${tG.length} gündem</span>`:''}
           </div>
@@ -12128,10 +12129,11 @@ window.mkToplantıEkle = function(){
     const _aylar=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
     const tarih    = (_dd && _mm && _yy) ? (_dd+' '+_aylar[_mm-1]+' '+_yy) : tarihVal;
     const durum   = document.getElementById('mk-f-durum')?.value||'planlandi';
+    const toplantiTuru = document.getElementById('mk-f-tur')?.value||'olagan';
     const ad       = adGiris || `Meslek Komitesi Toplantısı — ${tarih}`;
     const mkId     = genUUID();
-    MK_DB.toplantılar.push({id:mkId, ad, tarih, tarihIso:tarihVal, saat, bitisSaat, komite:'', komiteNo:0, durum});
-    _supa.from('karar_toplantilari').insert([{id:mkId, tur:'mk', ad, tarih, tarih_iso:tarihVal, saat, bitis_saat:bitisSaat, durum}])
+    MK_DB.toplantılar.push({id:mkId, ad, tarih, tarihIso:tarihVal, saat, bitisSaat, komite:'', komiteNo:0, durum, toplantıTuru:toplantiTuru});
+    _supa.from('karar_toplantilari').insert([{id:mkId, tur:'mk', ad, tarih, tarih_iso:tarihVal, saat, bitis_saat:bitisSaat, durum, toplanti_turu:toplantiTuru}])
       .then(({error})=>{if(error) console.error('MK toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); mkRender();
   };
@@ -12322,7 +12324,8 @@ window.mkToplantıDuzenle = function(id){
       tarih_iso : t.tarihIso,
       saat      : t.saat,
       bitis_saat: t.bitisSaat,
-      durum     : t.durum
+      durum     : t.durum,
+      toplanti_turu: t.toplantıTuru
     }).eq('id', id);
     if(error){ console.error('MK toplantı güncelleme hatası:', error.message); alert('Güncelleme hatası: '+error.message); return; }
 
