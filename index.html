@@ -18940,19 +18940,56 @@ window.katilimOzetYenile = async function(){
     if(tur==='yk') uyeler = window.YK_UYELER||[];
     else if(tur==='meclis') uyeler = window.MECLIS_UYELER||[];
     else if(tur==='mk'){
-      if(komiteNo) uyeler = (window.MK_UYELER||[]).filter(u=>u.komite_no===komiteNo);
-      else uyeler = window.MK_UYELER||[];
+      // mk_uyelik'ten: bu aralıktaki toplantı tarihlerinde görev yapmış TÜM üyelerin birleşimi
+      // (düşmüş üyeler dahil — örn. aralıkta görevdeyken sonradan düşenler)
+      const hedefKomiteler = komiteNo
+        ? [komiteNo]
+        : [...new Set(filtrelenmis.map(t=>parseInt(t.komiteNo||0)).filter(Boolean))];
+      // komiteNo yoksa ve toplantılarda komite bilgisi yoksa, mk_uyelik'teki tüm komiteleri al
+      let komiteListesi = hedefKomiteler;
+      if(!komiteListesi.length){
+        try{
+          const { data: kData } = await _supa.from('mk_uyelik').select('komite_no');
+          komiteListesi = [...new Set((kData||[]).map(r=>r.komite_no))].sort((a,b)=>a-b);
+        }catch(_){ komiteListesi = []; }
+      }
+      // Her komite için, aralıktaki toplantı tarihlerinde görevde olanların birleşimini topla
+      const uyeMap = {}; // id -> {id, ad_soyad, unvan, komite_no, rol, asil_yedek}
+      for(const kNo of komiteListesi){
+        // Bu komitenin tüm üyelik kayıtlarını çek
+        const { data: kayitlar } = await _supa.from('mk_uyelik').select('*').eq('komite_no', kNo);
+        const komiteTopl = filtrelenmis.filter(t=>komiteNo ? true : parseInt(t.komiteNo||0)===kNo || !t.komiteNo);
+        // Aralıktaki her toplantı tarihinde görevde olanları işaretle
+        (kayitlar||[]).forEach(r=>{
+          const aktifBirToplantida = filtrelenmis.some(t=>{
+            const td = t.tarihIso;
+            if(!td) return false;
+            return r.baslangic <= td && (r.bitis===null || r.bitis > td);
+          });
+          if(aktifBirToplantida){
+            const id = String(r.mk_uye_id || r.id);
+            const unvan = r.rol==='baskan'?'Başkanı':r.rol==='baskan_yrd'?'Başkan Yardımcısı':(r.asil_yedek==='yedek'?'Yedek Üyesi':'Üyesi');
+            uyeMap[id] = { id, ad_soyad:r.ad_soyad, unvan, komite_no:r.komite_no, rol:r.rol, asil_yedek:r.asil_yedek };
+          }
+        });
+      }
+      uyeler = Object.values(uyeMap);
+      // mk_uyelik boşsa eski sisteme düş
+      if(!uyeler.length){
+        if(komiteNo) uyeler = (window.MK_UYELER||[]).filter(u=>u.komite_no===komiteNo);
+        else uyeler = window.MK_UYELER||[];
+      }
     }
 
     let html = '';
     if(tur==='mk' && !komiteNo){
-      const mkKomiteNolar = [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+      const mkKomiteNolar = [...new Set(uyeler.map(u=>u.komite_no))].sort((a,b)=>a-b);
       for(const kNo of mkKomiteNolar){
         const kUyeler = uyeler.filter(u=>u.komite_no===kNo);
         if(!kUyeler.length) continue;
         html += `<div style="margin-bottom:24px">
           <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:8px;padding:6px 10px;background:var(--purple)15;border-radius:8px;border-left:3px solid var(--purple)">${kNo}. Meslek Komitesi</div>
-          ${katilimTabloOlustur(kUyeler, filtrelenmis, katilimMap)}
+          ${katilimTabloOlustur(kUyeler, filtrelenmis.filter(t=>!t.komiteNo || parseInt(t.komiteNo)===kNo), katilimMap)}
         </div>`;
       }
     } else {
