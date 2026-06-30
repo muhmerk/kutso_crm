@@ -22318,9 +22318,10 @@ window.slDuzenle = function(uid, ad){
 
     waitForEl('sk-search', function(){
       if(!window._skFirmaGoster) return;
+      console.log('[slDuzenle] v=', v);
       window._skFirmaGoster(uid,_no,_ad).then(function(){
-        // Form alanlarının (sk-rapor-tarihi vb.) DOM'da olduğunu doğrula, sonra doldur
         waitForEl('sk-rapor-tarihi', function(){
+          console.log('[slDuzenle] dolduruluyor, v=', v, 'skFormDoldur var mı:', !!window.skFormDoldur);
           if(v && window.skFormDoldur) skFormDoldur(v);
         });
       });
