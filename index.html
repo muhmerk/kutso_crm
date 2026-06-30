@@ -18205,6 +18205,7 @@ async function gsRenderMKAsync(){
       <td style="padding:10px 14px;color:var(--text2);font-size:12px">${gsFmtTarih(r.baslangic)}</td>
       <td style="padding:10px 14px;text-align:right;white-space:nowrap">
         <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMkUyelikDuzenle('${r.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsMkRolDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Rol Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
         <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsMkUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
         <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Sil"><i class="ti ti-trash"></i></button>
       </td>
@@ -18233,6 +18234,8 @@ async function gsRenderMKAsync(){
         ${donemSec || '<option>Dönem yok</option>'}
       </select>
       <button class="btn btn-sm" onclick="gsMkDonemEkle()" style="font-size:11px"><i class="ti ti-plus"></i> Yeni Dönem</button>
+      ${donemId ? `<button class="btn btn-sm" onclick="gsMkDonemDuzenle('${donemId}')" style="font-size:11px" title="Dönemi Düzenle"><i class="ti ti-edit"></i></button>
+      <button class="btn btn-sm" onclick="gsMkDonemSil('${donemId}')" style="font-size:11px;color:var(--red)" title="Dönemi Sil"><i class="ti ti-trash"></i></button>` : ''}
       ${seciliDonem ? `<span style="font-size:11px;color:var(--text2)">${gsFmtTarih(seciliDonem.baslangic)} — ${seciliDonem.bitis?gsFmtTarih(seciliDonem.bitis):'devam ediyor'}</span>` : ''}
     </div>
 
@@ -18570,6 +18573,90 @@ window.gsMkUyeDusur = async function(uyelikId, adSoyad, komiteNo){
   );
 };
 
+/* Rol Değiştir (tarihli) — eski kaydı kapatır, yeni rolle yeni kayıt açar.
+   Geçmiş korunur: değişim tarihinden önceki toplantılarda eski rol, sonrakilerde yeni rol görünür. */
+window.gsMkRolDegistir = async function(uyelikId, adSoyad, komiteNo){
+  const { data: mevcut } = await _supa.from('mk_uyelik').select('*').eq('id',uyelikId).single();
+  if(!mevcut){ alert('Kayıt bulunamadı.'); return; }
+
+  const rolAd = { baskan:'Başkan', baskan_yrd:'Başkan Yardımcısı', uye:'Üye' };
+  const mevcutRolMetni = `${rolAd[mevcut.rol]||mevcut.rol} (${mevcut.asil_yedek==='yedek'?'Yedek':'Asıl'})`;
+  const bugun = new Date().toISOString().slice(0,10);
+
+  // Aynı komitedeki diğer aktif üyeler (koltuk devri için — örn. başkan olacaksa eski başkan ne olacak)
+  const tumUyelik = await gsYukleKomiteUyelikleri(komiteNo, window._gsMkSeciliDonem);
+  const aktifler = tumUyelik.filter(r=>!r.bitis && r.id!==uyelikId);
+
+  gsModalAc(`Rol Değiştir: ${adSoyad}`,
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:var(--blue-bg,rgba(59,130,246,.1));border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text)">
+        <strong>${adSoyad}</strong> şu an: <strong>${mevcutRolMetni}</strong><br>
+        Yeni role geçiş tarihinden <u>önceki</u> toplantılarda eski rolü, <u>sonraki</u> toplantılarda yeni rolü görünecek.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Yeni Rol</label>
+          <select id="gs-rd-rol" class="yk-inp">
+            <option value="uye" ${mevcut.rol==='uye'?'selected':''}>Üye</option>
+            <option value="baskan" ${mevcut.rol==='baskan'?'selected':''}>Başkan</option>
+            <option value="baskan_yrd" ${mevcut.rol==='baskan_yrd'?'selected':''}>Başkan Yardımcısı</option>
+          </select>
+        </div>
+        <div><label class="yk-lbl">Yeni Tip</label>
+          <select id="gs-rd-ay" class="yk-inp">
+            <option value="asil" ${mevcut.asil_yedek==='asil'?'selected':''}>Asıl</option>
+            <option value="yedek" ${mevcut.asil_yedek==='yedek'?'selected':''}>Yedek</option>
+          </select>
+        </div>
+      </div>
+      <div><label class="yk-lbl">Geçiş Tarihi *</label>
+        <input id="gs-rd-tarih" type="date" class="yk-inp" value="${bugun}">
+      </div>
+      <div style="border-top:0.5px solid var(--border);padding-top:10px">
+        <label class="yk-lbl">Bu kişi başkan/yardımcı oluyorsa — eski koltuk sahibi ne olsun? (opsiyonel)</label>
+        <select id="gs-rd-eski-koltuk" class="yk-inp">
+          <option value="">Dokunma / gerek yok</option>
+          ${aktifler.filter(r=>r.rol==='baskan'||r.rol==='baskan_yrd').map(r=>`<option value="${r.uyelik_id||r.id}|${r.rol}">${r.ad_soyad} (${rolAd[r.rol]}) → üye yap</option>`).join('')}
+        </select>
+      </div>
+    </div>`,
+    async ()=>{
+      const yeniRol = document.getElementById('gs-rd-rol')?.value;
+      const yeniAy  = document.getElementById('gs-rd-ay')?.value;
+      const tarih   = document.getElementById('gs-rd-tarih')?.value;
+      if(!tarih){ alert('Geçiş tarihi zorunludur.'); return; }
+      if(yeniRol===mevcut.rol && yeniAy===mevcut.asil_yedek){ alert('Rol/tip değişmedi.'); return; }
+
+      // 1) Eski kaydı geçiş tarihinde kapat
+      await _supa.from('mk_uyelik').update({bitis:tarih, ayrilma_nedeni:'rol_degisikligi'}).eq('id',uyelikId);
+      // 2) Yeni rolle yeni kayıt aç
+      await _supa.from('mk_uyelik').insert([{
+        donem_id:mevcut.donem_id, komite_no:mevcut.komite_no, ad_soyad:mevcut.ad_soyad,
+        mk_uye_id:mevcut.mk_uye_id||null, rol:yeniRol, asil_yedek:yeniAy,
+        baslangic:tarih, bitis:null
+      }]);
+
+      // 3) Eski koltuk sahibini üye yap (opsiyonel — örn. yeni başkan atanınca eski başkan üye olur)
+      const eskiKoltuk = document.getElementById('gs-rd-eski-koltuk')?.value;
+      if(eskiKoltuk){
+        const [eskiId] = eskiKoltuk.split('|');
+        const { data: eski } = await _supa.from('mk_uyelik').select('*').eq('id',eskiId).single();
+        if(eski){
+          await _supa.from('mk_uyelik').update({bitis:tarih, ayrilma_nedeni:'rol_degisikligi'}).eq('id',eskiId);
+          await _supa.from('mk_uyelik').insert([{
+            donem_id:eski.donem_id, komite_no:eski.komite_no, ad_soyad:eski.ad_soyad,
+            mk_uye_id:eski.mk_uye_id||null, rol:'uye', asil_yedek:'asil',
+            baslangic:tarih, bitis:null
+          }]);
+        }
+      }
+
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderMK();
+      alert('✓ Rol değişikliği kaydedildi. Geçmiş toplantılar eski rolü, sonrakiler yeni rolü gösterecek.');
+    }
+  );
+};
+
 /* Düşmeyi geri al — bitis ve neden temizlenir, üye tekrar aktif olur */
 window.gsMkDusmeGeriAl = async function(uyelikId, adSoyad){
   if(!confirm(`${adSoyad} adlı üyenin düşme işlemi geri alınsın mı? Üye tekrar aktif hale gelecek ve bu tarihten sonraki toplantılarda yoklamada görünecek.`)) return;
@@ -18611,6 +18698,54 @@ window.gsMkDonemEkle = function(){
       gsModalKapat(); gsRenderMK();
     }
   );
+};
+
+/* Dönem düzenle */
+window.gsMkDonemDuzenle = async function(donemId){
+  const d = (window.MK_DONEMLER||[]).find(x=>x.id===donemId);
+  if(!d){ alert('Dönem bulunamadı.'); return; }
+  gsModalAc('Dönemi Düzenle',
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Dönem Adı *</label><input id="gs-f-donem-ad" class="yk-inp" value="${(d.ad||'').replace(/"/g,'&quot;')}"></div>
+      <div><label class="yk-lbl">Başlangıç Tarihi *</label><input id="gs-f-donem-bas" type="date" class="yk-inp" value="${(d.baslangic||'').slice(0,10)}"></div>
+      <div><label class="yk-lbl">Bitiş Tarihi (boş = aktif dönem)</label><input id="gs-f-donem-bit" type="date" class="yk-inp" value="${(d.bitis||'').slice(0,10)}"></div>
+    </div>`,
+    async ()=>{
+      const ad = document.getElementById('gs-f-donem-ad')?.value.trim();
+      const bas = document.getElementById('gs-f-donem-bas')?.value;
+      const bit = document.getElementById('gs-f-donem-bit')?.value||null;
+      if(!ad || !bas){ alert('Dönem adı ve başlangıç tarihi zorunludur.'); return; }
+      await _supa.from('donemler').update({ad, baslangic:bas, bitis:bit}).eq('id',donemId);
+      await gsYukleDonemler();
+      gsModalKapat(); gsRenderMK();
+    }
+  );
+};
+
+/* Dönem sil — içinde üyelik kaydı varsa uyar */
+window.gsMkDonemSil = async function(donemId){
+  const d = (window.MK_DONEMLER||[]).find(x=>x.id===donemId);
+  if(!d){ alert('Dönem bulunamadı.'); return; }
+  // Bu döneme bağlı üyelik sayısını kontrol et
+  let uyelikSayisi = 0;
+  try{
+    const { count } = await _supa.from('mk_uyelik').select('id',{count:'exact',head:true}).eq('donem_id',donemId);
+    uyelikSayisi = count||0;
+  }catch(_){}
+  if(uyelikSayisi>0){
+    if(!confirm(`"${d.ad}" dönemine bağlı ${uyelikSayisi} üyelik kaydı var. Dönem silinirse bu kayıtlar dönemsiz kalır (silinmez ama hangi döneme ait olduğu kaybolur). Yine de silmek istiyor musunuz?`)) return;
+  } else {
+    if(!confirm(`"${d.ad}" dönemi silinecek. Emin misiniz?`)) return;
+  }
+  try{
+    await _supa.from('donemler').delete().eq('id',donemId);
+    window._gsMkSeciliDonem = null;
+    await gsYukleDonemler();
+    gsRenderMK();
+    alert('✓ Dönem silindi.');
+  }catch(e){
+    alert('Dönem silinemedi: '+(e.message||e)+'\n\nMuhtemelen bu döneme bağlı üyelik kayıtları var. Önce o kayıtları başka döneme taşıyın veya silin.');
+  }
 };
 
 /* ── KOMİTE EKLE / SİL ── */
