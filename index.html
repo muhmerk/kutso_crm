@@ -13478,15 +13478,128 @@ function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikI
 
 window.ykGundemDuzenle = function(toplantıId, gundemId){
   const g=(window.YK_DB||{}).gundemler?.find(x=>x.id===gundemId);
-  if(!g){ alert('Gündem bulunamadı.'); return; }
-  _gundemDuzenleModalAc({
-    baslik:'Gündem Düzenle',
-    noId:'yfd-no', konuId:'yfd-konu', ozetId:'yfd-ozet', tarihId:'yfd-tarih', oncelikId:'yfd-oncelik',
-    atamaContId:'yfd-atama-cont', ekleId:'yfd-atama-ekle',
-    g,
-    onKaydet(){ ykModalKapat(); if(typeof ykRenderToplantıDetay==='function') ykRenderToplantıDetay(); else if(typeof ykRender==='function') ykRender(); }
+  if(!g) return;
+  document.getElementById('yk-modal-title').textContent = 'Gündem Maddesini Düzenle';
+  const personelOpts = window.PERSONEL.map(p=>
+    `<option value="${p.kullanici}">${p.ad} ${p.soyad} — ${p.unvan}</option>`
+  ).join('');
+
+  const ilkA = g.atananlar?.[0];
+  const digerA = (g.atananlar||[]).slice(1);
+
+  document.getElementById('yk-modal-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label class="yk-lbl">Gündem No (isteğe bağlı)</label>
+        <input id="yf-g-no" class="yk-inp" value="${(g.no||'').replace(/"/g,'&quot;')}" placeholder="ör: YK-2026-06/01">
+      </div>
+      <div>
+        <label class="yk-lbl">Gündem Konusu</label>
+        <input id="yf-g-konu" class="yk-inp" value="${(g.konu||'').replace(/"/g,'&quot;')}" placeholder="Kararın konusu...">
+      </div>
+      <div>
+        <label class="yk-lbl">Karar Özeti (isteğe bağlı)</label>
+        <textarea id="yf-g-ozet" class="yk-inp" style="min-height:64px;resize:vertical" placeholder="Alınan kararın detayı...">${g.ozet||''}</textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="yk-lbl">Son Tarih</label>
+          <input id="yf-g-tarih" type="date" class="yk-inp" value="${ilkA?.sonTarih||g.sonTarih||''}">
+        </div>
+        <div>
+          <label class="yk-lbl">Öncelik</label>
+          <select id="yf-g-oncelik" class="yk-inp">
+            <option value="acil" ${(ilkA?.oncelik||g.oncelik)==='acil'?'selected':''}>Acil</option>
+            <option value="normal" ${((ilkA?.oncelik||g.oncelik)||'normal')==='normal'?'selected':''}>Normal</option>
+            <option value="dusuk" ${(ilkA?.oncelik||g.oncelik)==='dusuk'?'selected':''}>Düşük</option>
+          </select>
+        </div>
+      </div>
+      <div style="border-top:0.5px solid var(--border);padding-top:12px">
+        <label class="yk-lbl" style="margin-bottom:8px;display:block">Atanacak Personel</label>
+        <select id="yf-g-personel" class="yk-inp">
+          <option value="">Personel seçin...</option>
+          ${personelOpts}
+        </select>
+      </div>
+      <div>
+        <label class="yk-lbl">Personele Verilen Görev</label>
+        <input id="yf-g-gorev" class="yk-inp" value="${(ilkA?.gorev||'').replace(/"/g,'&quot;')}" placeholder="Bu personelin yapması gereken işlem...">
+      </div>
+      <div id="yf-daha-atama" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button class="btn btn-sm" onclick="ykDahaAtamaEkle()" style="align-self:flex-start">
+        <i class="ti ti-plus"></i> Başka personel de ekle
+      </button>
+    </div>`;
+
+  // İlk personel seçili gelsin
+  if(ilkA?.kullanici) document.getElementById('yf-g-personel').value = ilkA.kullanici;
+
+  // Diğer atananları "ek atama" satırlarına doldur
+  ekAtamalar = [];
+  digerA.forEach(a=>{
+    window.ykDahaAtamaEkle();
+    const rows = document.querySelectorAll('#yf-daha-atama > div');
+    const lastRow = rows[rows.length-1];
+    const sel = lastRow.querySelector('.ek-personel');
+    const inp = lastRow.querySelector('.ek-gorev');
+    if(sel) sel.value = a.kullanici;
+    if(inp) inp.value = a.gorev||'';
   });
-};;
+
+  document.getElementById('yk-modal-kaydet').onclick = () => ykGundemDuzenleKaydet(toplantıId, gundemId);
+  document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
+  document.getElementById('yk-modal-overlay').classList.add('yk-modal-visible');
+};
+
+async function ykGundemDuzenleKaydet(toplantıId, gundemId){
+  const g = YK_DB.gundemler.find(x=>x.id===gundemId);
+  if(!g) return;
+
+  const konu = document.getElementById('yf-g-konu').value.trim();
+  if(!konu){ alert('Gündem konusu zorunludur.'); return; }
+  const no       = document.getElementById('yf-g-no').value.trim();
+  const ozet     = document.getElementById('yf-g-ozet').value.trim();
+  const tarih    = document.getElementById('yf-g-tarih').value;
+  const oncelik  = document.getElementById('yf-g-oncelik').value;
+  const kullanici= document.getElementById('yf-g-personel').value;
+  const gorev    = document.getElementById('yf-g-gorev').value.trim();
+
+  const yeniAtananlar = [];
+  if(kullanici){
+    const p = window.PERSONEL.find(x=>x.kullanici===kullanici);
+    yeniAtananlar.push({ kullanici, ad: p ? p.ad+' '+p.soyad : kullanici, gorev: gorev||'—', durum:'planlandi' });
+  }
+  document.querySelectorAll('.ek-personel').forEach((sel,i)=>{
+    const ekGor = document.querySelectorAll('.ek-gorev')[i];
+    if(sel.value && !yeniAtananlar.find(a=>a.kullanici===sel.value)){
+      const p = window.PERSONEL.find(x=>x.kullanici===sel.value);
+      yeniAtananlar.push({ kullanici:sel.value, ad: p ? p.ad+' '+p.soyad : sel.value, gorev: ekGor?.value?.trim()||'—', durum:'planlandi' });
+    }
+  });
+
+  if(!yeniAtananlar.length){ alert('En az bir personel ataması gereklidir.'); return; }
+
+  g.no=no; g.konu=konu; g.ozet=ozet; g.sonTarih=tarih; g.oncelik=oncelik;
+  g.atananlar = yeniAtananlar;
+
+  const {error} = await _supa.from('karar_gundemler').update({
+    no, konu, ozet, son_tarih: tarih||null, oncelik
+  }).eq('id', gundemId);
+  if(error){ alert('Güncelleme hatası: '+error.message); return; }
+
+  await _supa.from('karar_atamalar').delete().eq('gundem_id', gundemId);
+  for(const a of yeniAtananlar){
+    await _supa.from('karar_atamalar').insert([{
+      gundem_id: gundemId, kullanici: a.kullanici, ad: a.ad, gorev: a.gorev, durum: a.durum
+    }]);
+  }
+
+  ykModalKapat();
+  if(window.ykAcToplantı) window.ykAcToplantı(toplantıId);
+  else if(window.ykRender) window.ykRender();
+  if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+}
 
 window.meclisKararDuzenle = function(toplantıId, kararId){
   const g=(window.MECLIS_DB||{}).gundemler?.find(x=>x.id===kararId);
