@@ -18172,11 +18172,17 @@ async function gsRenderMKAsync(){
   const rolAd = { baskan:'Başkan', baskan_yrd:'Başkan Yrd.', uye:'Üye' };
 
   // Aktif (bitis null) ve geçmiş (bitis dolu) ayır
+  // Sıralama: başkan 1., yardımcı 2., kalan herkes orijinal ekleniş sırasına göre (created_at).
+  // İsme göre alfabetik sıralama YOK — üye olunca yeri değişmesin.
   const aktifler = kayitlar.filter(r=>!r.bitis).sort((a,b)=>{
     const ra=rolSira[a.rol]||9, rb=rolSira[b.rol]||9;
-    if(ra!==rb) return ra-rb;
-    if(a.asil_yedek!==b.asil_yedek) return a.asil_yedek==='asil'?-1:1;
-    return (a.ad_soyad||'').localeCompare(b.ad_soyad||'','tr');
+    if(ra!==rb) return ra-rb;                          // başkan > yrd > üye
+    // Aynı rolde: asıl üyeler yedeklerden önce
+    if(a.rol==='uye' && a.asil_yedek!==b.asil_yedek) return a.asil_yedek==='asil'?-1:1;
+    // Geri kalanı orijinal sıraya göre (created_at, yoksa id)
+    const ca=(a.created_at||''), cb=(b.created_at||'');
+    if(ca!==cb) return ca<cb?-1:1;
+    return String(a.id).localeCompare(String(b.id));
   });
   const gecmis = kayitlar.filter(r=>r.bitis).sort((a,b)=> (b.bitis||'').localeCompare(a.bitis||''));
 
@@ -18852,10 +18858,13 @@ async function supaYukleKomiteUyelik(komiteNo, toplantiTarihi){
       return r.bitis===null || r.bitis > toplantiTarihi;
     }).sort((a,b)=>{
       const ra=rolSira[a.rol]||9, rb=rolSira[b.rol]||9;
-      if(ra!==rb) return ra-rb;
-      // asil önce, yedek sonra
-      if(a.asil_yedek!==b.asil_yedek) return a.asil_yedek==='asil'?-1:1;
-      return (a.ad_soyad||'').localeCompare(b.ad_soyad||'','tr');
+      if(ra!==rb) return ra-rb;                          // başkan > yrd > üye
+      // asıl üyeler yedeklerden önce
+      if(a.rol==='uye' && a.asil_yedek!==b.asil_yedek) return a.asil_yedek==='asil'?-1:1;
+      // Geri kalanı orijinal sıraya göre (created_at) — isimle sıralama yok
+      const ca=(a.created_at||''), cb=(b.created_at||'');
+      if(ca!==cb) return ca<cb?-1:1;
+      return String(a.id).localeCompare(String(b.id));
     });
     // unvan metnini rol'den türet (gösterim için)
     const unvanMetni = (r)=>{
