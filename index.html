@@ -18227,6 +18227,7 @@ async function gsRenderMKAsync(){
       <td style="padding:8px 14px;font-size:11px;color:var(--text2)">${gsFmtTarih(r.baslangic)} → ${gsFmtTarih(r.bitis)}</td>
       <td style="padding:8px 14px"><span class="badge b-red" style="font-size:10px">${nedenAd[r.ayrilma_nedeni]||r.ayrilma_nedeni||'Ayrıldı'}</span></td>
       <td style="padding:8px 14px;text-align:right;white-space:nowrap">
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMkGecmisDuzenle('${r.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
         <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsMkDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
         <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Kaydı Sil"><i class="ti ti-trash"></i></button>
       </td>
@@ -18659,6 +18660,69 @@ window.gsMkRolDegistir = async function(uyelikId, adSoyad, komiteNo){
       await supaYukleKatilimUyeler();
       gsModalKapat(); gsRenderMK();
       alert('✓ Rol değişikliği kaydedildi. Geçmiş toplantılar eski rolü, sonrakiler yeni rolü gösterecek.');
+    }
+  );
+};
+
+/* Rol değişim geçmişi kaydını düzenle — TÜM alanlar (ad, rol, tip, başlangıç, bitiş, neden) */
+window.gsMkGecmisDuzenle = async function(uyelikId){
+  const { data } = await _supa.from('mk_uyelik').select('*').eq('id',uyelikId).single();
+  if(!data){ alert('Kayıt bulunamadı.'); return; }
+  gsModalAc('Geçmiş Kaydını Düzenle',
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-g-ad" class="yk-inp" value="${(data.ad_soyad||'').replace(/"/g,'&quot;')}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Rol</label>
+          <select id="gs-g-rol" class="yk-inp">
+            <option value="uye" ${data.rol==='uye'?'selected':''}>Üye</option>
+            <option value="baskan" ${data.rol==='baskan'?'selected':''}>Başkan</option>
+            <option value="baskan_yrd" ${data.rol==='baskan_yrd'?'selected':''}>Başkan Yardımcısı</option>
+          </select>
+        </div>
+        <div><label class="yk-lbl">Tip</label>
+          <select id="gs-g-ay" class="yk-inp">
+            <option value="asil" ${data.asil_yedek==='asil'?'selected':''}>Asıl</option>
+            <option value="yedek" ${data.asil_yedek==='yedek'?'selected':''}>Yedek</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Görev Başlangıcı</label>
+          <input id="gs-g-bas" type="date" class="yk-inp" value="${(data.baslangic||'').slice(0,10)}">
+        </div>
+        <div><label class="yk-lbl">Ayrılma / Bitiş Tarihi</label>
+          <input id="gs-g-bit" type="date" class="yk-inp" value="${(data.bitis||'').slice(0,10)}">
+        </div>
+      </div>
+      <div><label class="yk-lbl">Ayrılma Nedeni</label>
+        <select id="gs-g-neden" class="yk-inp">
+          <option value="">— Yok —</option>
+          <option value="devamsizlik" ${data.ayrilma_nedeni==='devamsizlik'?'selected':''}>Devamsızlık</option>
+          <option value="adli_sicil" ${data.ayrilma_nedeni==='adli_sicil'?'selected':''}>Adli Sicil Kaydı</option>
+          <option value="faaliyet_durdurma" ${data.ayrilma_nedeni==='faaliyet_durdurma'?'selected':''}>Ticari Faaliyeti Durdurma</option>
+          <option value="rol_degisikligi" ${data.ayrilma_nedeni==='rol_degisikligi'?'selected':''}>Rol Değişikliği</option>
+          <option value="diger" ${data.ayrilma_nedeni==='diger'?'selected':''}>Diğer</option>
+        </select>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:9px 11px;font-size:11px;color:var(--text2)">
+        <i class="ti ti-info-circle"></i> Bitiş tarihini boşaltırsanız bu kişi tekrar aktif üye olur (geçmişten çıkar, aktif listeye geçer).
+      </div>
+    </div>`,
+    async ()=>{
+      const ad = document.getElementById('gs-g-ad')?.value.trim();
+      const rol = document.getElementById('gs-g-rol')?.value;
+      const ay = document.getElementById('gs-g-ay')?.value;
+      const bas = document.getElementById('gs-g-bas')?.value;
+      const bit = document.getElementById('gs-g-bit')?.value||null;
+      const neden = document.getElementById('gs-g-neden')?.value||null;
+      if(!ad){ alert('Ad Soyad zorunludur.'); return; }
+      if(!bas){ alert('Görev başlangıcı zorunludur.'); return; }
+      await _supa.from('mk_uyelik').update({
+        ad_soyad:ad, rol, asil_yedek:ay, baslangic:bas, bitis:bit,
+        ayrilma_nedeni: bit ? neden : null   // bitis yoksa neden de temizlenir
+      }).eq('id',uyelikId);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderMK();
     }
   );
 };
