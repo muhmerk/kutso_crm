@@ -18203,9 +18203,10 @@ async function gsRenderMKAsync(){
       <td style="padding:10px 14px"><span style="color:${rolRenk};font-weight:600;font-size:12px">${rolAd[r.rol]||r.rol}</span></td>
       <td style="padding:10px 14px">${ayBadge}</td>
       <td style="padding:10px 14px;color:var(--text2);font-size:12px">${gsFmtTarih(r.baslangic)}</td>
-      <td style="padding:10px 14px;text-align:right">
+      <td style="padding:10px 14px;text-align:right;white-space:nowrap">
         <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMkUyelikDuzenle('${r.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;color:var(--amber)" onclick="gsMkUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsMkUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Sil"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`;
   }).join('');
@@ -18213,11 +18214,15 @@ async function gsRenderMKAsync(){
   // Geçmiş (düşmüş) satırlar
   const nedenAd = { devamsizlik:'Devamsızlık', adli_sicil:'Adli Sicil', faaliyet_durdurma:'Faaliyet Durdurma', rol_degisikligi:'Rol Değişikliği', diger:'Diğer' };
   const gecmisSatirlar = gecmis.map(r=>`
-    <tr style="border-bottom:0.5px solid var(--border);opacity:.7">
+    <tr style="border-bottom:0.5px solid var(--border);opacity:.85">
       <td style="padding:8px 14px;font-size:12px">${r.ad_soyad}</td>
       <td style="padding:8px 14px;font-size:11px;color:var(--text2)">${rolAd[r.rol]||r.rol} (${r.asil_yedek==='yedek'?'Yedek':'Asıl'})</td>
       <td style="padding:8px 14px;font-size:11px;color:var(--text2)">${gsFmtTarih(r.baslangic)} → ${gsFmtTarih(r.bitis)}</td>
       <td style="padding:8px 14px"><span class="badge b-red" style="font-size:10px">${nedenAd[r.ayrilma_nedeni]||r.ayrilma_nedeni||'Ayrıldı'}</span></td>
+      <td style="padding:8px 14px;text-align:right;white-space:nowrap">
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsMkDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Kaydı Sil"><i class="ti ti-trash"></i></button>
+      </td>
     </tr>`).join('');
 
   el.innerHTML = `
@@ -18268,6 +18273,7 @@ async function gsRenderMKAsync(){
             <th style="text-align:left;padding:8px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Rol</th>
             <th style="text-align:left;padding:8px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Görev Süresi</th>
             <th style="text-align:left;padding:8px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ayrılma Nedeni</th>
+            <th style="padding:8px 14px;border-bottom:1px solid var(--border)"></th>
           </tr></thead>
           <tbody>${gecmisSatirlar}</tbody>
         </table>
@@ -18562,6 +18568,28 @@ window.gsMkUyeDusur = async function(uyelikId, adSoyad, komiteNo){
       alert('✓ Üye düşürüldü. Bu tarihten sonraki toplantılarda yoklamada görünmeyecek.');
     }
   );
+};
+
+/* Düşmeyi geri al — bitis ve neden temizlenir, üye tekrar aktif olur */
+window.gsMkDusmeGeriAl = async function(uyelikId, adSoyad){
+  if(!confirm(`${adSoyad} adlı üyenin düşme işlemi geri alınsın mı? Üye tekrar aktif hale gelecek ve bu tarihten sonraki toplantılarda yoklamada görünecek.`)) return;
+  try{
+    await _supa.from('mk_uyelik').update({bitis:null, ayrilma_nedeni:null}).eq('id',uyelikId);
+    await supaYukleKatilimUyeler();
+    gsRenderMK();
+    alert('✓ Düşme geri alındı, üye tekrar aktif.');
+  }catch(e){ alert('Hata: '+(e.message||e)); }
+};
+
+/* Üyelik kaydını tamamen sil */
+window.gsMkUyelikSil = async function(uyelikId, adSoyad){
+  if(!confirm(`${adSoyad} adlı üyenin bu kaydı KALICI olarak silinecek. Bu işlem geri alınamaz. Emin misiniz?`)) return;
+  try{
+    await _supa.from('mk_uyelik').delete().eq('id',uyelikId);
+    await supaYukleKatilimUyeler();
+    gsRenderMK();
+    alert('✓ Kayıt silindi.');
+  }catch(e){ alert('Hata: '+(e.message||e)); }
 };
 
 /* Yeni dönem oluştur */
