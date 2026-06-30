@@ -18048,68 +18048,128 @@ window.gsTab = function(tab){
 };
 
 /* ── YK ÜYELERİ ── */
-function gsRenderYK(){
+function gsRenderYK(){ gsRenderKurul('yk'); }
+function gsRenderMeclis(){ gsRenderKurul('meclis'); }
+
+/* YK ve Meclis için ortak tarih-bazlı üye yönetimi (kurul_uyelik) */
+window._gsKurulSeciliDonem = { yk:null, meclis:null };
+
+function gsRenderKurul(tur){
   const el = document.getElementById('gs-icerik');
-  const uyeler = window.YK_UYELER||[];
-  el.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-size:13px;color:var(--text2)">${uyeler.length} üye</div>
-      <button class="btn btn-p btn-sm" onclick="gsYKEkleModal()"><i class="ti ti-plus"></i> Üye Ekle</button>
-    </div>
-    <div class="card" style="overflow:hidden">
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:var(--surface2)">
-          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">#</th>
-          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ad Soyad</th>
-          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ünvan</th>
-          <th style="padding:10px 14px;border-bottom:1px solid var(--border)"></th>
-        </tr></thead>
-        <tbody>
-          ${uyeler.map((u,i)=>`<tr style="border-bottom:0.5px solid var(--border)">
-            <td style="padding:10px 14px;color:var(--text2)">${u.sira_no||i+1}</td>
-            <td style="padding:10px 14px;font-weight:500">${u.ad_soyad}</td>
-            <td style="padding:10px 14px;color:var(--text2)">${u.unvan||'—'}</td>
-            <td style="padding:10px 14px;text-align:right">
-              <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsYKDuzenleModal(${u.id})"><i class="ti ti-edit"></i></button>
-              <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsUyeSil('yk_uyeler',${u.id},'yk')"><i class="ti ti-trash"></i></button>
-            </td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>`;
+  el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite;font-size:24px"></i><div style="margin-top:8px">Yükleniyor...</div></div>';
+  gsRenderKurulAsync(tur);
 }
 
-/* ── MECLİS ÜYELERİ ── */
-function gsRenderMeclis(){
+async function gsRenderKurulAsync(tur){
   const el = document.getElementById('gs-icerik');
-  const uyeler = window.MECLIS_UYELER||[];
+  const organAd = tur==='yk' ? 'Yönetim Kurulu' : 'Meclis';
+
+  if(!window.MK_DONEMLER.length) await gsYukleDonemler();
+  if(!window._gsKurulSeciliDonem[tur] && window.MK_DONEMLER.length){
+    const aktif = window.MK_DONEMLER.find(d=>!d.bitis) || window.MK_DONEMLER[0];
+    window._gsKurulSeciliDonem[tur] = aktif.id;
+  }
+  const donemId = window._gsKurulSeciliDonem[tur];
+  const seciliDonem = window.MK_DONEMLER.find(d=>d.id===donemId);
+
+  // Bu organın tüm üyelik kayıtları (seçili dönem)
+  let kayitlar = [];
+  try{
+    let q = _supa.from('kurul_uyelik').select('*').eq('tur', tur);
+    if(donemId) q = q.eq('donem_id', donemId);
+    const { data } = await q;
+    kayitlar = data||[];
+  }catch(e){ console.warn('Kurul üyelik yükleme:', e); }
+
+  const siralama = (a,b)=>{
+    const sa=a.sira_no||999, sb=b.sira_no||999;
+    if(sa!==sb) return sa-sb;
+    const ca=(a.created_at||''), cb=(b.created_at||'');
+    if(ca!==cb) return ca<cb?-1:1;
+    return String(a.id).localeCompare(String(b.id));
+  };
+  const aktifler = kayitlar.filter(r=>!r.bitis).sort(siralama);
+  const gecmis = kayitlar.filter(r=>r.bitis).sort((a,b)=>(b.bitis||'').localeCompare(a.bitis||''));
+
+  const donemSec = window.MK_DONEMLER.map(d=>
+    `<option value="${d.id}" ${d.id===donemId?'selected':''}>${d.ad}${!d.bitis?' (aktif)':''}</option>`
+  ).join('');
+
+  const aktifSatirlar = aktifler.map((r,i)=>`
+    <tr style="border-bottom:0.5px solid var(--border)">
+      <td style="padding:10px 14px;color:var(--text2)">${r.sira_no||i+1}</td>
+      <td style="padding:10px 14px;font-weight:500">${r.ad_soyad}</td>
+      <td style="padding:10px 14px;color:var(--text2);font-size:12px">${r.unvan||'—'}</td>
+      <td style="padding:10px 14px;color:var(--text2);font-size:12px">${gsFmtTarih(r.baslangic)}</td>
+      <td style="padding:10px 14px;text-align:right;white-space:nowrap">
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsKurulUyelikDuzenle('${r.id}','${tur}')" title="Düzenle"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsKurulUnvanDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Ünvan Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsKurulUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`).join('');
+
+  const nedenAd = { devamsizlik:'Devamsızlık', adli_sicil:'Adli Sicil', faaliyet_durdurma:'Faaliyet Durdurma', unvan_degisikligi:'Ünvan Değişikliği', rol_degisikligi:'Rol Değişikliği', diger:'Diğer' };
+  const gecmisSatirlar = gecmis.map(r=>`
+    <tr style="border-bottom:0.5px solid var(--border);opacity:.85">
+      <td style="padding:8px 14px;font-size:12px">${r.ad_soyad}</td>
+      <td style="padding:8px 14px;font-size:11px;color:var(--text2)">${r.unvan||'—'}</td>
+      <td style="padding:8px 14px;font-size:11px;color:var(--text2)">${gsFmtTarih(r.baslangic)} → ${gsFmtTarih(r.bitis)}</td>
+      <td style="padding:8px 14px"><span class="badge b-red" style="font-size:10px">${nedenAd[r.ayrilma_nedeni]||r.ayrilma_nedeni||'Ayrıldı'}</span></td>
+      <td style="padding:8px 14px;text-align:right;white-space:nowrap">
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsKurulGecmisDuzenle('${r.id}','${tur}')" title="Düzenle"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsKurulDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`).join('');
+
   el.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-size:13px;color:var(--text2)">${uyeler.length} üye</div>
-      <button class="btn btn-p btn-sm" onclick="gsMeclisEkleModal()"><i class="ti ti-plus"></i> Üye Ekle</button>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <label style="font-size:12px;color:var(--text2)">Dönem:</label>
+      <select class="yk-inp" style="height:32px;font-size:12px;width:auto;min-width:200px" onchange="gsKurulDonemSec(this.value,'${tur}')">
+        ${donemSec || '<option>Dönem yok</option>'}
+      </select>
+      ${seciliDonem ? `<span style="font-size:11px;color:var(--text2)">${gsFmtTarih(seciliDonem.baslangic)} — ${seciliDonem.bitis?gsFmtTarih(seciliDonem.bitis):'devam ediyor'}</span>` : ''}
     </div>
-    <div class="card" style="overflow:hidden">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:var(--blue)">${organAd}
+        <span style="color:var(--text2);font-weight:400;font-size:12px">— ${aktifler.length} aktif üye</span>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="gsKurulUyeEkle('${tur}')"><i class="ti ti-plus"></i> Üye Ekle</button>
+    </div>
+
+    <div class="card" style="overflow:hidden;margin-bottom:18px">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
         <thead><tr style="background:var(--surface2)">
           <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">#</th>
           <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ad Soyad</th>
           <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ünvan</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Başlangıç</th>
           <th style="padding:10px 14px;border-bottom:1px solid var(--border)"></th>
         </tr></thead>
-        <tbody>
-          ${uyeler.map((u,i)=>`<tr style="border-bottom:0.5px solid var(--border)">
-            <td style="padding:10px 14px;color:var(--text2)">${u.sira_no||i+1}</td>
-            <td style="padding:10px 14px;font-weight:500">${u.ad_soyad}</td>
-            <td style="padding:10px 14px;color:var(--text2)">${u.unvan||'—'}</td>
-            <td style="padding:10px 14px;text-align:right">
-              <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMeclisDuzenleModal(${u.id})"><i class="ti ti-edit"></i></button>
-              <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsUyeSil('meclis_uyeler',${u.id},'meclis')"><i class="ti ti-trash"></i></button>
-            </td>
-          </tr>`).join('')}
-        </tbody>
+        <tbody>${aktifSatirlar || '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text2)">Aktif üye yok</td></tr>'}</tbody>
       </table>
-    </div>`;
+    </div>
+
+    ${gecmis.length ? `
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px"><i class="ti ti-history"></i> Ünvan Değişim / Ayrılma Geçmişi</div>
+      <div class="card" style="overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:var(--surface2)">
+            <th style="text-align:left;padding:8px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ad Soyad</th>
+            <th style="text-align:left;padding:8px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ünvan</th>
+            <th style="text-align:left;padding:8px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Görev Süresi</th>
+            <th style="text-align:left;padding:8px 14px;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">Ayrılma Nedeni</th>
+            <th style="padding:8px 14px;border-bottom:1px solid var(--border)"></th>
+          </tr></thead>
+          <tbody>${gecmisSatirlar}</tbody>
+        </table>
+      </div>` : ''}
+  `;
 }
+
+window.gsKurulDonemSec = function(donemId, tur){ window._gsKurulSeciliDonem[tur]=donemId; gsRenderKurul(tur); };
 
 /* ── MESLEK KOMİTESİ ÜYELERİ ── */
 let _gsMkSeciliKomite = 1;
@@ -18837,6 +18897,198 @@ window.gsMkDonemSil = async function(donemId){
   }
 };
 
+/* ════════════════════════════════════════════════════════
+   YK / MECLİS (kurul_uyelik) — tarih bazlı üye yönetimi
+   ════════════════════════════════════════════════════════ */
+
+/* Yeni üye ekle */
+window.gsKurulUyeEkle = function(tur){
+  const organAd = tur==='yk' ? 'Yönetim Kurulu' : 'Meclis';
+  const donemId = window._gsKurulSeciliDonem[tur];
+  const donem = window.MK_DONEMLER.find(d=>d.id===donemId);
+  if(!donem){ alert('Önce bir dönem seçin veya oluşturun.'); return; }
+  gsModalAc(`${organAd} — Üye Ekle`,
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-k-ad" class="yk-inp" placeholder="Adı ve Soyadı..."></div>
+      <div><label class="yk-lbl">Ünvan</label><input id="gs-k-unvan" class="yk-inp" placeholder="ör: ${tur==='yk'?'Yönetim Kurulu Üyesi':'Meclis Üyesi'}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Sıra No</label><input id="gs-k-sira" type="number" min="1" class="yk-inp" placeholder="Sıralama"></div>
+        <div><label class="yk-lbl">Göreve Başlama</label><input id="gs-k-bas" type="date" class="yk-inp" value="${(donem.baslangic||'').slice(0,10)}"></div>
+      </div>
+    </div>`,
+    async ()=>{
+      const ad = document.getElementById('gs-k-ad')?.value.trim();
+      const unvan = document.getElementById('gs-k-unvan')?.value.trim()||null;
+      const sira = parseInt(document.getElementById('gs-k-sira')?.value)||null;
+      const bas = document.getElementById('gs-k-bas')?.value||donem.baslangic;
+      if(!ad){ alert('Ad Soyad zorunludur.'); return; }
+      await _supa.from('kurul_uyelik').insert([{
+        donem_id:donemId, tur, ad_soyad:ad, unvan, sira_no:sira, baslangic:bas, bitis:null
+      }]);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderKurul(tur);
+    }
+  );
+};
+
+/* Üyelik düzenle (ad/unvan/sıra/başlangıç) */
+window.gsKurulUyelikDuzenle = async function(uyelikId, tur){
+  const { data } = await _supa.from('kurul_uyelik').select('*').eq('id',uyelikId).single();
+  if(!data){ alert('Kayıt bulunamadı.'); return; }
+  gsModalAc('Üyelik Düzenle',
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-k-ad" class="yk-inp" value="${(data.ad_soyad||'').replace(/"/g,'&quot;')}"></div>
+      <div><label class="yk-lbl">Ünvan</label><input id="gs-k-unvan" class="yk-inp" value="${(data.unvan||'').replace(/"/g,'&quot;')}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Sıra No</label><input id="gs-k-sira" type="number" class="yk-inp" value="${data.sira_no||''}"></div>
+        <div><label class="yk-lbl">Göreve Başlama</label><input id="gs-k-bas" type="date" class="yk-inp" value="${(data.baslangic||'').slice(0,10)}"></div>
+      </div>
+    </div>`,
+    async ()=>{
+      const ad = document.getElementById('gs-k-ad')?.value.trim();
+      const unvan = document.getElementById('gs-k-unvan')?.value.trim()||null;
+      const sira = parseInt(document.getElementById('gs-k-sira')?.value)||null;
+      const bas = document.getElementById('gs-k-bas')?.value;
+      if(!ad){ alert('Ad Soyad zorunludur.'); return; }
+      await _supa.from('kurul_uyelik').update({ad_soyad:ad, unvan, sira_no:sira, baslangic:bas}).eq('id',uyelikId);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderKurul(tur);
+    }
+  );
+};
+
+/* Ünvan Değiştir (tarihli) — eski kaydı kapatır, yeni ünvanla yeni kayıt açar */
+window.gsKurulUnvanDegistir = async function(uyelikId, adSoyad, tur){
+  const { data: mevcut } = await _supa.from('kurul_uyelik').select('*').eq('id',uyelikId).single();
+  if(!mevcut){ alert('Kayıt bulunamadı.'); return; }
+  const bugun = new Date().toISOString().slice(0,10);
+  gsModalAc(`Ünvan Değiştir: ${adSoyad}`,
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:var(--blue-bg,rgba(59,130,246,.1));border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text)">
+        <strong>${adSoyad}</strong> şu an: <strong>${mevcut.unvan||'—'}</strong><br>
+        Geçiş tarihinden <u>önceki</u> toplantılarda eski ünvan, <u>sonraki</u> toplantılarda yeni ünvan görünecek.
+      </div>
+      <div><label class="yk-lbl">Yeni Ünvan *</label><input id="gs-k-yeni-unvan" class="yk-inp" value="${(mevcut.unvan||'').replace(/"/g,'&quot;')}"></div>
+      <div><label class="yk-lbl">Geçiş Tarihi *</label><input id="gs-k-gecis" type="date" class="yk-inp" value="${bugun}"></div>
+    </div>`,
+    async ()=>{
+      const yeniUnvan = document.getElementById('gs-k-yeni-unvan')?.value.trim();
+      const tarih = document.getElementById('gs-k-gecis')?.value;
+      if(!yeniUnvan){ alert('Yeni ünvan zorunludur.'); return; }
+      if(!tarih){ alert('Geçiş tarihi zorunludur.'); return; }
+      if(yeniUnvan===mevcut.unvan){ alert('Ünvan değişmedi.'); return; }
+      // Eski kaydı kapat
+      await _supa.from('kurul_uyelik').update({bitis:tarih, ayrilma_nedeni:'unvan_degisikligi'}).eq('id',uyelikId);
+      // Yeni ünvanla yeni kayıt
+      await _supa.from('kurul_uyelik').insert([{
+        donem_id:mevcut.donem_id, tur:mevcut.tur, ad_soyad:mevcut.ad_soyad, unvan:yeniUnvan,
+        sira_no:mevcut.sira_no, kurul_uye_id:mevcut.kurul_uye_id||null,
+        baslangic:tarih, bitis:null
+      }]);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderKurul(tur);
+      alert('✓ Ünvan değişikliği kaydedildi. Geçmiş toplantılar eski ünvanı, sonrakiler yeni ünvanı gösterecek.');
+    }
+  );
+};
+
+/* Üyeyi düşür */
+window.gsKurulUyeDusur = async function(uyelikId, adSoyad, tur){
+  const { data: dusen } = await _supa.from('kurul_uyelik').select('*').eq('id',uyelikId).single();
+  if(!dusen){ alert('Kayıt bulunamadı.'); return; }
+  const bugun = new Date().toISOString().slice(0,10);
+  gsModalAc(`Üyeyi Düşür: ${adSoyad}`,
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:var(--amber-bg);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text)">
+        <strong>${adSoyad}</strong> düşürülecek. Bu tarihten sonraki toplantılarda yoklamada görünmeyecek, önceki kayıtları korunacak.
+      </div>
+      <div><label class="yk-lbl">Düşme Tarihi *</label><input id="gs-k-dusme" type="date" class="yk-inp" value="${bugun}"></div>
+      <div><label class="yk-lbl">Düşme Nedeni</label>
+        <select id="gs-k-neden" class="yk-inp">
+          <option value="devamsizlik">Devamsızlık</option>
+          <option value="adli_sicil">Adli Sicil Kaydı</option>
+          <option value="faaliyet_durdurma">Ticari Faaliyeti Durdurma</option>
+          <option value="diger">Diğer</option>
+        </select>
+      </div>
+    </div>`,
+    async ()=>{
+      const tarih = document.getElementById('gs-k-dusme')?.value;
+      const neden = document.getElementById('gs-k-neden')?.value;
+      if(!tarih){ alert('Düşme tarihi zorunludur.'); return; }
+      await _supa.from('kurul_uyelik').update({bitis:tarih, ayrilma_nedeni:neden}).eq('id',uyelikId);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderKurul(tur);
+      alert('✓ Üye düşürüldü.');
+    }
+  );
+};
+
+/* Geçmiş kaydı düzenle (tüm alanlar) */
+window.gsKurulGecmisDuzenle = async function(uyelikId, tur){
+  const { data } = await _supa.from('kurul_uyelik').select('*').eq('id',uyelikId).single();
+  if(!data){ alert('Kayıt bulunamadı.'); return; }
+  gsModalAc('Geçmiş Kaydını Düzenle',
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-kg-ad" class="yk-inp" value="${(data.ad_soyad||'').replace(/"/g,'&quot;')}"></div>
+      <div><label class="yk-lbl">Ünvan</label><input id="gs-kg-unvan" class="yk-inp" value="${(data.unvan||'').replace(/"/g,'&quot;')}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Görev Başlangıcı</label><input id="gs-kg-bas" type="date" class="yk-inp" value="${(data.baslangic||'').slice(0,10)}"></div>
+        <div><label class="yk-lbl">Ayrılma / Bitiş</label><input id="gs-kg-bit" type="date" class="yk-inp" value="${(data.bitis||'').slice(0,10)}"></div>
+      </div>
+      <div><label class="yk-lbl">Ayrılma Nedeni</label>
+        <select id="gs-kg-neden" class="yk-inp">
+          <option value="">— Yok —</option>
+          <option value="devamsizlik" ${data.ayrilma_nedeni==='devamsizlik'?'selected':''}>Devamsızlık</option>
+          <option value="adli_sicil" ${data.ayrilma_nedeni==='adli_sicil'?'selected':''}>Adli Sicil Kaydı</option>
+          <option value="faaliyet_durdurma" ${data.ayrilma_nedeni==='faaliyet_durdurma'?'selected':''}>Ticari Faaliyeti Durdurma</option>
+          <option value="unvan_degisikligi" ${data.ayrilma_nedeni==='unvan_degisikligi'?'selected':''}>Ünvan Değişikliği</option>
+          <option value="diger" ${data.ayrilma_nedeni==='diger'?'selected':''}>Diğer</option>
+        </select>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:9px 11px;font-size:11px;color:var(--text2)">
+        <i class="ti ti-info-circle"></i> Bitiş tarihini boşaltırsanız bu kişi tekrar aktif üye olur.
+      </div>
+    </div>`,
+    async ()=>{
+      const ad = document.getElementById('gs-kg-ad')?.value.trim();
+      const unvan = document.getElementById('gs-kg-unvan')?.value.trim()||null;
+      const bas = document.getElementById('gs-kg-bas')?.value;
+      const bit = document.getElementById('gs-kg-bit')?.value||null;
+      const neden = document.getElementById('gs-kg-neden')?.value||null;
+      if(!ad){ alert('Ad Soyad zorunludur.'); return; }
+      if(!bas){ alert('Görev başlangıcı zorunludur.'); return; }
+      await _supa.from('kurul_uyelik').update({
+        ad_soyad:ad, unvan, baslangic:bas, bitis:bit, ayrilma_nedeni: bit?neden:null
+      }).eq('id',uyelikId);
+      await supaYukleKatilimUyeler();
+      gsModalKapat(); gsRenderKurul(tur);
+    }
+  );
+};
+
+/* Düşmeyi geri al */
+window.gsKurulDusmeGeriAl = async function(uyelikId, adSoyad, tur){
+  if(!confirm(`${adSoyad} adlı üyenin düşme işlemi geri alınsın mı? Üye tekrar aktif hale gelecek.`)) return;
+  try{
+    await _supa.from('kurul_uyelik').update({bitis:null, ayrilma_nedeni:null}).eq('id',uyelikId);
+    await supaYukleKatilimUyeler();
+    gsRenderKurul(tur);
+    alert('✓ Düşme geri alındı, üye tekrar aktif.');
+  }catch(e){ alert('Hata: '+(e.message||e)); }
+};
+
+/* Üyelik kaydını sil */
+window.gsKurulUyelikSil = async function(uyelikId, adSoyad, tur){
+  if(!confirm(`${adSoyad} adlı üyenin bu kaydı KALICI olarak silinecek. Emin misiniz?`)) return;
+  try{
+    await _supa.from('kurul_uyelik').delete().eq('id',uyelikId);
+    await supaYukleKatilimUyeler();
+    gsRenderKurul(tur);
+    alert('✓ Kayıt silindi.');
+  }catch(e){ alert('Hata: '+(e.message||e)); }
+};
+
 /* ── KOMİTE EKLE / SİL ── */
 window.gsMkKomiteEkle = async function(){
   const tumUyeler = window.MK_UYELER||[];
@@ -18952,6 +19204,43 @@ async function supaYukleKomiteUyelik(komiteNo, toplantiTarihi){
 }
 window.supaYukleKomiteUyelik = supaYukleKomiteUyelik;
 
+/* YK / Meclis için tarih bazlı üye yükleme (kurul_uyelik tablosundan).
+   tur: 'yk' | 'meclis', toplantiTarihi: 'YYYY-MM-DD' (yoksa şu an aktif olanlar)
+   id = kurul_uye_id (eski id) varsa onu, yoksa uyelik id'sini kullanır (katılım uyumu). */
+async function supaYukleKurulUyelik(tur, toplantiTarihi){
+  try{
+    const { data, error } = await _supa.from('kurul_uyelik').select('*').eq('tur', tur);
+    if(error) throw error;
+    if(!data || !data.length){
+      // kurul_uyelik boş → eski listeye düş
+      const eski = tur==='yk' ? (window.YK_UYELER||[]) : (window.MECLIS_UYELER||[]);
+      return eski.map(u=>({...u, id:String(u.id)}));
+    }
+    const aktifler = data.filter(r=>{
+      if(!toplantiTarihi) return r.bitis===null;
+      return r.bitis===null || r.bitis > toplantiTarihi;
+    }).sort((a,b)=>{
+      const sa=a.sira_no||999, sb=b.sira_no||999;
+      if(sa!==sb) return sa-sb;
+      const ca=(a.created_at||''), cb=(b.created_at||'');
+      if(ca!==cb) return ca<cb?-1:1;
+      return String(a.id).localeCompare(String(b.id));
+    });
+    return aktifler.map(r=>({
+      id: String(r.kurul_uye_id || r.id),
+      uyelik_id: r.id,
+      ad_soyad: r.ad_soyad,
+      unvan: r.unvan||'',
+      sira_no: r.sira_no
+    }));
+  }catch(e){
+    console.warn('Kurul üyelik yükleme hatası (eski listeye düşülüyor):', e.message||e);
+    const eski = tur==='yk' ? (window.YK_UYELER||[]) : (window.MECLIS_UYELER||[]);
+    return eski.map(u=>({...u, id:String(u.id)}));
+  }
+}
+window.supaYukleKurulUyelik = supaYukleKurulUyelik;
+
 /* Toplantıya ait mevcut katılım kayıtlarını çek */
 async function supaYukleKatilimKayitlar(toplantıId){
   try{
@@ -18971,8 +19260,20 @@ window.katilimAc = async function(toplantıId, tur, komiteNo){
   await supaYukleKatilimUyeler();
 
   /* Üye listesini belirle */
-  if(tur === 'yk') _katilimUyeler = window.YK_UYELER.map(u=>({...u}));
-  else if(tur === 'meclis') _katilimUyeler = window.MECLIS_UYELER.map(u=>({...u}));
+  if(tur === 'yk' || tur === 'meclis'){
+    // Toplantının tarihini bul (o tarihte görevde olanları çekmek için)
+    let toplantiTarihi = null;
+    const db = tur==='yk' ? window.YK_DB : window.MECLIS_DB;
+    const tObj = (db?.toplantılar||[]).find(t=>t.id===toplantıId);
+    if(tObj) toplantiTarihi = tObj.tarihIso || null;
+    if(!toplantiTarihi){
+      try{
+        const { data } = await _supa.from('karar_toplantilari').select('tarih_iso').eq('id', toplantıId).single();
+        if(data) toplantiTarihi = data.tarih_iso;
+      }catch(_){}
+    }
+    _katilimUyeler = await supaYukleKurulUyelik(tur, toplantiTarihi);
+  }
   else if(tur === 'mk' && komiteNo){
     // Toplantının tarihini bul (mk_uyelik'ten o tarihte görevde olanları çekmek için)
     let toplantiTarihi = null;
@@ -19192,8 +19493,29 @@ window.katilimOzetYenile = async function(){
     });
 
     let uyeler = [];
-    if(tur==='yk') uyeler = window.YK_UYELER||[];
-    else if(tur==='meclis') uyeler = window.MECLIS_UYELER||[];
+    if(tur==='yk' || tur==='meclis'){
+      // kurul_uyelik'ten: bu aralıktaki toplantı tarihlerinde görev yapmış TÜM üyelerin birleşimi
+      try{
+        const { data: kayitlar } = await _supa.from('kurul_uyelik').select('*').eq('tur', tur);
+        const uyeMap = {};
+        (kayitlar||[]).forEach(r=>{
+          const aktifBirToplantida = filtrelenmis.some(t=>{
+            const td = t.tarihIso;
+            if(!td) return false;
+            return r.baslangic <= td && (r.bitis===null || r.bitis > td);
+          });
+          if(aktifBirToplantida){
+            const id = String(r.kurul_uye_id || r.id);
+            uyeMap[id] = { id, ad_soyad:r.ad_soyad, unvan:r.unvan||'', sira_no:r.sira_no };
+          }
+        });
+        uyeler = Object.values(uyeMap).sort((a,b)=>(a.sira_no||999)-(b.sira_no||999));
+      }catch(e){ console.warn('Kurul özet üye yükleme:', e); }
+      // kurul_uyelik boşsa eski sisteme düş
+      if(!uyeler.length){
+        uyeler = tur==='yk' ? (window.YK_UYELER||[]) : (window.MECLIS_UYELER||[]);
+      }
+    }
     else if(tur==='mk'){
       // mk_uyelik'ten: bu aralıktaki toplantı tarihlerinde görev yapmış TÜM üyelerin birleşimi
       // (düşmüş üyeler dahil — örn. aralıkta görevdeyken sonradan düşenler)
