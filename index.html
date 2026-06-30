@@ -18682,7 +18682,7 @@ async function supaYukleKomiteUyelik(komiteNo, toplantiTarihi){
       return r.asil_yedek==='yedek' ? 'Yedek Üyesi' : 'Üyesi';
     };
     return aktifler.map(r=>({
-      id: r.mk_uye_id || r.id,   // katılım kaydı için eski id (yoksa uyelik id)
+      id: String(r.mk_uye_id || r.id),   // katılım kaydı için string id (sütun artık text)
       uyelik_id: r.id,
       ad_soyad: r.ad_soyad,
       unvan: unvanMetni(r),
@@ -18822,7 +18822,7 @@ window.katilimKaydet = async function(){
       const kayit = {
         toplanti_id: _katilimToplantıId,
         tur: _katilimTur,
-        uye_id: u.id,
+        uye_id: String(u.id),
         katildi: u.katildi,
         mazeret: u.mazeret || null
       };
