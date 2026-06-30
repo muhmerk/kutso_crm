@@ -11873,12 +11873,18 @@ async function mkKomiteKatilimOzetleriYukle(toplantıId){
       .select('uye_id,katildi').eq('toplanti_id', toplantıId).eq('tur','mk');
     if(!data) return;
 
+    /* Toplantının tarihini bul */
+    let toplantiTarihi = null;
+    const tObj = (window.MK_DB?.toplantılar||[]).find(t=>t.id===toplantıId);
+    if(tObj) toplantiTarihi = tObj.tarihIso || null;
+
     /* Dinamik komite numaraları */
     const komiteNolar = [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
     if(!komiteNolar.length) for(let i=1;i<=14;i++) komiteNolar.push(i);
 
     for(const kNo of komiteNolar){
-      const komiteUyeleri = (window.MK_UYELER||[]).filter(u=>u.komite_no===kNo);
+      // O toplantı tarihinde görevde olan üyeler (mk_uyelik'ten)
+      const komiteUyeleri = await supaYukleKomiteUyelik(kNo, toplantiTarihi);
       const komiteUyeIds = new Set(komiteUyeleri.map(u=>u.id));
       const komiteKatilim = data.filter(k=>komiteUyeIds.has(k.uye_id));
       const katildi = komiteKatilim.filter(k=>k.katildi===true).length;
@@ -18372,6 +18378,58 @@ async function supaYukleKatilimUyeler(){
 }
 window.supaYukleKatilimUyeler = supaYukleKatilimUyeler;
 
+/* Belirli bir komitenin, belirli bir TARİHTE görevde olan üyelerini mk_uyelik'ten çek.
+   toplantiTarihi: 'YYYY-MM-DD' (toplantının tarih_iso'su)
+   Dönüş: [{id, ad_soyad, unvan, rol, asil_yedek, komite_no}]
+   id = mk_uye_id (eski mk_uyeler.id) — geçmiş katılım kayıtlarıyla uyum için.
+   Eğer mk_uyelik'te kayıt yoksa (tablo henüz kurulmamışsa) eski MK_UYELER'e düşer. */
+async function supaYukleKomiteUyelik(komiteNo, toplantiTarihi){
+  try{
+    let q = _supa.from('mk_uyelik').select('*').eq('komite_no', komiteNo);
+    // Tarih varsa: o tarihte görevde olanlar (baslangic <= tarih AND (bitis is null OR bitis > tarih))
+    if(toplantiTarihi){
+      q = q.lte('baslangic', toplantiTarihi);
+    }
+    const { data, error } = await q;
+    if(error) throw error;
+    if(!data || !data.length){
+      // mk_uyelik boş/kurulmamış → eski davranışa düş
+      return (window.MK_UYELER||[]).filter(u=>u.komite_no===komiteNo).map(u=>({...u}));
+    }
+    // bitis filtresini JS'te uygula (null veya tarihten büyük)
+    const rolSira = { baskan:1, baskan_yrd:2, uye:3 };
+    const aktifler = data.filter(r=>{
+      if(!toplantiTarihi) return r.bitis===null; // tarih yoksa şu an aktif olanlar
+      return r.bitis===null || r.bitis > toplantiTarihi;
+    }).sort((a,b)=>{
+      const ra=rolSira[a.rol]||9, rb=rolSira[b.rol]||9;
+      if(ra!==rb) return ra-rb;
+      // asil önce, yedek sonra
+      if(a.asil_yedek!==b.asil_yedek) return a.asil_yedek==='asil'?-1:1;
+      return (a.ad_soyad||'').localeCompare(b.ad_soyad||'','tr');
+    });
+    // unvan metnini rol'den türet (gösterim için)
+    const unvanMetni = (r)=>{
+      if(r.rol==='baskan') return 'Başkanı';
+      if(r.rol==='baskan_yrd') return 'Başkan Yardımcısı';
+      return r.asil_yedek==='yedek' ? 'Yedek Üyesi' : 'Üyesi';
+    };
+    return aktifler.map(r=>({
+      id: r.mk_uye_id || r.id,   // katılım kaydı için eski id (yoksa uyelik id)
+      uyelik_id: r.id,
+      ad_soyad: r.ad_soyad,
+      unvan: unvanMetni(r),
+      rol: r.rol,
+      asil_yedek: r.asil_yedek,
+      komite_no: r.komite_no
+    }));
+  }catch(e){
+    console.warn('Komite üyelik yükleme hatası (eski listeye düşülüyor):', e.message||e);
+    return (window.MK_UYELER||[]).filter(u=>u.komite_no===komiteNo).map(u=>({...u}));
+  }
+}
+window.supaYukleKomiteUyelik = supaYukleKomiteUyelik;
+
 /* Toplantıya ait mevcut katılım kayıtlarını çek */
 async function supaYukleKatilimKayitlar(toplantıId){
   try{
@@ -18393,7 +18451,20 @@ window.katilimAc = async function(toplantıId, tur, komiteNo){
   /* Üye listesini belirle */
   if(tur === 'yk') _katilimUyeler = window.YK_UYELER.map(u=>({...u}));
   else if(tur === 'meclis') _katilimUyeler = window.MECLIS_UYELER.map(u=>({...u}));
-  else if(tur === 'mk' && komiteNo) _katilimUyeler = window.MK_UYELER.filter(u=>u.komite_no===komiteNo).map(u=>({...u}));
+  else if(tur === 'mk' && komiteNo){
+    // Toplantının tarihini bul (mk_uyelik'ten o tarihte görevde olanları çekmek için)
+    let toplantiTarihi = null;
+    const tObj = (window.MK_DB?.toplantılar||[]).find(t=>t.id===toplantıId);
+    if(tObj) toplantiTarihi = tObj.tarihIso || null;
+    if(!toplantiTarihi){
+      // MK_DB'de yoksa Supabase'den çek
+      try{
+        const { data } = await _supa.from('karar_toplantilari').select('tarih_iso').eq('id', toplantıId).single();
+        if(data) toplantiTarihi = data.tarih_iso;
+      }catch(_){}
+    }
+    _katilimUyeler = await supaYukleKomiteUyelik(komiteNo, toplantiTarihi);
+  }
 
   if(!_katilimUyeler.length){
     alert('Üye listesi bulunamadı. Lütfen SQL kurulum dosyasını Supabase\'de çalıştırın.');
