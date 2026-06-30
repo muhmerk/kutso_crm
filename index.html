@@ -21654,6 +21654,7 @@ function skFormVeriTopla(){
 }
 
 /* ── Formu mevcut veriyle doldur ── */
+window.skFormDoldur = skFormDoldur;
 function skFormDoldur(v){
   const set = (id,val)=>{ const el=document.getElementById(id); if(el&&val) el.value=val; };
 
@@ -22318,11 +22319,9 @@ window.slDuzenle = function(uid, ad){
 
     waitForEl('sk-search', function(){
       if(!window._skFirmaGoster) return;
-      console.log('[slDuzenle] v=', v);
       window._skFirmaGoster(uid,_no,_ad).then(function(){
         waitForEl('sk-rapor-tarihi', function(){
-          console.log('[slDuzenle] dolduruluyor, v=', v, 'skFormDoldur var mı:', !!window.skFormDoldur);
-          if(v && window.skFormDoldur) skFormDoldur(v);
+          if(v) skFormDoldur(v);
         });
       });
     });
