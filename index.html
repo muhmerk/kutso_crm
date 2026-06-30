@@ -34,7 +34,7 @@ async function supaYukleYK() {
     const { data: toplantılar } = await _supa.from('karar_toplantilari').select('*').eq('tur','yk').order('tarih_iso', {ascending:false});
     if(!toplantılar || toplantılar.length===0) { if(window.YK_DB){ window.YK_DB.toplantılar=[]; window.YK_DB.gundemler=[]; if(window.ykRender) window.ykRender(); } return; }
     const toplantıIdler = toplantılar.map(t=>t.id);
-    const { data: gundemler } = await _supa.from('karar_gundemler').select('*').in('toplanti_id', toplantıIdler);
+    const { data: gundemler } = await _supa.from('karar_gundemler').select('*').in('toplanti_id', toplantıIdler).order('created_at', {ascending:true});
     const gundemIdler = (gundemler||[]).map(g=>g.id);
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
@@ -62,7 +62,7 @@ async function supaYukleMK() {
     const { data: toplantılar } = await _supa.from('karar_toplantilari').select('*').eq('tur','mk').order('tarih_iso', {ascending:false});
     if(!toplantılar || toplantılar.length===0) { if(window.MK_DB){ window.MK_DB.toplantılar=[]; window.MK_DB.gundemler=[]; if(window.mkRender) window.mkRender(); } return; }
     const toplantıIdler = toplantılar.map(t=>t.id);
-    const { data: gundemler } = await _supa.from('karar_gundemler').select('*').in('toplanti_id', toplantıIdler);
+    const { data: gundemler } = await _supa.from('karar_gundemler').select('*').in('toplanti_id', toplantıIdler).order('created_at', {ascending:true});
     const gundemIdler = (gundemler||[]).map(g=>g.id);
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
@@ -88,7 +88,7 @@ async function supaYukleMeclis() {
     const { data: toplantılar } = await _supa.from('karar_toplantilari').select('*').eq('tur','meclis').order('tarih_iso', {ascending:false});
     if(!toplantılar || toplantılar.length===0) { if(window.MECLIS_DB){ window.MECLIS_DB.toplantılar=[]; window.MECLIS_DB.gundemler=[]; if(window.meclisRender) window.meclisRender(); } return; }
     const toplantıIdler = toplantılar.map(t=>t.id);
-    const { data: gundemler } = await _supa.from('karar_gundemler').select('*').in('toplanti_id', toplantıIdler);
+    const { data: gundemler } = await _supa.from('karar_gundemler').select('*').in('toplanti_id', toplantıIdler).order('created_at', {ascending:true});
     const gundemIdler = (gundemler||[]).map(g=>g.id);
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
