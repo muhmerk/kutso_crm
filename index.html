@@ -22305,16 +22305,26 @@ window.slDuzenle = function(uid, ad){
     var _s=document.getElementById('tb-sub');   if(_s) _s.textContent='Kapasite raporu yükleme ve sanayi veri takibi';
     var _m=document.querySelector('.main');     if(_m) _m.scrollTop=0;
 
-    setTimeout(function(){
-      if(window.sanayiSecKapasite) window.sanayiSecKapasite();
-      setTimeout(function(){
-        if(window._skFirmaGoster){
-          window._skFirmaGoster(uid,_no,_ad).then(function(){
-            setTimeout(function(){ if(v&&window.skFormDoldur) skFormDoldur(v); },200);
-          });
-        }
-      },300);
-    },80);
+    // Form HTML'inin DOM'a yerleşmesini garanti etmek için requestAnimationFrame zinciri kullan
+    function waitForEl(id, cb, tries){
+      tries = tries||0;
+      var el = document.getElementById(id);
+      if(el){ cb(); return; }
+      if(tries > 60){ console.warn('Form elementi bulunamadı: '+id); return; } // ~1sn timeout
+      requestAnimationFrame(function(){ waitForEl(id, cb, tries+1); });
+    }
+
+    if(window.sanayiSecKapasite) window.sanayiSecKapasite();
+
+    waitForEl('sk-search', function(){
+      if(!window._skFirmaGoster) return;
+      window._skFirmaGoster(uid,_no,_ad).then(function(){
+        // Form alanlarının (sk-rapor-tarihi vb.) DOM'da olduğunu doğrula, sonra doldur
+        waitForEl('sk-rapor-tarihi', function(){
+          if(v && window.skFormDoldur) skFormDoldur(v);
+        });
+      });
+    });
   }).catch(function(e){ alert('Veri yüklenemedi: '+e.message); });
 };
 
