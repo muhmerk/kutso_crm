@@ -18054,6 +18054,39 @@ function gsRenderMeclis(){ gsRenderKurul('meclis'); }
 /* YK ve Meclis için ortak tarih-bazlı üye yönetimi (kurul_uyelik) */
 window._gsKurulSeciliDonem = { yk:null, meclis:null };
 
+/* Sabit ünvan listeleri (dropdown için) */
+const KURUL_UNVANLAR = {
+  yk: [
+    'Yönetim Kurulu Başkanı',
+    'Yönetim Kurulu Başkan Yardımcısı (Vekil)',
+    'Yönetim Kurulu Başkan Yardımcısı',
+    'Yönetim Kurulu Sayman Üyesi',
+    'Yönetim Kurulu Üyesi',
+    'Yönetim Kurulu Yedek Üyesi'
+  ],
+  meclis: [
+    'Meclis Başkanı',
+    'Meclis Başkan Yrd.',
+    'Yönetim Kurulu Başkanı',
+    'Yönetim Kurulu Başkan Yrd.',
+    'Yönetim Kurulu Sayman Üyesi',
+    'Yönetim Kurulu Üyesi',
+    'Meclis Divan Katibi',
+    'Meclis Üyesi',
+    'Meclis Yedek Üyesi'
+  ]
+};
+/* Ünvan select HTML'i üret (seçili değeri işaretle) */
+function kurulUnvanSelect(tur, id, seciliUnvan){
+  const opts = (KURUL_UNVANLAR[tur]||[]).map(u=>
+    `<option value="${u.replace(/"/g,'&quot;')}" ${u===seciliUnvan?'selected':''}>${u}</option>`
+  ).join('');
+  // Listede olmayan mevcut bir ünvan varsa onu da ekle (veri kaybı olmasın)
+  const extra = (seciliUnvan && !(KURUL_UNVANLAR[tur]||[]).includes(seciliUnvan))
+    ? `<option value="${seciliUnvan.replace(/"/g,'&quot;')}" selected>${seciliUnvan}</option>` : '';
+  return `<select id="${id}" class="yk-inp">${extra}${opts}</select>`;
+}
+
 function gsRenderKurul(tur){
   const el = document.getElementById('gs-icerik');
   el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite;font-size:24px"></i><div style="margin-top:8px">Yükleniyor...</div></div>';
@@ -18910,7 +18943,7 @@ window.gsKurulUyeEkle = function(tur){
   gsModalAc(`${organAd} — Üye Ekle`,
     `<div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-k-ad" class="yk-inp" placeholder="Adı ve Soyadı..."></div>
-      <div><label class="yk-lbl">Ünvan</label><input id="gs-k-unvan" class="yk-inp" placeholder="ör: ${tur==='yk'?'Yönetim Kurulu Üyesi':'Meclis Üyesi'}"></div>
+      <div><label class="yk-lbl">Ünvan</label>${kurulUnvanSelect(tur,'gs-k-unvan', tur==='yk'?'Yönetim Kurulu Üyesi':'Meclis Üyesi')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Sıra No</label><input id="gs-k-sira" type="number" min="1" class="yk-inp" placeholder="Sıralama"></div>
         <div><label class="yk-lbl">Göreve Başlama</label><input id="gs-k-bas" type="date" class="yk-inp" value="${(donem.baslangic||'').slice(0,10)}"></div>
@@ -18938,7 +18971,7 @@ window.gsKurulUyelikDuzenle = async function(uyelikId, tur){
   gsModalAc('Üyelik Düzenle',
     `<div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-k-ad" class="yk-inp" value="${(data.ad_soyad||'').replace(/"/g,'&quot;')}"></div>
-      <div><label class="yk-lbl">Ünvan</label><input id="gs-k-unvan" class="yk-inp" value="${(data.unvan||'').replace(/"/g,'&quot;')}"></div>
+      <div><label class="yk-lbl">Ünvan</label>${kurulUnvanSelect(tur,'gs-k-unvan', data.unvan||'')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Sıra No</label><input id="gs-k-sira" type="number" class="yk-inp" value="${data.sira_no||''}"></div>
         <div><label class="yk-lbl">Göreve Başlama</label><input id="gs-k-bas" type="date" class="yk-inp" value="${(data.baslangic||'').slice(0,10)}"></div>
@@ -18968,7 +19001,7 @@ window.gsKurulUnvanDegistir = async function(uyelikId, adSoyad, tur){
         <strong>${adSoyad}</strong> şu an: <strong>${mevcut.unvan||'—'}</strong><br>
         Geçiş tarihinden <u>önceki</u> toplantılarda eski ünvan, <u>sonraki</u> toplantılarda yeni ünvan görünecek.
       </div>
-      <div><label class="yk-lbl">Yeni Ünvan *</label><input id="gs-k-yeni-unvan" class="yk-inp" value="${(mevcut.unvan||'').replace(/"/g,'&quot;')}"></div>
+      <div><label class="yk-lbl">Yeni Ünvan *</label>${kurulUnvanSelect(tur,'gs-k-yeni-unvan', mevcut.unvan||'')}</div>
       <div><label class="yk-lbl">Geçiş Tarihi *</label><input id="gs-k-gecis" type="date" class="yk-inp" value="${bugun}"></div>
     </div>`,
     async ()=>{
@@ -19031,7 +19064,7 @@ window.gsKurulGecmisDuzenle = async function(uyelikId, tur){
   gsModalAc('Geçmiş Kaydını Düzenle',
     `<div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-kg-ad" class="yk-inp" value="${(data.ad_soyad||'').replace(/"/g,'&quot;')}"></div>
-      <div><label class="yk-lbl">Ünvan</label><input id="gs-kg-unvan" class="yk-inp" value="${(data.unvan||'').replace(/"/g,'&quot;')}"></div>
+      <div><label class="yk-lbl">Ünvan</label>${kurulUnvanSelect(tur,'gs-kg-unvan', data.unvan||'')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Görev Başlangıcı</label><input id="gs-kg-bas" type="date" class="yk-inp" value="${(data.baslangic||'').slice(0,10)}"></div>
         <div><label class="yk-lbl">Ayrılma / Bitiş</label><input id="gs-kg-bit" type="date" class="yk-inp" value="${(data.bitis||'').slice(0,10)}"></div>
