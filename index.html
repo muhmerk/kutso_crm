@@ -18114,9 +18114,20 @@ async function gsRenderKurulAsync(tur){
     kayitlar = data||[];
   }catch(e){ console.warn('Kurul üyelik yükleme:', e); }
 
+  // Ünvan hiyerarşi sırası (küçük = üstte). Listedeki index'e göre otomatik.
+  const unvanSira = (unvan)=>{
+    const liste = KURUL_UNVANLAR[tur]||[];
+    const i = liste.indexOf(unvan);
+    return i===-1 ? 900 : i;   // listede yoksa sona yakın
+  };
   const siralama = (a,b)=>{
+    // 1) Ünvan hiyerarşisi (başkan → yrd → sayman → üye → yedek)
+    const ua=unvanSira(a.unvan), ub=unvanSira(b.unvan);
+    if(ua!==ub) return ua-ub;
+    // 2) Aynı ünvanda: sıra no
     const sa=a.sira_no||999, sb=b.sira_no||999;
     if(sa!==sb) return sa-sb;
+    // 3) Orijinal ekleniş sırası
     const ca=(a.created_at||''), cb=(b.created_at||'');
     if(ca!==cb) return ca<cb?-1:1;
     return String(a.id).localeCompare(String(b.id));
@@ -19249,10 +19260,14 @@ async function supaYukleKurulUyelik(tur, toplantiTarihi){
       const eski = tur==='yk' ? (window.YK_UYELER||[]) : (window.MECLIS_UYELER||[]);
       return eski.map(u=>({...u, id:String(u.id)}));
     }
+    const unvanListe = KURUL_UNVANLAR[tur]||[];
+    const unvanSira = (u)=>{ const i=unvanListe.indexOf(u); return i===-1?900:i; };
     const aktifler = data.filter(r=>{
       if(!toplantiTarihi) return r.bitis===null;
       return r.bitis===null || r.bitis > toplantiTarihi;
     }).sort((a,b)=>{
+      const ua=unvanSira(a.unvan), ub=unvanSira(b.unvan);
+      if(ua!==ub) return ua-ub;
       const sa=a.sira_no||999, sb=b.sira_no||999;
       if(sa!==sb) return sa-sb;
       const ca=(a.created_at||''), cb=(b.created_at||'');
