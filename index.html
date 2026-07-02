@@ -11758,12 +11758,13 @@ function mkRenderMetrik(){
   };
   const filtreliT=MK_DB.toplantılar.filter(x=>mkYilOk(x));
   const filtreliTIdler=new Set(filtreliT.map(x=>x.id));
-  const filtreliG=MK_DB.gundemler.filter(g=>filtreliTIdler.has(g.toplantıId));
+  // Sadece bir komiteye bağlı olan kararlar sayılır — genel/komitesiz gündem maddeleri hariç
+  const filtreliG=MK_DB.gundemler.filter(g=>filtreliTIdler.has(g.toplantıId) && g.komiteNo);
   const t=filtreliT.length, g=filtreliG.length;
   const tam=filtreliG.filter(g=>g.durum==='tamamlandi').length;
   document.getElementById('mk-metrics').innerHTML=`
     <div class="mc"><div class="mc-lbl">Toplantı</div><div class="mc-val">${t}</div><div class="mc-sub">${t?'Girilen':'Henüz yok'}</div></div>
-    <div class="mc"><div class="mc-lbl">Gündem</div><div class="mc-val">${g}</div><div class="mc-sub">Toplam</div></div>
+    <div class="mc"><div class="mc-lbl">Karar</div><div class="mc-val">${g}</div><div class="mc-sub">Toplam</div></div>
     <div class="mc"><div class="mc-lbl">Tamamlanan</div><div class="mc-val" style="color:var(--teal)">${tam}</div><div class="mc-sub up">${g?'%'+Math.round(tam/g*100):''}</div></div>
     <div class="mc"><div class="mc-lbl">Açık</div><div class="mc-val" style="color:${g-tam>0?'var(--red)':'var(--teal)'}">${g-tam}</div><div class="mc-sub ${g-tam>0?'dn':'up'}">${g-tam>0?'Bekliyor':'Temiz'}</div></div>`;
 }
