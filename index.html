@@ -11950,7 +11950,8 @@ window.mkGundemYonetAc = function(toplantıId){
 };
 
 function mkGundemEkraniRender(toplantıId, kararEl){
-  const gundemler = MK_DB.gundemler.filter(g=>g.toplantıId===toplantıId);
+  // Sadece komiteye bağlı OLMAYAN (genel) gündem maddeleri — komite kararları burada görünmez
+  const gundemler = MK_DB.gundemler.filter(g=>g.toplantıId===toplantıId && !g.komiteNo);
   const sira = gundemler.length + 1;
 
   // Mevcut gündemler listesi + ilk boş input satırı
