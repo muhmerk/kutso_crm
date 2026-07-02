@@ -19557,7 +19557,14 @@ window.katilimOzetYenile = async function(){
             uyeMap[id] = { id, ad_soyad:r.ad_soyad, unvan:r.unvan||'', sira_no:r.sira_no };
           }
         });
-        uyeler = Object.values(uyeMap).sort((a,b)=>(a.sira_no||999)-(b.sira_no||999));
+        // Hiyerarşik sırala: ünvan listesindeki sıraya göre, sonra sira_no
+        const unvanListe = KURUL_UNVANLAR[tur]||[];
+        const unvanSira = (u)=>{ const i=unvanListe.indexOf(u); return i===-1?900:i; };
+        uyeler = Object.values(uyeMap).sort((a,b)=>{
+          const ua=unvanSira(a.unvan), ub=unvanSira(b.unvan);
+          if(ua!==ub) return ua-ub;
+          return (a.sira_no||999)-(b.sira_no||999);
+        });
       }catch(e){ console.warn('Kurul özet üye yükleme:', e); }
       // kurul_uyelik boşsa eski sisteme düş
       if(!uyeler.length){
@@ -19598,7 +19605,19 @@ window.katilimOzetYenile = async function(){
           }
         });
       }
-      uyeler = Object.values(uyeMap);
+      // Hiyerarşik sırala: başkan → başkan yrd → asıl üye → yedek üye
+      const rolSira = { baskan:1, baskan_yrd:2, uye:3 };
+      uyeler = Object.values(uyeMap).sort((a,b)=>{
+        // Önce komite no (birden fazla komite varsa)
+        if((a.komite_no||0)!==(b.komite_no||0)) return (a.komite_no||0)-(b.komite_no||0);
+        // Rol hiyerarşisi
+        const ra=rolSira[a.rol]||9, rb=rolSira[b.rol]||9;
+        if(ra!==rb) return ra-rb;
+        // Aynı rolde: asıl üyeler yedeklerden önce
+        if(a.rol==='uye' && a.asil_yedek!==b.asil_yedek) return a.asil_yedek==='asil'?-1:1;
+        // Son olarak isim
+        return (a.ad_soyad||'').localeCompare(b.ad_soyad||'','tr');
+      });
       // mk_uyelik boşsa eski sisteme düş
       if(!uyeler.length){
         if(komiteNo) uyeler = (window.MK_UYELER||[]).filter(u=>u.komite_no===komiteNo);
