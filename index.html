@@ -12333,14 +12333,15 @@ window.mkGundemEkle = function(toplantıId, mevcutId, komiteNo){
       if(!konu){ alert('Karar konusu zorunludur.'); return; }
       const mkgId=genUUID();
       const ozet=document.getElementById('mk-f-ozet')?.value.trim()||'';
+      const tarih=document.getElementById('mk-f-tarih')?.value||null;
       const oncelik=document.getElementById('mk-f-oncelik')?.value||'normal';
-      const {error:gErr}=await _supa.from('karar_gundemler').insert([{id:mkgId,toplanti_id:toplantıId,konu,ozet,oncelik,durum:'planlandi',komite_no:komiteNo||null}]);
+      const {error:gErr}=await _supa.from('karar_gundemler').insert([{id:mkgId,toplanti_id:toplantıId,konu,ozet,son_tarih:tarih,oncelik,durum:'planlandi',komite_no:komiteNo||null}]);
       if(gErr){ console.error('MK gündem kaydetme hatası:',gErr.message); alert('Kaydetme hatası: '+gErr.message); return; }
       for(const a of atananlar){
         const {error:aErr}=await _supa.from('karar_atamalar').insert([{gundem_id:mkgId,kullanici:a.kullanici,ad:a.ad,gorev:a.gorev,durum:'planlandi'}]);
         if(aErr) console.error('MK atama kaydetme hatası:',aErr.message);
       }
-      MK_DB.gundemler.push({id:mkgId,toplantıId,konu,ozet,oncelik,durum:'planlandi',atananlar,komiteNo});
+      MK_DB.gundemler.push({id:mkgId,toplantıId,konu,ozet,sonTarih:tarih||'',oncelik,durum:'planlandi',atananlar,komiteNo});
     }
     ykModalKapat();
     await supaYukleMK();
