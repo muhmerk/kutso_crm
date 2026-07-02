@@ -19068,6 +19068,7 @@ window.gsUyeSil = async function(tablo, id, tur){
 
 /* ── YARDIMCI: Modal Aç/Kapat ── */
 let _gsModalKaydetFn = null;
+window.gsModalAc = gsModalAc;
 function gsModalAc(baslik, icerikHtml, kaydetFn){
   _gsModalKaydetFn = kaydetFn;
   document.getElementById('gs-modal-baslik').textContent = baslik;
