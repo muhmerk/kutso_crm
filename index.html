@@ -11836,9 +11836,17 @@ window.mkAcToplantı = function(id){
     <span style="font-size:14px;font-weight:500">${t?.ad||''}</span>
     <span style="font-size:12px;color:var(--text2)">${t?.tarih||''}</span>`;
 
-  /* Komite kartları — MK_UYELER'den gelen komite numaralarına göre dinamik */
-  const komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+  /* Komite kartları — mk_uyelik'ten gelen komite numaralarına göre dinamik,
+     SADECE bu toplantı tarihinde faaliyette olan (kuruluş tarihi geçmiş) komiteler gösterilir */
+  let komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
   if(!komiteNolar.length){ komiteNolar.push(...Array.from({length:14},(_,i)=>i+1)); }
+  const toplantiTarihiMk = t?.tarihIso;
+  if(toplantiTarihiMk && window._mkKomiteKurulusTarihi){
+    komiteNolar = komiteNolar.filter(kNo=>{
+      const kurulus = window._mkKomiteKurulusTarihi[kNo];
+      return !kurulus || kurulus <= toplantiTarihiMk; // kuruluş tarihi bilinmiyorsa (eski veri) göster
+    });
+  }
 
   el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">` +
     komiteNolar.map(kNo=>{
@@ -11894,9 +11902,15 @@ async function mkKomiteKatilimOzetleriYukle(toplantıId){
     const tObj = (window.MK_DB?.toplantılar||[]).find(t=>t.id===toplantıId);
     if(tObj) toplantiTarihi = tObj.tarihIso || null;
 
-    /* Dinamik komite numaraları */
-    const komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+    /* Dinamik komite numaraları — sadece bu toplantı tarihinde faaliyette olanlar */
+    let komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
     if(!komiteNolar.length) for(let i=1;i<=14;i++) komiteNolar.push(i);
+    if(toplantiTarihi && window._mkKomiteKurulusTarihi){
+      komiteNolar = komiteNolar.filter(kNo=>{
+        const kurulus = window._mkKomiteKurulusTarihi[kNo];
+        return !kurulus || kurulus <= toplantiTarihi;
+      });
+    }
 
     for(const kNo of komiteNolar){
       // O toplantı tarihinde görevde olan üyeler (mk_uyelik'ten)
@@ -19609,6 +19623,7 @@ window.MECLIS_UYELER = [];
 window.MK_UYELER = []; /* tüm komiteler (eski, tarihsiz) */
 window._mkTumKomiteNolar = []; /* mk_uyelik'ten gelen GÜNCEL komite no listesi (yeni komiteler dahil) */
 window._mkKomiteUyeSayisi = {}; /* komite_no -> aktif üye sayısı (mk_uyelik'ten) */
+window._mkKomiteKurulusTarihi = {}; /* komite_no -> en erken baslangic (komitenin kuruluş/faaliyet başlangıç tarihi) */
 
 async function supaYukleKatilimUyeler(){
   try{
@@ -19616,7 +19631,7 @@ async function supaYukleKatilimUyeler(){
       _supa.from('yk_uyeler').select('*').eq('aktif',true).order('sira_no'),
       _supa.from('meclis_uyeler').select('*').eq('aktif',true).order('sira_no'),
       _supa.from('mk_uyeler').select('*').eq('aktif',true).order('komite_no,id'),
-      _supa.from('mk_uyelik').select('komite_no,bitis')
+      _supa.from('mk_uyelik').select('komite_no,bitis,baslangic')
     ]);
     if(yk.data) window.YK_UYELER = yk.data;
     if(meclis.data) window.MECLIS_UYELER = meclis.data;
@@ -19624,10 +19639,15 @@ async function supaYukleKatilimUyeler(){
     if(mkUyelikKomiteler.data){
       window._mkTumKomiteNolar = [...new Set(mkUyelikKomiteler.data.map(r=>r.komite_no))].sort((a,b)=>a-b);
       const sayimMap = {};
+      const kurulusMap = {};
       mkUyelikKomiteler.data.forEach(r=>{
         if(!r.bitis) sayimMap[r.komite_no] = (sayimMap[r.komite_no]||0) + 1;
+        if(r.baslangic && (!kurulusMap[r.komite_no] || r.baslangic < kurulusMap[r.komite_no])){
+          kurulusMap[r.komite_no] = r.baslangic;
+        }
       });
       window._mkKomiteUyeSayisi = sayimMap;
+      window._mkKomiteKurulusTarihi = kurulusMap;
     }
     console.log('✓ Katılım üye listeleri yüklendi:', window.YK_UYELER.length, window.MECLIS_UYELER.length, window.MK_UYELER.length);
   }catch(e){ console.warn('Katılım üye yükleme hatası:', e); }
