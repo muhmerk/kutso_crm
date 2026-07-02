@@ -12691,7 +12691,7 @@ async function meclisEvrakKategorileriYukle(){
           </div>
         </div>
         <div style="display:flex;gap:6px">
-          ${kat.key==='hazirun' ? `<button class="btn btn-sm" onclick="meclisHazirun6AyAc()"><i class="ti ti-calendar-stats"></i> Son 6 Ay</button>` : ''}
+          ${kat.key==='hazirun' ? `<button class="btn btn-sm" onclick="katilimOzetAc('meclis','6aylik')"><i class="ti ti-calendar-stats"></i> Son 6 Ay</button>` : ''}
           <label class="btn btn-p btn-sm" style="cursor:pointer;margin:0">
             <i class="ti ti-upload"></i> Dosya Ekle
             <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="meclisEvrakYukle(event,'${kat.key}')">
@@ -12890,7 +12890,7 @@ async function mkEvrakKategorileriYukle(){
           </div>
         </div>
         <div style="display:flex;gap:6px">
-          ${kat.key==='hazirun' ? `<button class="btn btn-sm" onclick="mkHazirun6AyAc()"><i class="ti ti-calendar-stats"></i> Son 6 Ay</button>` : ''}
+          ${kat.key==='hazirun' ? `<button class="btn btn-sm" onclick="katilimOzetAc('mk','6aylik')"><i class="ti ti-calendar-stats"></i> Son 6 Ay</button>` : ''}
           <label class="btn btn-p btn-sm" style="cursor:pointer;margin:0">
             <i class="ti ti-upload"></i> Dosya Ekle
             <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="mkEvrakYukle(event,'${kat.key}')">
