@@ -94,7 +94,7 @@ async function supaYukleMeclis() {
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
     const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', durum:t.durum||'planlandi' }));
-    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', komiteNo:g.komite_no||0, atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
+    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', dosyaUrl:g.dosya_url||null, dosyaAdi:g.dosya_adi||null, atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MECLIS_DB) {
         window.MECLIS_DB.toplantılar = mappedT;
@@ -12663,10 +12663,13 @@ async function meclisEvrakKategorileriYukle(){
             <div style="font-size:11px;color:var(--text2)">${kat.aciklama}</div>
           </div>
         </div>
-        <label class="btn btn-p btn-sm" style="cursor:pointer;margin:0">
-          <i class="ti ti-upload"></i> Dosya Ekle
-          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="meclisEvrakYukle(event,'${kat.key}')">
-        </label>
+        <div style="display:flex;gap:6px">
+          ${kat.key==='hazirun' ? `<button class="btn btn-sm" onclick="meclisHazirun6AyAc()"><i class="ti ti-calendar-stats"></i> Son 6 Ay</button>` : ''}
+          <label class="btn btn-p btn-sm" style="cursor:pointer;margin:0">
+            <i class="ti ti-upload"></i> Dosya Ekle
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="meclisEvrakYukle(event,'${kat.key}')">
+          </label>
+        </div>
       </div>
       <div style="padding:8px 16px">
         ${katEvrak.length ? katEvrak.map(e=>`
@@ -12721,6 +12724,59 @@ window.meclisEvrakSil = async function(id, dosyaUrl){
     await _supa.from('meclis_evrak').delete().eq('id',id);
     await meclisEvrakKategorileriYukle();
   }catch(e){ alert('Silme hatası: '+(e.message||e)); }
+};
+
+/* Son 6 aylık Hazirun cetveli görünümü — seçili aydan geriye 6 ay */
+window.meclisHazirun6AyAc = async function(){
+  const {yil, ay} = window._meclisEvrakDonem;
+  // Seçili aydan geriye 6 ay (yıl geçişini de hesaba katarak)
+  const aylar = [];
+  for(let i=0;i<6;i++){
+    let y=yil, a=ay-i;
+    while(a<1){ a+=12; y-=1; }
+    aylar.push({yil:y, ay:a});
+  }
+  gsModalAc(`Son 6 Aylık Hazirun Cetveli — ${AY_ADLARI[ay]} ${yil}'den geriye`, '<div id="mev-6ay-icerik" style="padding:20px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite"></i></div>', null);
+  // Kaydet butonunu gizle (sadece görüntüleme)
+  const kaydetBtn = document.getElementById('gs-modal-kaydet-btn');
+  if(kaydetBtn) kaydetBtn.style.display = 'none';
+
+  let tumEvrak = [];
+  try{
+    for(const d of aylar){
+      const { data } = await _supa.from('meclis_evrak').select('*').eq('yil',d.yil).eq('ay',d.ay).eq('kategori','hazirun').order('created_at',{ascending:false});
+      (data||[]).forEach(e=>tumEvrak.push({...e, _ayAdi:AY_ADLARI[d.ay], _yil:d.yil}));
+    }
+  }catch(e){ console.warn('6 aylık hazirun yükleme:', e); }
+
+  const icerik = document.getElementById('mev-6ay-icerik');
+  if(!icerik) return;
+
+  if(!tumEvrak.length){
+    icerik.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text2)">Bu 6 aylık dönemde hazirun evrakı bulunamadı.</div>`;
+    return;
+  }
+
+  // Aya göre grupla
+  const gruplu = {};
+  aylar.forEach(d=>{ gruplu[`${d.yil}-${d.ay}`] = { yilAy:d, evraklar:[] }; });
+  tumEvrak.forEach(e=>{ const k=`${e.yil}-${e.ay}`; if(gruplu[k]) gruplu[k].evraklar.push(e); });
+
+  icerik.innerHTML = aylar.map(d=>{
+    const grup = gruplu[`${d.yil}-${d.ay}`];
+    const evraklar = grup?.evraklar||[];
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:600;color:var(--teal);margin-bottom:6px">${AY_ADLARI[d.ay]} ${d.yil} <span style="color:var(--text2);font-weight:400">(${evraklar.length} evrak)</span></div>
+      ${evraklar.length ? evraklar.map(e=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface2);border-radius:7px;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">
+            <i class="ti ti-file-text" style="font-size:14px;color:var(--text2);flex-shrink:0"></i>
+            <span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.baslik||e.dosya_adi||'Dosya'}</span>
+          </div>
+          <a href="${e.dosya_url}" target="_blank" class="btn btn-sm" style="padding:3px 8px;flex-shrink:0" title="Görüntüle"><i class="ti ti-eye"></i></a>
+        </div>`).join('') : `<div style="font-size:11px;color:var(--text2);padding:4px 10px">Evrak yok</div>`}
+    </div>`;
+  }).join('');
 };
 
 function meclisRenderMetrik(){
@@ -12805,6 +12861,7 @@ window.meclisAcToplantı = function(id){
         <span class="badge ${g.durum==='tamamlandi'?'b-green':'b-blue'}">${g.durum==='tamamlandi'?'Uygulandı':'Bekliyor'}</span>
       </div>
       ${g.ozet?`<div class="yk-body">${g.ozet}</div>`:''}
+      ${g.dosyaUrl?`<a href="${g.dosyaUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:6px 10px;background:var(--surface2);border-radius:7px;font-size:12px;color:var(--blue);text-decoration:none"><i class="ti ti-file-text"></i> ${g.dosyaAdi||'Karar dosyası'}</a>`:''}
       ${g.atananlar?.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:${a.durum==='tamamlandi'?'var(--green-bg)':'var(--amber-bg)'};border-radius:7px;margin-top:6px">
         <div style="width:6px;height:6px;border-radius:50%;background:${a.durum==='tamamlandi'?'#1D9E75':'#EF9F27'}"></div>
         <div style="flex:1;font-size:12px"><strong>${a.ad}</strong>${a.gorev&&a.gorev!=='—'?' — '+a.gorev:''}</div>
@@ -13007,7 +13064,12 @@ window.meclisKararEkle=function(toplantıId, mevcutId){
       ${mevcutId?'':`
       <div><label class="yk-lbl">Karar No</label><input id="meclis-f-no" class="yk-inp" placeholder="MK-2026-01/01"></div>
       <div><label class="yk-lbl">Karar Konusu</label><input id="meclis-f-konu" class="yk-inp" placeholder="Kararın konusu..."></div>
-      <div><label class="yk-lbl">Karar Özeti</label><textarea id="meclis-f-ozet" class="yk-inp" style="min-height:60px;resize:vertical"></textarea></div>`}
+      <div><label class="yk-lbl">Karar Özeti</label><textarea id="meclis-f-ozet" class="yk-inp" style="min-height:60px;resize:vertical"></textarea></div>
+      <div>
+        <label class="yk-lbl">Karar Dosyası (Word/PDF) — opsiyonel</label>
+        <input type="file" id="meclis-f-dosya" accept=".doc,.docx,.pdf" class="yk-inp">
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">İmzalı kararı Word veya PDF olarak doğrudan ekleyebilirsiniz.</div>
+      </div>`}
       <div style="border-top:0.5px solid var(--border);padding-top:12px">
         <label class="yk-lbl" style="margin-bottom:8px;display:block">Atanacak Personel</label>
         <select id="meclis-f-prs" class="yk-inp"><option value="">Personel seçin...</option>${personelOpts}</select>
@@ -13048,13 +13110,29 @@ window.meclisKararEkle=function(toplantıId, mevcutId){
       const mgId=genUUID();
       const mecOzet=document.getElementById('meclis-f-ozet')?.value.trim()||'';
       const mecNo=document.getElementById('meclis-f-no')?.value.trim()||'';
-      const {error:gErr}=await _supa.from('karar_gundemler').insert([{id:mgId,toplanti_id:toplantıId,no:mecNo,konu,ozet:mecOzet,durum:'planlandi'}]);
+
+      // Dosya varsa yükle
+      let dosyaUrl=null, dosyaAdi=null;
+      const dosyaInput = document.getElementById('meclis-f-dosya');
+      const dosya = dosyaInput?.files?.[0];
+      if(dosya){
+        try{
+          const temizAd = dosya.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+          const path = `kararlar/${mgId}_${temizAd}`;
+          const { error: upErr } = await _supa.storage.from('meclis-evraklar').upload(path, dosya, {upsert:false});
+          if(upErr) throw upErr;
+          const { data: urlData } = _supa.storage.from('meclis-evraklar').getPublicUrl(path);
+          dosyaUrl = urlData.publicUrl; dosyaAdi = dosya.name;
+        }catch(e){ alert('Dosya yükleme hatası: '+(e.message||e)); }
+      }
+
+      const {error:gErr}=await _supa.from('karar_gundemler').insert([{id:mgId,toplanti_id:toplantıId,no:mecNo,konu,ozet:mecOzet,durum:'planlandi',dosya_url:dosyaUrl,dosya_adi:dosyaAdi}]);
       if(gErr){ console.error('Meclis karar kaydetme hatası:',gErr.message); alert('Kaydetme hatası: '+gErr.message); return; }
       for(const a of atananlar){
         const {error:aErr}=await _supa.from('karar_atamalar').insert([{gundem_id:mgId,kullanici:a.kullanici,ad:a.ad,gorev:a.gorev,durum:'planlandi'}]);
         if(aErr) console.error('Meclis atama kaydetme hatası:',aErr.message);
       }
-      MECLIS_DB.gundemler.push({id:mgId,toplantıId,no:mecNo,konu,ozet:mecOzet,durum:'planlandi',atananlar});
+      MECLIS_DB.gundemler.push({id:mgId,toplantıId,no:mecNo,konu,ozet:mecOzet,durum:'planlandi',atananlar,dosyaUrl,dosyaAdi});
     }
     ykModalKapat();
     await supaYukleMeclis();
@@ -13696,6 +13774,12 @@ function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikI
       </select></div>
     </div>
     <div>
+      <label class="yk-lbl">Karar Dosyası (Word/PDF) — opsiyonel</label>
+      <div id="gd-dosya-mevcut" style="margin-bottom:6px">${g.dosyaUrl?`<a href="${g.dosyaUrl}" target="_blank" class="btn btn-sm" style="text-decoration:none"><i class="ti ti-file-text"></i> ${g.dosyaAdi||'Mevcut dosya'}</a> <button type="button" class="btn btn-sm" style="color:var(--red)" onclick="document.getElementById('gd-dosya-mevcut').innerHTML='';document.getElementById('gd-dosya-kaldir').value='1'"><i class="ti ti-x"></i> Kaldır</button>`:'<span style="font-size:11px;color:var(--text2)">Dosya eklenmedi</span>'}</div>
+      <input type="hidden" id="gd-dosya-kaldir" value="0">
+      <input type="file" id="gd-dosya-yeni" accept=".doc,.docx,.pdf" class="yk-inp">
+    </div>
+    <div>
       <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px">Atamalar</div>
       <div id="${atamaContId}">${mevcutAtamalar.map((a,i)=>atamaRowHtml(a,i)).join('')}</div>
       <button type="button" class="btn btn-sm" id="${ekleId}" style="margin-top:10px;align-self:flex-start"><i class="ti ti-plus"></i> Atama Ekle</button>
@@ -13716,13 +13800,31 @@ function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikI
   };
 
   /* Kaydet */
-  document.getElementById('yk-modal-kaydet').onclick=function(){
+  document.getElementById('yk-modal-kaydet').onclick=async function(){
     g.no=document.getElementById(noId)?.value.trim()||g.no;
     g.konu=document.getElementById(konuId)?.value.trim()||g.konu;
     g.ozet=document.getElementById(ozetId)?.value.trim()||'';
     const sonTarih=document.getElementById(tarihId)?.value||'';
     const oncelik=document.getElementById(oncelikId)?.value||'normal';
     g.sonTarih=sonTarih; g.oncelik=oncelik;
+
+    /* Dosya işlemleri: yeni dosya yüklendi mi, mevcut dosya kaldırıldı mı */
+    let dosyaUrl = g.dosyaUrl||null, dosyaAdi = g.dosyaAdi||null;
+    const kaldirFlag = document.getElementById('gd-dosya-kaldir')?.value==='1';
+    const yeniDosya = document.getElementById('gd-dosya-yeni')?.files?.[0];
+    if(yeniDosya){
+      try{
+        const temizAd = yeniDosya.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path = `kararlar/${g.id}_${Date.now()}_${temizAd}`;
+        const { error: upErr } = await _supa.storage.from('meclis-evraklar').upload(path, yeniDosya, {upsert:false});
+        if(upErr) throw upErr;
+        const { data: urlData } = _supa.storage.from('meclis-evraklar').getPublicUrl(path);
+        dosyaUrl = urlData.publicUrl; dosyaAdi = yeniDosya.name;
+      }catch(e){ alert('Dosya yükleme hatası: '+(e.message||e)); }
+    } else if(kaldirFlag){
+      dosyaUrl = null; dosyaAdi = null;
+    }
+    g.dosyaUrl = dosyaUrl; g.dosyaAdi = dosyaAdi;
 
     /* Tüm atama satırlarını oku */
     const yeniAtananlar=[];
@@ -13741,7 +13843,8 @@ function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikI
 
     // Gündem Supabase güncellemesi
     _supa.from('karar_gundemler').update({
-      no: g.no, konu: g.konu, ozet: g.ozet, son_tarih: g.sonTarih||null, oncelik: g.oncelik
+      no: g.no, konu: g.konu, ozet: g.ozet, son_tarih: g.sonTarih||null, oncelik: g.oncelik,
+      dosya_url: dosyaUrl, dosya_adi: dosyaAdi
     }).eq('id', g.id).then(({error})=>{ if(error) console.error('Gündem güncelleme hatası:', error.message); });
 
     // Atamalar: mevcut atamaları sil, yeniden ekle
@@ -18708,6 +18811,8 @@ function gsModalAc(baslik, icerikHtml, kaydetFn){
 }
 window.gsModalKapat = function(){
   document.getElementById('gs-modal').style.display = 'none';
+  const kaydetBtn = document.getElementById('gs-modal-kaydet-btn');
+  if(kaydetBtn) kaydetBtn.style.display = '';
 };
 window.gsModalKaydet = async function(){
   if(!_gsModalKaydetFn) return;
@@ -24683,9 +24788,9 @@ window.sikayetSilById = async function(id, btn){
         <button onclick="gsModalKapat()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2)"><i class="ti ti-x"></i></button>
       </div>
       <div id="gs-modal-icerik" style="padding:20px;overflow-y:auto;flex:1"></div>
-      <div style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+      <div id="gs-modal-footer" style="padding:12px 20px;border-top:0.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
         <button class="btn btn-sm" onclick="gsModalKapat()">İptal</button>
-        <button class="btn btn-p btn-sm" onclick="gsModalKaydet()"><i class="ti ti-check"></i> Kaydet</button>
+        <button class="btn btn-p btn-sm" id="gs-modal-kaydet-btn" onclick="gsModalKaydet()"><i class="ti ti-check"></i> Kaydet</button>
       </div>
     </div>
   </div>
