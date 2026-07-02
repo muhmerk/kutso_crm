@@ -12647,7 +12647,10 @@ function meclisEvrakRender(){
   if(!el) return;
   const {yil, ay} = meclisEvrakAktifDonem();
   el.innerHTML = `
-    <div style="margin-bottom:14px;font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları — üstteki yıl/ay seçiciyle değiştirebilirsiniz</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları — üstteki yıl/ay seçiciyle değiştirebilirsiniz</div>
+      <button class="btn btn-sm" onclick="meclisGundemGoruntule()"><i class="ti ti-file-description"></i> Gündem Görüntüle</button>
+    </div>
     <div id="mev-kategoriler"></div>
   `;
   meclisEvrakKategorileriYukle();
@@ -12738,6 +12741,37 @@ window.meclisEvrakSil = async function(id, dosyaUrl){
     await _supa.from('meclis_evrak').delete().eq('id',id);
     await meclisEvrakKategorileriYukle();
   }catch(e){ alert('Silme hatası: '+(e.message||e)); }
+};
+
+/* Gündem Görüntüle — o ayki Meclis toplantı(lar)ının gündemini resmi belge görünümünde göster */
+window.meclisGundemGoruntule = function(){
+  const {yil, ay} = meclisEvrakAktifDonem();
+  const toplantilar = (window.MECLIS_DB?.toplantılar||[]).filter(t=>{
+    if(!t.tarihIso) return false;
+    const d = new Date(t.tarihIso+'T00:00:00');
+    return d.getFullYear()===yil && (d.getMonth()+1)===ay;
+  });
+
+  gsModalAc(`${AY_ADLARI[ay]} ${yil} — Gündem`,
+    !toplantilar.length
+      ? `<div style="padding:24px;text-align:center;color:var(--text2)">Bu ayda toplantı bulunamadı.</div>`
+      : toplantilar.map(t=>{
+          const gundemler = (window.MECLIS_DB?.gundemler||[]).filter(g=>g.toplantıId===t.id);
+          return `
+          <div style="margin-bottom:24px;padding:22px;background:var(--surface2);border-radius:10px">
+            <div style="text-align:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+              <div style="font-size:15px;font-weight:700">${t.ad||'Meclis Toplantısı'}</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:5px">${t.tarih||''}${t.saat?` — Saat: ${t.saat}`:''}${t.bitisSaat?` - ${t.bitisSaat}`:''}</div>
+            </div>
+            ${gundemler.length ? `<ol style="margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px">
+              ${gundemler.map(g=>`<li style="font-size:13px;line-height:1.6">${g.konu}${g.ozet?`<div style="font-size:12px;color:var(--text2);margin-top:3px">${g.ozet}</div>`:''}</li>`).join('')}
+            </ol>` : `<div style="text-align:center;color:var(--text2);font-size:12px;padding:12px">Bu toplantı için gündem maddesi girilmemiş.</div>`}
+          </div>`;
+        }).join(''),
+    null
+  );
+  const kaydetBtn = document.getElementById('gs-modal-kaydet-btn');
+  if(kaydetBtn) kaydetBtn.style.display = 'none';
 };
 
 /* Son 6 aylık Hazirun cetveli görünümü — seçili aydan geriye 6 ay */
@@ -12834,7 +12868,10 @@ function mkEvrakRender(){
   if(!el) return;
   const {yil, ay} = mkEvrakAktifDonem();
   el.innerHTML = `
-    <div style="margin-bottom:14px;font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları — üstteki yıl/ay seçiciyle değiştirebilirsiniz</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları — üstteki yıl/ay seçiciyle değiştirebilirsiniz</div>
+      <button class="btn btn-sm" onclick="mkGundemGoruntule()"><i class="ti ti-file-description"></i> Gündem Görüntüle</button>
+    </div>
     <div id="mkev-kategoriler"></div>
   `;
   mkEvrakKategorileriYukle();
@@ -12924,6 +12961,37 @@ window.mkEvrakSil = async function(id, dosyaUrl){
     await _supa.from('mk_evrak').delete().eq('id',id);
     await mkEvrakKategorileriYukle();
   }catch(e){ alert('Silme hatası: '+(e.message||e)); }
+};
+
+/* Gündem Görüntüle — o ayki MK toplantı(lar)ının genel gündemini resmi belge görünümünde göster */
+window.mkGundemGoruntule = function(){
+  const {yil, ay} = mkEvrakAktifDonem();
+  const toplantilar = (window.MK_DB?.toplantılar||[]).filter(t=>{
+    if(!t.tarihIso) return false;
+    const d = new Date(t.tarihIso+'T00:00:00');
+    return d.getFullYear()===yil && (d.getMonth()+1)===ay;
+  });
+
+  gsModalAc(`${AY_ADLARI[ay]} ${yil} — Gündem`,
+    !toplantilar.length
+      ? `<div style="padding:24px;text-align:center;color:var(--text2)">Bu ayda toplantı bulunamadı.</div>`
+      : toplantilar.map(t=>{
+          const gundemler = (window.MK_DB?.gundemler||[]).filter(g=>g.toplantıId===t.id && !g.komiteNo);
+          return `
+          <div style="margin-bottom:24px;padding:22px;background:var(--surface2);border-radius:10px">
+            <div style="text-align:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+              <div style="font-size:15px;font-weight:700">${t.ad||'Meslek Komiteleri Toplantısı'}</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:5px">${t.tarih||''}${t.saat?` — Saat: ${t.saat}`:''}${t.bitisSaat?` - ${t.bitisSaat}`:''}</div>
+            </div>
+            ${gundemler.length ? `<ol style="margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px">
+              ${gundemler.map(g=>`<li style="font-size:13px;line-height:1.6">${g.konu}${g.ozet?`<div style="font-size:12px;color:var(--text2);margin-top:3px">${g.ozet}</div>`:''}</li>`).join('')}
+            </ol>` : `<div style="text-align:center;color:var(--text2);font-size:12px;padding:12px">Bu toplantı için gündem maddesi girilmemiş.</div>`}
+          </div>`;
+        }).join(''),
+    null
+  );
+  const kaydetBtn = document.getElementById('gs-modal-kaydet-btn');
+  if(kaydetBtn) kaydetBtn.style.display = 'none';
 };
 
 /* Son 6 aylık Hazirun cetveli görünümü — seçili aydan geriye 6 ay */
