@@ -11837,13 +11837,12 @@ window.mkAcToplantı = function(id){
     <span style="font-size:12px;color:var(--text2)">${t?.tarih||''}</span>`;
 
   /* Komite kartları — MK_UYELER'den gelen komite numaralarına göre dinamik */
-  const komiteNolar = [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+  const komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
   if(!komiteNolar.length){ komiteNolar.push(...Array.from({length:14},(_,i)=>i+1)); }
 
   el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">` +
     komiteNolar.map(kNo=>{
-      const komiteUyeleri = (window.MK_UYELER||[]).filter(u=>u.komite_no===kNo);
-      const uyeSayisi = komiteUyeleri.length;
+      const uyeSayisi = (window._mkKomiteUyeSayisi && window._mkKomiteUyeSayisi[kNo]!==undefined) ? window._mkKomiteUyeSayisi[kNo] : (window.MK_UYELER||[]).filter(u=>u.komite_no===kNo).length;
       return `<div class="yk-card" id="mk-komite-kart-${kNo}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <div>
@@ -11896,7 +11895,7 @@ async function mkKomiteKatilimOzetleriYukle(toplantıId){
     if(tObj) toplantiTarihi = tObj.tarihIso || null;
 
     /* Dinamik komite numaraları */
-    const komiteNolar = [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+    const komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
     if(!komiteNolar.length) for(let i=1;i<=14;i++) komiteNolar.push(i);
 
     for(const kNo of komiteNolar){
@@ -19607,18 +19606,29 @@ let _katilimMevcut = {}; /* uye_id -> {katildi, mazeret, db_id} — DB'den yükl
 /* DB'deki üye listelerini cache'le */
 window.YK_UYELER = [];
 window.MECLIS_UYELER = [];
-window.MK_UYELER = []; /* tüm komiteler */
+window.MK_UYELER = []; /* tüm komiteler (eski, tarihsiz) */
+window._mkTumKomiteNolar = []; /* mk_uyelik'ten gelen GÜNCEL komite no listesi (yeni komiteler dahil) */
+window._mkKomiteUyeSayisi = {}; /* komite_no -> aktif üye sayısı (mk_uyelik'ten) */
 
 async function supaYukleKatilimUyeler(){
   try{
-    const [yk, meclis, mk] = await Promise.all([
+    const [yk, meclis, mk, mkUyelikKomiteler] = await Promise.all([
       _supa.from('yk_uyeler').select('*').eq('aktif',true).order('sira_no'),
       _supa.from('meclis_uyeler').select('*').eq('aktif',true).order('sira_no'),
-      _supa.from('mk_uyeler').select('*').eq('aktif',true).order('komite_no,id')
+      _supa.from('mk_uyeler').select('*').eq('aktif',true).order('komite_no,id'),
+      _supa.from('mk_uyelik').select('komite_no,bitis')
     ]);
     if(yk.data) window.YK_UYELER = yk.data;
     if(meclis.data) window.MECLIS_UYELER = meclis.data;
     if(mk.data) window.MK_UYELER = mk.data;
+    if(mkUyelikKomiteler.data){
+      window._mkTumKomiteNolar = [...new Set(mkUyelikKomiteler.data.map(r=>r.komite_no))].sort((a,b)=>a-b);
+      const sayimMap = {};
+      mkUyelikKomiteler.data.forEach(r=>{
+        if(!r.bitis) sayimMap[r.komite_no] = (sayimMap[r.komite_no]||0) + 1;
+      });
+      window._mkKomiteUyeSayisi = sayimMap;
+    }
     console.log('✓ Katılım üye listeleri yüklendi:', window.YK_UYELER.length, window.MECLIS_UYELER.length, window.MK_UYELER.length);
   }catch(e){ console.warn('Katılım üye yükleme hatası:', e); }
 }
@@ -19908,7 +19918,7 @@ window.katilimOzetAc = function(tur, mod){
   komiteSel.style.display = tur==='mk' ? '' : 'none';
   if(tur==='mk'){
     const mevcutDeger = komiteSel.value;
-    const komiteNolar = [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+    const komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
     komiteSel.innerHTML = '<option value="">Tüm komiteler</option>' +
       komiteNolar.map(k=>`<option value="${k}">${k}. Meslek Komitesi</option>`).join('');
     komiteSel.value = mevcutDeger && komiteNolar.includes(parseInt(mevcutDeger)) ? mevcutDeger : String(komiteNolar[0]||1);
