@@ -12186,10 +12186,12 @@ window.mkGundemEkle = function(toplantıId, mevcutId, komiteNo){
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick= async ()=>{
     const kul=document.getElementById('mk-f-prs').value;
-    if(!kul){ alert('En az bir personel seçin.'); return; }
-    const p=(window.PERSONEL||[]).find(x=>x.kullanici===kul);
-    const gorev=document.getElementById('mk-f-gorev').value.trim()||'—';
-    const atananlar=[{kullanici:kul, ad:p?p.ad+' '+p.soyad:kul, gorev, durum:'planlandi'}];
+    const atananlar=[];
+    if(kul){
+      const p=(window.PERSONEL||[]).find(x=>x.kullanici===kul);
+      const gorev=document.getElementById('mk-f-gorev').value.trim()||'—';
+      atananlar.push({kullanici:kul, ad:p?p.ad+' '+p.soyad:kul, gorev, durum:'planlandi'});
+    }
     document.querySelectorAll('.mk-ek-personel').forEach((sel,i)=>{
       const ekGor=document.querySelectorAll('.mk-ek-gorev')[i];
       if(sel.value && !atananlar.find(a=>a.kullanici===sel.value)){
