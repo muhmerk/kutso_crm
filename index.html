@@ -3312,20 +3312,32 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><div id="yd-placeholder-mk" style="display:inline-flex;align-items:center;flex-shrink:0"></div><select id="ay-sec-mk" onchange="kararAySec('mk',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:center"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
       <div id="mk-metrics" class="mg" style="margin-bottom:14px"></div>
       <div id="mk-yonetici-view" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="mk-karar-baslik">Toplantılar</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <button class="btn btn-sm" onclick="katilimOzetAc('mk','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
-            <button class="btn btn-sm" onclick="katilimOzetAc('mk','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
-            <button class="btn btn-sm" onclick="katilimOzetAc('mk','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
-            <div id="mk-header-btn" style="display:inline-flex">
-              <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()">
-                <i class="ti ti-plus"></i> Toplantı Ekle
-              </button>
+        <!-- Sekmeler: Toplantılar | Evrak Yönetimi -->
+        <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)">
+          <button id="mk-sekme-toplanti" onclick="mkSekmeSec('toplanti')" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid var(--purple);color:var(--purple);font-weight:600;font-size:13px;cursor:pointer;font-family:var(--font)">Toplantılar</button>
+          <button id="mk-sekme-evrak" onclick="mkSekmeSec('evrak')" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-weight:500;font-size:13px;cursor:pointer;font-family:var(--font)">Evrak Yönetimi</button>
+        </div>
+
+        <!-- TOPLANTILAR SEKMESİ -->
+        <div id="mk-toplanti-sekme">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="mk-karar-baslik">Toplantılar</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button class="btn btn-sm" onclick="katilimOzetAc('mk','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
+              <button class="btn btn-sm" onclick="katilimOzetAc('mk','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
+              <button class="btn btn-sm" onclick="katilimOzetAc('mk','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
+              <div id="mk-header-btn" style="display:inline-flex">
+                <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()">
+                  <i class="ti ti-plus"></i> Toplantı Ekle
+                </button>
+              </div>
             </div>
           </div>
+          <div id="mk-karar-list"></div>
         </div>
-        <div id="mk-karar-list"></div>
+
+        <!-- EVRAK YÖNETİMİ SEKMESİ -->
+        <div id="mk-evrak-sekme" style="display:none"></div>
       </div>
       <div id="mk-personel-view" style="display:none">
         <div id="mk-personel-kararlar"></div>
@@ -12773,6 +12785,201 @@ window.meclisHazirun6AyAc = async function(){
   }
 
   // Aya göre grupla
+  const gruplu = {};
+  aylar.forEach(d=>{ gruplu[`${d.yil}-${d.ay}`] = { yilAy:d, evraklar:[] }; });
+  tumEvrak.forEach(e=>{ const k=`${e.yil}-${e.ay}`; if(gruplu[k]) gruplu[k].evraklar.push(e); });
+
+  icerik.innerHTML = aylar.map(d=>{
+    const grup = gruplu[`${d.yil}-${d.ay}`];
+    const evraklar = grup?.evraklar||[];
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:600;color:var(--teal);margin-bottom:6px">${AY_ADLARI[d.ay]} ${d.yil} <span style="color:var(--text2);font-weight:400">(${evraklar.length} evrak)</span></div>
+      ${evraklar.length ? evraklar.map(e=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface2);border-radius:7px;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">
+            <i class="ti ti-file-text" style="font-size:14px;color:var(--text2);flex-shrink:0"></i>
+            <span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.baslik||e.dosya_adi||'Dosya'}</span>
+          </div>
+          <a href="${e.dosya_url}" target="_blank" class="btn btn-sm" style="padding:3px 8px;flex-shrink:0" title="Görüntüle"><i class="ti ti-eye"></i></a>
+        </div>`).join('') : `<div style="font-size:11px;color:var(--text2);padding:4px 10px">Evrak yok</div>`}
+    </div>`;
+  }).join('');
+};
+
+/* ════════════════════════════════════════════════════════
+   MESLEK KOMİTESİ EVRAK YÖNETİMİ (ay bazlı: tebliğ / hazirun)
+   ════════════════════════════════════════════════════════ */
+window._mkSekme = 'toplanti';
+window._mkEvrakDonem = { yil: new Date().getFullYear(), ay: new Date().getMonth()+1 };
+const MK_EVRAK_BUCKET = 'mk-evraklar';
+const MK_EVRAK_KATEGORILER = [
+  { key:'teblig',   ad:'Tebliğ ve Mail Kanıtları', ikon:'ti-mail-forward',    renk:'var(--blue)', aciklama:'Üyelere gönderilen tebliğ ve mail kanıtları' },
+  { key:'hazirun',  ad:'Hazirun Cetveli',          ikon:'ti-clipboard-list', renk:'var(--teal)', aciklama:'İmzalı hazirun ve tebliğ kâğıtları' }
+];
+
+window.mkSekmeSec = function(sekme){
+  window._mkSekme = sekme;
+  const tBtn = document.getElementById('mk-sekme-toplanti');
+  const eBtn = document.getElementById('mk-sekme-evrak');
+  const tView = document.getElementById('mk-toplanti-sekme');
+  const eView = document.getElementById('mk-evrak-sekme');
+  if(sekme==='evrak'){
+    tBtn.style.color='var(--text2)'; tBtn.style.fontWeight='500'; tBtn.style.borderBottom='2px solid transparent';
+    eBtn.style.color='var(--purple)'; eBtn.style.fontWeight='600'; eBtn.style.borderBottom='2px solid var(--purple)';
+    tView.style.display='none'; eView.style.display='block';
+    mkEvrakRender();
+  } else {
+    eBtn.style.color='var(--text2)'; eBtn.style.fontWeight='500'; eBtn.style.borderBottom='2px solid transparent';
+    tBtn.style.color='var(--purple)'; tBtn.style.fontWeight='600'; tBtn.style.borderBottom='2px solid var(--purple)';
+    eView.style.display='none'; tView.style.display='block';
+  }
+};
+
+function mkEvrakRender(){
+  const el = document.getElementById('mk-evrak-sekme');
+  if(!el) return;
+  const {yil, ay} = window._mkEvrakDonem;
+  const buYil = new Date().getFullYear();
+  const yillar = [];
+  for(let y=buYil+1; y>=2022; y--) yillar.push(y);
+
+  el.innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+      <label style="font-size:12px;color:var(--text2)">Dönem:</label>
+      <select id="mkev-yil" class="yk-inp" style="height:32px;font-size:12px;width:auto" onchange="mkEvrakDonemSec()">
+        ${yillar.map(y=>`<option value="${y}" ${y===yil?'selected':''}>${y}</option>`).join('')}
+      </select>
+      <select id="mkev-ay" class="yk-inp" style="height:32px;font-size:12px;width:auto" onchange="mkEvrakDonemSec()">
+        ${AY_ADLARI.map((a,i)=>i===0?'':`<option value="${i}" ${i===ay?'selected':''}>${a}</option>`).join('')}
+      </select>
+      <span style="font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları</span>
+    </div>
+    <div id="mkev-kategoriler"></div>
+  `;
+  mkEvrakKategorileriYukle();
+}
+
+window.mkEvrakDonemSec = function(){
+  window._mkEvrakDonem.yil = parseInt(document.getElementById('mkev-yil').value);
+  window._mkEvrakDonem.ay  = parseInt(document.getElementById('mkev-ay').value);
+  mkEvrakKategorileriYukle();
+};
+
+async function mkEvrakKategorileriYukle(){
+  const cont = document.getElementById('mkev-kategoriler');
+  if(!cont) return;
+  const {yil, ay} = window._mkEvrakDonem;
+  cont.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite"></i></div>';
+
+  let evraklar = [];
+  try{
+    const { data } = await _supa.from('mk_evrak').select('*').eq('yil',yil).eq('ay',ay).order('created_at',{ascending:false});
+    evraklar = data||[];
+  }catch(e){ console.warn('MK evrak yükleme:', e); }
+
+  cont.innerHTML = MK_EVRAK_KATEGORILER.map(kat=>{
+    const katEvrak = evraklar.filter(e=>e.kategori===kat.key);
+    return `
+    <div class="card" style="margin-bottom:14px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="ti ${kat.ikon}" style="font-size:18px;color:${kat.renk}"></i>
+          <div>
+            <div style="font-size:13px;font-weight:600">${kat.ad}</div>
+            <div style="font-size:11px;color:var(--text2)">${kat.aciklama}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          ${kat.key==='hazirun' ? `<button class="btn btn-sm" onclick="mkHazirun6AyAc()"><i class="ti ti-calendar-stats"></i> Son 6 Ay</button>` : ''}
+          <label class="btn btn-p btn-sm" style="cursor:pointer;margin:0">
+            <i class="ti ti-upload"></i> Dosya Ekle
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="mkEvrakYukle(event,'${kat.key}')">
+          </label>
+        </div>
+      </div>
+      <div style="padding:8px 16px">
+        ${katEvrak.length ? katEvrak.map(e=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0">
+              <i class="ti ti-file-text" style="font-size:15px;color:var(--text2);flex-shrink:0"></i>
+              <span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.baslik||e.dosya_adi||'Dosya'}</span>
+            </div>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <a href="${e.dosya_url}" target="_blank" class="btn btn-sm" style="padding:3px 8px" title="Görüntüle"><i class="ti ti-eye"></i></a>
+              <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="mkEvrakSil('${e.id}','${(e.dosya_url||'').replace(/'/g,"\\'")}')" title="Sil"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>
+        `).join('') : '<div style="padding:12px;text-align:center;color:var(--text2);font-size:12px">Bu kategoride evrak yok</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.mkEvrakYukle = async function(event, kategori){
+  const file = event.target.files[0];
+  if(!file) return;
+  const {yil, ay} = window._mkEvrakDonem;
+  const label = event.target.closest('label');
+  const eskiHtml = label ? label.innerHTML : '';
+  if(label) label.innerHTML = '<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Yükleniyor...';
+  try{
+    const temizAd = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const path = `${yil}/${ay}/${kategori}/${Date.now()}_${temizAd}`;
+    const { error: upErr } = await _supa.storage.from(MK_EVRAK_BUCKET).upload(path, file, {upsert:false});
+    if(upErr) throw upErr;
+    const { data: urlData } = _supa.storage.from(MK_EVRAK_BUCKET).getPublicUrl(path);
+    await _supa.from('mk_evrak').insert([{
+      yil, ay, kategori, baslik:file.name, dosya_url:urlData.publicUrl, dosya_adi:file.name
+    }]);
+    await mkEvrakKategorileriYukle();
+  }catch(e){
+    alert('Yükleme hatası: '+(e.message||e));
+    if(label) label.innerHTML = eskiHtml;
+  }
+  event.target.value='';
+};
+
+window.mkEvrakSil = async function(id, dosyaUrl){
+  if(!confirm('Bu evrak silinecek. Emin misiniz?')) return;
+  try{
+    if(dosyaUrl && dosyaUrl.includes('/'+MK_EVRAK_BUCKET+'/')){
+      const path = dosyaUrl.split('/'+MK_EVRAK_BUCKET+'/')[1];
+      if(path) await _supa.storage.from(MK_EVRAK_BUCKET).remove([decodeURIComponent(path)]);
+    }
+    await _supa.from('mk_evrak').delete().eq('id',id);
+    await mkEvrakKategorileriYukle();
+  }catch(e){ alert('Silme hatası: '+(e.message||e)); }
+};
+
+/* Son 6 aylık Hazirun cetveli görünümü — seçili aydan geriye 6 ay */
+window.mkHazirun6AyAc = async function(){
+  const {yil, ay} = window._mkEvrakDonem;
+  const aylar = [];
+  for(let i=0;i<6;i++){
+    let y=yil, a=ay-i;
+    while(a<1){ a+=12; y-=1; }
+    aylar.push({yil:y, ay:a});
+  }
+  gsModalAc(`Son 6 Aylık Hazirun Cetveli — ${AY_ADLARI[ay]} ${yil}'den geriye`, '<div id="mkev-6ay-icerik" style="padding:20px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite"></i></div>', null);
+  const kaydetBtn = document.getElementById('gs-modal-kaydet-btn');
+  if(kaydetBtn) kaydetBtn.style.display = 'none';
+
+  let tumEvrak = [];
+  try{
+    for(const d of aylar){
+      const { data } = await _supa.from('mk_evrak').select('*').eq('yil',d.yil).eq('ay',d.ay).eq('kategori','hazirun').order('created_at',{ascending:false});
+      (data||[]).forEach(e=>tumEvrak.push({...e, _ayAdi:AY_ADLARI[d.ay], _yil:d.yil}));
+    }
+  }catch(e){ console.warn('6 aylık MK hazirun yükleme:', e); }
+
+  const icerik = document.getElementById('mkev-6ay-icerik');
+  if(!icerik) return;
+
+  if(!tumEvrak.length){
+    icerik.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text2)">Bu 6 aylık dönemde hazirun evrakı bulunamadı.</div>`;
+    return;
+  }
+
   const gruplu = {};
   aylar.forEach(d=>{ gruplu[`${d.yil}-${d.ay}`] = { yilAy:d, evraklar:[] }; });
   tumEvrak.forEach(e=>{ const k=`${e.yil}-${e.ay}`; if(gruplu[k]) gruplu[k].evraklar.push(e); });
