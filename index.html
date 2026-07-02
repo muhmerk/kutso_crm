@@ -18651,7 +18651,11 @@ async function gsRenderMKAsync(){
     komiteNolar = [...new Set((data||[]).map(r=>r.komite_no))].sort((a,b)=>a-b);
   }catch(_){}
   if(!komiteNolar.length) komiteNolar = Array.from({length:14},(_,i)=>i+1);
-  if(!komiteNolar.includes(_gsMkSeciliKomite)) _gsMkSeciliKomite = komiteNolar[0];
+  // Yeni oluşturulmuş ama henüz üyesi olmayan komite varsa listeye ekle (kaybolmasın)
+  if(_gsMkSeciliKomite && !komiteNolar.includes(_gsMkSeciliKomite)){
+    komiteNolar.push(_gsMkSeciliKomite);
+    komiteNolar.sort((a,b)=>a-b);
+  }
 
   // Seçili komitenin üyelik kayıtları
   const kayitlar = await gsYukleKomiteUyelikleri(_gsMkSeciliKomite, donemId);
@@ -18684,7 +18688,8 @@ async function gsRenderMKAsync(){
 
   // Komite sekmeleri
   const komiteTabs = komiteNolar.map(kNo=>`
-    <button onclick="gsMkKomiteSec(${kNo})" style="padding:5px 12px;border-radius:20px;border:1px solid ${kNo===_gsMkSeciliKomite?'var(--purple)':'var(--border)'};background:${kNo===_gsMkSeciliKomite?'var(--purple)':'transparent'};color:${kNo===_gsMkSeciliKomite?'#fff':'var(--text2)'};cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)">${kNo}. Komite</button>`).join('');
+    <button onclick="gsMkKomiteSec(${kNo})" style="padding:5px 12px;border-radius:20px;border:1px solid ${kNo===_gsMkSeciliKomite?'var(--purple)':'var(--border)'};background:${kNo===_gsMkSeciliKomite?'var(--purple)':'transparent'};color:${kNo===_gsMkSeciliKomite?'#fff':'var(--text2)'};cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)">${kNo}. Komite</button>`).join('')
+    + `<button onclick="gsMkYeniKomite()" style="padding:5px 12px;border-radius:20px;border:1px dashed var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)"><i class="ti ti-plus" style="font-size:11px"></i> Yeni Komite</button>`;
 
   // Aktif üye satırları
   const aktifSatirlar = aktifler.map(r=>{
@@ -18787,6 +18792,44 @@ function gsFmtTarih(d){
 }
 
 window.gsMkKomiteSec = function(kNo){ _gsMkSeciliKomite=kNo; gsRenderMK(); };
+
+/* Yeni komite oluştur — komite numarası + başlangıç tarihi belirlenir,
+   bu tarih o komiteye eklenecek üyelerde varsayılan olarak önerilir */
+window._gsMkKomiteBaslangic = {};
+window.gsMkYeniKomite = function(){
+  const donemId = window._gsMkSeciliDonem;
+  const donem = window.MK_DONEMLER.find(d=>d.id===donemId);
+  const bugun = new Date().toISOString().slice(0,10);
+  gsModalAc('Yeni Meslek Komitesi',
+    `<div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Komite Numarası *</label>
+        <input id="gs-f-yeni-komite-no" type="number" min="1" class="yk-inp" placeholder="ör: 15">
+      </div>
+      <div><label class="yk-lbl">Bu Komitenin Göreve Başlama Tarihi *</label>
+        <input id="gs-f-yeni-komite-tarih" type="date" class="yk-inp" value="${bugun}">
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">Genel dönem ${donem?gsFmtTarih(donem.baslangic):''} tarihinde başlamış olsa bile, bu komite sonradan farklı bir tarihte göreve başlamış olabilir. Buraya gireceğiniz tarih, üye eklerken varsayılan olarak önerilecek.</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:9px 11px;font-size:11px;color:var(--text2)">
+        <i class="ti ti-info-circle"></i> Komiteyi oluşturduktan sonra "Üye Ekle" ile üyelerini (başkan, yardımcı, asıl/yedek üyeler) ekleyebilirsiniz — başlangıç tarihi burada girdiğiniz tarihle otomatik dolu gelecek, isterseniz üye bazında değiştirebilirsiniz.
+      </div>
+    </div>`,
+    async ()=>{
+      const no = parseInt(document.getElementById('gs-f-yeni-komite-no')?.value);
+      const tarih = document.getElementById('gs-f-yeni-komite-tarih')?.value;
+      if(!no || no<1){ alert('Geçerli bir komite numarası girin.'); return; }
+      if(!tarih){ alert('Başlangıç tarihi zorunludur.'); return; }
+      // Zaten var mı kontrol et
+      try{
+        const { data } = await _supa.from('mk_uyelik').select('id').eq('komite_no', no).limit(1);
+        if(data && data.length){ alert(`${no}. Komite zaten mevcut.`); return; }
+      }catch(_){}
+      window._gsMkKomiteBaslangic[no] = tarih;
+      _gsMkSeciliKomite = no;
+      gsModalKapat();
+      gsRenderMK();
+    }
+  );
+};
 window.gsMkDonemSec = function(donemId){ window._gsMkSeciliDonem=donemId; gsRenderMK(); };
 
 /* ── GENEL: ÜYE SİL ── */
@@ -18909,6 +18952,8 @@ window.gsMkUyelikEkle = function(komiteNo){
   const donemId = window._gsMkSeciliDonem;
   const donem = window.MK_DONEMLER.find(d=>d.id===donemId);
   if(!donem){ alert('Önce bir dönem seçin veya oluşturun.'); return; }
+  // Komiteye özel bir başlangıç tarihi belirlenmişse (yeni komite oluştururken) onu kullan, yoksa dönem başlangıcını
+  const varsayilanTarih = (window._gsMkKomiteBaslangic && window._gsMkKomiteBaslangic[komiteNo]) || (donem.baslangic||'').slice(0,10);
   gsModalAc(`${komiteNo}. Komite — Üye Ekle`,
     `<div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Ad Soyad *</label><input id="gs-f-ad" class="yk-inp" placeholder="Adı ve Soyadı..."></div>
@@ -18926,14 +18971,14 @@ window.gsMkUyelikEkle = function(komiteNo){
         </select>
       </div>
       <div><label class="yk-lbl">Göreve Başlama Tarihi</label>
-        <input id="gs-f-baslangic" type="date" class="yk-inp" value="${(donem.baslangic||'').slice(0,10)}">
+        <input id="gs-f-baslangic" type="date" class="yk-inp" value="${varsayilanTarih}">
       </div>
     </div>`,
     async ()=>{
       const adSoyad = document.getElementById('gs-f-ad')?.value.trim();
       const rol = document.getElementById('gs-f-rol')?.value||'uye';
       const ay = document.getElementById('gs-f-ay')?.value||'asil';
-      const baslangic = document.getElementById('gs-f-baslangic')?.value||donem.baslangic;
+      const baslangic = document.getElementById('gs-f-baslangic')?.value||varsayilanTarih;
       if(!adSoyad){ alert('Ad Soyad zorunludur.'); return; }
       await _supa.from('mk_uyelik').insert([{
         donem_id:donemId, komite_no:komiteNo, ad_soyad:adSoyad,
