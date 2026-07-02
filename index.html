@@ -3336,19 +3336,31 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><div id="yd-placeholder-meclis" style="display:inline-flex;align-items:center;flex-shrink:0"></div><select id="ay-sec-meclis" onchange="kararAySec('meclis',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:center"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
       <div id="meclis-metrics" class="mg" style="margin-bottom:14px"></div>
       <div id="meclis-yonetici-view" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="meclis-karar-baslik">Toplantılar</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <button class="btn btn-sm" onclick="katilimOzetAc('meclis','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
-            <button class="btn btn-sm" onclick="katilimOzetAc('meclis','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
-            <div id="meclis-header-btn" style="display:inline-flex">
-              <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()">
-                <i class="ti ti-plus"></i> Toplantı Ekle
-              </button>
+        <!-- Sekmeler: Toplantılar | Evrak Yönetimi -->
+        <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)">
+          <button id="meclis-sekme-toplanti" onclick="meclisSekmeSec('toplanti')" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid var(--blue);color:var(--blue);font-weight:600;font-size:13px;cursor:pointer;font-family:var(--font)">Toplantılar</button>
+          <button id="meclis-sekme-evrak" onclick="meclisSekmeSec('evrak')" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-weight:500;font-size:13px;cursor:pointer;font-family:var(--font)">Evrak Yönetimi</button>
+        </div>
+
+        <!-- TOPLANTILAR SEKMESİ -->
+        <div id="meclis-toplanti-sekme">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="meclis-karar-baslik">Toplantılar</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button class="btn btn-sm" onclick="katilimOzetAc('meclis','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
+              <button class="btn btn-sm" onclick="katilimOzetAc('meclis','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
+              <div id="meclis-header-btn" style="display:inline-flex">
+                <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()">
+                  <i class="ti ti-plus"></i> Toplantı Ekle
+                </button>
+              </div>
             </div>
           </div>
+          <div id="meclis-karar-list"></div>
         </div>
-        <div id="meclis-karar-list"></div>
+
+        <!-- EVRAK YÖNETİMİ SEKMESİ -->
+        <div id="meclis-evrak-sekme" style="display:none"></div>
       </div>
       <div id="meclis-personel-view" style="display:none">
         <div id="meclis-personel-kararlar"></div>
@@ -12441,6 +12453,153 @@ function meclisRender(){
   else meclisRenderPersonel();
   setTimeout(function(){ if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle(); }, 50);
 }
+
+/* ════════════════════════════════════════════════════════
+   MECLİS EVRAK YÖNETİMİ (ay bazlı: divan / tebliğ / hazirun)
+   ════════════════════════════════════════════════════════ */
+window._meclisSekme = 'toplanti';
+window._meclisEvrakDonem = { yil: new Date().getFullYear(), ay: new Date().getMonth()+1 };
+const MECLIS_EVRAK_BUCKET = 'meclis-evraklar';
+const MECLIS_EVRAK_KATEGORILER = [
+  { key:'divan',    ad:'Divan Kararları',        ikon:'ti-gavel',        renk:'var(--purple)', aciklama:'İmzalı-taranmış divan kararları' },
+  { key:'teblig',   ad:'Tebliğ ve Mail Kanıtları', ikon:'ti-mail-forward', renk:'var(--blue)',   aciklama:'Üyelere gönderilen tebliğ ve mail kanıtları' },
+  { key:'hazirun',  ad:'Hazirun Cetveli',        ikon:'ti-clipboard-list', renk:'var(--teal)',  aciklama:'İmzalı hazirun ve tebliğ kâğıtları' }
+];
+
+window.meclisSekmeSec = function(sekme){
+  window._meclisSekme = sekme;
+  const tBtn = document.getElementById('meclis-sekme-toplanti');
+  const eBtn = document.getElementById('meclis-sekme-evrak');
+  const tView = document.getElementById('meclis-toplanti-sekme');
+  const eView = document.getElementById('meclis-evrak-sekme');
+  if(sekme==='evrak'){
+    tBtn.style.cssText = tBtn.style.cssText.replace(/border-bottom:2px solid var\(--blue\)/,'border-bottom:2px solid transparent').replace('var(--blue);font-weight:600','var(--text2);font-weight:500');
+    tBtn.style.color='var(--text2)'; tBtn.style.fontWeight='500'; tBtn.style.borderBottom='2px solid transparent';
+    eBtn.style.color='var(--blue)'; eBtn.style.fontWeight='600'; eBtn.style.borderBottom='2px solid var(--blue)';
+    tView.style.display='none'; eView.style.display='block';
+    meclisEvrakRender();
+  } else {
+    eBtn.style.color='var(--text2)'; eBtn.style.fontWeight='500'; eBtn.style.borderBottom='2px solid transparent';
+    tBtn.style.color='var(--blue)'; tBtn.style.fontWeight='600'; tBtn.style.borderBottom='2px solid var(--blue)';
+    eView.style.display='none'; tView.style.display='block';
+  }
+};
+
+const AY_ADLARI = ['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+function meclisEvrakRender(){
+  const el = document.getElementById('meclis-evrak-sekme');
+  if(!el) return;
+  const {yil, ay} = window._meclisEvrakDonem;
+  const buYil = new Date().getFullYear();
+  const yillar = [];
+  for(let y=buYil+1; y>=2022; y--) yillar.push(y);
+
+  el.innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+      <label style="font-size:12px;color:var(--text2)">Dönem:</label>
+      <select id="mev-yil" class="yk-inp" style="height:32px;font-size:12px;width:auto" onchange="meclisEvrakDonemSec()">
+        ${yillar.map(y=>`<option value="${y}" ${y===yil?'selected':''}>${y}</option>`).join('')}
+      </select>
+      <select id="mev-ay" class="yk-inp" style="height:32px;font-size:12px;width:auto" onchange="meclisEvrakDonemSec()">
+        ${AY_ADLARI.map((a,i)=>i===0?'':`<option value="${i}" ${i===ay?'selected':''}>${a}</option>`).join('')}
+      </select>
+      <span style="font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları</span>
+    </div>
+    <div id="mev-kategoriler"></div>
+  `;
+  meclisEvrakKategorileriYukle();
+}
+
+window.meclisEvrakDonemSec = function(){
+  window._meclisEvrakDonem.yil = parseInt(document.getElementById('mev-yil').value);
+  window._meclisEvrakDonem.ay  = parseInt(document.getElementById('mev-ay').value);
+  meclisEvrakKategorileriYukle();
+};
+
+async function meclisEvrakKategorileriYukle(){
+  const cont = document.getElementById('mev-kategoriler');
+  if(!cont) return;
+  const {yil, ay} = window._meclisEvrakDonem;
+  cont.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite"></i></div>';
+
+  let evraklar = [];
+  try{
+    const { data } = await _supa.from('meclis_evrak').select('*').eq('yil',yil).eq('ay',ay).order('created_at',{ascending:false});
+    evraklar = data||[];
+  }catch(e){ console.warn('Evrak yükleme:', e); }
+
+  cont.innerHTML = MECLIS_EVRAK_KATEGORILER.map(kat=>{
+    const katEvrak = evraklar.filter(e=>e.kategori===kat.key);
+    return `
+    <div class="card" style="margin-bottom:14px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="ti ${kat.ikon}" style="font-size:18px;color:${kat.renk}"></i>
+          <div>
+            <div style="font-size:13px;font-weight:600">${kat.ad}</div>
+            <div style="font-size:11px;color:var(--text2)">${kat.aciklama}</div>
+          </div>
+        </div>
+        <label class="btn btn-p btn-sm" style="cursor:pointer;margin:0">
+          <i class="ti ti-upload"></i> Dosya Ekle
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="meclisEvrakYukle(event,'${kat.key}')">
+        </label>
+      </div>
+      <div style="padding:8px 16px">
+        ${katEvrak.length ? katEvrak.map(e=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0">
+              <i class="ti ti-file-text" style="font-size:15px;color:var(--text2);flex-shrink:0"></i>
+              <span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.baslik||e.dosya_adi||'Dosya'}</span>
+            </div>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <a href="${e.dosya_url}" target="_blank" class="btn btn-sm" style="padding:3px 8px" title="Görüntüle"><i class="ti ti-eye"></i></a>
+              <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="meclisEvrakSil('${e.id}','${(e.dosya_url||'').replace(/'/g,"\\'")}')" title="Sil"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>
+        `).join('') : '<div style="padding:12px;text-align:center;color:var(--text2);font-size:12px">Bu kategoride evrak yok</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.meclisEvrakYukle = async function(event, kategori){
+  const file = event.target.files[0];
+  if(!file) return;
+  const {yil, ay} = window._meclisEvrakDonem;
+  const label = event.target.closest('label');
+  const eskiHtml = label ? label.innerHTML : '';
+  if(label) label.innerHTML = '<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Yükleniyor...';
+  try{
+    const temizAd = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const path = `${yil}/${ay}/${kategori}/${Date.now()}_${temizAd}`;
+    const { error: upErr } = await _supa.storage.from(MECLIS_EVRAK_BUCKET).upload(path, file, {upsert:false});
+    if(upErr) throw upErr;
+    const { data: urlData } = _supa.storage.from(MECLIS_EVRAK_BUCKET).getPublicUrl(path);
+    await _supa.from('meclis_evrak').insert([{
+      yil, ay, kategori, baslik:file.name, dosya_url:urlData.publicUrl, dosya_adi:file.name
+    }]);
+    await meclisEvrakKategorileriYukle();
+  }catch(e){
+    alert('Yükleme hatası: '+(e.message||e));
+    if(label) label.innerHTML = eskiHtml;
+  }
+  event.target.value='';
+};
+
+window.meclisEvrakSil = async function(id, dosyaUrl){
+  if(!confirm('Bu evrak silinecek. Emin misiniz?')) return;
+  try{
+    // Storage'dan sil
+    if(dosyaUrl && dosyaUrl.includes('/'+MECLIS_EVRAK_BUCKET+'/')){
+      const path = dosyaUrl.split('/'+MECLIS_EVRAK_BUCKET+'/')[1];
+      if(path) await _supa.storage.from(MECLIS_EVRAK_BUCKET).remove([decodeURIComponent(path)]);
+    }
+    await _supa.from('meclis_evrak').delete().eq('id',id);
+    await meclisEvrakKategorileriYukle();
+  }catch(e){ alert('Silme hatası: '+(e.message||e)); }
+};
 
 function meclisRenderMetrik(){
   const mYF=window._meclisYilFilter;
