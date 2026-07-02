@@ -12607,13 +12607,20 @@ function meclisRender(){
    MECLİS EVRAK YÖNETİMİ (ay bazlı: divan / tebliğ / hazirun)
    ════════════════════════════════════════════════════════ */
 window._meclisSekme = 'toplanti';
-window._meclisEvrakDonem = { yil: new Date().getFullYear(), ay: new Date().getMonth()+1 };
 const MECLIS_EVRAK_BUCKET = 'meclis-evraklar';
 const MECLIS_EVRAK_KATEGORILER = [
   { key:'divan',    ad:'Divan Kararları',        ikon:'ti-gavel',        renk:'var(--purple)', aciklama:'İmzalı-taranmış divan kararları' },
   { key:'teblig',   ad:'Tebliğ ve Mail Kanıtları', ikon:'ti-mail-forward', renk:'var(--blue)',   aciklama:'Üyelere gönderilen tebliğ ve mail kanıtları' },
   { key:'hazirun',  ad:'Hazirun Cetveli',        ikon:'ti-clipboard-list', renk:'var(--teal)',  aciklama:'İmzalı hazirun ve tebliğ kâğıtları' }
 ];
+
+/* Üstteki paylaşılan yıl/ay seçiciden (Toplantılar ile ortak) dönem bilgisini al */
+function meclisEvrakAktifDonem(){
+  const yilSet = window._meclisYilFilter;
+  const yil = (yilSet && yilSet.size) ? Math.max(...Array.from(yilSet)) : new Date().getFullYear();
+  const ay = (window._kararAy && window._kararAy.meclis) || (new Date().getMonth()+1);
+  return { yil, ay };
+}
 
 window.meclisSekmeSec = function(sekme){
   window._meclisSekme = sekme;
@@ -12622,7 +12629,6 @@ window.meclisSekmeSec = function(sekme){
   const tView = document.getElementById('meclis-toplanti-sekme');
   const eView = document.getElementById('meclis-evrak-sekme');
   if(sekme==='evrak'){
-    tBtn.style.cssText = tBtn.style.cssText.replace(/border-bottom:2px solid var\(--blue\)/,'border-bottom:2px solid transparent').replace('var(--blue);font-weight:600','var(--text2);font-weight:500');
     tBtn.style.color='var(--text2)'; tBtn.style.fontWeight='500'; tBtn.style.borderBottom='2px solid transparent';
     eBtn.style.color='var(--blue)'; eBtn.style.fontWeight='600'; eBtn.style.borderBottom='2px solid var(--blue)';
     tView.style.display='none'; eView.style.display='block';
@@ -12639,37 +12645,18 @@ const AY_ADLARI = ['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz'
 function meclisEvrakRender(){
   const el = document.getElementById('meclis-evrak-sekme');
   if(!el) return;
-  const {yil, ay} = window._meclisEvrakDonem;
-  const buYil = new Date().getFullYear();
-  const yillar = [];
-  for(let y=buYil+1; y>=2022; y--) yillar.push(y);
-
+  const {yil, ay} = meclisEvrakAktifDonem();
   el.innerHTML = `
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
-      <label style="font-size:12px;color:var(--text2)">Dönem:</label>
-      <select id="mev-yil" class="yk-inp" style="height:32px;font-size:12px;width:auto" onchange="meclisEvrakDonemSec()">
-        ${yillar.map(y=>`<option value="${y}" ${y===yil?'selected':''}>${y}</option>`).join('')}
-      </select>
-      <select id="mev-ay" class="yk-inp" style="height:32px;font-size:12px;width:auto" onchange="meclisEvrakDonemSec()">
-        ${AY_ADLARI.map((a,i)=>i===0?'':`<option value="${i}" ${i===ay?'selected':''}>${a}</option>`).join('')}
-      </select>
-      <span style="font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları</span>
-    </div>
+    <div style="margin-bottom:14px;font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları — üstteki yıl/ay seçiciyle değiştirebilirsiniz</div>
     <div id="mev-kategoriler"></div>
   `;
   meclisEvrakKategorileriYukle();
 }
 
-window.meclisEvrakDonemSec = function(){
-  window._meclisEvrakDonem.yil = parseInt(document.getElementById('mev-yil').value);
-  window._meclisEvrakDonem.ay  = parseInt(document.getElementById('mev-ay').value);
-  meclisEvrakKategorileriYukle();
-};
-
 async function meclisEvrakKategorileriYukle(){
   const cont = document.getElementById('mev-kategoriler');
   if(!cont) return;
-  const {yil, ay} = window._meclisEvrakDonem;
+  const {yil, ay} = meclisEvrakAktifDonem();
   cont.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite"></i></div>';
 
   let evraklar = [];
@@ -12719,7 +12706,7 @@ async function meclisEvrakKategorileriYukle(){
 window.meclisEvrakYukle = async function(event, kategori){
   const file = event.target.files[0];
   if(!file) return;
-  const {yil, ay} = window._meclisEvrakDonem;
+  const {yil, ay} = meclisEvrakAktifDonem();
   const label = event.target.closest('label');
   const eskiHtml = label ? label.innerHTML : '';
   if(label) label.innerHTML = '<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Yükleniyor...';
@@ -12755,7 +12742,7 @@ window.meclisEvrakSil = async function(id, dosyaUrl){
 
 /* Son 6 aylık Hazirun cetveli görünümü — seçili aydan geriye 6 ay */
 window.meclisHazirun6AyAc = async function(){
-  const {yil, ay} = window._meclisEvrakDonem;
+  const {yil, ay} = meclisEvrakAktifDonem();
   // Seçili aydan geriye 6 ay (yıl geçişini de hesaba katarak)
   const aylar = [];
   for(let i=0;i<6;i++){
@@ -12810,12 +12797,19 @@ window.meclisHazirun6AyAc = async function(){
    MESLEK KOMİTESİ EVRAK YÖNETİMİ (ay bazlı: tebliğ / hazirun)
    ════════════════════════════════════════════════════════ */
 window._mkSekme = 'toplanti';
-window._mkEvrakDonem = { yil: new Date().getFullYear(), ay: new Date().getMonth()+1 };
 const MK_EVRAK_BUCKET = 'mk-evraklar';
 const MK_EVRAK_KATEGORILER = [
   { key:'teblig',   ad:'Tebliğ ve Mail Kanıtları', ikon:'ti-mail-forward',    renk:'var(--blue)', aciklama:'Üyelere gönderilen tebliğ ve mail kanıtları' },
   { key:'hazirun',  ad:'Hazirun Cetveli',          ikon:'ti-clipboard-list', renk:'var(--teal)', aciklama:'İmzalı hazirun ve tebliğ kâğıtları' }
 ];
+
+/* Üstteki paylaşılan yıl/ay seçiciden (Toplantılar ile ortak) dönem bilgisini al */
+function mkEvrakAktifDonem(){
+  const yilSet = window._mkYilFilter;
+  const yil = (yilSet && yilSet.size) ? Math.max(...Array.from(yilSet)) : new Date().getFullYear();
+  const ay = (window._kararAy && window._kararAy.mk) || (new Date().getMonth()+1);
+  return { yil, ay };
+}
 
 window.mkSekmeSec = function(sekme){
   window._mkSekme = sekme;
@@ -12838,37 +12832,18 @@ window.mkSekmeSec = function(sekme){
 function mkEvrakRender(){
   const el = document.getElementById('mk-evrak-sekme');
   if(!el) return;
-  const {yil, ay} = window._mkEvrakDonem;
-  const buYil = new Date().getFullYear();
-  const yillar = [];
-  for(let y=buYil+1; y>=2022; y--) yillar.push(y);
-
+  const {yil, ay} = mkEvrakAktifDonem();
   el.innerHTML = `
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
-      <label style="font-size:12px;color:var(--text2)">Dönem:</label>
-      <select id="mkev-yil" class="yk-inp" style="height:32px;font-size:12px;width:auto" onchange="mkEvrakDonemSec()">
-        ${yillar.map(y=>`<option value="${y}" ${y===yil?'selected':''}>${y}</option>`).join('')}
-      </select>
-      <select id="mkev-ay" class="yk-inp" style="height:32px;font-size:12px;width:auto" onchange="mkEvrakDonemSec()">
-        ${AY_ADLARI.map((a,i)=>i===0?'':`<option value="${i}" ${i===ay?'selected':''}>${a}</option>`).join('')}
-      </select>
-      <span style="font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları</span>
-    </div>
+    <div style="margin-bottom:14px;font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları — üstteki yıl/ay seçiciyle değiştirebilirsiniz</div>
     <div id="mkev-kategoriler"></div>
   `;
   mkEvrakKategorileriYukle();
 }
 
-window.mkEvrakDonemSec = function(){
-  window._mkEvrakDonem.yil = parseInt(document.getElementById('mkev-yil').value);
-  window._mkEvrakDonem.ay  = parseInt(document.getElementById('mkev-ay').value);
-  mkEvrakKategorileriYukle();
-};
-
 async function mkEvrakKategorileriYukle(){
   const cont = document.getElementById('mkev-kategoriler');
   if(!cont) return;
-  const {yil, ay} = window._mkEvrakDonem;
+  const {yil, ay} = mkEvrakAktifDonem();
   cont.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite"></i></div>';
 
   let evraklar = [];
@@ -12918,7 +12893,7 @@ async function mkEvrakKategorileriYukle(){
 window.mkEvrakYukle = async function(event, kategori){
   const file = event.target.files[0];
   if(!file) return;
-  const {yil, ay} = window._mkEvrakDonem;
+  const {yil, ay} = mkEvrakAktifDonem();
   const label = event.target.closest('label');
   const eskiHtml = label ? label.innerHTML : '';
   if(label) label.innerHTML = '<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Yükleniyor...';
@@ -12953,7 +12928,7 @@ window.mkEvrakSil = async function(id, dosyaUrl){
 
 /* Son 6 aylık Hazirun cetveli görünümü — seçili aydan geriye 6 ay */
 window.mkHazirun6AyAc = async function(){
-  const {yil, ay} = window._mkEvrakDonem;
+  const {yil, ay} = mkEvrakAktifDonem();
   const aylar = [];
   for(let i=0;i<6;i++){
     let y=yil, a=ay-i;
@@ -14297,8 +14272,14 @@ window._kararAy = { yk: 0, mk: 0, meclis: 0, gorev: 0, ziyaret: 0 }; /* 0 = tüm
 window.kararAySec = function(tip, ay){
   window._kararAy[tip] = parseInt(ay) || 0;
   if(tip==='yk')     { if(window.ykRender) window.ykRender(); else ykRender(); }
-  else if(tip==='mk')      { if(window.mkRender) window.mkRender(); }
-  else if(tip==='meclis')  { if(window.meclisRender) window.meclisRender(); }
+  else if(tip==='mk')      {
+    if(window.mkRender) window.mkRender();
+    if(window._mkSekme==='evrak' && typeof mkEvrakKategorileriYukle==='function') mkEvrakKategorileriYukle();
+  }
+  else if(tip==='meclis')  {
+    if(window.meclisRender) window.meclisRender();
+    if(window._meclisSekme==='evrak' && typeof meclisEvrakKategorileriYukle==='function') meclisEvrakKategorileriYukle();
+  }
   else if(tip==='gorev')   { if(window.gorevRender) window.gorevRender(); }
   else if(tip==='ziyaret') { if(window.ziyRenderListe) window.ziyRenderListe(); }
 };
@@ -15259,6 +15240,7 @@ window.updateTopbarUser = function(user){
     window._mkYilFilter = yillar;
     if(window.ykResetAktif_mk) window.ykResetAktif_mk(); /* MK aktif toplantıyı sıfırla */
     if(window.mkRenderGlobal) window.mkRenderGlobal();
+    if(window._mkSekme==='evrak' && typeof mkEvrakKategorileriYukle==='function') mkEvrakKategorileriYukle();
   }
 
   /* MECLİS KARARLARI */
@@ -15266,6 +15248,7 @@ window.updateTopbarUser = function(user){
     window._meclisYilFilter = yillar;
     if(window.ykResetAktif_meclis) window.ykResetAktif_meclis();
     if(window.meclisRenderGlobal) window.meclisRenderGlobal();
+    if(window._meclisSekme==='evrak' && typeof meclisEvrakKategorileriYukle==='function') meclisEvrakKategorileriYukle();
   }
 
   /* ── INIT ── */
