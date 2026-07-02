@@ -3316,6 +3316,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="mk-karar-baslik">Toplantılar</div>
           <div style="display:flex;gap:6px;align-items:center">
             <button class="btn btn-sm" onclick="katilimOzetAc('mk','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
+            <button class="btn btn-sm" onclick="katilimOzetAc('mk','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
             <button class="btn btn-sm" onclick="katilimOzetAc('mk','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
             <div id="mk-header-btn" style="display:inline-flex">
               <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()">
@@ -3348,6 +3349,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
             <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="meclis-karar-baslik">Toplantılar</div>
             <div style="display:flex;gap:6px;align-items:center">
               <button class="btn btn-sm" onclick="katilimOzetAc('meclis','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
+              <button class="btn btn-sm" onclick="katilimOzetAc('meclis','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
               <button class="btn btn-sm" onclick="katilimOzetAc('meclis','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
               <div id="meclis-header-btn" style="display:inline-flex">
                 <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()">
@@ -19928,11 +19930,11 @@ window.katilimOzetAc = function(tur, mod){
   const yilSel = document.getElementById('katilim-ozet-yil');
   const buYil = new Date().getFullYear();
   if(!yilSel.value || yilSel.value == '0') yilSel.value = buYil;
-  yilSel.style.display = mod==='6aylik' ? 'none' : '';
+  yilSel.style.display = '';
 
   const aySel = document.getElementById('katilim-ozet-ay');
-  aySel.style.display = mod==='aylik' ? '' : 'none';
-  if(mod==='aylik') aySel.value = String(new Date().getMonth()+1);
+  aySel.style.display = (mod==='aylik' || mod==='6aylik') ? '' : 'none';
+  if(mod==='aylik' || mod==='6aylik') aySel.value = String(new Date().getMonth()+1);
 
   const komiteSel = document.getElementById('katilim-ozet-komite');
   komiteSel.style.display = tur==='mk' ? '' : 'none';
@@ -19966,12 +19968,15 @@ window.katilimOzetYenile = async function(){
 
     let filtrelenmis = [];
     if(mod==='6aylik'){
-      const simdi = new Date();
-      const altiAyOnce = new Date(simdi.getFullYear(), simdi.getMonth()-5, 1);
+      // Seçilen ay/yıldan geriye, seçilen ay dahil toplam 6 ay
+      const ankorAy = ay || (new Date().getMonth()+1);
+      const ankorYil = yil || new Date().getFullYear();
+      const ankorSonGun = new Date(ankorYil, ankorAy, 0); // seçilen ayın son günü
+      const altiAyOnce = new Date(ankorYil, ankorAy-6, 1); // 6 ay öncesinin ilk günü (seçilen ay dahil)
       filtrelenmis = tumToplantılar.filter(t=>{
         if(!t.tarihIso) return false;
         const d = new Date(t.tarihIso+'T00:00:00');
-        return d >= altiAyOnce && d <= simdi;
+        return d >= altiAyOnce && d <= ankorSonGun;
       });
     } else if(mod==='aylik'){
       filtrelenmis = tumToplantılar.filter(t=>{
