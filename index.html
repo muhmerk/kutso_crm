@@ -11865,9 +11865,13 @@ window.mkAcToplantı = function(id){
             ${MK_DB.gundemler.filter(g=>g.toplantıId===id && parseInt(g.komiteNo||0)===kNo).length === 0
               ? `<div style="font-size:11px;color:var(--text2);padding:6px 0">Henüz karar girilmedi</div>`
               : MK_DB.gundemler.filter(g=>g.toplantıId===id && parseInt(g.komiteNo||0)===kNo).map(g=>`
-                  <div style="padding:7px 10px;background:var(--surface2);border-radius:7px;margin-bottom:4px;font-size:12px;display:flex;justify-content:space-between;align-items:center">
-                    <span>${g.konu}</span>
-                    <span class="badge ${g.durum==='tamamlandi'?'b-green':'b-amber'}">${g.durum==='tamamlandi'?'Uygulandı':'Bekliyor'}</span>
+                  <div class="mk-karar-satir" style="padding:7px 10px;background:var(--surface2);border-radius:7px;margin-bottom:4px;font-size:12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="mkKomiteKararDetay('${g.id}','${id}',${kNo})">
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${g.konu}</span>
+                    <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
+                      <span class="badge ${g.durum==='tamamlandi'?'b-green':'b-amber'}">${g.durum==='tamamlandi'?'Uygulandı':'Bekliyor'}</span>
+                      <button class="btn btn-sm" style="padding:2px 6px" onclick="event.stopPropagation();mkKomiteKararDuzenle('${g.id}','${id}',${kNo})" title="Düzenle"><i class="ti ti-edit" style="font-size:12px"></i></button>
+                      <button class="btn btn-sm" style="padding:2px 6px;color:var(--red)" onclick="event.stopPropagation();mkKomiteKararSil('${g.id}','${id}',${kNo})" title="Sil"><i class="ti ti-trash" style="font-size:12px"></i></button>
+                    </span>
                   </div>`).join('')}
           </div>
         </div>
@@ -11927,6 +11931,119 @@ window.mkKomiteKatilimAc = function(toplantıId, kNo){
 /* Komite karar ekle */
 window.mkKomiteKararEkle = function(toplantıId, kNo){
   mkGundemEkle(toplantıId, null, kNo);
+};
+
+/* Komite kararı detay/düzenle — ekleme ekranıyla birebir aynı, dolu ve düzenlenebilir */
+window.mkKomiteKararDetay = function(gundemId, toplantıId, kNo){
+  mkKomiteKararDuzenle(gundemId, toplantıId, kNo);
+};
+
+window.mkKomiteKararDuzenle = function(gundemId, toplantıId, kNo){
+  const g = MK_DB.gundemler.find(x=>x.id===gundemId);
+  if(!g){ alert('Karar bulunamadı.'); return; }
+  const personelOpts=(window.PERSONEL||[]).map(p=>`<option value="${p.kullanici}">${p.ad} ${p.soyad} — ${p.unvan}</option>`).join('');
+  const ilkA = g.atananlar?.[0];
+  const digerA = (g.atananlar||[]).slice(1);
+
+  document.getElementById('yk-modal-title').textContent = `${kNo}. Komite — Kararı Düzenle`;
+  document.getElementById('yk-modal-body').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="yk-lbl">Karar Konusu</label><input id="mk-f-konu" class="yk-inp" value="${(g.konu||'').replace(/"/g,'&quot;')}"></div>
+      <div><label class="yk-lbl">Karar Özeti</label><textarea id="mk-f-ozet" class="yk-inp" style="min-height:60px;resize:vertical">${g.ozet||''}</textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Son Tarih</label><input id="mk-f-tarih" type="date" class="yk-inp" value="${g.sonTarih||''}"></div>
+        <div><label class="yk-lbl">Öncelik</label>
+          <select id="mk-f-oncelik" class="yk-inp">
+            <option value="acil" ${g.oncelik==='acil'?'selected':''}>Acil</option>
+            <option value="normal" ${(g.oncelik||'normal')==='normal'?'selected':''}>Normal</option>
+            <option value="dusuk" ${g.oncelik==='dusuk'?'selected':''}>Düşük</option>
+          </select>
+        </div>
+      </div>
+      <div><label class="yk-lbl">Durum</label>
+        <select id="mk-f-durum" class="yk-inp">
+          <option value="planlandi" ${g.durum!=='tamamlandi'?'selected':''}>Bekliyor</option>
+          <option value="tamamlandi" ${g.durum==='tamamlandi'?'selected':''}>Uygulandı</option>
+        </select>
+      </div>
+      <div style="border-top:0.5px solid var(--border);padding-top:12px">
+        <label class="yk-lbl" style="margin-bottom:8px;display:block">Atanacak Personel</label>
+        <select id="mk-f-prs" class="yk-inp"><option value="">Personel seçin...</option>${personelOpts}</select>
+      </div>
+      <div><label class="yk-lbl">Görev Açıklaması</label><input id="mk-f-gorev" class="yk-inp" value="${(ilkA?.gorev||'').replace(/"/g,'&quot;')}" placeholder="Yapılacak işlem..."></div>
+      <div id="mk-ek-atama-cont" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button class="btn btn-sm" onclick="mkDahaAtamaEkle()" style="align-self:flex-start">
+        <i class="ti ti-plus"></i> Başka personel de ekle
+      </button>
+    </div>`;
+
+  // İlk personel seçili gelsin
+  if(ilkA?.kullanici) document.getElementById('mk-f-prs').value = ilkA.kullanici;
+  // Diğer atananları ek satırlara doldur
+  digerA.forEach(a=>{
+    window.mkDahaAtamaEkle();
+    const rows = document.querySelectorAll('#mk-ek-atama-cont > div');
+    const lastRow = rows[rows.length-1];
+    const sel = lastRow?.querySelector('.mk-ek-personel');
+    const inp = lastRow?.querySelector('.mk-ek-gorev');
+    if(sel) sel.value = a.kullanici;
+    if(inp) inp.value = a.gorev||'';
+  });
+
+  document.getElementById('yk-modal-kaydet').onclick = async ()=>{
+    const konu = document.getElementById('mk-f-konu')?.value.trim();
+    if(!konu){ alert('Karar konusu zorunludur.'); return; }
+    const ozet = document.getElementById('mk-f-ozet')?.value.trim()||'';
+    const tarih = document.getElementById('mk-f-tarih')?.value||null;
+    const oncelik = document.getElementById('mk-f-oncelik')?.value||'normal';
+    const durum = document.getElementById('mk-f-durum')?.value||'planlandi';
+
+    const kul=document.getElementById('mk-f-prs').value;
+    const atananlar=[];
+    if(kul){
+      const p=(window.PERSONEL||[]).find(x=>x.kullanici===kul);
+      const gorev=document.getElementById('mk-f-gorev').value.trim()||'—';
+      atananlar.push({kullanici:kul, ad:p?p.ad+' '+p.soyad:kul, gorev, durum:'planlandi'});
+    }
+    document.querySelectorAll('.mk-ek-personel').forEach((sel,i)=>{
+      const ekGor=document.querySelectorAll('.mk-ek-gorev')[i];
+      if(sel.value && !atananlar.find(a=>a.kullanici===sel.value)){
+        const ep=(window.PERSONEL||[]).find(x=>x.kullanici===sel.value);
+        atananlar.push({kullanici:sel.value, ad:ep?ep.ad+' '+ep.soyad:sel.value, gorev:ekGor?.value?.trim()||'—', durum:'planlandi'});
+      }
+    });
+
+    const {error} = await _supa.from('karar_gundemler').update({
+      konu, ozet, son_tarih:tarih, oncelik, durum
+    }).eq('id', gundemId);
+    if(error){ alert('Güncelleme hatası: '+error.message); return; }
+
+    // Atamaları sıfırla ve yeniden yaz (basit ve tutarlı yaklaşım)
+    await _supa.from('karar_atamalar').delete().eq('gundem_id', gundemId);
+    for(const a of atananlar){
+      await _supa.from('karar_atamalar').insert([{gundem_id:gundemId, kullanici:a.kullanici, ad:a.ad, gorev:a.gorev, durum:a.durum}]);
+    }
+
+    ykModalKapat();
+    await supaYukleMK();
+    mkAcToplantı(toplantıId);
+    if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+  };
+
+  document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
+  document.getElementById('yk-modal-overlay').classList.add('yk-modal-visible');
+};
+
+window.mkKomiteKararSil = async function(gundemId, toplantıId, kNo){
+  if(!confirm('Bu karar silinecek. Emin misiniz?')) return;
+  try{
+    await _supa.from('karar_atamalar').delete().eq('gundem_id', gundemId);
+    const {error} = await _supa.from('karar_gundemler').delete().eq('id', gundemId);
+    if(error) throw error;
+    await supaYukleMK();
+    mkAcToplantı(toplantıId);
+    if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+  }catch(e){ alert('Silme hatası: '+(e.message||e)); }
 };
 
 /* ══════════════════════════════════════════════════════════
