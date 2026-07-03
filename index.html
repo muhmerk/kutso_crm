@@ -4507,7 +4507,7 @@ async function doLogin() {
 
   /* Genel Sekreterlik menüsü yetkisi */
   const GS_YETKILI = ['admin','feyyaz','umran','orhan'];
-  const gsYetkili = GS_YETKILI.includes(currentUser.kullanici);
+  const gsYetkili = window.digerYetkiVar('gs', GS_YETKILI.includes(currentUser.kullanici));
   document.getElementById('gs-nav-section').style.display = gsYetkili ? '' : 'none';
   document.getElementById('gs-nav-btn').style.display = gsYetkili ? '' : 'none';
 
@@ -6561,7 +6561,7 @@ const kaydetBtn = document.querySelector('#etk-ekle-overlay [onclick*="etkYeniKa
 
   /* Memnuniyet yetkisi */
   const ETK_MEM_YETKILI = ['admin','feyyaz','umran','orhan','haver'];
-  function etkMemYetkiMi(){ return currentUser && ETK_MEM_YETKILI.includes(currentUser.kullanici); }
+  function etkMemYetkiMi(){ return window.digerYetkiVar('crm-egitim', currentUser && ETK_MEM_YETKILI.includes(currentUser.kullanici)); }
 
   /* Memnuniyet başlıkları (tüm etkinlikler için ortak, düzenlenebilir) */
   const ETK_MEM_BASLIKLAR = window.ETK_MEM_BASLIKLAR = [
@@ -8589,7 +8589,7 @@ window.sw = function(id, btn) {
 (function(){
 
 const KURUL_YETKİLİLER = ['admin','feyyaz','umran','orhan','haver'];
-const kurulYetkiVar = () => KURUL_YETKİLİLER.includes(currentUser?.kullanici||'');
+const kurulYetkiVar = () => window.digerYetkiVar('personel-kurul', KURUL_YETKİLİLER.includes(currentUser?.kullanici||''));
 
 window.KURUL_DATA = {}; // { yil: [{id, ad, tarih, saat, yer, katilimci, gundemler:[{id, no, konu, aciklama, karar}]}] }
 let _kurulSecilenYil = new Date().getFullYear();
@@ -9110,7 +9110,7 @@ window.oneriRender = function(){
   if(durumFilter) data = data.filter(o=>o.durum===durumFilter);
 
   const GS = ['admin','feyyaz','umran','orhan','haver'];
-  const isGS = GS.includes(currentUser?.kullanici||'');
+  const isGS = window.digerYetkiVar('personel-oneri', GS.includes(currentUser?.kullanici||''));
   if(!isGS) data = data.filter(o=>o.gonderen_kullanici===currentUser?.kullanici);
 
   if(!data.length){
@@ -9653,6 +9653,13 @@ window.kullaniciMenuYetkisi = function(menuKey){
   return kayit ? kayit.seviye : 'yok';
 };
 
+/* Eski koda-gömülü yetki fonksiyonlarında kullanılır — yetki matrisinde 'degistirebilir'
+   VEYA eski koddaki sabit listede (eskiListedeVarMi) yer alıyorsa true döner. */
+window.digerYetkiVar = function(menuKey, eskiListedeVarMi){
+  if(eskiListedeVarMi) return true;
+  return window.kullaniciMenuYetkisi(menuKey) === 'degistirebilir';
+};
+
 /* Bir menü için "değiştirebilir" yetkisi yoksa, o konteynerdeki
    .yetki-degistir-gerekli class'lı tüm elemanları gizler (ekle/düzenle/sil butonları vb.) */
 window.yetkiButonlariUygula = function(menuKey, containerId){
@@ -10064,12 +10071,12 @@ window.prsTabAndSelect = function(pane, id) {
 
 /* Personel ekleme yetkisi: GS, GS yardımcıları, IK/Kalite */
 const PRS_EKLE_YETKILILER = ['admin','feyyaz','umran','orhan','haver'];
-function prsEklemeYetkiVar(){ return currentUser && PRS_EKLE_YETKILILER.includes(currentUser.kullanici); }
+function prsEklemeYetkiVar(){ return window.digerYetkiVar('personel-bilgi', currentUser && PRS_EKLE_YETKILILER.includes(currentUser.kullanici)); }
 window.prsEklemeYetkiVar = prsEklemeYetkiVar;
 const OZLUK_YETKILILER = ['admin','feyyaz','umran','orhan','haver'];
 
 function ozlukYetkiVar() {
-  return currentUser && OZLUK_YETKILILER.includes(currentUser.kullanici);
+  return window.digerYetkiVar('personel-bilgi', currentUser && OZLUK_YETKILILER.includes(currentUser.kullanici));
 }
 
 function kendiId() {
@@ -10295,7 +10302,7 @@ window.egitimToggle = function(btn){
 
 /* Memnuniyet yetkisi — GS, GS Yardımcıları, İK/Kalite Sorumlusu */
 const ETK_PRS_MEM_YETKILI = ['admin','feyyaz','umran','orhan','haver'];
-function etkPrsMemYetkiMi(){ return currentUser && ETK_PRS_MEM_YETKILI.includes(currentUser.kullanici); }
+function etkPrsMemYetkiMi(){ return window.digerYetkiVar('personel-egitim', currentUser && ETK_PRS_MEM_YETKILI.includes(currentUser.kullanici)); }
 window.etkPrsMemYetkiMi = etkPrsMemYetkiMi;
 
 /* Veri deposu — window üzerinden tüm fonksiyonlara erişilebilir */
@@ -11217,7 +11224,7 @@ window.sw = function(id, btn) {
 (function(){
 
 const YK_YONETICI = ['admin','feyyaz','umran','orhan'];
-function ykYoneticiMi(){ return currentUser && YK_YONETICI.includes(currentUser.kullanici); }
+function ykYoneticiMi(){ return window.digerYetkiVar('yk-yk', currentUser && YK_YONETICI.includes(currentUser.kullanici)); }
 
 /* ─── VERİ DEPOSU (boş başlar, yönetici doldurur) ─── */
 window.YK_DB = { toplantılar: [], gundemler: [] };
@@ -12021,7 +12028,9 @@ window.kararlarSec = function(tip, btn){
 const MK_DB = window.MK_DB = { toplantılar:[], gundemler:[] };
 let mkAktifToplantı = null;
 const MK_YONETICI = ['admin','feyyaz','umran','orhan'];
-function mkYoneticiMi(){ return currentUser && MK_YONETICI.includes(currentUser.kullanici); }
+function mkYoneticiMi(){ return window.digerYetkiVar('yk-mk', currentUser && MK_YONETICI.includes(currentUser.kullanici)); }
+function meclisYoneticiMi(){ return window.digerYetkiVar('yk-meclis', currentUser && MK_YONETICI.includes(currentUser.kullanici)); }
+window.meclisYoneticiMi = meclisYoneticiMi;
 
 window._mkSeciliKomiteNo = null; /* null = komite listesi görünümü, sayı = o komitenin içindeyiz */
 
@@ -12923,7 +12932,7 @@ const MECLIS_DB = window.MECLIS_DB = { toplantılar:[], gundemler:[] };
 let meclisAktifToplantı = null;
 
 function meclisRender(){
-  const yonetici = mkYoneticiMi();
+  const yonetici = meclisYoneticiMi();
   document.getElementById('meclis-yonetici-view').style.display = yonetici?'block':'none';
   document.getElementById('meclis-personel-view').style.display  = yonetici?'none':'block';
   if(yonetici){
@@ -13450,7 +13459,7 @@ function meclisRenderListe(){
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
           <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();meclisGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','meclis','${t.ad.replace(/'/g,"\\'")}')" ><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
-          ${mkYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
+          ${meclisYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();meclisToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
       </div>`;
@@ -13479,15 +13488,15 @@ window.meclisAcToplantı = function(id){
         <div style="width:6px;height:6px;border-radius:50%;background:${a.durum==='tamamlandi'?'#1D9E75':'#EF9F27'}"></div>
         <div style="flex:1;font-size:12px"><strong>${a.ad}</strong>${a.gorev&&a.gorev!=='—'?' — '+a.gorev:''}</div>
         <span style="font-size:10px;color:${a.durum==='tamamlandi'?'var(--green)':'#854F0B'}">${a.durum==='tamamlandi'?'✓':'Devam'}</span>
-        ${mkYoneticiMi()&&a.durum!=='tamamlandi'?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 6px" onclick="meclisAtamaTam('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>`:''}
+        ${meclisYoneticiMi()&&a.durum!=='tamamlandi'?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 6px" onclick="meclisAtamaTam('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>`:''}
       </div>`).join('')||''}
-      ${mkYoneticiMi()&&g.durum!=='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
+      ${meclisYoneticiMi()&&g.durum!=='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
         <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisKararEkle('${id}','${g.id}')"><i class="ti ti-user-plus"></i> Atama</button>
         <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisKararDuzenle('${id}','${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
         <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="meclisGundemSil('${g.id}','${id}')"><i class="ti ti-trash"></i> Sil</button>
         <button class="btn btn-p btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisGundemTam('${g.id}')"><i class="ti ti-check"></i> Uygulandı</button>
       </div>`:''}
-      ${mkYoneticiMi()&&g.durum==='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
+      ${meclisYoneticiMi()&&g.durum==='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
         <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisGundemGeriAl('${g.id}')"><i class="ti ti-arrow-back-up"></i> Geri Al</button>
       </div>`:''}
     </div>`).join('');
@@ -13789,7 +13798,7 @@ window.meclisAtamaTam=function(gId,kul){
   /* Supabase güncelle */
   _supa.from('karar_atamalar').update({durum:'tamamlandi'}).eq('gundem_id',gId).eq('kullanici',kul)
     .then(({error})=>{if(error)console.error('Meclis atama tamamlama hatası:',error.message);});
-  if(mkYoneticiMi()) meclisAcToplantı(g.toplantıId);
+  if(meclisYoneticiMi()) meclisAcToplantı(g.toplantıId);
   else meclisRender();
   if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 };
@@ -14020,7 +14029,7 @@ window.supaYukleGorevler = async function supaYukleGorevler() {
   } catch(e){ console.warn('Görev yükleme hatası:', e); }
 }
 const GOREV_YETKILI = ['admin','feyyaz','umran','orhan'];
-function gorevYetkiMi(){ return currentUser && GOREV_YETKILI.includes(currentUser.kullanici); }
+function gorevYetkiMi(){ return window.digerYetkiVar('yk-gorev', currentUser && GOREV_YETKILI.includes(currentUser.kullanici)); }
 
 function gorevBadgeGuncelle(){
   const badge = document.getElementById('gorev-badge');
@@ -16598,7 +16607,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 (function(){
 
 const IP_YETKI = ['admin','feyyaz','umran','orhan','haver'];
-function ipYetkiMi(){ return currentUser && IP_YETKI.includes(currentUser.kullanici); }
+function ipYetkiMi(){ return window.digerYetkiVar('isplani', currentUser && IP_YETKI.includes(currentUser.kullanici)); }
 
 /* Personelin kendi projesini düzenleyip düzenleyemeyeceği:
    - Tam yetkili (IP_YETKI): her şeyi yapabilir
@@ -22812,7 +22821,7 @@ window.AKR_ST = AKR_ST;
 
 /* ─── Yetki ─── */
 const AKR_ADMIN = ['admin','feyyaz','umran','orhan','haver'];
-function akrYoneticiMi(){ return currentUser && AKR_ADMIN.includes(currentUser.kullanici); }
+function akrYoneticiMi(){ return window.digerYetkiVar('akreditasyon', currentUser && AKR_ADMIN.includes(currentUser.kullanici)); }
 function akrSorumluMu(maddeId){
   const s = (AKR_ST.sorumlu[AKR_ST.yil]||{})[maddeId];
   return currentUser && s === currentUser.kullanici;
