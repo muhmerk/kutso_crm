@@ -20016,7 +20016,7 @@ async function supaYukleKatilimKayitlar(toplantıId){
   try{
     const { data } = await _supa.from('toplanti_katilim').select('*').eq('toplanti_id', toplantıId);
     _katilimMevcut = {};
-    (data||[]).forEach(k=>{ _katilimMevcut[k.uye_id] = { katildi:k.katildi, mazeret:k.mazeret||'', db_id:k.id }; });
+    (data||[]).forEach(k=>{ _katilimMevcut[k.uye_id] = { katildi:k.katildi, durum:k.durum||null, mazeret:k.mazeret||'', db_id:k.id }; });
   }catch(e){ console.warn('Katılım kayıt yükleme hatası:', e); }
 }
 
@@ -20075,7 +20075,7 @@ window.katilimAc = async function(toplantıId, tur, komiteNo){
   /* _katilimUyeler'e mevcut durumları uygula */
   _katilimUyeler.forEach(u=>{
     const mevcut = _katilimMevcut[u.id];
-    u.katildi = mevcut ? mevcut.katildi : null;
+    u.katildi = mevcut ? (mevcut.durum==='gorevli' ? 'gorevli' : mevcut.katildi) : null;
     u.mazeret = mevcut ? mevcut.mazeret : '';
   });
 
@@ -20089,13 +20089,14 @@ function katilimListeRender(){
 
   const katildiSayisi = _katilimUyeler.filter(u=>u.katildi===true).length;
   const katilmadiSayisi = _katilimUyeler.filter(u=>u.katildi===false).length;
+  const gorevliSayisi = _katilimUyeler.filter(u=>u.katildi==='gorevli').length;
   const belirsizSayisi = _katilimUyeler.filter(u=>u.katildi===null).length;
   const ozet = document.getElementById('katilim-ozet');
-  if(ozet) ozet.innerHTML = `<span style="color:var(--teal)">✓ ${katildiSayisi}</span> &nbsp; <span style="color:var(--red)">✗ ${katilmadiSayisi}</span> &nbsp; <span style="color:var(--text2)">? ${belirsizSayisi}</span>`;
+  if(ozet) ozet.innerHTML = `<span style="color:var(--teal)">✓ ${katildiSayisi}</span> &nbsp; <span style="color:var(--red)">✗ ${katilmadiSayisi}</span> &nbsp; <span style="color:var(--amber)">G ${gorevliSayisi}</span> &nbsp; <span style="color:var(--text2)">? ${belirsizSayisi}</span>`;
 
   liste.innerHTML = _katilimUyeler.map((u,idx)=>{
-    const durumRenk = u.katildi===true ? 'var(--teal)' : u.katildi===false ? 'var(--red)' : 'var(--border2)';
-    const durumBg = u.katildi===true ? 'var(--green-bg)' : u.katildi===false ? 'var(--red-bg)' : 'var(--surface2)';
+    const durumRenk = u.katildi===true ? 'var(--teal)' : u.katildi===false ? 'var(--red)' : u.katildi==='gorevli' ? 'var(--amber)' : 'var(--border2)';
+    const durumBg = u.katildi===true ? 'var(--green-bg)' : u.katildi===false ? 'var(--red-bg)' : u.katildi==='gorevli' ? 'var(--amber-bg)' : 'var(--surface2)';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:${durumBg};transition:background .15s">
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">${u.ad_soyad}</div>
@@ -20108,7 +20109,8 @@ function katilimListeRender(){
         <button onclick="katilimSec(${idx},false)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid ${u.katildi===false?'var(--red)':'var(--border2)'};background:${u.katildi===false?'var(--red)':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s" title="Katılmadı">
           <i class="ti ti-x" style="font-size:15px;color:${u.katildi===false?'#fff':'var(--text2)'}"></i>
         </button>
-        ${u.katildi===false?`<input placeholder="Mazeret..." value="${u.mazeret||''}" onchange="katilimMazeret(${idx},this.value)" style="height:32px;padding:0 8px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text);font-size:11px;font-family:var(--font);width:110px">`:''}
+        <button onclick="katilimSec(${idx},'gorevli')" style="width:32px;height:32px;border-radius:8px;border:1.5px solid ${u.katildi==='gorevli'?'var(--amber)':'var(--border2)'};background:${u.katildi==='gorevli'?'var(--amber)':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;font-size:13px;font-weight:700;color:${u.katildi==='gorevli'?'#fff':'var(--text2)'}" title="Görevli (o hafta görevliydi, katılım sayılmaz)">G</button>
+        ${(u.katildi===false || u.katildi==='gorevli')?`<input placeholder="Mazeret..." value="${u.mazeret||''}" onchange="katilimMazeret(${idx},this.value)" style="height:32px;padding:0 8px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text);font-size:11px;font-family:var(--font);width:110px">`:''}
       </div>
     </div>`;
   }).join('');
@@ -20145,17 +20147,22 @@ window.katilimKaydet = async function(){
       const mevcut = _katilimMevcut[u.id];
       if(u.katildi === null && !mevcut) continue; /* değişmemiş, boş kayıt */
 
+      /* katildi sütunu boolean — 'gorevli' durumunda null yazılır, gerçek durum 'durum' sütununda tutulur */
+      const katildiBool = (u.katildi===true || u.katildi===false) ? u.katildi : null;
+      const durumDeger = u.katildi==='gorevli' ? 'gorevli' : (u.katildi===true ? 'katildi' : (u.katildi===false ? 'katilmadi' : null));
+
       const kayit = {
         toplanti_id: _katilimToplantıId,
         tur: _katilimTur,
         uye_id: String(u.id),
-        katildi: u.katildi,
+        katildi: katildiBool,
+        durum: durumDeger,
         mazeret: u.mazeret || null
       };
 
       if(mevcut){
         /* Güncelle */
-        await _supa.from('toplanti_katilim').update({katildi:u.katildi, mazeret:u.mazeret||null}).eq('id', mevcut.db_id);
+        await _supa.from('toplanti_katilim').update({katildi:katildiBool, durum:durumDeger, mazeret:u.mazeret||null}).eq('id', mevcut.db_id);
       } else if(u.katildi !== null){
         /* Ekle */
         await _supa.from('toplanti_katilim').insert([kayit]);
@@ -20257,12 +20264,12 @@ window.katilimOzetYenile = async function(){
 
     const toplantıIds = filtrelenmis.map(t=>t.id);
     const { data: katilimlar } = await _supa.from('toplanti_katilim')
-      .select('uye_id,katildi,toplanti_id').in('toplanti_id', toplantıIds).eq('tur', tur);
+      .select('uye_id,katildi,durum,toplanti_id').in('toplanti_id', toplantıIds).eq('tur', tur);
 
     const katilimMap = {};
     (katilimlar||[]).forEach(k=>{
       if(!katilimMap[k.uye_id]) katilimMap[k.uye_id]={};
-      katilimMap[k.uye_id][k.toplanti_id] = k.katildi;
+      katilimMap[k.uye_id][k.toplanti_id] = k.durum==='gorevli' ? 'gorevli' : k.katildi;
     });
 
     let uyeler = [];
@@ -20388,10 +20395,15 @@ function katilimTabloOlustur(uyeler, toplantılar, katilimMap){
       const katildi = katilimMap[u.id]?.[t.id];
       if(katildi===true)  return `<td style="text-align:center;padding:6px 8px"><span style="color:var(--teal);font-size:15px">✓</span></td>`;
       if(katildi===false) return `<td style="text-align:center;padding:6px 8px"><span style="color:var(--red);font-size:13px">✗</span></td>`;
+      if(katildi==='gorevli') return `<td style="text-align:center;padding:6px 8px"><span style="color:var(--amber);font-size:12px;font-weight:700">G</span></td>`;
       return `<td style="text-align:center;padding:6px 8px"><span style="color:var(--border2);font-size:13px">—</span></td>`;
     }).join('');
     const katildiSayisi = siraliT.filter(t=>katilimMap[u.id]?.[t.id]===true).length;
-    const topSayisi = siraliT.filter(t=>katilimMap[u.id]?.[t.id]!==undefined).length;
+    /* Oran hesabına 'gorevli' (G) dahil edilmez — ne katılım ne devamsızlık sayılır */
+    const topSayisi = siraliT.filter(t=>{
+      const d = katilimMap[u.id]?.[t.id];
+      return d!==undefined && d!=='gorevli';
+    }).length;
     const oran = topSayisi>0 ? Math.round(katildiSayisi/topSayisi*100) : null;
     const oranBadge = oran!==null ? `<span class="badge ${oran>=80?'b-green':oran>=50?'b-amber':'b-red'}" style="font-size:9px">${oran}%</span>` : '';
     return `<tr style="border-bottom:0.5px solid var(--border)">
