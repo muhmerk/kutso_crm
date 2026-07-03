@@ -9697,36 +9697,48 @@ function yetkiRender(){
     return;
   }
 
-  const seviyeVal = (menuKey, unvan) => {
-    const k = (window.YETKI_MATRISI||[]).find(y=>y.menu_key===menuKey && y.unvan===unvan);
-    return k ? k.seviye : 'yok';
+  const seviyeUnvanlari = (menuKey, seviye) => {
+    if(seviye==='yok'){
+      const atanmis = new Set((window.YETKI_MATRISI||[]).filter(y=>y.menu_key===menuKey).map(y=>y.unvan));
+      return unvanlar.filter(u=>!atanmis.has(u));
+    }
+    return (window.YETKI_MATRISI||[]).filter(y=>y.menu_key===menuKey && y.seviye===seviye).map(y=>y.unvan);
   };
 
-  /* Gruplara göre satırları oluştur */
+  const SEVIYELER = [
+    { key:'degistirebilir', ad:'Okuyabilir/Değiştirebilir', renk:'var(--teal)' },
+    { key:'okuyabilir',     ad:'Okuyabilir',                 renk:'var(--amber)' },
+    { key:'yok',            ad:'Yok',                        renk:'var(--text2)' },
+  ];
+
   const gruplar = [...new Set(YETKI_MENULER.map(m=>m.grup))];
 
-  let tabloHtml = `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px;white-space:nowrap">
+  const hucreHtml = (menuKey, seviye) => {
+    const liste = seviyeUnvanlari(menuKey, seviye);
+    const renk = SEVIYELER.find(s=>s.key===seviye).renk;
+    const bg = seviye==='degistirebilir' ? 'var(--green-bg)' : seviye==='okuyabilir' ? 'var(--amber-bg)' : 'var(--surface2)';
+    return `<td style="padding:8px 10px;border-bottom:0.5px solid var(--border);vertical-align:top;min-width:220px">
+      <div onclick="yetkiHucreAc('${menuKey}','${seviye}')" style="cursor:pointer;min-height:28px;border:1px dashed var(--border2);border-radius:8px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;transition:border-color .15s" onmouseover="this.style.borderColor='${renk}'" onmouseout="this.style.borderColor='var(--border2)'">
+        ${liste.length
+          ? liste.map(u=>`<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${bg};color:${seviye==='yok'?'var(--text2)':renk};font-weight:600;white-space:nowrap">${u}</span>`).join('')
+          : `<span style="font-size:11px;color:var(--text2)"><i class="ti ti-plus" style="font-size:11px"></i> Ünvan ata</span>`}
+      </div>
+    </td>`;
+  };
+
+  let tabloHtml = `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px;width:100%">
     <thead><tr>
-      <th style="position:sticky;left:0;background:var(--surface);text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text2);border-bottom:2px solid var(--border);border-right:1px solid var(--border);z-index:2">Menü</th>
-      ${unvanlar.map(u=>`<th style="padding:8px 8px;font-size:10px;font-weight:600;color:var(--text2);border-bottom:2px solid var(--border);text-align:center;min-width:110px">${u}</th>`).join('')}
+      <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text2);border-bottom:2px solid var(--border);min-width:170px">Menü</th>
+      ${SEVIYELER.map(s=>`<th style="padding:8px 10px;font-size:11px;font-weight:700;color:${s.renk};border-bottom:2px solid var(--border);text-align:left">${s.ad}</th>`).join('')}
     </tr></thead>
     <tbody>`;
 
   gruplar.forEach(grup=>{
-    tabloHtml += `<tr><td colspan="${unvanlar.length+1}" style="padding:10px 12px 4px;font-size:11px;font-weight:700;color:var(--purple);background:var(--surface2);position:sticky;left:0">${grup}</td></tr>`;
+    tabloHtml += `<tr><td colspan="4" style="padding:10px 12px 4px;font-size:11px;font-weight:700;color:var(--purple);background:var(--surface2)">${grup}</td></tr>`;
     YETKI_MENULER.filter(m=>m.grup===grup).forEach(m=>{
       tabloHtml += `<tr>
-        <td style="position:sticky;left:0;background:var(--surface);padding:6px 12px;font-size:12px;border-right:1px solid var(--border);border-bottom:0.5px solid var(--border)">${m.ad}</td>
-        ${unvanlar.map(u=>{
-          const v = seviyeVal(m.key, u);
-          return `<td style="padding:4px 6px;text-align:center;border-bottom:0.5px solid var(--border)">
-            <select onchange="yetkiDegistir('${m.key}','${u.replace(/'/g,"\\'")}',this.value)" style="font-size:10px;padding:3px 4px;border-radius:6px;border:1px solid var(--border2);background:${v==='degistirebilir'?'var(--green-bg)':v==='okuyabilir'?'var(--amber-bg)':'var(--surface2)'};color:var(--text);font-family:var(--font);cursor:pointer">
-              <option value="yok" ${v==='yok'?'selected':''}>Yok</option>
-              <option value="okuyabilir" ${v==='okuyabilir'?'selected':''}>Okuyabilir</option>
-              <option value="degistirebilir" ${v==='degistirebilir'?'selected':''}>Okuyabilir/Değiştirebilir</option>
-            </select>
-          </td>`;
-        }).join('')}
+        <td style="padding:6px 12px;font-size:12px;font-weight:500;border-bottom:0.5px solid var(--border);vertical-align:top">${m.ad}</td>
+        ${SEVIYELER.map(s=>hucreHtml(m.key, s.key)).join('')}
       </tr>`;
     });
   });
@@ -9735,27 +9747,59 @@ function yetkiRender(){
 
   el.innerHTML = `
     <div style="margin-bottom:14px;font-size:12px;color:var(--text2)">
-      <i class="ti ti-info-circle"></i> Bir ünvana menü ataması yapılmazsa ("Yok"), o ünvandaki personel ilgili sayfayı açtığında içerik yerine yetkisizlik mesajı görür. Değişiklikler anında kaydedilir.
+      <i class="ti ti-info-circle"></i> Bir hücreye tıklayıp o yetki seviyesine ünvan atayın. Bir ünvan aynı menüde sadece tek bir sütunda olabilir — başka bir sütuna atarsanız eski yerinden otomatik kalkar. Yazılıma yeni menü eklendikçe bu listeye otomatik eklenir.
     </div>
     ${tabloHtml}`;
 }
 
-/* Hücre değiştiğinde kaydet */
-window.yetkiDegistir = async function(menuKey, unvan, seviye){
-  try{
-    if(seviye==='yok'){
-      await _supa.from('yetki_matrisi').delete().eq('menu_key',menuKey).eq('unvan',unvan);
-      window.YETKI_MATRISI = window.YETKI_MATRISI.filter(y=>!(y.menu_key===menuKey && y.unvan===unvan));
-    } else {
-      const { data } = await _supa.from('yetki_matrisi').upsert(
-        [{menu_key:menuKey, unvan, seviye}],
-        {onConflict:'menu_key,unvan'}
-      ).select();
-      const mevcutIdx = window.YETKI_MATRISI.findIndex(y=>y.menu_key===menuKey && y.unvan===unvan);
-      if(mevcutIdx>=0) window.YETKI_MATRISI[mevcutIdx].seviye = seviye;
-      else window.YETKI_MATRISI.push({menu_key:menuKey, unvan, seviye});
+/* Bir hücreye tıklayınca — o seviyeye ünvan atama penceresi */
+window.yetkiHucreAc = function(menuKey, seviye){
+  const unvanlar = [...new Set((window.PERSONEL||[]).map(p=>p.unvan).filter(u=>u && u!=='—'))].sort((a,b)=>a.localeCompare(b,'tr'));
+  const menuAd = YETKI_MENULER.find(m=>m.key===menuKey)?.ad || menuKey;
+  const seviyeAd = {degistirebilir:'Okuyabilir/Değiştirebilir', okuyabilir:'Okuyabilir', yok:'Yok'}[seviye];
+
+  const suankiSeviye = (unvan) => {
+    const k = (window.YETKI_MATRISI||[]).find(y=>y.menu_key===menuKey && y.unvan===unvan);
+    return k ? k.seviye : 'yok';
+  };
+
+  gsModalAc(`${menuAd} — ${seviyeAd}`,
+    `<div style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Bu seviyeye atamak istediğiniz ünvanları işaretleyin. Başka sütunda olan bir ünvanı işaretlerseniz oradan kalkar.</div>
+      ${unvanlar.map(u=>{
+        const mevcut = suankiSeviye(u);
+        const buradaMi = mevcut===seviye;
+        const baskaYerdeMi = mevcut!=='yok' && !buradaMi;
+        return `<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:var(--surface2);cursor:pointer">
+          <input type="checkbox" class="yetki-unvan-cb" data-unvan="${u.replace(/"/g,'&quot;')}" ${buradaMi?'checked':''}>
+          <span style="font-size:12px;flex:1">${u}</span>
+          ${baskaYerdeMi?`<span style="font-size:10px;color:var(--text2)">şu an: ${mevcut==='degistirebilir'?'Okuyabilir/Değiştirebilir':'Okuyabilir'}</span>`:''}
+        </label>`;
+      }).join('')}
+    </div>`,
+    async ()=>{
+      const cbs = document.querySelectorAll('.yetki-unvan-cb');
+      for(const cb of cbs){
+        const unvan = cb.getAttribute('data-unvan');
+        const isaretli = cb.checked;
+        const mevcutSeviye = suankiSeviye(unvan);
+        if(isaretli && mevcutSeviye!==seviye){
+          /* Bu seviyeye ata (yok ise sil, değilse upsert) */
+          if(seviye==='yok'){
+            await _supa.from('yetki_matrisi').delete().eq('menu_key',menuKey).eq('unvan',unvan);
+          } else {
+            await _supa.from('yetki_matrisi').upsert([{menu_key:menuKey, unvan, seviye}], {onConflict:'menu_key,unvan'});
+          }
+        } else if(!isaretli && mevcutSeviye===seviye && seviye!=='yok'){
+          /* İşaret kaldırıldı — bu seviyeden çıkar (yok'a düşer) */
+          await _supa.from('yetki_matrisi').delete().eq('menu_key',menuKey).eq('unvan',unvan);
+        }
+      }
+      await supaYukleYetkiMatrisi();
+      gsModalKapat();
+      yetkiRender();
     }
-  }catch(e){ alert('Yetki kaydetme hatası: '+(e.message||e)); yetkiRender(); }
+  );
 };
 (function(){
 
