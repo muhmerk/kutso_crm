@@ -14342,11 +14342,11 @@ window.kararAySec = function(tip, ay){
   if(tip==='yk')     { if(window.ykRender) window.ykRender(); else ykRender(); }
   else if(tip==='mk')      {
     if(window.mkRender) window.mkRender();
-    if(window._mkSekme==='evrak' && typeof mkEvrakKategorileriYukle==='function') mkEvrakKategorileriYukle();
+    if(window._mkSekme==='evrak' && typeof mkEvrakRender==='function') mkEvrakRender();
   }
   else if(tip==='meclis')  {
     if(window.meclisRender) window.meclisRender();
-    if(window._meclisSekme==='evrak' && typeof meclisEvrakKategorileriYukle==='function') meclisEvrakKategorileriYukle();
+    if(window._meclisSekme==='evrak' && typeof meclisEvrakRender==='function') meclisEvrakRender();
   }
   else if(tip==='gorev')   { if(window.gorevRender) window.gorevRender(); }
   else if(tip==='ziyaret') { if(window.ziyRenderListe) window.ziyRenderListe(); }
@@ -15308,7 +15308,7 @@ window.updateTopbarUser = function(user){
     window._mkYilFilter = yillar;
     if(window.ykResetAktif_mk) window.ykResetAktif_mk(); /* MK aktif toplantıyı sıfırla */
     if(window.mkRenderGlobal) window.mkRenderGlobal();
-    if(window._mkSekme==='evrak' && typeof mkEvrakKategorileriYukle==='function') mkEvrakKategorileriYukle();
+    if(window._mkSekme==='evrak' && typeof mkEvrakRender==='function') mkEvrakRender();
   }
 
   /* MECLİS KARARLARI */
@@ -15316,7 +15316,7 @@ window.updateTopbarUser = function(user){
     window._meclisYilFilter = yillar;
     if(window.ykResetAktif_meclis) window.ykResetAktif_meclis();
     if(window.meclisRenderGlobal) window.meclisRenderGlobal();
-    if(window._meclisSekme==='evrak' && typeof meclisEvrakKategorileriYukle==='function') meclisEvrakKategorileriYukle();
+    if(window._meclisSekme==='evrak' && typeof meclisEvrakRender==='function') meclisEvrakRender();
   }
 
   /* ── INIT ── */
