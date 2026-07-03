@@ -3154,7 +3154,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <div id="yd-placeholder-mem-prs" style="margin-bottom:0;display:inline-flex;align-items:flex-start;align-self:flex-start"></div>
       <div style="flex:1"></div>
-      <button class="btn btn-p btn-sm" onclick="memPrsEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="memPrsEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
     </div>
     <div class="two">
       <div class="card">
@@ -3553,7 +3553,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <i class="ti ti-search" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:13px;pointer-events:none"></i>
           <input id="etk-prs-arama" class="yk-inp" style="padding:6px 10px 6px 30px;font-size:12px;width:200px" placeholder="Etkinlik adı veya no..." oninput="etkPrsArama(this.value)">
         </div>
-        <button class="btn btn-p btn-sm" onclick="etkPrsYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button>
+        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="etkPrsYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button>
       </div>
     </div>
     <div id="etk-prs-list"></div>
@@ -3815,24 +3815,24 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
 
     <div id="ch-email" class="chs active">
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-amber">Aidat</span><span style="font-size:13px;font-weight:500">Aidat ödeme hatırlatması</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Sayın <span class="tpl-tag">{{firma_adi}}</span> — <span class="tpl-tag">{{yil}}</span> yılı aidat ödeme hatırlatması</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Kütahya Ticaret ve Sanayi Odası'na <span class="tpl-tag">{{yil}}</span> yılı için ödenecek <strong><span class="tpl-tag">{{aidat_tutari}}</span> TL</strong> tutarındaki aidatınızın son ödeme tarihi <span class="tpl-tag">{{son_tarih}}</span>'dir.<br><br>Ödemenizi şubemize veya <strong>TR00 0000 0000 0000 0000 00</strong> IBAN numaralı hesabımıza yapabilirsiniz.<br><br>Sorularınız için: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-amber">Aidat</span><span style="font-size:13px;font-weight:500">Aidat ödeme hatırlatması</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Sayın <span class="tpl-tag">{{firma_adi}}</span> — <span class="tpl-tag">{{yil}}</span> yılı aidat ödeme hatırlatması</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Kütahya Ticaret ve Sanayi Odası'na <span class="tpl-tag">{{yil}}</span> yılı için ödenecek <strong><span class="tpl-tag">{{aidat_tutari}}</span> TL</strong> tutarındaki aidatınızın son ödeme tarihi <span class="tpl-tag">{{son_tarih}}</span>'dir.<br><br>Ödemenizi şubemize veya <strong>TR00 0000 0000 0000 0000 00</strong> IBAN numaralı hesabımıza yapabilirsiniz.<br><br>Sorularınız için: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-blue">Hoş Geldin</span><span style="font-size:13px;font-weight:500">Yeni üye karşılama</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Hoş geldiniz — Kütahya TSO üyeliğiniz onaylandı</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{firma_adi}}</span> adına Kütahya TSO'ya hoş geldiniz!<br>Üye numaranız: <strong><span class="tpl-tag">{{uye_no}}</span></strong> · Başlangıç: <span class="tpl-tag">{{baslangic_tarihi}}</span><br><br>Oryantasyon toplantımız için ayrıca davet iletilecektir.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-blue">Hoş Geldin</span><span style="font-size:13px;font-weight:500">Yeni üye karşılama</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Hoş geldiniz — Kütahya TSO üyeliğiniz onaylandı</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{firma_adi}}</span> adına Kütahya TSO'ya hoş geldiniz!<br>Üye numaranız: <strong><span class="tpl-tag">{{uye_no}}</span></strong> · Başlangıç: <span class="tpl-tag">{{baslangic_tarihi}}</span><br><br>Oryantasyon toplantımız için ayrıca davet iletilecektir.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Gönder</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">Eğitim</span><span style="font-size:13px;font-weight:500">Eğitim / etkinlik duyurusu</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Davet: <span class="tpl-tag">{{etkinlik_adi}}</span> — <span class="tpl-tag">{{tarih}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Odamızca düzenlenen <strong><span class="tpl-tag">{{etkinlik_adi}}</span></strong> etkinliğine sizi davet ediyoruz.<br><br>Tarih: <span class="tpl-tag">{{tarih}}</span> · Saat: <span class="tpl-tag">{{saat}}</span> · Yer: <span class="tpl-tag">{{konum}}</span><br>Kayıt: <span class="tpl-tag">{{kayit_linki}}</span><br><br>Kontenjanımız sınırlıdır. Erken kayıt yaptırmanızı tavsiye ederiz.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">Eğitim</span><span style="font-size:13px;font-weight:500">Eğitim / etkinlik duyurusu</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Davet: <span class="tpl-tag">{{etkinlik_adi}}</span> — <span class="tpl-tag">{{tarih}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Odamızca düzenlenen <strong><span class="tpl-tag">{{etkinlik_adi}}</span></strong> etkinliğine sizi davet ediyoruz.<br><br>Tarih: <span class="tpl-tag">{{tarih}}</span> · Saat: <span class="tpl-tag">{{saat}}</span> · Yer: <span class="tpl-tag">{{konum}}</span><br>Kayıt: <span class="tpl-tag">{{kayit_linki}}</span><br><br>Kontenjanımız sınırlıdır. Erken kayıt yaptırmanızı tavsiye ederiz.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-red">Şikayet</span><span style="font-size:13px;font-weight:500">Şikayet alındı bildirimi</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Şikayetiniz alındı — Başvuru No: <span class="tpl-tag">{{sikayet_no}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{sikayet_tarihi}}</span> tarihinde ilettiğiniz şikayetiniz (<strong><span class="tpl-tag">{{sikayet_no}}</span></strong>) kaydımıza alınmıştır.<br><br><span class="tpl-tag">{{sorumlu_personel}}</span> en geç <span class="tpl-tag">{{max_sure}}</span> iş günü içinde sizinle iletişime geçecektir.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-red">Şikayet</span><span style="font-size:13px;font-weight:500">Şikayet alındı bildirimi</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Şikayetiniz alındı — Başvuru No: <span class="tpl-tag">{{sikayet_no}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{sikayet_tarihi}}</span> tarihinde ilettiğiniz şikayetiniz (<strong><span class="tpl-tag">{{sikayet_no}}</span></strong>) kaydımıza alınmıştır.<br><br><span class="tpl-tag">{{sorumlu_personel}}</span> en geç <span class="tpl-tag">{{max_sure}}</span> iş günü içinde sizinle iletişime geçecektir.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">YK Kararı</span><span style="font-size:13px;font-weight:500">YK kararı uygulama bildirimi</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Yönetim Kurulu Kararı — <span class="tpl-tag">{{karar_no}}</span> · <span class="tpl-tag">{{karar_konusu}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{toplanti_tarihi}}</span> tarihli Yönetim Kurulu toplantımızda alınan <span class="tpl-tag">{{karar_no}}</span> sayılı karar gereğince <span class="tpl-tag">{{karar_ozeti}}</span>.<br><br>Bilgilerinize saygıyla sunarız.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">YK Kararı</span><span style="font-size:13px;font-weight:500">YK kararı uygulama bildirimi</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Yönetim Kurulu Kararı — <span class="tpl-tag">{{karar_no}}</span> · <span class="tpl-tag">{{karar_konusu}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{toplanti_tarihi}}</span> tarihli Yönetim Kurulu toplantımızda alınan <span class="tpl-tag">{{karar_no}}</span> sayılı karar gereğince <span class="tpl-tag">{{karar_ozeti}}</span>.<br><br>Bilgilerinize saygıyla sunarız.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Gönder</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-green">Memnuniyet</span><span style="font-size:13px;font-weight:500">Yıllık memnuniyet anketi daveti</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Görüşleriniz bizim için değerli — <span class="tpl-tag">{{yil}}</span> yılı memnuniyet anketi</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Hizmet kalitemizi geliştirmek için <span class="tpl-tag">{{yil}}</span> yılı üye memnuniyet anketimizi doldurmanızı rica ederiz. Yalnızca 3 dakika sürmektedir.<br><br>Ankete katılın: <span class="tpl-tag">{{anket_linki}}</span></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-green">Memnuniyet</span><span style="font-size:13px;font-weight:500">Yıllık memnuniyet anketi daveti</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Görüşleriniz bizim için değerli — <span class="tpl-tag">{{yil}}</span> yılı memnuniyet anketi</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Hizmet kalitemizi geliştirmek için <span class="tpl-tag">{{yil}}</span> yılı üye memnuniyet anketimizi doldurmanızı rica ederiz. Yalnızca 3 dakika sürmektedir.<br><br>Ankete katılın: <span class="tpl-tag">{{anket_linki}}</span></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
     </div>
 
     <div id="ch-sms" class="chs">
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-amber">Aidat</span><span style="font-size:13px;font-weight:500">Aidat hatırlatma SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni <span style="font-size:11px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400">(maks. 160 karakter)</span></div><div class="tpl-field">Kütahya TSO: Sayın <span class="tpl-tag">{{yetkili_adi}}</span>, <span class="tpl-tag">{{yil}}</span> yılı aidatınız (<span class="tpl-tag">{{aidat_tutari}}</span> TL) için son tarih <span class="tpl-tag">{{son_tarih}}</span>. Bilgi: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">Eğitim</span><span style="font-size:13px;font-weight:500">Etkinlik hatırlatma SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO: <span class="tpl-tag">{{etkinlik_adi}}</span> etkinliği <span class="tpl-tag">{{tarih}}</span> saat <span class="tpl-tag">{{saat}}</span>'de <span class="tpl-tag">{{konum}}</span>'da başlıyor. Katılımınızı bekliyoruz.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Gönder</button></div></div></div>
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-red">Şikayet</span><span style="font-size:13px;font-weight:500">Şikayet alındı SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO: Şikayetiniz (<span class="tpl-tag">{{sikayet_no}}</span>) alındı. En geç <span class="tpl-tag">{{max_sure}}</span> iş günü içinde dönüş yapılacaktır. Bilgi: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-blue">Hoş Geldin</span><span style="font-size:13px;font-weight:500">Yeni üye karşılama SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO'ya hoş geldiniz! Üye No: <span class="tpl-tag">{{uye_no}}</span>. Herhangi bir sorunuz için: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-amber">Aidat</span><span style="font-size:13px;font-weight:500">Aidat hatırlatma SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni <span style="font-size:11px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400">(maks. 160 karakter)</span></div><div class="tpl-field">Kütahya TSO: Sayın <span class="tpl-tag">{{yetkili_adi}}</span>, <span class="tpl-tag">{{yil}}</span> yılı aidatınız (<span class="tpl-tag">{{aidat_tutari}}</span> TL) için son tarih <span class="tpl-tag">{{son_tarih}}</span>. Bilgi: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">Eğitim</span><span style="font-size:13px;font-weight:500">Etkinlik hatırlatma SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO: <span class="tpl-tag">{{etkinlik_adi}}</span> etkinliği <span class="tpl-tag">{{tarih}}</span> saat <span class="tpl-tag">{{saat}}</span>'de <span class="tpl-tag">{{konum}}</span>'da başlıyor. Katılımınızı bekliyoruz.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-red">Şikayet</span><span style="font-size:13px;font-weight:500">Şikayet alındı SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO: Şikayetiniz (<span class="tpl-tag">{{sikayet_no}}</span>) alındı. En geç <span class="tpl-tag">{{max_sure}}</span> iş günü içinde dönüş yapılacaktır. Bilgi: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-blue">Hoş Geldin</span><span style="font-size:13px;font-weight:500">Yeni üye karşılama SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO'ya hoş geldiniz! Üye No: <span class="tpl-tag">{{uye_no}}</span>. Herhangi bir sorunuz için: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
     </div>
   </div>
 
@@ -4100,7 +4100,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
               <option>Sanayi</option>
               <option>İK / Kalite</option>
             </select>
-            <button class="btn btn-p btn-sm" id="prs-ekle-btn" onclick="prsEkleModal()" style="display:none"><i class="ti ti-plus"></i> Personel Ekle</button>
+            <button class="btn btn-p btn-sm yetki-degistir-gerekli" id="prs-ekle-btn" onclick="prsEkleModal()" style="display:none"><i class="ti ti-plus"></i> Personel Ekle</button>
           </div>
           <div class="um-table-wrap">
             <table id="prs-tbl">
@@ -4275,7 +4275,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <option value="Red">Red</option>
         </select>
       </div>
-      <button class="btn btn-p btn-sm" onclick="oneriEkleAc()"><i class="ti ti-plus"></i> Personel Öneri Ekle</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="oneriEkleAc()"><i class="ti ti-plus"></i> Personel Öneri Ekle</button>
     </div>
 
     <!-- İstatistik kartları -->
@@ -4308,7 +4308,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap">
         <div id="yd-placeholder-kurul" style="display:inline-flex;align-items:flex-start;align-self:flex-start;flex-shrink:0"></div>
       </div>
-      <button class="btn btn-p btn-sm" id="kurul-ekle-btn" onclick="kurulToplantıEkle()" style="display:none">
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" id="kurul-ekle-btn" onclick="kurulToplantıEkle()" style="display:none">
         <i class="ti ti-plus"></i> Personel Kurul Toplantısı Ekle
       </button>
     </div>
@@ -8670,7 +8670,7 @@ function kurulListeRender(){
           <span style="font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0">${g.no||gi+1}.</span>
           <span style="font-size:13px;font-weight:500;flex:1">${g.konu||''}</span>
           ${g.karar?`<span class="badge b-green" style="font-size:9px;flex-shrink:0">Karar var</span>`:`<span class="badge b-amber" style="font-size:9px;flex-shrink:0">Karar yok</span>`}
-          ${yetki?`<div style="display:flex;gap:3px;flex-shrink:0" onclick="event.stopPropagation()">
+          ${yetki?`<div class="yetki-degistir-gerekli" style="display:flex;gap:3px;flex-shrink:0" onclick="event.stopPropagation()">
             <button class="btn btn-sm" style="padding:2px 6px" onclick="kurulGundemDuzenle('${t.id}','${g.id}')"><i class="ti ti-edit" style="font-size:11px"></i></button>
             <button class="btn btn-sm" style="padding:2px 6px;color:var(--red)" onclick="kurulGundemSil('${t.id}','${g.id}')"><i class="ti ti-trash" style="font-size:11px"></i></button>
           </div>`:''}
@@ -8697,7 +8697,7 @@ function kurulListeRender(){
             <span><i class="ti ti-list" style="font-size:11px;margin-right:3px"></i>${gundemler.length} gündem · ${gundemler.filter(g=>g.karar).length} karar</span>
           </div>
         </div>
-        ${yetki?`<div style="display:flex;gap:4px;flex-shrink:0">
+        ${yetki?`<div class="yetki-degistir-gerekli" style="display:flex;gap:4px;flex-shrink:0">
           <button class="btn btn-sm" style="font-size:11px" onclick="kurulGundemEkle('${t.id}','${t.ad}')"><i class="ti ti-plus"></i> Gündem Ekle</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="kurulToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="kurulToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>
@@ -8707,6 +8707,7 @@ function kurulListeRender(){
       ${gundemler.length?`<div style="padding:0 12px 12px">${gundemHtml}</div>`:`<div style="padding:0 16px 12px;font-size:12px;color:var(--text2);font-style:italic">${yetki?'Henüz gündem eklenmedi. "Gündem Ekle" butonunu kullanın.':'Henüz gündem eklenmedi.'}</div>`}
     </div>`;
   }).join('');
+  yetkiButonlariUygula('personel-kurul', 's-personel-kurul');
 }
 
 /* Gündem accordion toggle */
@@ -9166,14 +9167,15 @@ window.oneriRender = function(){
 
           <!-- Butonlar -->
           <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:0.5px solid var(--border)">
-            ${isGS && o.durum==='Beklemede'?`<button class="btn btn-sm" style="font-size:11px;color:var(--blue)" onclick="event.stopPropagation();oneriDegAc('${o.id}')"><i class="ti ti-clipboard-check"></i> Değerlendir</button>`:''}
-            <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();oneriDuzenle('${o.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-            <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();oneriSil('${o.id}')"><i class="ti ti-trash"></i> Sil</button>
+            ${isGS && o.durum==='Beklemede'?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--blue)" onclick="event.stopPropagation();oneriDegAc('${o.id}')"><i class="ti ti-clipboard-check"></i> Değerlendir</button>`:''}
+            <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();oneriDuzenle('${o.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+            <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();oneriSil('${o.id}')"><i class="ti ti-trash"></i> Sil</button>
           </div>
         </div>
       </div>
     </div>`;
   }).join('');
+  yetkiButonlariUygula('personel-oneri', 's-personel-oneri');
 };
 
 /* Metrikler */
@@ -9921,9 +9923,10 @@ function renderPrsList() {
       <td>${p.durum==='aktif'?'<span class="badge b-green">Aktif</span>':'<span class="badge b-amber">İzinde</span>'}</td>
       <td>${(ozlukYetkiVar() || kendiId()==p.id) ? `<button class="btn btn-sm" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation();prsTabAndSelect('ozluk',${p.id})"><i class="ti ti-folder"></i> Özlük</button>` : `<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;opacity:.35;cursor:not-allowed" disabled title="Yetki yok"><i class="ti ti-lock"></i> Özlük</button>`}</td>
       <td>${tikla ? `<button class="btn btn-sm" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation();prsOpenDetail(${p.id})"><i class="ti ti-eye"></i></button>` : `<button class="btn btn-sm" style="font-size:10px;padding:3px 7px;opacity:.35;cursor:not-allowed" disabled title="Görüntüleme yetkiniz yok"><i class="ti ti-lock"></i></button>`}
-      ${prsEklemeYetkiVar()?`<button class="btn btn-sm" style="font-size:10px;padding:3px 7px;color:var(--red);margin-left:3px" onclick="event.stopPropagation();prsSilModal(${p.id})" title="Personeli sil"><i class="ti ti-trash"></i></button>`:''}</td>
+      ${prsEklemeYetkiVar()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:3px 7px;color:var(--red);margin-left:3px" onclick="event.stopPropagation();prsSilModal(${p.id})" title="Personeli sil"><i class="ti ti-trash"></i></button>`:''}</td>
     </tr>`;
   }).join('');
+  yetkiButonlariUygula('personel-bilgi', 's-personel');
 }
 
 window.prsMetrikleriGuncelle = function(){
@@ -10410,7 +10413,7 @@ function etkPrsRender(){
   if(_etkPrsArama){
     etks=etks.filter(e=>(e.ad||'').toLowerCase().includes(_etkPrsArama)||(e.no||'').toLowerCase().includes(_etkPrsArama)||(e.egitimci||'').toLowerCase().includes(_etkPrsArama));
   }
-  if(!etks.length){ list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text2)"><i class="ti ti-school" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz personel eğitimi eklenmedi</div><button class="btn btn-p btn-sm" onclick="etkPrsYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button></div>`; return; }
+  if(!etks.length){ list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text2)"><i class="ti ti-school" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz personel eğitimi eklenmedi</div><button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="etkPrsYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button></div>`; return; }
   list.innerHTML=etks.map(etk=>{
     const kat=(etk.katilimcilar||[]).length;
     let mT=0,mS=0; (etk.anketler||[]).forEach(a=>Object.values(a.cevaplar||{}).forEach(b=>Object.values(b||{}).forEach(p=>{ if(p>0){mT+=p;mS++;} })));
@@ -10451,15 +10454,16 @@ function etkPrsRender(){
           </div>`).join('')}
         </div>`:''}
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <button class="btn btn-sm" onclick="event.stopPropagation();etkPrsOpenModal('${etk.id}')"><i class="ti ti-users"></i> Katılımcı & Memnuniyet</button>
-          <button class="btn btn-sm" onclick="event.stopPropagation();etkPrsDuzenle('${etk.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-          <button class="btn btn-sm" onclick="event.stopPropagation();etkPrsEvrakAc('${etk.id}')"><i class="ti ti-file-upload"></i> Evrak${(etk.evraklar||[]).length?' ('+(etk.evraklar||[]).length+')':''}</button>
-          ${etk.durum!=='tamamlandi'?`<button class="btn btn-p btn-sm" onclick="event.stopPropagation();etkPrsTamamla('${etk.id}')"><i class="ti ti-check"></i> Tamamlandı</button>`:'<span class="badge b-green" style="font-size:10px">✓ Tamamlandı</span>'}
-          <button class="btn btn-sm" style="color:var(--red);margin-left:auto" onclick="event.stopPropagation();etkPrsSil('${etk.id}')"><i class="ti ti-trash"></i></button>
+          <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkPrsOpenModal('${etk.id}')"><i class="ti ti-users"></i> Katılımcı & Memnuniyet</button>
+          <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkPrsDuzenle('${etk.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+          <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkPrsEvrakAc('${etk.id}')"><i class="ti ti-file-upload"></i> Evrak${(etk.evraklar||[]).length?' ('+(etk.evraklar||[]).length+')':''}</button>
+          ${etk.durum!=='tamamlandi'?`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkPrsTamamla('${etk.id}')"><i class="ti ti-check"></i> Tamamlandı</button>`:'<span class="badge b-green" style="font-size:10px">✓ Tamamlandı</span>'}
+          <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red);margin-left:auto" onclick="event.stopPropagation();etkPrsSil('${etk.id}')"><i class="ti ti-trash"></i></button>
         </div>
       </div>`:''}
     </div>`;
   }).join('');
+  yetkiButonlariUygula('personel-egitim', 's-egitim-prs');
 }
 window.etkPrsRender=etkPrsRender;
 
@@ -14833,7 +14837,7 @@ function memPrsAnketListesiGuncelle(yil){
   const anketler=MEM_PRS_DB[yil]||[];
   if(badge) badge.textContent=yil+' · '+anketler.length+' anket';
   if(!el) return;
-  if(!anketler.length){ el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">${yil} yili için henüz anket yok</div>`; return; }
+  if(!anketler.length){ el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">${yil} yili için henüz anket yok</div>`; yetkiButonlariUygula('personel-memnuniyet','s-mem-prs'); return; }
   el.innerHTML=anketler.map((a,ai)=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--surface)">
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:500">${a.aciklama||(yil+' — Anket #'+(ai+1))}</div>
@@ -14843,10 +14847,11 @@ function memPrsAnketListesiGuncelle(yil){
       ${a.ortPuan?`<div style="font-size:13px;font-weight:700;color:var(--teal)">${a.ortPuan}/4</div><div style="font-size:10px;color:var(--text2)">%${a.ortPct||Math.round(a.ortPuan/4*100)}</div>`:'<span style="font-size:12px;color:var(--text2)">—</span>'}
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0">
-      <button class="btn btn-sm" style="font-size:11px" onclick="memPrsEkleModal('${a.id}')"><i class="ti ti-edit"></i></button>
-      <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="memPrsAnketSil('${a.id}')"><i class="ti ti-trash"></i></button>
+      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="memPrsEkleModal('${a.id}')"><i class="ti ti-edit"></i></button>
+      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="memPrsAnketSil('${a.id}')"><i class="ti ti-trash"></i></button>
     </div>
   </div>`).join('');
+  yetkiButonlariUygula('personel-memnuniyet','s-mem-prs');
 }
 
 function memPrsKarsilastirmaGuncelle(){
@@ -19141,9 +19146,9 @@ async function gsRenderKurulAsync(tur){
       <td style="padding:10px 14px;color:var(--text2);font-size:12px">${gsFmtTarih(r.baslangic)}</td>
       <td style="padding:10px 14px;text-align:right;white-space:nowrap">
         <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsKurulUyelikDuzenle('${r.id}','${tur}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsKurulUnvanDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Ünvan Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsKurulUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsKurulUnvanDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Ünvan Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsKurulUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`).join('');
 
@@ -19155,9 +19160,9 @@ async function gsRenderKurulAsync(tur){
       <td style="padding:8px 14px;font-size:11px;color:var(--text2)">${gsFmtTarih(r.baslangic)} → ${gsFmtTarih(r.bitis)}</td>
       <td style="padding:8px 14px"><span class="badge b-red" style="font-size:10px">${nedenAd[r.ayrilma_nedeni]||r.ayrilma_nedeni||'Ayrıldı'}</span></td>
       <td style="padding:8px 14px;text-align:right;white-space:nowrap">
-        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsKurulGecmisDuzenle('${r.id}','${tur}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsKurulDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px" onclick="gsKurulGecmisDuzenle('${r.id}','${tur}')" title="Düzenle"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsKurulDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`).join('');
 
@@ -19174,7 +19179,7 @@ async function gsRenderKurulAsync(tur){
       <div style="font-size:13px;font-weight:600;color:var(--blue)">${organAd}
         <span style="color:var(--text2);font-weight:400;font-size:12px">— ${aktifler.length} aktif üye</span>
       </div>
-      <button class="btn btn-p btn-sm" onclick="gsKurulUyeEkle('${tur}')"><i class="ti ti-plus"></i> Üye Ekle</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="gsKurulUyeEkle('${tur}')"><i class="ti ti-plus"></i> Üye Ekle</button>
     </div>
 
     <div class="card" style="overflow:hidden;margin-bottom:18px">
@@ -19205,6 +19210,7 @@ async function gsRenderKurulAsync(tur){
         </table>
       </div>` : ''}
   `;
+  yetkiButonlariUygula('gs', 's-gs');
 }
 
 window.gsKurulDonemSec = function(donemId, tur){ window._gsKurulSeciliDonem[tur]=donemId; gsRenderKurul(tur); };
@@ -19299,7 +19305,7 @@ async function gsRenderMKAsync(){
   // Komite sekmeleri
   const komiteTabs = komiteNolar.map(kNo=>`
     <button onclick="gsMkKomiteSec(${kNo})" style="padding:5px 12px;border-radius:20px;border:1px solid ${kNo===_gsMkSeciliKomite?'var(--purple)':'var(--border)'};background:${kNo===_gsMkSeciliKomite?'var(--purple)':'transparent'};color:${kNo===_gsMkSeciliKomite?'#fff':'var(--text2)'};cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)">${kNo}. Komite</button>`).join('')
-    + `<button onclick="gsMkYeniKomite()" style="padding:5px 12px;border-radius:20px;border:1px dashed var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)"><i class="ti ti-plus" style="font-size:11px"></i> Yeni Komite</button>`;
+    + `<button class="yetki-degistir-gerekli" onclick="gsMkYeniKomite()" style="padding:5px 12px;border-radius:20px;border:1px dashed var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)"><i class="ti ti-plus" style="font-size:11px"></i> Yeni Komite</button>`;
 
   // Aktif üye satırları
   const aktifSatirlar = aktifler.map(r=>{
@@ -19314,9 +19320,9 @@ async function gsRenderMKAsync(){
       <td style="padding:10px 14px;color:var(--text2);font-size:12px">${gsFmtTarih(r.baslangic)}</td>
       <td style="padding:10px 14px;text-align:right;white-space:nowrap">
         <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMkUyelikDuzenle('${r.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsMkRolDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Rol Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsMkUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Sil"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsMkRolDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Rol Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsMkUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Sil"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`;
   }).join('');
@@ -19330,9 +19336,9 @@ async function gsRenderMKAsync(){
       <td style="padding:8px 14px;font-size:11px;color:var(--text2)">${gsFmtTarih(r.baslangic)} → ${gsFmtTarih(r.bitis)}</td>
       <td style="padding:8px 14px"><span class="badge b-red" style="font-size:10px">${nedenAd[r.ayrilma_nedeni]||r.ayrilma_nedeni||'Ayrıldı'}</span></td>
       <td style="padding:8px 14px;text-align:right;white-space:nowrap">
-        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMkGecmisDuzenle('${r.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsMkDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
-        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Kaydı Sil"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px" onclick="gsMkGecmisDuzenle('${r.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsMkDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Kaydı Sil"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`).join('');
 
@@ -19343,9 +19349,9 @@ async function gsRenderMKAsync(){
       <select id="gs-mk-donem" class="yk-inp" style="height:32px;font-size:12px;width:auto;min-width:200px" onchange="gsMkDonemSec(this.value)">
         ${donemSec || '<option>Dönem yok</option>'}
       </select>
-      <button class="btn btn-sm" onclick="gsMkDonemEkle()" style="font-size:11px"><i class="ti ti-plus"></i> Yeni Dönem</button>
-      ${donemId ? `<button class="btn btn-sm" onclick="gsMkDonemDuzenle('${donemId}')" style="font-size:11px" title="Dönemi Düzenle"><i class="ti ti-edit"></i></button>
-      <button class="btn btn-sm" onclick="gsMkDonemSil('${donemId}')" style="font-size:11px;color:var(--red)" title="Dönemi Sil"><i class="ti ti-trash"></i></button>` : ''}
+      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsMkDonemEkle()" style="font-size:11px"><i class="ti ti-plus"></i> Yeni Dönem</button>
+      ${donemId ? `<button class="btn btn-sm yetki-degistir-gerekli" onclick="gsMkDonemDuzenle('${donemId}')" style="font-size:11px" title="Dönemi Düzenle"><i class="ti ti-edit"></i></button>
+      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsMkDonemSil('${donemId}')" style="font-size:11px;color:var(--red)" title="Dönemi Sil"><i class="ti ti-trash"></i></button>` : ''}
       ${seciliDonem ? `<span style="font-size:11px;color:var(--text2)">${gsFmtTarih(seciliDonem.baslangic)} — ${seciliDonem.bitis?gsFmtTarih(seciliDonem.bitis):'devam ediyor'}</span>` : ''}
     </div>
 
@@ -19360,8 +19366,8 @@ async function gsRenderMKAsync(){
         <span style="color:var(--text2);font-weight:400;font-size:12px">— ${aktifAsil} asıl, ${aktifYedek} yedek</span>
       </div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-sm" style="color:var(--red)" onclick="gsMkKomiteSilYeni(${_gsMkSeciliKomite})"><i class="ti ti-trash"></i> Komiteyi Sil</button>
-        <button class="btn btn-p btn-sm" onclick="gsMkUyelikEkle(${_gsMkSeciliKomite})"><i class="ti ti-plus"></i> Üye Ekle</button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red)" onclick="gsMkKomiteSilYeni(${_gsMkSeciliKomite})"><i class="ti ti-trash"></i> Komiteyi Sil</button>
+        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="gsMkUyelikEkle(${_gsMkSeciliKomite})"><i class="ti ti-plus"></i> Üye Ekle</button>
       </div>
     </div>
 
@@ -19395,6 +19401,7 @@ async function gsRenderMKAsync(){
         </table>
       </div>` : ''}
   `;
+  yetkiButonlariUygula('gs', 's-gs');
 }
 
 function gsFmtTarih(d){
@@ -23157,7 +23164,12 @@ window.sw=function(id,btn){
   },30);
   /* Yetki kontrolü — doğrudan sw() ile açılan menüler için, modül render'ından SONRA çalışsın diye geciktirilmiş */
   if(window.YETKI_MENULER && window.YETKI_MENULER.some(m=>m.key===id)){
-    setTimeout(()=>{ if(window.yetkiKontrolGoster) window.yetkiKontrolGoster(id, 's-'+id); }, 100);
+    setTimeout(()=>{
+      if(window.yetkiKontrolGoster){
+        const bloklandi = window.yetkiKontrolGoster(id, 's-'+id);
+        if(!bloklandi && window.yetkiButonlariUygula) window.yetkiButonlariUygula(id, 's-'+id);
+      }
+    }, 100);
   }
 };
 
