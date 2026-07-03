@@ -9622,14 +9622,14 @@ window.supaYukleYetkiMatrisi = supaYukleYetkiMatrisi;
 
 /* Şu anki kullanıcının ünvanını bul (personel tablosundan, kullanıcı adıyla eşleşir) */
 window.kullaniciUnvani = function(){
-  if(!window.currentUser) return null;
+  if(!currentUser) return null;
   const p = (window.PERSONEL||[]).find(x=>x.kullanici===currentUser.kullanici);
   return p ? p.unvan : null;
 };
 
 /* "admin" kullanıcı adı her zaman tam yetkili (master/test hesabı) */
 window.masterKullaniciMi = function(){
-  return window.currentUser && window.currentUser.kullanici === 'admin';
+  return currentUser && currentUser.kullanici === 'admin';
 };
 
 /* Genel Sekreter mi? — Yetkilendirme ekranına her zaman erişebilir (kilitlenmeyi önler) */
