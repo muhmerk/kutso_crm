@@ -19065,7 +19065,10 @@ async function gsRenderMKAsync(){
       <div style="font-size:13px;font-weight:600;color:var(--purple)">${_gsMkSeciliKomite}. Meslek Komitesi
         <span style="color:var(--text2);font-weight:400;font-size:12px">— ${aktifAsil} asıl, ${aktifYedek} yedek</span>
       </div>
-      <button class="btn btn-p btn-sm" onclick="gsMkUyelikEkle(${_gsMkSeciliKomite})"><i class="ti ti-plus"></i> Üye Ekle</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" style="color:var(--red)" onclick="gsMkKomiteSilYeni(${_gsMkSeciliKomite})"><i class="ti ti-trash"></i> Komiteyi Sil</button>
+        <button class="btn btn-p btn-sm" onclick="gsMkUyelikEkle(${_gsMkSeciliKomite})"><i class="ti ti-plus"></i> Üye Ekle</button>
+      </div>
     </div>
 
     <!-- Aktif üyeler -->
@@ -19147,6 +19150,40 @@ window.gsMkYeniKomite = function(){
   );
 };
 window.gsMkDonemSec = function(donemId){ window._gsMkSeciliDonem=donemId; gsRenderMK(); };
+
+/* Komiteyi tamamen sil — tüm mk_uyelik kayıtlarını (aktif + geçmiş) kaldırır.
+   Not: Bu komiteye ait toplantı/karar/evrak kayıtları veritabanında kalır (silinmez),
+   ama komite üye listesi olmadığı için "Meslek Komitesi Kararları" menüsündeki
+   komite listesinde artık görünmez. */
+window.gsMkKomiteSilYeni = async function(kNo){
+  const donemId = window._gsMkSeciliDonem;
+  let toplamKayit = 0;
+  try{
+    const { count } = await _supa.from('mk_uyelik').select('id',{count:'exact',head:true}).eq('komite_no',kNo);
+    toplamKayit = count||0;
+  }catch(_){}
+
+  if(!confirm(`${kNo}. Meslek Komitesi silinecek.\n\nBu komiteye ait ${toplamKayit} üyelik kaydı (aktif + geçmiş) kalıcı olarak silinecek.\n\nKomiteye ait toplantı/karar/evrak kayıtları veritabanında kalır ama "Meslek Komitesi Kararları" menüsünde artık görünmeyecektir.\n\nBu işlem GERİ ALINAMAZ. Devam etmek istiyor musunuz?`)) return;
+
+  const dogrulama = prompt(`Emin olduğunuzu onaylamak için komite numarasını yazın: ${kNo}`);
+  if(String(dogrulama).trim() !== String(kNo)){
+    alert('Numara eşleşmedi, işlem iptal edildi.');
+    return;
+  }
+
+  try{
+    const { error } = await _supa.from('mk_uyelik').delete().eq('komite_no', kNo);
+    if(error) throw error;
+    await supaYukleKatilimUyeler();
+    _gsMkSeciliKomite = null;
+    // Kalan komitelerden birine geç
+    if((window._mkTumKomiteNolar||[]).length) _gsMkSeciliKomite = window._mkTumKomiteNolar[0];
+    // Eğer MK Kararları menüsünde bu komitedeyseniz, komite listesine dön
+    if(window._mkSeciliKomiteNo === kNo){ window._mkSeciliKomiteNo = null; }
+    gsRenderMK();
+    alert(`✓ ${kNo}. Meslek Komitesi silindi.`);
+  }catch(e){ alert('Silme hatası: '+(e.message||e)); }
+};
 
 /* ── GENEL: ÜYE SİL ── */
 window.gsUyeSil = async function(tablo, id, tur){
