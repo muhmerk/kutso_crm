@@ -6230,7 +6230,7 @@ let _etkEvrakAktif = null;
     const ov = document.createElement('div');
     ov.id = 'etk-evrak-overlay';
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:250;display:flex;align-items:center;justify-content:center';
-    const _etkYetki = currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici);
+    const _etkYetki = window.digerYetkiVar('crm-egitim', currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici));
     const canDelete = _etkYetki; /* Sadece GS/İK silebilir */
     const canDownload = _etkYetki; /* Sadece GS/İK indirebilir */
     ov.innerHTML = `<div style="background:var(--surface);border-radius:14px;width:520px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
@@ -9603,7 +9603,6 @@ const YETKI_MENULER = [
   { key:'yk-yk',             ad:'YK Kararları',                grup:'Oda Yönetimi' },
   { key:'yk-mk',             ad:'Meslek Komitesi',             grup:'Oda Yönetimi' },
   { key:'yk-meclis',         ad:'Meclis Kararları',            grup:'Oda Yönetimi' },
-  { key:'yk-gorev',          ad:'Görevler',                    grup:'Oda Yönetimi' },
   { key:'akreditasyon',      ad:'Akreditasyon',                grup:'Oda Yönetimi' },
   { key:'isplani',           ad:'İş Planı',                    grup:'Oda Yönetimi' },
   { key:'personel-bilgi',    ad:'Personel Bilgi',              grup:'Personel' },
@@ -10555,7 +10554,7 @@ window.etkPrsEvrakAc=function(etkId){
   window._etkPrsEvrakAktif = etkId;
   const existing=document.getElementById('etk-prs-evrak-overlay');
   if(existing) existing.remove();
-  const _etkYetki = currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici);
+  const _etkYetki = window.digerYetkiVar('personel-egitim', currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici));
   function _ikon(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(e==='pdf') return 'ti-file-type-pdf'; if(['doc','docx'].includes(e)) return 'ti-file-type-doc'; if(['xls','xlsx'].includes(e)) return 'ti-file-type-xls'; if(['ppt','pptx'].includes(e)) return 'ti-presentation'; return 'ti-file-description'; }
   function _renk(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(e==='pdf') return '#E24B4A'; if(['doc','docx'].includes(e)) return '#185FA5'; if(['xls','xlsx'].includes(e)) return '#1D9E75'; if(['ppt','pptx'].includes(e)) return '#EF9F27'; return 'var(--text2)'; }
   const ov=document.createElement('div');
@@ -12015,7 +12014,7 @@ window.kararlarSec = function(tip, btn){
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.gorevRender) window.gorevRender(); }, 30);
   }
   /* Yetki kontrolü */
-  const _kararMenuKeyMap = { yk:'yk-yk', mk:'yk-mk', meclis:'yk-meclis', gorev:'yk-gorev' };
+  const _kararMenuKeyMap = { yk:'yk-yk', mk:'yk-mk', meclis:'yk-meclis' };
   if(_kararMenuKeyMap[tip]){
     setTimeout(()=>{ if(window.yetkiKontrolGoster) window.yetkiKontrolGoster(_kararMenuKeyMap[tip], 'kp-'+tip); }, 110);
   }
@@ -14042,9 +14041,8 @@ function gorevBadgeGuncelle(){
 function gorevRender(){
   const el=document.getElementById('gorev-panel-icerik');
   if(!el||!currentUser)return;
-  const yonetici=gorevYetkiMi();
-  if(yonetici) gorevRenderYonetici(el);
-  else gorevRenderPersonel(el);
+  /* Herkes (Genel Sekreterlik dahil) sadece kendi görevlerini görür — yetkilendirmeye tabi değil */
+  gorevRenderPersonel(el);
   gorevBadgeGuncelle();
 }
 
