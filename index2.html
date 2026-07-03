@@ -233,8 +233,8 @@ async function supaYukleSikayetler() {
               </div>
               <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
                 <button class="btn btn-sm" style="font-size:11px" onclick="sikSurecAc('${s.id}')"><i class="ti ti-list-details"></i> Detay & Süreç</button>
-                <button class="btn btn-sm" style="font-size:11px" onclick="sikayetEkleModal('${s.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-                <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="sikayetSilById('${s.id}',this)"><i class="ti ti-trash"></i> Sil</button>
+                <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="sikayetEkleModal('${s.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+                <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="sikayetSilById('${s.id}',this)"><i class="ti ti-trash"></i> Sil</button>
               </div>
             </div>`;
           if(window.YD_STATE?.['sikayet']){
@@ -243,6 +243,7 @@ async function supaYukleSikayetler() {
           container.appendChild(div);
         });
       }
+      yetkiButonlariUygula('crm-sikayet', 's-sikayet');
       const aktifYil = window.YD_STATE?.['sikayet']?.size ? Math.max(...Array.from(window.YD_STATE['sikayet'])) : new Date().getFullYear();
       if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(aktifYil);
       if(window.sikTrendGuncelle) window.sikTrendGuncelle();
@@ -2881,8 +2882,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           </div>
         </div>
         <div id="crm-firm-status"></div>
-        <button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button>
-        <button class="btn btn-p btn-sm" onclick="crmNotEkleModal()"><i class="ti ti-plus"></i> Not Ekle</button>
+        <button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button>
+        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="crmNotEkleModal()"><i class="ti ti-plus"></i> Not Ekle</button>
       </div>
 
       <!-- İçerik: sol profil + sağ 2 bölüm -->
@@ -3064,7 +3065,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:0;flex-wrap:wrap">
       <div id="yd-placeholder-memnuniyet" style="margin-bottom:0;display:flex;align-items:center;gap:6px"></div>
       <div style="flex:1"></div>
-      <button class="btn btn-p btn-sm" onclick="memEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="memEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
     </div>
 
     <!-- Memnuniyet Ekle Modal -->
@@ -3209,7 +3210,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:0;flex-wrap:wrap">
       <div id="yd-placeholder-sikayet" style="margin-bottom:0;display:flex;align-items:center;gap:6px"></div>
       <div style="flex:1"></div>
-      <button class="btn btn-p btn-sm" onclick="sikayetEkleModal()"><i class="ti ti-plus"></i> Şikayet Ekle</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="sikayetEkleModal()"><i class="ti ti-plus"></i> Şikayet Ekle</button>
     </div>
 
     <!-- Şikayet Ekle Modal -->
@@ -3333,7 +3334,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
                 <button class="btn btn-sm" onclick="katilimOzetAc('mk','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
                 <button class="btn btn-sm" onclick="katilimOzetAc('mk','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
                 <div id="mk-header-btn" style="display:inline-flex">
-                  <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()">
+                  <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="mkToplantıEkle()">
                     <i class="ti ti-plus"></i> Toplantı Ekle
                   </button>
                 </div>
@@ -3371,7 +3372,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
               <button class="btn btn-sm" onclick="katilimOzetAc('meclis','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
               <button class="btn btn-sm" onclick="katilimOzetAc('meclis','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
               <div id="meclis-header-btn" style="display:inline-flex">
-                <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()">
+                <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisToplantıEkle()">
                   <i class="ti ti-plus"></i> Toplantı Ekle
                 </button>
               </div>
@@ -3685,7 +3686,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <i class="ti ti-search" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:13px;pointer-events:none"></i>
           <input id="etk-arama" class="yk-inp" style="padding:6px 10px 6px 30px;font-size:12px;width:200px" placeholder="Etkinlik adı veya no..." oninput="etkArama(this.value)">
         </div>
-        <button class="btn btn-p btn-sm" onclick="etkYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button>
+        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="etkYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button>
       </div>
     </div>
     <div id="etk-list"></div>
@@ -5181,14 +5182,15 @@ function toggleTpl(header) {
 
     /* Hızlı işlemler */
     document.getElementById('crm-hizli-islemler').innerHTML = `
-      <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmNotEkleModal()"><i class="ti ti-message" style="margin-right:6px"></i> İletişim Notu Ekle</button>
-      <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmGorevEkle()"><i class="ti ti-checklist" style="margin-right:6px"></i> Görev Oluştur</button>
+      <button class="btn btn-sm yetki-degistir-gerekli" style="width:100%;justify-content:flex-start" onclick="crmNotEkleModal()"><i class="ti ti-message" style="margin-right:6px"></i> İletişim Notu Ekle</button>
+      <button class="btn btn-sm yetki-degistir-gerekli" style="width:100%;justify-content:flex-start" onclick="crmGorevEkle()"><i class="ti ti-checklist" style="margin-right:6px"></i> Görev Oluştur</button>
       <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmTab('aidat',document.querySelector('.crm-tab[onclick*=aidat]'))"><i class="ti ti-coin" style="margin-right:6px"></i> Aidat Durumu Gör</button>
     `;
 
     /* Göster */
     document.getElementById('crm-detail').style.display = 'block';
     crmTab('iletisim', document.querySelector('.crm-tab'));
+    if(window.yetkiButonlariUygula) window.yetkiButonlariUygula('crm-profil', 'crm-detail');
 
     /* Verileri Supabase'den yükle */
     crmTimelineRender(f.id);
@@ -6095,7 +6097,8 @@ window.crmNavSec = function(sekme, btn){
     });
 
     if(!etks.length){
-      list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text2)"><i class="ti ti-calendar-event" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz etkinlik eklenmedi</div><button class="btn btn-p btn-sm" onclick="etkYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button></div>`;
+      list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text2)"><i class="ti ti-calendar-event" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz etkinlik eklenmedi</div><button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="etkYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button></div>`;
+      yetkiButonlariUygula('crm-egitim', 's-egitim');
       return;
     }
 
@@ -6152,15 +6155,16 @@ if(etk.durum !== 'tamamlandi') etk.durum = etkOtoDurum(etk);
             <span class="kota-val">${kat} / ${etk.kontenjan}</span>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <button class="btn btn-sm" onclick="event.stopPropagation();etkOpenModal('${etk.id}')"><i class="ti ti-users"></i> Katılımcı & Memnuniyet</button>
-            <button class="btn btn-sm" onclick="event.stopPropagation();etkDuzenle('${etk.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-            <button class="btn btn-sm" onclick="event.stopPropagation();etkEvrakAc('${etk.id}')"><i class="ti ti-file-upload"></i> Evrak${evraklar.length?' ('+evraklar.length+')':''}</button>
-            ${etk.durum!=='tamamlandi'?`<button class="btn btn-p btn-sm" onclick="event.stopPropagation();etkTamamla('${etk.id}')"><i class="ti ti-check"></i> Tamamlandı</button>`:'<span class="badge b-green" style="font-size:10px">✓ Tamamlandı</span>'}
-            <button class="btn btn-sm" style="color:var(--red);margin-left:auto" onclick="event.stopPropagation();etkSil('${etk.id}')"><i class="ti ti-trash"></i></button>
+            <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkOpenModal('${etk.id}')"><i class="ti ti-users"></i> Katılımcı & Memnuniyet</button>
+            <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkDuzenle('${etk.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+            <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkEvrakAc('${etk.id}')"><i class="ti ti-file-upload"></i> Evrak${evraklar.length?' ('+evraklar.length+')':''}</button>
+            ${etk.durum!=='tamamlandi'?`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkTamamla('${etk.id}')"><i class="ti ti-check"></i> Tamamlandı</button>`:'<span class="badge b-green" style="font-size:10px">✓ Tamamlandı</span>'}
+            <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red);margin-left:auto" onclick="event.stopPropagation();etkSil('${etk.id}')"><i class="ti ti-trash"></i></button>
           </div>
         </div>`:''}
       </div>`;
     }).join('');
+    yetkiButonlariUygula('crm-egitim', 's-egitim');
   } /* end renderList */
 
   function renderListAndMetrics(){
@@ -11273,7 +11277,7 @@ function ykRenderToplantıListesi(){
   const headerBtn = document.getElementById('yk-header-btn');
   if(!el) return;
   header.innerHTML = 'Toplantılar';
-  if(headerBtn) headerBtn.innerHTML = `<button class="btn btn-p btn-sm" onclick="ykToplantıEkleModal()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
+  if(headerBtn) headerBtn.innerHTML = `<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="ykToplantıEkleModal()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
 
   let liste = [...YK_DB.toplantılar];
   /* Tarih sıralaması — en eski en üstte */
@@ -11293,8 +11297,9 @@ function ykRenderToplantıListesi(){
       </div>
       <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz toplantı eklenmedi</div>
       <div style="font-size:13px;margin-bottom:16px">Yönetim Kurulu toplantılarını ve gündem maddelerini buradan yönetin</div>
-      <button class="btn btn-p" onclick="ykToplantıEkleModal()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
+      <button class="btn btn-p yetki-degistir-gerekli" onclick="ykToplantıEkleModal()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
     </div>`;
+    yetkiButonlariUygula('yk-yk', 'yk-karar-list');
     return;
   }
 
@@ -11328,11 +11333,12 @@ function ykRenderToplantıListesi(){
         <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();ykAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay & Gündemler</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','yk','${t.ad.replace(/'/g,'\\&apos;')}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
-          ${ykYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();ykToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();ykToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
+          ${ykYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();ykToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();ykToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
       </div>`;
     }).join('') + '</div>';
+  yetkiButonlariUygula('yk-yk', 'yk-karar-list');
 }
 
 /* ── Toplantı detayı (gündemler) ── */
@@ -11355,11 +11361,11 @@ function ykRenderToplantıDetay(){
     </button>
     <span style="font-size:14px;font-weight:500">${t.ad}</span>
     <span style="font-size:12px;font-weight:400;color:var(--text2)">${t.tarih}</span>
-    <button class="btn btn-sm" onclick="katilimAc('${t.id}','yk')" style="margin-left:8px">
+    <button class="btn btn-sm yetki-degistir-gerekli" onclick="katilimAc('${t.id}','yk')" style="margin-left:8px">
       <i class="ti ti-clipboard-check"></i> Katılım Takibi
     </button>`;
 
-  if(headerBtn) headerBtn.innerHTML = `<button class="btn btn-p btn-sm" onclick="ykGundemEkleModal('${t.id}')">
+  if(headerBtn) headerBtn.innerHTML = `<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="ykGundemEkleModal('${t.id}')">
     <i class="ti ti-plus"></i> Gündem & Atama Ekle
   </button>`;
 
@@ -11372,6 +11378,7 @@ function ykRenderToplantıDetay(){
         </div>`
       : tGundemler.map((g,i) => ykGundemKartHtml(g, i+1, true)).join('')
     }`;
+  yetkiButonlariUygula('yk-yk', 'yk-karar-list');
 }
 
 window.ykGeriToplantıListesi = function(){
@@ -11398,7 +11405,7 @@ function ykGundemKartHtml(g, sira, yoneticiMod){
         <div style="width:6px;height:6px;border-radius:50%;background:${aDurum?'#1D9E75':pr.dot};flex-shrink:0"></div>
         <div style="flex:1;font-size:12px"><strong>${a.ad}</strong> — ${a.gorev}</div>
         <span style="font-size:10px;color:${aDurum?'var(--green)':pr.txt};font-weight:500">${aDurum?'✓ Tamamlandı':'Devam'}</span>
-        ${yoneticiMod && !aDurum ? `<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="ykAtamaTamamla('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>` : ''}
+        ${yoneticiMod && !aDurum ? `<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 7px" onclick="ykAtamaTamamla('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>` : ''}
       </div>
       ${notHtml}
     </div>`;
@@ -11419,9 +11426,9 @@ function ykGundemKartHtml(g, sira, yoneticiMod){
     <div style="font-size:11px;font-weight:500;color:var(--text2);margin-top:10px;margin-bottom:2px">Atamalar:</div>
     ${g.atananlar.length ? atananlarHtml : '<div style="font-size:12px;color:var(--text2);padding:6px 10px;background:var(--surface2);border-radius:7px;margin-top:6px">Henüz atama yapılmadı</div>'}
     ${yoneticiMod ? `<div style="margin-top:10px;display:flex;gap:7px">
-      <button class="btn btn-sm" style="font-size:11px" onclick="ykGundemEkleModal('${g.toplantıId}', '${g.id}')"><i class="ti ti-user-plus"></i> Atama Ekle</button>
-      <button class="btn btn-sm" style="font-size:11px" onclick="ykGundemDuzenle('${g.toplantıId}', '${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-      <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="ykGundemSil('${g.id}','${g.toplantıId}')"><i class="ti ti-trash"></i> Sil</button>
+      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="ykGundemEkleModal('${g.toplantıId}', '${g.id}')"><i class="ti ti-user-plus"></i> Atama Ekle</button>
+      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="ykGundemDuzenle('${g.toplantıId}', '${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="ykGundemSil('${g.id}','${g.toplantıId}')"><i class="ti ti-trash"></i> Sil</button>
       ${g.durum!=='tamamlandi' ? `<button class="btn btn-p btn-sm" style="font-size:11px" onclick="ykGundemTamamla('${g.id}')"><i class="ti ti-check"></i> Tümünü Tamamlandı İşaretle</button>` : ''}
     </div>` : ''}
   </div>`;
@@ -12119,7 +12126,7 @@ function mkRenderListe(){
   const kNo = window._mkSeciliKomiteNo;
   hd.innerHTML = `<button class="btn btn-sm" onclick="mkKomiteGeri()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Komiteler</button>
     <span style="font-size:14px;font-weight:600;color:var(--purple)">${kNo}. Meslek Komitesi</span>`;
-  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm" onclick="mkToplantıEkle()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
+  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="mkToplantıEkle()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
   /* YD filtresi */
   const mkYF = window._mkYilFilter;
   /* Sadece seçili komiteye ait toplantılar */
@@ -12141,7 +12148,7 @@ function mkRenderListe(){
         <i class="ti ti-building-community" style="font-size:24px;color:var(--purple)"></i>
       </div>
       <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${window._kararYil ? window._kararYil+' yılı için ':''}${kNo}. Meslek Komitesi'ne henüz toplantı girilmedi</div>
-      <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="mkToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
     </div>`; return;
   }
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">`+
@@ -12160,13 +12167,14 @@ function mkRenderListe(){
         </div>
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
-          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
+          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();mkGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','mk','${t.ad.replace(/'/g,"\\'")}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
-          ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();mkToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
+          ${mkYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();mkToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();mkToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
       </div>`;
     }).join('')+'</div>';
+  yetkiButonlariUygula('yk-mk', 'mk-karar-list');
 }
 
 window.mkAcToplantı = function(id){
@@ -12190,7 +12198,7 @@ window.mkAcToplantı = function(id){
         <div style="font-size:13px;font-weight:700;color:var(--purple)">${kNo}. Meslek Komitesi</div>
         <div style="font-size:11px;color:var(--text2);margin-top:2px">${uyeSayisi} üye</div>
       </div>
-      <button class="btn btn-sm" onclick="mkKomiteKatilimAc('${id}',${kNo})" style="gap:4px">
+      <button class="btn btn-sm yetki-degistir-gerekli" onclick="mkKomiteKatilimAc('${id}',${kNo})" style="gap:4px">
         <i class="ti ti-clipboard-check"></i> Katılım Takibi
       </button>
     </div>
@@ -12200,7 +12208,7 @@ window.mkAcToplantı = function(id){
     <div style="border-top:0.5px solid var(--border);padding-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div style="font-size:11px;font-weight:600;color:var(--text2)">Kararlar</div>
-        ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="mkKomiteKararEkle('${id}',${kNo})"><i class="ti ti-plus"></i> Karar Ekle</button>`:''}
+        ${mkYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 8px" onclick="mkKomiteKararEkle('${id}',${kNo})"><i class="ti ti-plus"></i> Karar Ekle</button>`:''}
       </div>
       <div id="mk-komite-kararlar-${id}-${kNo}">
         ${MK_DB.gundemler.filter(g=>g.toplantıId===id && g.kaynak!=='gundem').length === 0
@@ -12210,8 +12218,8 @@ window.mkAcToplantı = function(id){
                 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${g.konu}</span>
                 <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
                   <span class="badge ${g.durum==='tamamlandi'?'b-green':'b-amber'}">${g.durum==='tamamlandi'?'Uygulandı':'Bekliyor'}</span>
-                  <button class="btn btn-sm" style="padding:2px 6px" onclick="event.stopPropagation();mkKomiteKararDuzenle('${g.id}','${id}',${kNo})" title="Düzenle"><i class="ti ti-edit" style="font-size:12px"></i></button>
-                  <button class="btn btn-sm" style="padding:2px 6px;color:var(--red)" onclick="event.stopPropagation();mkKomiteKararSil('${g.id}','${id}',${kNo})" title="Sil"><i class="ti ti-trash" style="font-size:12px"></i></button>
+                  <button class="btn btn-sm yetki-degistir-gerekli" style="padding:2px 6px" onclick="event.stopPropagation();mkKomiteKararDuzenle('${g.id}','${id}',${kNo})" title="Düzenle"><i class="ti ti-edit" style="font-size:12px"></i></button>
+                  <button class="btn btn-sm yetki-degistir-gerekli" style="padding:2px 6px;color:var(--red)" onclick="event.stopPropagation();mkKomiteKararSil('${g.id}','${id}',${kNo})" title="Sil"><i class="ti ti-trash" style="font-size:12px"></i></button>
                 </span>
               </div>`).join('')}
       </div>
@@ -12220,6 +12228,7 @@ window.mkAcToplantı = function(id){
 
   /* Katılım özetini async yükle */
   mkKomiteKatilimOzetleriYukle(id);
+  yetkiButonlariUygula('yk-mk', 'mk-karar-list');
 };
 
 /* Bu toplantının (tek komiteye ait) katılım özetini göster */
@@ -12430,7 +12439,7 @@ function mkGundemSatirHtml(g, sira, toplantıId){
   return `<div class="mk-gundem-satir" id="mk-gs-${g.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
     <div style="width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
     <input class="yk-inp" style="flex:1;margin:0" value="${konuE}" onblur="mkGundemSatirGuncelle('${idE}','${toplantıId}',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();mkGundemSatirGuncelle('${idE}','${toplantıId}',this.value);}">
-    <button class="btn btn-sm" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="mkGundemSil('${idE}','${toplantıId}')" title="Sil"><i class="ti ti-trash"></i></button>
+    <button class="btn btn-sm yetki-degistir-gerekli" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="mkGundemSil('${idE}','${toplantıId}')" title="Sil"><i class="ti ti-trash"></i></button>
   </div>`;
 }
 
@@ -13388,7 +13397,7 @@ function meclisRenderListe(){
   const hb=document.getElementById('meclis-header-btn');
   if(!el) return;
   hd.innerHTML='Meclis Toplantıları';
-  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
+  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisToplantıEkle()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
   /* YD filtresi */
   const meclisYF = window._meclisYilFilter;
   let filtreliMeclis = [...MECLIS_DB.toplantılar];
@@ -13405,7 +13414,7 @@ function meclisRenderListe(){
         <i class="ti ti-users-group" style="font-size:24px;color:var(--blue)"></i>
       </div>
       <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${window._kararYil ? window._kararYil+' yılı için meclis' : 'Henüz meclis'} toplantısı girilmedi</div>
-      <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
     </div>`; return;
   }
   el.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+
@@ -13423,13 +13432,14 @@ function meclisRenderListe(){
         </div>
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
-          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
+          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();meclisGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','meclis','${t.ad.replace(/'/g,"\\'")}')" ><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
-          ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();meclisToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
+          ${mkYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();meclisToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
       </div>`;
     }).join('')+'</div>';
+  yetkiButonlariUygula('yk-meclis', 'meclis-karar-list');
 }
 
 window.meclisAcToplantı = function(id){
@@ -13439,8 +13449,8 @@ window.meclisAcToplantı = function(id){
   const hd=document.getElementById('meclis-karar-baslik');
   const hb=document.getElementById('meclis-header-btn');
   const tG=MECLIS_DB.gundemler.filter(g=>g.toplantıId===id);
-  hd.innerHTML=`<button class="btn btn-sm" onclick="meclisGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span><button class="btn btn-sm" onclick="katilimAc('${id}','meclis')" style="margin-left:8px"><i class="ti ti-clipboard-check"></i> Katılım Takibi</button>`;
-  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm" onclick="meclisKararEkle('${id}')"><i class="ti ti-plus"></i> Karar Ekle</button>`;
+  hd.innerHTML=`<button class="btn btn-sm" onclick="meclisGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span><button class="btn btn-sm yetki-degistir-gerekli" onclick="katilimAc('${id}','meclis')" style="margin-left:8px"><i class="ti ti-clipboard-check"></i> Katılım Takibi</button>`;
+  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisKararEkle('${id}')"><i class="ti ti-plus"></i> Karar Ekle</button>`;
   el.innerHTML=tG.length===0?`<div style="text-align:center;padding:32px;color:var(--text2)"><i class="ti ti-clipboard-list" style="font-size:24px;display:block;margin-bottom:8px"></i>Karar eklenmedi</div>`:
     tG.map((g,i)=>`<div class="yk-card" style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
@@ -13453,15 +13463,16 @@ window.meclisAcToplantı = function(id){
         <div style="width:6px;height:6px;border-radius:50%;background:${a.durum==='tamamlandi'?'#1D9E75':'#EF9F27'}"></div>
         <div style="flex:1;font-size:12px"><strong>${a.ad}</strong>${a.gorev&&a.gorev!=='—'?' — '+a.gorev:''}</div>
         <span style="font-size:10px;color:${a.durum==='tamamlandi'?'var(--green)':'#854F0B'}">${a.durum==='tamamlandi'?'✓':'Devam'}</span>
-        ${mkYoneticiMi()&&a.durum!=='tamamlandi'?`<button class="btn btn-sm" style="font-size:10px;padding:2px 6px" onclick="meclisAtamaTam('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>`:''}
+        ${mkYoneticiMi()&&a.durum!=='tamamlandi'?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 6px" onclick="meclisAtamaTam('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>`:''}
       </div>`).join('')||''}
       ${mkYoneticiMi()&&g.durum!=='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
-        <button class="btn btn-sm" style="font-size:11px" onclick="meclisKararEkle('${id}','${g.id}')"><i class="ti ti-user-plus"></i> Atama</button>
-        <button class="btn btn-sm" style="font-size:11px" onclick="meclisKararDuzenle('${id}','${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-        <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="meclisGundemSil('${g.id}','${id}')"><i class="ti ti-trash"></i> Sil</button>
-        <button class="btn btn-p btn-sm" style="font-size:11px" onclick="meclisGundemTam('${g.id}')"><i class="ti ti-check"></i> Uygulandı</button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisKararEkle('${id}','${g.id}')"><i class="ti ti-user-plus"></i> Atama</button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisKararDuzenle('${id}','${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="meclisGundemSil('${g.id}','${id}')"><i class="ti ti-trash"></i> Sil</button>
+        <button class="btn btn-p btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisGundemTam('${g.id}')"><i class="ti ti-check"></i> Uygulandı</button>
       </div>`:''}
     </div>`).join('');
+  yetkiButonlariUygula('yk-meclis', 'meclis-karar-list');
 };
 
 /* ══════════════════════════════════════════════════════════
@@ -13999,19 +14010,20 @@ function gorevRenderYonetici(el){
       <div class="mc"><div class="mc-lbl">Tamamlanan</div><div class="mc-val" style="color:var(--teal)">${tamam}</div><div class="mc-sub up">Kapatıldı</div></div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <button class="btn btn-p btn-sm" onclick="gorevEkleModal()"><i class="ti ti-plus"></i> Görev Ata</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="gorevEkleModal()"><i class="ti ti-plus"></i> Görev Ata</button>
     </div>
     ${filtreliGorevler.length===0?`<div style="text-align:center;padding:48px;color:var(--text2)">
       <i class="ti ti-clipboard-check" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i>
       <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${secYil} yılı için görev bulunamadı</div>
       <div style="font-size:12px;margin-bottom:16px">Personele doğrudan görev atamak için "Görev Ata" butonunu kullanın</div>
-      <button class="btn btn-p btn-sm" onclick="gorevEkleModal()"><i class="ti ti-plus"></i> Görev Ata</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="gorevEkleModal()"><i class="ti ti-plus"></i> Görev Ata</button>
     </div>`:
     [...filtreliGorevler].sort((a,b)=>{
       const da=a.sonTarih?new Date(a.sonTarih):new Date('2099-12-31');
       const db2=b.sonTarih?new Date(b.sonTarih):new Date('2099-12-31');
       return da-db2;
     }).map(g=>gorevKart(g,true)).join('')}`;
+  yetkiButonlariUygula('yk-gorev', 'gorev-panel-icerik');
 }
 
 function gorevRenderPersonel(el){
@@ -14057,11 +14069,11 @@ function gorevKart(g, yoneticiMod){
       ${!tamam?`
         <button class="btn btn-sm" onclick="gorevNotEkle('${g.id}')"><i class="ti ti-notes"></i> Not Ekle</button>
         <button class="btn btn-p btn-sm" onclick="gorevTamamla('${g.id}')"><i class="ti ti-check"></i> Tamamlandı</button>
-        ${yoneticiMod?`<button class="btn btn-sm" onclick="gorevDuzenle('${g.id}')"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm" style="color:var(--red)" onclick="gorevSil('${g.id}')"><i class="ti ti-trash"></i></button>`:''}
+        ${yoneticiMod?`<button class="btn btn-sm yetki-degistir-gerekli" onclick="gorevDuzenle('${g.id}')"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red)" onclick="gorevSil('${g.id}')"><i class="ti ti-trash"></i></button>`:''}
       `:`
         <button class="btn btn-sm" onclick="gorevGeriAl('${g.id}')"><i class="ti ti-arrow-back-up"></i> Geri Al</button>
-        ${yoneticiMod?`<button class="btn btn-sm" style="color:var(--red)" onclick="gorevSil('${g.id}')"><i class="ti ti-trash"></i></button>`:''}
+        ${yoneticiMod?`<button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red)" onclick="gorevSil('${g.id}')"><i class="ti ti-trash"></i></button>`:''}
       `}
     </div>
   </div>`;
@@ -16369,6 +16381,7 @@ window.memAnketListesiGuncelle = function(yil){
   /* Accordion açık/kapalı durumunu koru */
   if(!anketSayi){
     el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">${yil} yılı için henüz anket kaydı yok</div>`;
+    yetkiButonlariUygula('crm-memnuniyet', 's-memnuniyet');
     return;
   }
   el.innerHTML=anketler.map(a=>{
@@ -16381,11 +16394,12 @@ window.memAnketListesiGuncelle = function(yil){
       </div>
       ${ortStr}
       <div style="display:flex;gap:6px;flex-shrink:0">
-        <button class="btn btn-sm" style="font-size:11px" onclick="memEkleModal('${a.id}')"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="memAnketSil('${a.id}')"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="memEkleModal('${a.id}')"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="memAnketSil('${a.id}')"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
   }).join('');
+  yetkiButonlariUygula('crm-memnuniyet', 's-memnuniyet');
 };
 
 window.memKarsilastirmaGuncelle = function(){
@@ -16733,10 +16747,11 @@ function ipRenderPlan(){
   el.innerHTML=`
     <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
       <span style="font-size:13px;font-weight:600;color:var(--text)">${aktifYil} Yılı Stratejik Plan</span>
-      ${yetki?`<button class="btn btn-sm" style="font-size:11px" onclick="ipStratejiEkle()"><i class="ti ti-plus"></i> Strateji Ekle</button>`:''}
+      ${yetki?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="ipStratejiEkle()"><i class="ti ti-plus"></i> Strateji Ekle</button>`:''}
     </div>
     ${yilStr.length===0?'<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-clipboard-list" style="font-size:26px;display:block;margin-bottom:10px;opacity:.4"></i><div style="font-size:13px">Bu yıl için henüz strateji eklenmedi</div></div>':''}
     ${yilStr.map((str,si)=>renderStrateji(str,si,yetki)).join('')}`;
+  yetkiButonlariUygula('isplani', 'ip-yil-icerik');
 }
 
 function renderStrateji(str, si, yetki){
@@ -16755,7 +16770,7 @@ function renderStrateji(str, si, yetki){
       </div>
       <div class="pb" style="width:80px;flex-shrink:0"><div class="pf" style="width:${ort}%;background:${ort>=70?'var(--teal)':ort>=40?'var(--amber)':'var(--red)'}"></div></div>
       <span style="font-size:12px;font-weight:600;color:${ort>=70?'var(--teal)':ort>=40?'var(--amber)':'var(--red)'};margin-left:6px;flex-shrink:0">%${ort}</span>
-      ${yetki?`<div style="display:flex;gap:4px;flex-shrink:0">
+      ${yetki?`<div class="yetki-degistir-gerekli" style="display:flex;gap:4px;flex-shrink:0">
         <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" title="Yukarı taşı" onclick="event.stopPropagation();ipStratejiTasi('${str.id}',-1)"><i class="ti ti-arrow-up"></i></button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" title="Aşağı taşı" onclick="event.stopPropagation();ipStratejiTasi('${str.id}',1)"><i class="ti ti-arrow-down"></i></button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();ipStratejiDuzenle('${str.id}')"><i class="ti ti-edit"></i></button>
@@ -16785,7 +16800,7 @@ function renderHedef(strId, h, hi, yetki){
         <div style="font-size:11px;color:var(--text2)">${h.projeler.length} proje · ${tamam} tamamlandı</div>
       </div>
       <div class="pb" style="width:60px;flex-shrink:0"><div class="pf" style="width:${ort}%;background:var(--teal)"></div></div>
-      ${yetki?`<div style="display:flex;gap:4px;flex-shrink:0">
+      ${yetki?`<div class="yetki-degistir-gerekli" style="display:flex;gap:4px;flex-shrink:0">
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();ipHedefDuzenle('${strId}','${h.id}')"><i class="ti ti-edit"></i></button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();ipProjeEkle('${strId}','${h.id}')"><i class="ti ti-plus"></i> Proje</button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px;color:var(--red)" onclick="event.stopPropagation();ipHedefSil('${strId}','${h.id}')"><i class="ti ti-trash"></i></button>
@@ -22787,6 +22802,7 @@ function akrRender(){
   const el=document.getElementById('akr-icerik');
   if(!el) return;
   el.innerHTML=AKR_YAPI.map(b=>renderBaslik(b)).join('');
+  yetkiButonlariUygula('akreditasyon', 'akr-icerik');
 }
 
 function renderBaslik(b){
@@ -22838,7 +22854,7 @@ function renderBolum(bl, renk){
             <span style="font-size:12px;font-weight:600;color:var(--amber)">PERFORMANS GÖSTERGELERİ — ${bl.id}</span>
           </div>
           <div style="display:flex;gap:6px;align-items:center">
-            ${perfDuzenleyebilir?`<button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();akrPerfDuzenle('${bl.id}')"><i class="ti ti-edit"></i> Düzenle</button>`:''}
+            ${perfDuzenleyebilir?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();akrPerfDuzenle('${bl.id}')"><i class="ti ti-edit"></i> Düzenle</button>`:''}
             <i class="ti ti-chevron-right ip-chevron" id="chev-perf-${bl.id}"></i>
           </div>
         </div>
@@ -22871,7 +22887,7 @@ function renderMadde(m, showPerfBtn){
         <div style="font-size:12px;line-height:1.6;color:var(--text);margin-bottom:8px">${m.metin}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <!-- Sorumlu personel -->
-          ${yonetici?`<div style="display:flex;align-items:center;gap:5px">
+          ${yonetici?`<div class="yetki-degistir-gerekli" style="display:flex;align-items:center;gap:5px">
             <i class="ti ti-user-check" style="font-size:12px;color:var(--text2)"></i>
             <select class="yk-inp" style="padding:3px 8px;font-size:11px;min-width:170px"
               onchange="akrSorumluAta('${m.id}',this.value)">
@@ -24137,7 +24153,7 @@ async function sanayiRenderListe(root){
       <div style="font-size:15px;font-weight:500">Kayıtlı Firmalar</div>
       <div style="font-size:12px;color:var(--text2)">Kapasite raporu kayıtlı firmalar</div>
     </div>
-    <button class="btn btn-p btn-sm" onclick="window.sanayiSecKapasite()" style="gap:5px"><i class="ti ti-plus"></i> Rapor Ekle</button>
+    <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="window.sanayiSecKapasite()" style="gap:5px"><i class="ti ti-plus"></i> Rapor Ekle</button>
   </div>
   <div id="sl-yil-bar" style="margin-bottom:16px"></div>
   <div id="sl-liste" style="text-align:center;padding:40px;color:var(--text2)">
@@ -24215,8 +24231,9 @@ function slRenderKartlar(){
         '</div>' +
         '<div style="font-size:14px;font-weight:500">Henüz kapasite raporu yüklenmemiş</div>' +
         '<div style="font-size:13px;margin-top:6px">Kapasite Raporu Ekle seçeneğiyle başlayın</div>' +
-        '<button class="btn btn-p btn-sm" onclick="window.sanayiSecKapasite()" style="margin-top:16px"><i class="ti ti-plus"></i> Rapor Ekle</button>' +
+        '<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="window.sanayiSecKapasite()" style="margin-top:16px"><i class="ti ti-plus"></i> Rapor Ekle</button>' +
       '</div>';
+    yetkiButonlariUygula('crm-sanayi', 's-sanayi-main');
     return;
   }
   if(!items.length){
@@ -24279,8 +24296,8 @@ function slRenderKartlar(){
             '<i class="ti ti-chevron-right" id="sl-chev-'+idx+'" style="font-size:16px;color:var(--text2);transition:transform .2s;margin-left:2px"></i>' +
           '</div>' +
           '<div style="display:flex;gap:6px">' +
-            '<button class="btn btn-sm" style="font-size:11px;gap:4px" onclick="event.stopPropagation();slDuzenle(\''+uidE+'\',\''+adE+'\');" title="Düzenle"><i class="ti ti-edit"></i> Düzenle</button>' +
-            '<button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();slFirmaSil(\''+uidE+'\');" title="Sil"><i class="ti ti-trash"></i></button>' +
+            '<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;gap:4px" onclick="event.stopPropagation();slDuzenle(\''+uidE+'\',\''+adE+'\');" title="Düzenle"><i class="ti ti-edit"></i> Düzenle</button>' +
+            '<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();slFirmaSil(\''+uidE+'\');" title="Sil"><i class="ti ti-trash"></i></button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -24293,6 +24310,7 @@ function slRenderKartlar(){
     wrapper.appendChild(detay);
     kartlarEl.appendChild(wrapper);
   });
+  yetkiButonlariUygula('crm-sanayi', 's-sanayi-main');
 }
 
 window.slKartToggle = async function(uid, idx, v){
@@ -24513,7 +24531,7 @@ window.crmSanayiPaneYukle = async function(uyeId){
       <i class="ti ti-file-off" style="font-size:32px;display:block;margin-bottom:10px;opacity:.4"></i>
       <div style="font-size:14px;font-weight:500;margin-bottom:6px">Kapasite raporu bulunamadı</div>
       <div style="font-size:12px">Bu firmaya henüz rapor eklenmemiş.</div>
-      <button class="btn btn-p btn-sm" onclick="crmNavSec('sanayi',document.getElementById('nav-crm-sanayi'))" style="margin-top:14px"><i class="ti ti-plus"></i> Rapor Ekle</button>
+      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="crmNavSec('sanayi',document.getElementById('nav-crm-sanayi'))" style="margin-top:14px"><i class="ti ti-plus"></i> Rapor Ekle</button>
     </div>`;
     return;
   }
