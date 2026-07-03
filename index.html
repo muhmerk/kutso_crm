@@ -12770,7 +12770,10 @@ window.mkToplantıDuzenle = function(id){
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Toplantı Adı</label><input id="mk-f-ad" class="yk-inp" value="${(t.ad||'').replace(/"/g,'&quot;')}" placeholder="Boş bırakılırsa otomatik oluşur"></div>
-      <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="mk-f-tarih" type="date" class="yk-inp" value="${t.tarihIso||''}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="mk-f-tarih" type="date" class="yk-inp" value="${t.tarihIso||''}"></div>
+        <div><label class="yk-lbl">Toplantı No</label><input id="mk-f-no" class="yk-inp" value="${(t.toplantiNo||'').replace(/"/g,'&quot;')}" placeholder="ör: 5"></div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Başlangıç Saati</label><input id="mk-f-saat" type="time" class="yk-inp" value="${t.saat||''}"></div>
         <div><label class="yk-lbl">Bitiş Saati</label><input id="mk-f-bitis-saat" type="time" class="yk-inp" value="${t.bitisSaat||''}"></div>
@@ -12795,6 +12798,7 @@ window.mkToplantıDuzenle = function(id){
     const bitisSaat = document.getElementById('mk-f-bitis-saat').value||'';
     const adGiris   = document.getElementById('mk-f-ad').value.trim();
     const tur       = document.getElementById('mk-f-tur').value;
+    const toplantiNo = document.getElementById('mk-f-no')?.value.trim()||'';
     const [yy,mm,dd]= tarihVal.split('-').map(Number);
     const aylar     = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
     const tarihGoster = (dd&&mm&&yy) ? (dd+' '+aylar[mm-1]+' '+yy) : tarihVal;
@@ -12810,6 +12814,7 @@ window.mkToplantıDuzenle = function(id){
     t.bitisSaat    = bitisSaat;
     t.durum        = durum;
     t.toplantıTuru = tur; // 'olagan' / 'olaganustu' — tur:'mk' değişmez
+    t.toplantiNo   = toplantiNo;
 
     // Supabase'e kaydet (tur alanına dokunmuyoruz — 'mk' olarak kalır)
     const {error} = await _supa.from('karar_toplantilari').update({
@@ -12819,7 +12824,8 @@ window.mkToplantıDuzenle = function(id){
       saat      : t.saat,
       bitis_saat: t.bitisSaat,
       durum     : t.durum,
-      toplanti_turu: t.toplantıTuru
+      toplanti_turu: t.toplantıTuru,
+      toplanti_no: toplantiNo||null
     }).eq('id', id);
     if(error){ console.error('MK toplantı güncelleme hatası:', error.message); alert('Güncelleme hatası: '+error.message); return; }
 
@@ -13856,18 +13862,19 @@ window.meclisToplantıDuzenle = function(id){
         <div><label class="yk-lbl">Bitiş Saati</label><input id="meclis-d-bitis-saat" type="time" class="yk-inp" value="${t.bitisSaat||''}"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="yk-lbl">Toplantı No</label><input id="meclis-d-no" class="yk-inp" value="${(t.toplantiNo||'').replace(/"/g,'&quot;')}" placeholder="ör: 7"></div>
         <div><label class="yk-lbl">Tür</label>
           <select id="meclis-d-tur" class="yk-inp">
             <option value="olagan" ${(t.toplantıTuru||t.tur||'olagan')==='olagan'?'selected':''}>Olağan</option>
             <option value="olaganustu" ${(t.toplantıTuru||t.tur||'')==='olaganustu'?'selected':''}>Olağanüstü</option>
           </select>
         </div>
-        <div><label class="yk-lbl">Durum</label>
-          <select id="meclis-d-durum" class="yk-inp">
-            <option value="planlandi" ${(t.durum||'planlandi')==='planlandi'?'selected':''}>Planlandı</option>
-            <option value="tamamlandi" ${t.durum==='tamamlandi'?'selected':''}>Tamamlandı</option>
-          </select>
-        </div>
+      </div>
+      <div><label class="yk-lbl">Durum</label>
+        <select id="meclis-d-durum" class="yk-inp">
+          <option value="planlandi" ${(t.durum||'planlandi')==='planlandi'?'selected':''}>Planlandı</option>
+          <option value="tamamlandi" ${t.durum==='tamamlandi'?'selected':''}>Tamamlandı</option>
+        </select>
       </div>
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick=()=>{
@@ -13885,10 +13892,14 @@ window.meclisToplantıDuzenle = function(id){
     t.bitisSaat = document.getElementById('meclis-d-bitis-saat')?.value||t.bitisSaat||'';
     t.durum     = document.getElementById('meclis-d-durum').value;
     t.toplantıTuru = document.getElementById('meclis-d-tur')?.value||'olagan';
+    t.tur = t.toplantıTuru;
+    const toplantiNo = document.getElementById('meclis-d-no')?.value.trim()||'';
+    t.toplantiNo = toplantiNo;
     // Supabase'e kaydet (tur='meclis' korunur)
     _supa.from('karar_toplantilari').update({
       ad: t.ad, tarih: t.tarih, tarih_iso: t.tarihIso,
-      saat: t.saat, bitis_saat: t.bitisSaat, durum: t.durum
+      saat: t.saat, bitis_saat: t.bitisSaat, durum: t.durum,
+      toplanti_turu: t.toplantıTuru, toplanti_no: toplantiNo||null
     }).eq('id', id).then(({error})=>{ if(error) console.error('Meclis güncelleme hatası:', error.message); });
     ykModalKapat(); meclisRender();
   };
