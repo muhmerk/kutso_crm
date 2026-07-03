@@ -9627,13 +9627,19 @@ window.kullaniciUnvani = function(){
   return p ? p.unvan : null;
 };
 
+/* "admin" kullanıcı adı her zaman tam yetkili (master/test hesabı) */
+window.masterKullaniciMi = function(){
+  return window.currentUser && window.currentUser.kullanici === 'admin';
+};
+
 /* Genel Sekreter mi? — Yetkilendirme ekranına her zaman erişebilir (kilitlenmeyi önler) */
 window.genelSekreterMi = function(){
-  return window.kullaniciUnvani() === 'Genel Sekreter';
+  return window.masterKullaniciMi() || window.kullaniciUnvani() === 'Genel Sekreter';
 };
 
 /* Bir menü için şu anki kullanıcının yetki seviyesini döndürür: 'yok' | 'okuyabilir' | 'degistirebilir' */
 window.kullaniciMenuYetkisi = function(menuKey){
+  if(window.masterKullaniciMi()) return 'degistirebilir'; /* admin her zaman tam yetkili */
   if(window.genelSekreterMi()) return 'degistirebilir'; /* Genel Sekreter her zaman tam yetkili */
   const unvan = window.kullaniciUnvani();
   if(!unvan) return 'yok';
