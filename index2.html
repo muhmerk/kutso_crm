@@ -3567,7 +3567,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <button class="btn btn-sm" onclick="ziyFiltrele('planlandi',this)">Planlandı</button>
           <button class="btn btn-sm" onclick="ziyFiltrele('tamamlandi',this)">Tamamlandı</button>
         </div>
-        <button class="btn btn-p btn-sm" onclick="ziyaretYeniModal()"><i class="ti ti-plus"></i> Yeni Ziyaret Planla</button>
+        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="ziyaretYeniModal()"><i class="ti ti-plus"></i> Yeni Ziyaret Planla</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:18px" id="ziy-metrikler">
         <div class="mc"><div class="mc-ico" style="background:var(--blue-bg)"><i class="ti ti-calendar-event" style="color:var(--blue)"></i></div><div class="mc-lbl">Planlanan</div><div class="mc-val" id="ziy-metrik-planlanan">—</div></div>
@@ -9647,8 +9647,16 @@ window.kullaniciMenuYetkisi = function(menuKey){
   return kayit ? kayit.seviye : 'yok';
 };
 
-/* Bir menünün içerik alanına yetkisizlik mesajı basar. Yetkisizse true döner (çağıran fonksiyon
-   burada durmalı), yetkiliyse false döner (normal render devam etsin). */
+/* Bir menü için "değiştirebilir" yetkisi yoksa, o konteynerdeki
+   .yetki-degistir-gerekli class'lı tüm elemanları gizler (ekle/düzenle/sil butonları vb.) */
+window.yetkiButonlariUygula = function(menuKey, containerId){
+  const cont = document.getElementById(containerId);
+  if(!cont) return;
+  const izinli = window.kullaniciMenuYetkisi(menuKey) === 'degistirebilir';
+  cont.querySelectorAll('.yetki-degistir-gerekli').forEach(el=>{
+    el.style.display = izinli ? '' : 'none';
+  });
+};
 window.yetkiKontrolGoster = function(menuKey, containerId){
   const seviye = window.kullaniciMenuYetkisi(menuKey);
   if(seviye === 'yok'){
@@ -9779,6 +9787,7 @@ window.yetkiHucreAc = function(menuKey, seviye){
     </div>`,
     async ()=>{
       const cbs = document.querySelectorAll('.yetki-unvan-cb');
+      const hatalar = [];
       for(const cb of cbs){
         const unvan = cb.getAttribute('data-unvan');
         const isaretli = cb.checked;
@@ -9786,15 +9795,19 @@ window.yetkiHucreAc = function(menuKey, seviye){
         if(isaretli && mevcutSeviye!==seviye){
           /* Bu seviyeye ata (yok ise sil, değilse upsert) */
           if(seviye==='yok'){
-            await _supa.from('yetki_matrisi').delete().eq('menu_key',menuKey).eq('unvan',unvan);
+            const {error} = await _supa.from('yetki_matrisi').delete().eq('menu_key',menuKey).eq('unvan',unvan);
+            if(error){ console.error('Yetki silme hatası:', error); hatalar.push(unvan+': '+error.message); }
           } else {
-            await _supa.from('yetki_matrisi').upsert([{menu_key:menuKey, unvan, seviye}], {onConflict:'menu_key,unvan'});
+            const {error} = await _supa.from('yetki_matrisi').upsert([{menu_key:menuKey, unvan, seviye}], {onConflict:'menu_key,unvan'});
+            if(error){ console.error('Yetki kaydetme hatası:', error); hatalar.push(unvan+': '+error.message); }
           }
         } else if(!isaretli && mevcutSeviye===seviye && seviye!=='yok'){
           /* İşaret kaldırıldı — bu seviyeden çıkar (yok'a düşer) */
-          await _supa.from('yetki_matrisi').delete().eq('menu_key',menuKey).eq('unvan',unvan);
+          const {error} = await _supa.from('yetki_matrisi').delete().eq('menu_key',menuKey).eq('unvan',unvan);
+          if(error){ console.error('Yetki kaldırma hatası:', error); hatalar.push(unvan+': '+error.message); }
         }
       }
+      if(hatalar.length){ alert('Bazı kayıtlar kaydedilemedi:\n'+hatalar.join('\n')); }
       await supaYukleYetkiMatrisi();
       gsModalKapat();
       yetkiRender();
@@ -21734,6 +21747,7 @@ window.ziyRenderListe = function(){
     liste.innerHTML = `<div style="text-align:center;padding:48px 20px;color:var(--text2)">
       <i class="ti ti-car" style="font-size:28px;display:block;margin-bottom:10px"></i>
       <div style="font-size:13px">${secYil} yılı için kayıtlı ziyaret bulunmuyor</div></div>`;
+    yetkiButonlariUygula('crm-ziyaret', 's-uye-ziyaret');
     return;
   }
 
@@ -21757,11 +21771,12 @@ window.ziyRenderListe = function(){
         ${z.memnuniyet_skoru?`<span><i class="ti ti-star" style="font-size:13px;vertical-align:-1px;color:var(--amber)"></i> ${z.memnuniyet_skoru}/5</span>`:''}
       </div>
       <div style="display:flex;gap:6px;margin-top:10px" onclick="event.stopPropagation()">
-        <button class="btn btn-sm" onclick="ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>
-        <button class="btn btn-sm" style="color:var(--red)" onclick="ziyaretSil('${z.id}')"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm yetki-degistir-gerekli" onclick="ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>
+        <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red)" onclick="ziyaretSil('${z.id}')"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
   }).join('');
+  yetkiButonlariUygula('crm-ziyaret', 's-uye-ziyaret');
 };
 
 /* ───────────────── FİRMA ARAMA ───────────────── */
@@ -22307,7 +22322,7 @@ window.ziyDetayAc = function(id, sadeceGoruntule){
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-sm" onclick="ziyPdfOlustur('once','${z.id}')"><i class="ti ti-file-text"></i> Brief (PDF)</button>
         <button class="btn btn-sm" onclick="ziyPdfOlustur('sonra','${z.id}')"><i class="ti ti-file-check"></i> Tamamlandı Raporu (PDF)</button>
-        ${sadeceGoruntule ? '' : `<button class="btn btn-sm" onclick="document.getElementById('ziy-detay-overlay').style.display='none';ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>`}
+        ${sadeceGoruntule ? '' : `<button class="btn btn-sm yetki-degistir-gerekli" onclick="document.getElementById('ziy-detay-overlay').style.display='none';ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>`}
       </div>
     </div>
 
@@ -22360,6 +22375,7 @@ window.ziyDetayAc = function(id, sadeceGoruntule){
     ${blok('Kayıt Bilgisi', `<div style="font-size:11px;color:var(--text2)">Giren: ${z.giren_ad||z.giren_kul||'—'}</div>`)}
   `;
   document.getElementById('ziy-detay-overlay').style.display='flex';
+  yetkiButonlariUygula('crm-ziyaret', 'ziy-detay-overlay');
 };
 function ziyDosyaIkonGlobal(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(['jpg','jpeg','png','gif','webp'].includes(e)) return 'ti-photo'; if(e==='pdf') return 'ti-file-type-pdf'; return 'ti-file'; }
 
