@@ -20387,7 +20387,15 @@ function katilimTabloOlustur(uyeler, toplantılar, katilimMap){
 
   const basliklar = siraliT.map(t=>{
     const d = t.tarihIso ? new Date(t.tarihIso+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'}) : t.tarih;
-    return `<th style="font-size:10px;font-weight:600;color:var(--text2);padding:6px 8px;text-align:center;white-space:nowrap;border-bottom:2px solid var(--border)">${d}</th>`;
+    /* Bu toplantıya özel katılım yüzdesi — G katılmamış sayılır, işaretlenmemiş üyeler de paydaya girer */
+    const katildiSayisiT = uyeler.filter(u=>katilimMap[u.id]?.[t.id]===true).length;
+    const toplamUyeSayisiT = uyeler.length;
+    const oranT = toplamUyeSayisiT>0 ? Math.round(katildiSayisiT/toplamUyeSayisiT*100) : null;
+    const oranRenk = oranT===null ? 'var(--text2)' : oranT>=80 ? 'var(--teal)' : oranT>=50 ? 'var(--amber)' : 'var(--red)';
+    return `<th style="font-size:10px;font-weight:600;color:var(--text2);padding:6px 8px;text-align:center;white-space:nowrap;border-bottom:2px solid var(--border)">
+      ${oranT!==null?`<div style="font-size:11px;font-weight:700;color:${oranRenk};margin-bottom:2px">%${oranT}</div>`:''}
+      <div>${d}</div>
+    </th>`;
   }).join('');
 
   const satirlar = uyeler.map(u=>{
