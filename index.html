@@ -67,8 +67,8 @@ async function supaYukleMK() {
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
-    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', komite:t.komite||'', komiteNo:parseInt(t.komite)||0, durum:t.durum||'planlandi', toplantıTuru:t.toplanti_turu||'olagan', toplantiNo:t.toplanti_no||'' }));
-    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', komiteNo:g.komite_no||0, kaynak:g.kaynak||'karar', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
+    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', komite:t.komite||'', komiteNo:parseInt(t.komite)||0, durum:t.durum||'planlandi', toplantıTuru:t.toplanti_turu||'olagan' }));
+    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', komiteNo:g.komite_no||0, atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MK_DB) {
         window.MK_DB.toplantılar = mappedT;
@@ -93,7 +93,7 @@ async function supaYukleMeclis() {
     const { data: atamalar } = gundemIdler.length > 0
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
-    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', durum:t.durum||'planlandi', toplantiNo:t.toplanti_no||'' }));
+    const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', durum:t.durum||'planlandi' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', dosyaUrl:g.dosya_url||null, dosyaAdi:g.dosya_adi||null, atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MECLIS_DB) {
@@ -233,8 +233,8 @@ async function supaYukleSikayetler() {
               </div>
               <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
                 <button class="btn btn-sm" style="font-size:11px" onclick="sikSurecAc('${s.id}')"><i class="ti ti-list-details"></i> Detay & Süreç</button>
-                <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="sikayetEkleModal('${s.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-                <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="sikayetSilById('${s.id}',this)"><i class="ti ti-trash"></i> Sil</button>
+                <button class="btn btn-sm" style="font-size:11px" onclick="sikayetEkleModal('${s.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+                <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="sikayetSilById('${s.id}',this)"><i class="ti ti-trash"></i> Sil</button>
               </div>
             </div>`;
           if(window.YD_STATE?.['sikayet']){
@@ -243,7 +243,6 @@ async function supaYukleSikayetler() {
           container.appendChild(div);
         });
       }
-      yetkiButonlariUygula('crm-sikayet', 's-sikayet');
       const aktifYil = window.YD_STATE?.['sikayet']?.size ? Math.max(...Array.from(window.YD_STATE['sikayet'])) : new Date().getFullYear();
       if(window.sikMetrikleriGuncelle) window.sikMetrikleriGuncelle(aktifYil);
       if(window.sikTrendGuncelle) window.sikTrendGuncelle();
@@ -2425,7 +2424,6 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <button class="nav nav-sub" id="nav-personel-oneri" onclick="personelSec('oneri',this)"><i class="ti ti-bulb" style="font-size:14px"></i>Personel Öneri</button>
     <button class="nav nav-sub" id="nav-personel-memnuniyet" onclick="personelSec('memnuniyet',this)"><i class="ti ti-mood-smile" style="font-size:14px"></i>Personel Memnuniyet</button>
     <button class="nav nav-sub" id="nav-personel-kurul" onclick="personelSec('kurul',this)"><i class="ti ti-gavel" style="font-size:14px"></i>Personel Kurul Kararları</button>
-    <button class="nav nav-sub" id="nav-personel-yetki" onclick="personelSec('yetki',this)"><i class="ti ti-lock" style="font-size:14px"></i>Yetkilendirme</button>
   </div>
   <!-- Genel Sekreterlik — sadece yetkililere görünür -->
   <div class="sb-section" id="gs-nav-section" style="display:none">Genel Sekreterlik</div>
@@ -2882,8 +2880,8 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           </div>
         </div>
         <div id="crm-firm-status"></div>
-        <button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button>
-        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="crmNotEkleModal()"><i class="ti ti-plus"></i> Not Ekle</button>
+        <button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button>
+        <button class="btn btn-p btn-sm" onclick="crmNotEkleModal()"><i class="ti ti-plus"></i> Not Ekle</button>
       </div>
 
       <!-- İçerik: sol profil + sağ 2 bölüm -->
@@ -3065,7 +3063,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:0;flex-wrap:wrap">
       <div id="yd-placeholder-memnuniyet" style="margin-bottom:0;display:flex;align-items:center;gap:6px"></div>
       <div style="flex:1"></div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="memEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
+      <button class="btn btn-p btn-sm" onclick="memEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
     </div>
 
     <!-- Memnuniyet Ekle Modal -->
@@ -3154,7 +3152,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <div id="yd-placeholder-mem-prs" style="margin-bottom:0;display:inline-flex;align-items:flex-start;align-self:flex-start"></div>
       <div style="flex:1"></div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="memPrsEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
+      <button class="btn btn-p btn-sm" onclick="memPrsEkleModal()"><i class="ti ti-plus"></i> Memnuniyet Verisi Ekle</button>
     </div>
     <div class="two">
       <div class="card">
@@ -3210,7 +3208,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:0;flex-wrap:wrap">
       <div id="yd-placeholder-sikayet" style="margin-bottom:0;display:flex;align-items:center;gap:6px"></div>
       <div style="flex:1"></div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="sikayetEkleModal()"><i class="ti ti-plus"></i> Şikayet Ekle</button>
+      <button class="btn btn-p btn-sm" onclick="sikayetEkleModal()"><i class="ti ti-plus"></i> Şikayet Ekle</button>
     </div>
 
     <!-- Şikayet Ekle Modal -->
@@ -3314,38 +3312,32 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><div id="yd-placeholder-mk" style="display:inline-flex;align-items:center;flex-shrink:0"></div><select id="ay-sec-mk" onchange="kararAySec('mk',this.value)" style="height:30px;padding:0 8px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font);cursor:pointer;flex-shrink:0;align-self:center"><option value="">Tüm aylar</option><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
       <div id="mk-metrics" class="mg" style="margin-bottom:14px"></div>
       <div id="mk-yonetici-view" style="display:none">
-        <!-- KOMİTE LİSTESİ (üst seviye) -->
-        <div id="mk-komite-liste"></div>
+        <!-- Sekmeler: Toplantılar | Evrak Yönetimi -->
+        <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)">
+          <button id="mk-sekme-toplanti" onclick="mkSekmeSec('toplanti')" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid var(--purple);color:var(--purple);font-weight:600;font-size:13px;cursor:pointer;font-family:var(--font)">Toplantılar</button>
+          <button id="mk-sekme-evrak" onclick="mkSekmeSec('evrak')" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-weight:500;font-size:13px;cursor:pointer;font-family:var(--font)">Evrak Yönetimi</button>
+        </div>
 
-        <!-- KOMİTE İÇERİĞİ (seçili komite varken) -->
-        <div id="mk-komite-icerik" style="display:none">
-          <!-- Sekmeler: Toplantılar | Evrak Yönetimi -->
-          <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)">
-            <button id="mk-sekme-toplanti" onclick="mkSekmeSec('toplanti')" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid var(--purple);color:var(--purple);font-weight:600;font-size:13px;cursor:pointer;font-family:var(--font)">Toplantılar</button>
-            <button id="mk-sekme-evrak" onclick="mkSekmeSec('evrak')" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-weight:500;font-size:13px;cursor:pointer;font-family:var(--font)">Evrak Yönetimi</button>
-          </div>
-
-          <!-- TOPLANTILAR SEKMESİ -->
-          <div id="mk-toplanti-sekme">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-              <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="mk-karar-baslik">Toplantılar</div>
-              <div style="display:flex;gap:6px;align-items:center">
-                <button class="btn btn-sm" onclick="katilimOzetAc('mk','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
-                <button class="btn btn-sm" onclick="katilimOzetAc('mk','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
-                <button class="btn btn-sm" onclick="katilimOzetAc('mk','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
-                <div id="mk-header-btn" style="display:inline-flex">
-                  <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="mkToplantıEkle()">
-                    <i class="ti ti-plus"></i> Toplantı Ekle
-                  </button>
-                </div>
+        <!-- TOPLANTILAR SEKMESİ -->
+        <div id="mk-toplanti-sekme">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px" id="mk-karar-baslik">Toplantılar</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button class="btn btn-sm" onclick="katilimOzetAc('mk','aylik')"><i class="ti ti-chart-bar"></i> Aylık Özet</button>
+              <button class="btn btn-sm" onclick="katilimOzetAc('mk','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
+              <button class="btn btn-sm" onclick="katilimOzetAc('mk','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
+              <div id="mk-header-btn" style="display:inline-flex">
+                <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()">
+                  <i class="ti ti-plus"></i> Toplantı Ekle
+                </button>
               </div>
             </div>
-            <div id="mk-karar-list"></div>
           </div>
-
-          <!-- EVRAK YÖNETİMİ SEKMESİ -->
-          <div id="mk-evrak-sekme" style="display:none"></div>
+          <div id="mk-karar-list"></div>
         </div>
+
+        <!-- EVRAK YÖNETİMİ SEKMESİ -->
+        <div id="mk-evrak-sekme" style="display:none"></div>
       </div>
       <div id="mk-personel-view" style="display:none">
         <div id="mk-personel-kararlar"></div>
@@ -3372,7 +3364,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
               <button class="btn btn-sm" onclick="katilimOzetAc('meclis','6aylik')"><i class="ti ti-chart-dots"></i> 6 Aylık</button>
               <button class="btn btn-sm" onclick="katilimOzetAc('meclis','yillik')"><i class="ti ti-calendar-stats"></i> Yıllık Özet</button>
               <div id="meclis-header-btn" style="display:inline-flex">
-                <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisToplantıEkle()">
+                <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()">
                   <i class="ti ti-plus"></i> Toplantı Ekle
                 </button>
               </div>
@@ -3553,7 +3545,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <i class="ti ti-search" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:13px;pointer-events:none"></i>
           <input id="etk-prs-arama" class="yk-inp" style="padding:6px 10px 6px 30px;font-size:12px;width:200px" placeholder="Etkinlik adı veya no..." oninput="etkPrsArama(this.value)">
         </div>
-        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="etkPrsYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button>
+        <button class="btn btn-p btn-sm" onclick="etkPrsYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button>
       </div>
     </div>
     <div id="etk-prs-list"></div>
@@ -3568,7 +3560,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <button class="btn btn-sm" onclick="ziyFiltrele('planlandi',this)">Planlandı</button>
           <button class="btn btn-sm" onclick="ziyFiltrele('tamamlandi',this)">Tamamlandı</button>
         </div>
-        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="ziyaretYeniModal()"><i class="ti ti-plus"></i> Yeni Ziyaret Planla</button>
+        <button class="btn btn-p btn-sm" onclick="ziyaretYeniModal()"><i class="ti ti-plus"></i> Yeni Ziyaret Planla</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:18px" id="ziy-metrikler">
         <div class="mc"><div class="mc-ico" style="background:var(--blue-bg)"><i class="ti ti-calendar-event" style="color:var(--blue)"></i></div><div class="mc-lbl">Planlanan</div><div class="mc-val" id="ziy-metrik-planlanan">—</div></div>
@@ -3686,7 +3678,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <i class="ti ti-search" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:13px;pointer-events:none"></i>
           <input id="etk-arama" class="yk-inp" style="padding:6px 10px 6px 30px;font-size:12px;width:200px" placeholder="Etkinlik adı veya no..." oninput="etkArama(this.value)">
         </div>
-        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="etkYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button>
+        <button class="btn btn-p btn-sm" onclick="etkYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button>
       </div>
     </div>
     <div id="etk-list"></div>
@@ -3815,24 +3807,24 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
     </div>
 
     <div id="ch-email" class="chs active">
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-amber">Aidat</span><span style="font-size:13px;font-weight:500">Aidat ödeme hatırlatması</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Sayın <span class="tpl-tag">{{firma_adi}}</span> — <span class="tpl-tag">{{yil}}</span> yılı aidat ödeme hatırlatması</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Kütahya Ticaret ve Sanayi Odası'na <span class="tpl-tag">{{yil}}</span> yılı için ödenecek <strong><span class="tpl-tag">{{aidat_tutari}}</span> TL</strong> tutarındaki aidatınızın son ödeme tarihi <span class="tpl-tag">{{son_tarih}}</span>'dir.<br><br>Ödemenizi şubemize veya <strong>TR00 0000 0000 0000 0000 00</strong> IBAN numaralı hesabımıza yapabilirsiniz.<br><br>Sorularınız için: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-amber">Aidat</span><span style="font-size:13px;font-weight:500">Aidat ödeme hatırlatması</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Sayın <span class="tpl-tag">{{firma_adi}}</span> — <span class="tpl-tag">{{yil}}</span> yılı aidat ödeme hatırlatması</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Kütahya Ticaret ve Sanayi Odası'na <span class="tpl-tag">{{yil}}</span> yılı için ödenecek <strong><span class="tpl-tag">{{aidat_tutari}}</span> TL</strong> tutarındaki aidatınızın son ödeme tarihi <span class="tpl-tag">{{son_tarih}}</span>'dir.<br><br>Ödemenizi şubemize veya <strong>TR00 0000 0000 0000 0000 00</strong> IBAN numaralı hesabımıza yapabilirsiniz.<br><br>Sorularınız için: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-blue">Hoş Geldin</span><span style="font-size:13px;font-weight:500">Yeni üye karşılama</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Hoş geldiniz — Kütahya TSO üyeliğiniz onaylandı</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{firma_adi}}</span> adına Kütahya TSO'ya hoş geldiniz!<br>Üye numaranız: <strong><span class="tpl-tag">{{uye_no}}</span></strong> · Başlangıç: <span class="tpl-tag">{{baslangic_tarihi}}</span><br><br>Oryantasyon toplantımız için ayrıca davet iletilecektir.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-blue">Hoş Geldin</span><span style="font-size:13px;font-weight:500">Yeni üye karşılama</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Hoş geldiniz — Kütahya TSO üyeliğiniz onaylandı</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{firma_adi}}</span> adına Kütahya TSO'ya hoş geldiniz!<br>Üye numaranız: <strong><span class="tpl-tag">{{uye_no}}</span></strong> · Başlangıç: <span class="tpl-tag">{{baslangic_tarihi}}</span><br><br>Oryantasyon toplantımız için ayrıca davet iletilecektir.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Gönder</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">Eğitim</span><span style="font-size:13px;font-weight:500">Eğitim / etkinlik duyurusu</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Davet: <span class="tpl-tag">{{etkinlik_adi}}</span> — <span class="tpl-tag">{{tarih}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Odamızca düzenlenen <strong><span class="tpl-tag">{{etkinlik_adi}}</span></strong> etkinliğine sizi davet ediyoruz.<br><br>Tarih: <span class="tpl-tag">{{tarih}}</span> · Saat: <span class="tpl-tag">{{saat}}</span> · Yer: <span class="tpl-tag">{{konum}}</span><br>Kayıt: <span class="tpl-tag">{{kayit_linki}}</span><br><br>Kontenjanımız sınırlıdır. Erken kayıt yaptırmanızı tavsiye ederiz.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">Eğitim</span><span style="font-size:13px;font-weight:500">Eğitim / etkinlik duyurusu</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Davet: <span class="tpl-tag">{{etkinlik_adi}}</span> — <span class="tpl-tag">{{tarih}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Odamızca düzenlenen <strong><span class="tpl-tag">{{etkinlik_adi}}</span></strong> etkinliğine sizi davet ediyoruz.<br><br>Tarih: <span class="tpl-tag">{{tarih}}</span> · Saat: <span class="tpl-tag">{{saat}}</span> · Yer: <span class="tpl-tag">{{konum}}</span><br>Kayıt: <span class="tpl-tag">{{kayit_linki}}</span><br><br>Kontenjanımız sınırlıdır. Erken kayıt yaptırmanızı tavsiye ederiz.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-red">Şikayet</span><span style="font-size:13px;font-weight:500">Şikayet alındı bildirimi</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Şikayetiniz alındı — Başvuru No: <span class="tpl-tag">{{sikayet_no}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{sikayet_tarihi}}</span> tarihinde ilettiğiniz şikayetiniz (<strong><span class="tpl-tag">{{sikayet_no}}</span></strong>) kaydımıza alınmıştır.<br><br><span class="tpl-tag">{{sorumlu_personel}}</span> en geç <span class="tpl-tag">{{max_sure}}</span> iş günü içinde sizinle iletişime geçecektir.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-red">Şikayet</span><span style="font-size:13px;font-weight:500">Şikayet alındı bildirimi</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Şikayetiniz alındı — Başvuru No: <span class="tpl-tag">{{sikayet_no}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{sikayet_tarihi}}</span> tarihinde ilettiğiniz şikayetiniz (<strong><span class="tpl-tag">{{sikayet_no}}</span></strong>) kaydımıza alınmıştır.<br><br><span class="tpl-tag">{{sorumlu_personel}}</span> en geç <span class="tpl-tag">{{max_sure}}</span> iş günü içinde sizinle iletişime geçecektir.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">YK Kararı</span><span style="font-size:13px;font-weight:500">YK kararı uygulama bildirimi</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Yönetim Kurulu Kararı — <span class="tpl-tag">{{karar_no}}</span> · <span class="tpl-tag">{{karar_konusu}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{toplanti_tarihi}}</span> tarihli Yönetim Kurulu toplantımızda alınan <span class="tpl-tag">{{karar_no}}</span> sayılı karar gereğince <span class="tpl-tag">{{karar_ozeti}}</span>.<br><br>Bilgilerinize saygıyla sunarız.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">YK Kararı</span><span style="font-size:13px;font-weight:500">YK kararı uygulama bildirimi</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Yönetim Kurulu Kararı — <span class="tpl-tag">{{karar_no}}</span> · <span class="tpl-tag">{{karar_konusu}}</span></div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br><span class="tpl-tag">{{toplanti_tarihi}}</span> tarihli Yönetim Kurulu toplantımızda alınan <span class="tpl-tag">{{karar_no}}</span> sayılı karar gereğince <span class="tpl-tag">{{karar_ozeti}}</span>.<br><br>Bilgilerinize saygıyla sunarız.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Gönder</button></div></div></div>
 
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-green">Memnuniyet</span><span style="font-size:13px;font-weight:500">Yıllık memnuniyet anketi daveti</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Görüşleriniz bizim için değerli — <span class="tpl-tag">{{yil}}</span> yılı memnuniyet anketi</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Hizmet kalitemizi geliştirmek için <span class="tpl-tag">{{yil}}</span> yılı üye memnuniyet anketimizi doldurmanızı rica ederiz. Yalnızca 3 dakika sürmektedir.<br><br>Ankete katılın: <span class="tpl-tag">{{anket_linki}}</span></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-green">Memnuniyet</span><span style="font-size:13px;font-weight:500">Yıllık memnuniyet anketi daveti</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">Konu satırı</div><div class="tpl-field">Görüşleriniz bizim için değerli — <span class="tpl-tag">{{yil}}</span> yılı memnuniyet anketi</div><div class="tpl-lbl">İçerik</div><div class="tpl-field">Sayın <span class="tpl-tag">{{yetkili_adi}}</span>,<br><br>Hizmet kalitemizi geliştirmek için <span class="tpl-tag">{{yil}}</span> yılı üye memnuniyet anketimizi doldurmanızı rica ederiz. Yalnızca 3 dakika sürmektedir.<br><br>Ankete katılın: <span class="tpl-tag">{{anket_linki}}</span></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
     </div>
 
     <div id="ch-sms" class="chs">
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-amber">Aidat</span><span style="font-size:13px;font-weight:500">Aidat hatırlatma SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni <span style="font-size:11px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400">(maks. 160 karakter)</span></div><div class="tpl-field">Kütahya TSO: Sayın <span class="tpl-tag">{{yetkili_adi}}</span>, <span class="tpl-tag">{{yil}}</span> yılı aidatınız (<span class="tpl-tag">{{aidat_tutari}}</span> TL) için son tarih <span class="tpl-tag">{{son_tarih}}</span>. Bilgi: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">Eğitim</span><span style="font-size:13px;font-weight:500">Etkinlik hatırlatma SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO: <span class="tpl-tag">{{etkinlik_adi}}</span> etkinliği <span class="tpl-tag">{{tarih}}</span> saat <span class="tpl-tag">{{saat}}</span>'de <span class="tpl-tag">{{konum}}</span>'da başlıyor. Katılımınızı bekliyoruz.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm yetki-degistir-gerekli"><i class="ti ti-send"></i> Gönder</button></div></div></div>
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-red">Şikayet</span><span style="font-size:13px;font-weight:500">Şikayet alındı SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO: Şikayetiniz (<span class="tpl-tag">{{sikayet_no}}</span>) alındı. En geç <span class="tpl-tag">{{max_sure}}</span> iş günü içinde dönüş yapılacaktır. Bilgi: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
-      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-blue">Hoş Geldin</span><span style="font-size:13px;font-weight:500">Yeni üye karşılama SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO'ya hoş geldiniz! Üye No: <span class="tpl-tag">{{uye_no}}</span>. Herhangi bir sorunuz için: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm yetki-degistir-gerekli"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-amber">Aidat</span><span style="font-size:13px;font-weight:500">Aidat hatırlatma SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni <span style="font-size:11px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400">(maks. 160 karakter)</span></div><div class="tpl-field">Kütahya TSO: Sayın <span class="tpl-tag">{{yetkili_adi}}</span>, <span class="tpl-tag">{{yil}}</span> yılı aidatınız (<span class="tpl-tag">{{aidat_tutari}}</span> TL) için son tarih <span class="tpl-tag">{{son_tarih}}</span>. Bilgi: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Toplu Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-purple">Eğitim</span><span style="font-size:13px;font-weight:500">Etkinlik hatırlatma SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO: <span class="tpl-tag">{{etkinlik_adi}}</span> etkinliği <span class="tpl-tag">{{tarih}}</span> saat <span class="tpl-tag">{{saat}}</span>'de <span class="tpl-tag">{{konum}}</span>'da başlıyor. Katılımınızı bekliyoruz.</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button><button class="btn btn-p btn-sm"><i class="ti ti-send"></i> Gönder</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-red">Şikayet</span><span style="font-size:13px;font-weight:500">Şikayet alındı SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO: Şikayetiniz (<span class="tpl-tag">{{sikayet_no}}</span>) alındı. En geç <span class="tpl-tag">{{max_sure}}</span> iş günü içinde dönüş yapılacaktır. Bilgi: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
+      <div class="tpl"><div class="tpl-hd" onclick="toggleTpl(this)"><div class="tpl-hd-l"><span class="badge b-blue">Hoş Geldin</span><span style="font-size:13px;font-weight:500">Yeni üye karşılama SMS</span></div><i class="ti ti-chevron-down" style="font-size:14px;color:var(--text2)"></i></div><div class="tpl-body"><div class="tpl-lbl">SMS metni</div><div class="tpl-field">Kütahya TSO'ya hoş geldiniz! Üye No: <span class="tpl-tag">{{uye_no}}</span>. Herhangi bir sorunuz için: 0274 000 00 00</div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-sm"><i class="ti ti-edit"></i> Düzenle</button></div></div></div>
     </div>
   </div>
 
@@ -4100,7 +4092,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
               <option>Sanayi</option>
               <option>İK / Kalite</option>
             </select>
-            <button class="btn btn-p btn-sm yetki-degistir-gerekli" id="prs-ekle-btn" onclick="prsEkleModal()" style="display:none"><i class="ti ti-plus"></i> Personel Ekle</button>
+            <button class="btn btn-p btn-sm" id="prs-ekle-btn" onclick="prsEkleModal()" style="display:none"><i class="ti ti-plus"></i> Personel Ekle</button>
           </div>
           <div class="um-table-wrap">
             <table id="prs-tbl">
@@ -4275,7 +4267,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
           <option value="Red">Red</option>
         </select>
       </div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="oneriEkleAc()"><i class="ti ti-plus"></i> Personel Öneri Ekle</button>
+      <button class="btn btn-p btn-sm" onclick="oneriEkleAc()"><i class="ti ti-plus"></i> Personel Öneri Ekle</button>
     </div>
 
     <!-- İstatistik kartları -->
@@ -4308,7 +4300,7 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap">
         <div id="yd-placeholder-kurul" style="display:inline-flex;align-items:flex-start;align-self:flex-start;flex-shrink:0"></div>
       </div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" id="kurul-ekle-btn" onclick="kurulToplantıEkle()" style="display:none">
+      <button class="btn btn-p btn-sm" id="kurul-ekle-btn" onclick="kurulToplantıEkle()" style="display:none">
         <i class="ti ti-plus"></i> Personel Kurul Toplantısı Ekle
       </button>
     </div>
@@ -4328,11 +4320,6 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
       </div>
     </div>
 
-  </div>
-
-  <!-- YETKİLENDİRME PANELİ -->
-  <div id="s-yetki" class="section">
-    <div id="yetki-icerik"></div>
   </div>
   </div><!-- /content -->
 
@@ -4479,7 +4466,7 @@ async function doLogin() {
   currentUser = user;
 
   /* Supabase'den tüm verileri yükle — paralel ama tamamlanmasını bekle */
-  await Promise.all([supaYukleKullanicilar(), supaYuklePersonel(), supaYuklePersonelBelgeler(), supaYuklePersonelEgitimler(), supaYukleYetkiMatrisi()]);
+  await Promise.all([supaYukleKullanicilar(), supaYuklePersonel(), supaYuklePersonelBelgeler(), supaYuklePersonelEgitimler()]);
 
   /* personel tablosundan güncel ad/soyad al */
   const pGuncel = (window.PERSONEL||[]).find(x=>x.kullanici===currentUser.kullanici);
@@ -4507,7 +4494,7 @@ async function doLogin() {
 
   /* Genel Sekreterlik menüsü yetkisi */
   const GS_YETKILI = ['admin','feyyaz','umran','orhan'];
-  const gsYetkili = window.digerYetkiVar('gs', GS_YETKILI.includes(currentUser.kullanici));
+  const gsYetkili = GS_YETKILI.includes(currentUser.kullanici);
   document.getElementById('gs-nav-section').style.display = gsYetkili ? '' : 'none';
   document.getElementById('gs-nav-btn').style.display = gsYetkili ? '' : 'none';
 
@@ -5182,15 +5169,14 @@ function toggleTpl(header) {
 
     /* Hızlı işlemler */
     document.getElementById('crm-hizli-islemler').innerHTML = `
-      <button class="btn btn-sm yetki-degistir-gerekli" style="width:100%;justify-content:flex-start" onclick="crmNotEkleModal()"><i class="ti ti-message" style="margin-right:6px"></i> İletişim Notu Ekle</button>
-      <button class="btn btn-sm yetki-degistir-gerekli" style="width:100%;justify-content:flex-start" onclick="crmGorevEkle()"><i class="ti ti-checklist" style="margin-right:6px"></i> Görev Oluştur</button>
+      <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmNotEkleModal()"><i class="ti ti-message" style="margin-right:6px"></i> İletişim Notu Ekle</button>
+      <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmGorevEkle()"><i class="ti ti-checklist" style="margin-right:6px"></i> Görev Oluştur</button>
       <button class="btn btn-sm" style="width:100%;justify-content:flex-start" onclick="crmTab('aidat',document.querySelector('.crm-tab[onclick*=aidat]'))"><i class="ti ti-coin" style="margin-right:6px"></i> Aidat Durumu Gör</button>
     `;
 
     /* Göster */
     document.getElementById('crm-detail').style.display = 'block';
     crmTab('iletisim', document.querySelector('.crm-tab'));
-    if(window.yetkiButonlariUygula) window.yetkiButonlariUygula('crm-profil', 'crm-detail');
 
     /* Verileri Supabase'den yükle */
     crmTimelineRender(f.id);
@@ -5942,12 +5928,6 @@ window.crmNavSec = function(sekme, btn){
       }
     }, 50);
   }
-  /* Yetki kontrolü */
-  const _crmSectionMap = { profil:'s-crm', ziyaret:'s-uye-ziyaret', egitim:'s-egitim', memnuniyet:'s-memnuniyet', sikayet:'s-sikayet', sanayi:'s-sanayi-main' };
-  const _crmMenuKeyMap = { profil:'crm-profil', ziyaret:'crm-ziyaret', egitim:'crm-egitim', memnuniyet:'crm-memnuniyet', sikayet:'crm-sikayet', sanayi:'crm-sanayi' };
-  if(_crmSectionMap[sekme]){
-    setTimeout(()=>{ if(window.yetkiKontrolGoster) window.yetkiKontrolGoster(_crmMenuKeyMap[sekme], _crmSectionMap[sekme]); }, 110);
-  }
 };
 
 /* ══ EĞİTİM & ETKİNLİK JS ══ */
@@ -6097,8 +6077,7 @@ window.crmNavSec = function(sekme, btn){
     });
 
     if(!etks.length){
-      list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text2)"><i class="ti ti-calendar-event" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz etkinlik eklenmedi</div><button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="etkYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button></div>`;
-      yetkiButonlariUygula('crm-egitim', 's-egitim');
+      list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text2)"><i class="ti ti-calendar-event" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz etkinlik eklenmedi</div><button class="btn btn-p btn-sm" onclick="etkYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button></div>`;
       return;
     }
 
@@ -6155,16 +6134,15 @@ if(etk.durum !== 'tamamlandi') etk.durum = etkOtoDurum(etk);
             <span class="kota-val">${kat} / ${etk.kontenjan}</span>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkOpenModal('${etk.id}')"><i class="ti ti-users"></i> Katılımcı & Memnuniyet</button>
-            <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkDuzenle('${etk.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-            <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkEvrakAc('${etk.id}')"><i class="ti ti-file-upload"></i> Evrak${evraklar.length?' ('+evraklar.length+')':''}</button>
-            ${etk.durum!=='tamamlandi'?`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkTamamla('${etk.id}')"><i class="ti ti-check"></i> Tamamlandı</button>`:'<span class="badge b-green" style="font-size:10px">✓ Tamamlandı</span>'}
-            <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red);margin-left:auto" onclick="event.stopPropagation();etkSil('${etk.id}')"><i class="ti ti-trash"></i></button>
+            <button class="btn btn-sm" onclick="event.stopPropagation();etkOpenModal('${etk.id}')"><i class="ti ti-users"></i> Katılımcı & Memnuniyet</button>
+            <button class="btn btn-sm" onclick="event.stopPropagation();etkDuzenle('${etk.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+            <button class="btn btn-sm" onclick="event.stopPropagation();etkEvrakAc('${etk.id}')"><i class="ti ti-file-upload"></i> Evrak${evraklar.length?' ('+evraklar.length+')':''}</button>
+            ${etk.durum!=='tamamlandi'?`<button class="btn btn-p btn-sm" onclick="event.stopPropagation();etkTamamla('${etk.id}')"><i class="ti ti-check"></i> Tamamlandı</button>`:'<span class="badge b-green" style="font-size:10px">✓ Tamamlandı</span>'}
+            <button class="btn btn-sm" style="color:var(--red);margin-left:auto" onclick="event.stopPropagation();etkSil('${etk.id}')"><i class="ti ti-trash"></i></button>
           </div>
         </div>`:''}
       </div>`;
     }).join('');
-    yetkiButonlariUygula('crm-egitim', 's-egitim');
   } /* end renderList */
 
   function renderListAndMetrics(){
@@ -6230,7 +6208,7 @@ let _etkEvrakAktif = null;
     const ov = document.createElement('div');
     ov.id = 'etk-evrak-overlay';
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:250;display:flex;align-items:center;justify-content:center';
-    const _etkYetki = window.digerYetkiVar('crm-egitim', currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici));
+    const _etkYetki = currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici);
     const canDelete = _etkYetki; /* Sadece GS/İK silebilir */
     const canDownload = _etkYetki; /* Sadece GS/İK indirebilir */
     ov.innerHTML = `<div style="background:var(--surface);border-radius:14px;width:520px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
@@ -6561,7 +6539,7 @@ const kaydetBtn = document.querySelector('#etk-ekle-overlay [onclick*="etkYeniKa
 
   /* Memnuniyet yetkisi */
   const ETK_MEM_YETKILI = ['admin','feyyaz','umran','orhan','haver'];
-  function etkMemYetkiMi(){ return window.digerYetkiVar('crm-egitim', currentUser && ETK_MEM_YETKILI.includes(currentUser.kullanici)); }
+  function etkMemYetkiMi(){ return currentUser && ETK_MEM_YETKILI.includes(currentUser.kullanici); }
 
   /* Memnuniyet başlıkları (tüm etkinlikler için ortak, düzenlenebilir) */
   const ETK_MEM_BASLIKLAR = window.ETK_MEM_BASLIKLAR = [
@@ -8589,7 +8567,7 @@ window.sw = function(id, btn) {
 (function(){
 
 const KURUL_YETKİLİLER = ['admin','feyyaz','umran','orhan','haver'];
-const kurulYetkiVar = () => window.digerYetkiVar('personel-kurul', KURUL_YETKİLİLER.includes(currentUser?.kullanici||''));
+const kurulYetkiVar = () => KURUL_YETKİLİLER.includes(currentUser?.kullanici||'');
 
 window.KURUL_DATA = {}; // { yil: [{id, ad, tarih, saat, yer, katilimci, gundemler:[{id, no, konu, aciklama, karar}]}] }
 let _kurulSecilenYil = new Date().getFullYear();
@@ -8670,7 +8648,7 @@ function kurulListeRender(){
           <span style="font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0">${g.no||gi+1}.</span>
           <span style="font-size:13px;font-weight:500;flex:1">${g.konu||''}</span>
           ${g.karar?`<span class="badge b-green" style="font-size:9px;flex-shrink:0">Karar var</span>`:`<span class="badge b-amber" style="font-size:9px;flex-shrink:0">Karar yok</span>`}
-          ${yetki?`<div class="yetki-degistir-gerekli" style="display:flex;gap:3px;flex-shrink:0" onclick="event.stopPropagation()">
+          ${yetki?`<div style="display:flex;gap:3px;flex-shrink:0" onclick="event.stopPropagation()">
             <button class="btn btn-sm" style="padding:2px 6px" onclick="kurulGundemDuzenle('${t.id}','${g.id}')"><i class="ti ti-edit" style="font-size:11px"></i></button>
             <button class="btn btn-sm" style="padding:2px 6px;color:var(--red)" onclick="kurulGundemSil('${t.id}','${g.id}')"><i class="ti ti-trash" style="font-size:11px"></i></button>
           </div>`:''}
@@ -8697,7 +8675,7 @@ function kurulListeRender(){
             <span><i class="ti ti-list" style="font-size:11px;margin-right:3px"></i>${gundemler.length} gündem · ${gundemler.filter(g=>g.karar).length} karar</span>
           </div>
         </div>
-        ${yetki?`<div class="yetki-degistir-gerekli" style="display:flex;gap:4px;flex-shrink:0">
+        ${yetki?`<div style="display:flex;gap:4px;flex-shrink:0">
           <button class="btn btn-sm" style="font-size:11px" onclick="kurulGundemEkle('${t.id}','${t.ad}')"><i class="ti ti-plus"></i> Gündem Ekle</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="kurulToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
           <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="kurulToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>
@@ -8707,7 +8685,6 @@ function kurulListeRender(){
       ${gundemler.length?`<div style="padding:0 12px 12px">${gundemHtml}</div>`:`<div style="padding:0 16px 12px;font-size:12px;color:var(--text2);font-style:italic">${yetki?'Henüz gündem eklenmedi. "Gündem Ekle" butonunu kullanın.':'Henüz gündem eklenmedi.'}</div>`}
     </div>`;
   }).join('');
-  yetkiButonlariUygula('personel-kurul', 's-personel-kurul');
 }
 
 /* Gündem accordion toggle */
@@ -9110,7 +9087,7 @@ window.oneriRender = function(){
   if(durumFilter) data = data.filter(o=>o.durum===durumFilter);
 
   const GS = ['admin','feyyaz','umran','orhan','haver'];
-  const isGS = window.digerYetkiVar('personel-oneri', GS.includes(currentUser?.kullanici||''));
+  const isGS = GS.includes(currentUser?.kullanici||'');
   if(!isGS) data = data.filter(o=>o.gonderen_kullanici===currentUser?.kullanici);
 
   if(!data.length){
@@ -9167,15 +9144,14 @@ window.oneriRender = function(){
 
           <!-- Butonlar -->
           <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:0.5px solid var(--border)">
-            ${isGS && o.durum==='Beklemede'?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--blue)" onclick="event.stopPropagation();oneriDegAc('${o.id}')"><i class="ti ti-clipboard-check"></i> Değerlendir</button>`:''}
-            <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();oneriDuzenle('${o.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-            <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();oneriSil('${o.id}')"><i class="ti ti-trash"></i> Sil</button>
+            ${isGS && o.durum==='Beklemede'?`<button class="btn btn-sm" style="font-size:11px;color:var(--blue)" onclick="event.stopPropagation();oneriDegAc('${o.id}')"><i class="ti ti-clipboard-check"></i> Değerlendir</button>`:''}
+            <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();oneriDuzenle('${o.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+            <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();oneriSil('${o.id}')"><i class="ti ti-trash"></i> Sil</button>
           </div>
         </div>
       </div>
     </div>`;
   }).join('');
-  yetkiButonlariUygula('personel-oneri', 's-personel-oneri');
 };
 
 /* Metrikler */
@@ -9570,261 +9546,8 @@ const aktifBtn = btn || document.getElementById('nav-personel-'+sekme);
     document.getElementById('tb-title').textContent = 'Personel Kurul Kararları';
     document.getElementById('tb-sub').textContent = 'Kurul kararları ve yönetim bildirileri';
     setTimeout(()=>{ if(window.kurulAcildi) window.kurulAcildi(); }, 30);
-  } else if(sekme === 'yetki'){
-    document.getElementById('s-yetki')?.classList.add('active');
-    document.getElementById('tb-title').textContent = 'Yetkilendirme';
-    document.getElementById('tb-sub').textContent = 'Ünvan bazlı menü erişim yetkileri';
-    setTimeout(()=>{ if(window.yetkiAcildi) window.yetkiAcildi(); }, 30);
-  }
-  /* Yetki kontrolü (Yetkilendirme sekmesi hariç — o kendi Genel Sekreter kontrolüne sahip) */
-  const _prsSectionMap = { bilgi:'s-personel', egitim:'s-egitim-prs', oneri:'s-personel-oneri', memnuniyet:'s-mem-prs', kurul:'s-personel-kurul' };
-  const _prsMenuKeyMap = { bilgi:'personel-bilgi', egitim:'personel-egitim', oneri:'personel-oneri', memnuniyet:'personel-memnuniyet', kurul:'personel-kurul' };
-  if(_prsSectionMap[sekme]){
-    setTimeout(()=>{ if(window.yetkiKontrolGoster) window.yetkiKontrolGoster(_prsMenuKeyMap[sekme], _prsSectionMap[sekme]); }, 110);
   }
   document.getElementById('tb-right-page').innerHTML = '';
-};
-
-/* ════════════════════════════════════════════════════════
-   YETKİLENDİRME SİSTEMİ (ünvan bazlı menü erişimi)
-   ════════════════════════════════════════════════════════ */
-window.YETKI_MATRISI = []; /* [{menu_key, unvan, seviye}] */
-window._yetkiYuklendi = false;
-
-/* Menü listesi — Genel Bakış ve Takvim hariç (bunlar herkese açık) */
-const YETKI_MENULER = [
-  { key:'uyeler',            ad:'Üye Modülü',                 grup:'Üyeler' },
-  { key:'crm-profil',        ad:'Üye Profili',                grup:'CRM' },
-  { key:'crm-ziyaret',       ad:'Üye Ziyareti',                grup:'CRM' },
-  { key:'crm-egitim',        ad:'Üye Eğitim & Etkinlik',       grup:'CRM' },
-  { key:'crm-memnuniyet',    ad:'Üye Memnuniyet',              grup:'CRM' },
-  { key:'crm-sikayet',       ad:'Şikayet',                     grup:'CRM' },
-  { key:'crm-sanayi',        ad:'Sanayi Bilgi Sistemi',        grup:'CRM' },
-  { key:'yk-yk',             ad:'YK Kararları',                grup:'Oda Yönetimi' },
-  { key:'yk-mk',             ad:'Meslek Komitesi',             grup:'Oda Yönetimi' },
-  { key:'yk-meclis',         ad:'Meclis Kararları',            grup:'Oda Yönetimi' },
-  { key:'akreditasyon',      ad:'Akreditasyon',                grup:'Oda Yönetimi' },
-  { key:'isplani',           ad:'İş Planı',                    grup:'Oda Yönetimi' },
-  { key:'personel-bilgi',    ad:'Personel Bilgi',              grup:'Personel' },
-  { key:'personel-egitim',   ad:'Personel Eğitim & Etkinlik',  grup:'Personel' },
-  { key:'personel-oneri',    ad:'Personel Öneri',              grup:'Personel' },
-  { key:'personel-memnuniyet',ad:'Personel Memnuniyet',        grup:'Personel' },
-  { key:'personel-kurul',    ad:'Personel Kurul Kararları',    grup:'Personel' },
-  { key:'gs',                ad:'Üye Yönetimi',                grup:'Genel Sekreterlik' },
-  { key:'bildirim',          ad:'Bildirim Şablonları',         grup:'İletişim' },
-  { key:'raporlar',          ad:'Raporlar',                    grup:'İletişim' },
-];
-window.YETKI_MENULER = YETKI_MENULER;
-
-async function supaYukleYetkiMatrisi(){
-  try{
-    const { data } = await _supa.from('yetki_matrisi').select('*');
-    window.YETKI_MATRISI = data||[];
-    window._yetkiYuklendi = true;
-  }catch(e){ console.warn('Yetki matrisi yükleme hatası:', e); window.YETKI_MATRISI=[]; }
-}
-window.supaYukleYetkiMatrisi = supaYukleYetkiMatrisi;
-
-/* Şu anki kullanıcının ünvanını bul (personel tablosundan, kullanıcı adıyla eşleşir) */
-window.kullaniciUnvani = function(){
-  if(!currentUser) return null;
-  const p = (window.PERSONEL||[]).find(x=>x.kullanici===currentUser.kullanici);
-  return p ? p.unvan : null;
-};
-
-/* "admin" kullanıcı adı her zaman tam yetkili (master/test hesabı) */
-window.masterKullaniciMi = function(){
-  return currentUser && currentUser.kullanici === 'admin';
-};
-
-/* Genel Sekreter mi? — Yetkilendirme ekranına her zaman erişebilir (kilitlenmeyi önler) */
-window.genelSekreterMi = function(){
-  return window.masterKullaniciMi() || window.kullaniciUnvani() === 'Genel Sekreter';
-};
-
-/* Bir menü için şu anki kullanıcının yetki seviyesini döndürür: 'yok' | 'okuyabilir' | 'degistirebilir' */
-window.kullaniciMenuYetkisi = function(menuKey){
-  if(window.masterKullaniciMi()) return 'degistirebilir'; /* admin her zaman tam yetkili */
-  if(window.genelSekreterMi()) return 'degistirebilir'; /* Genel Sekreter her zaman tam yetkili */
-  const unvan = window.kullaniciUnvani();
-  if(!unvan) return 'yok';
-  const kayit = (window.YETKI_MATRISI||[]).find(y=>y.menu_key===menuKey && y.unvan===unvan);
-  return kayit ? kayit.seviye : 'yok';
-};
-
-/* Eski koda-gömülü yetki fonksiyonlarında kullanılır — yetki matrisinde 'degistirebilir'
-   VEYA eski koddaki sabit listede (eskiListedeVarMi) yer alıyorsa true döner. */
-window.digerYetkiVar = function(menuKey, eskiListedeVarMi){
-  if(eskiListedeVarMi) return true;
-  return window.kullaniciMenuYetkisi(menuKey) === 'degistirebilir';
-};
-
-/* Bir menü için "değiştirebilir" yetkisi yoksa, o konteynerdeki
-   .yetki-degistir-gerekli class'lı tüm elemanları gizler (ekle/düzenle/sil butonları vb.) */
-window.yetkiButonlariUygula = function(menuKey, containerId){
-  const cont = document.getElementById(containerId);
-  if(!cont) return;
-  const izinli = window.kullaniciMenuYetkisi(menuKey) === 'degistirebilir';
-  cont.querySelectorAll('.yetki-degistir-gerekli').forEach(el=>{
-    el.style.display = izinli ? '' : 'none';
-  });
-};
-window.yetkiKontrolGoster = function(menuKey, containerId){
-  const seviye = window.kullaniciMenuYetkisi(menuKey);
-  if(seviye === 'yok'){
-    const el = document.getElementById(containerId);
-    if(el) el.innerHTML = `
-      <div style="text-align:center;padding:60px 20px;color:var(--text2)">
-        <div style="width:56px;height:56px;border-radius:14px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
-          <i class="ti ti-lock" style="font-size:26px;color:var(--red)"></i>
-        </div>
-        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">Bu sayfayı görüntüleme yetkiniz yok</div>
-        <div style="font-size:12px;color:var(--text2)">Yetkiniz olduğunu düşünüyorsanız Genel Sekreterinizle iletişime geçin.</div>
-      </div>`;
-    return true;
-  }
-  return false;
-};
-
-/* Yetkilendirme ekranı açıldığında */
-window.yetkiAcildi = async function(){
-  if(!window.genelSekreterMi()){
-    const el = document.getElementById('yetki-icerik');
-    if(el) el.innerHTML = `
-      <div style="text-align:center;padding:60px 20px;color:var(--text2)">
-        <div style="width:56px;height:56px;border-radius:14px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
-          <i class="ti ti-lock" style="font-size:26px;color:var(--red)"></i>
-        </div>
-        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">Bu sayfayı görüntüleme yetkiniz yok</div>
-        <div style="font-size:12px;color:var(--text2)">Yetkilendirme işlemleri sadece Genel Sekreter tarafından yapılabilir.</div>
-      </div>`;
-    return;
-  }
-  if(!window._yetkiYuklendi) await supaYukleYetkiMatrisi();
-  yetkiRender();
-};
-
-/* Matris tablosunu oluştur */
-function yetkiRender(){
-  const el = document.getElementById('yetki-icerik');
-  if(!el) return;
-
-  /* Sistemdeki tüm ünvanlar (personel tablosundan, benzersiz) */
-  const unvanlar = [...new Set((window.PERSONEL||[]).map(p=>p.unvan).filter(u=>u && u!=='—'))].sort((a,b)=>a.localeCompare(b,'tr'));
-
-  if(!unvanlar.length){
-    el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text2)">Personel listesinde ünvan bulunamadı.</div>`;
-    return;
-  }
-
-  const seviyeUnvanlari = (menuKey, seviye) => {
-    if(seviye==='yok'){
-      const atanmis = new Set((window.YETKI_MATRISI||[]).filter(y=>y.menu_key===menuKey).map(y=>y.unvan));
-      return unvanlar.filter(u=>!atanmis.has(u));
-    }
-    return (window.YETKI_MATRISI||[]).filter(y=>y.menu_key===menuKey && y.seviye===seviye).map(y=>y.unvan);
-  };
-
-  const SEVIYELER = [
-    { key:'degistirebilir', ad:'Okuyabilir/Değiştirebilir', renk:'var(--teal)' },
-    { key:'okuyabilir',     ad:'Okuyabilir',                 renk:'var(--amber)' },
-    { key:'yok',            ad:'Yok',                        renk:'var(--text2)' },
-  ];
-
-  const gruplar = [...new Set(YETKI_MENULER.map(m=>m.grup))];
-
-  const hucreHtml = (menuKey, seviye) => {
-    const liste = seviyeUnvanlari(menuKey, seviye);
-    const renk = SEVIYELER.find(s=>s.key===seviye).renk;
-    const bg = seviye==='degistirebilir' ? 'var(--green-bg)' : seviye==='okuyabilir' ? 'var(--amber-bg)' : 'var(--surface2)';
-    return `<td style="padding:8px 10px;border-bottom:0.5px solid var(--border);vertical-align:top;min-width:220px">
-      <div onclick="yetkiHucreAc('${menuKey}','${seviye}')" style="cursor:pointer;min-height:28px;border:1px dashed var(--border2);border-radius:8px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;transition:border-color .15s" onmouseover="this.style.borderColor='${renk}'" onmouseout="this.style.borderColor='var(--border2)'">
-        ${liste.length
-          ? liste.map(u=>`<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${bg};color:${seviye==='yok'?'var(--text2)':renk};font-weight:600;white-space:nowrap">${u}</span>`).join('')
-          : `<span style="font-size:11px;color:var(--text2)"><i class="ti ti-plus" style="font-size:11px"></i> Ünvan ata</span>`}
-      </div>
-    </td>`;
-  };
-
-  let tabloHtml = `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px;width:100%">
-    <thead><tr>
-      <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text2);border-bottom:2px solid var(--border);min-width:170px">Menü</th>
-      ${SEVIYELER.map(s=>`<th style="padding:8px 10px;font-size:11px;font-weight:700;color:${s.renk};border-bottom:2px solid var(--border);text-align:left">${s.ad}</th>`).join('')}
-    </tr></thead>
-    <tbody>`;
-
-  gruplar.forEach(grup=>{
-    tabloHtml += `<tr><td colspan="4" style="padding:10px 12px 4px;font-size:11px;font-weight:700;color:var(--purple);background:var(--surface2)">${grup}</td></tr>`;
-    YETKI_MENULER.filter(m=>m.grup===grup).forEach(m=>{
-      tabloHtml += `<tr>
-        <td style="padding:6px 12px;font-size:12px;font-weight:500;border-bottom:0.5px solid var(--border);vertical-align:top">${m.ad}</td>
-        ${SEVIYELER.map(s=>hucreHtml(m.key, s.key)).join('')}
-      </tr>`;
-    });
-  });
-
-  tabloHtml += `</tbody></table></div>`;
-
-  el.innerHTML = `
-    <div style="margin-bottom:14px;font-size:12px;color:var(--text2)">
-      <i class="ti ti-info-circle"></i> Bir hücreye tıklayıp o yetki seviyesine ünvan atayın. Bir ünvan aynı menüde sadece tek bir sütunda olabilir — başka bir sütuna atarsanız eski yerinden otomatik kalkar. Yazılıma yeni menü eklendikçe bu listeye otomatik eklenir.
-    </div>
-    ${tabloHtml}`;
-}
-
-/* Bir hücreye tıklayınca — o seviyeye ünvan atama penceresi */
-window.yetkiHucreAc = function(menuKey, seviye){
-  const unvanlar = [...new Set((window.PERSONEL||[]).map(p=>p.unvan).filter(u=>u && u!=='—'))].sort((a,b)=>a.localeCompare(b,'tr'));
-  const menuAd = YETKI_MENULER.find(m=>m.key===menuKey)?.ad || menuKey;
-  const seviyeAd = {degistirebilir:'Okuyabilir/Değiştirebilir', okuyabilir:'Okuyabilir', yok:'Yok'}[seviye];
-
-  const suankiSeviye = (unvan) => {
-    const k = (window.YETKI_MATRISI||[]).find(y=>y.menu_key===menuKey && y.unvan===unvan);
-    return k ? k.seviye : 'yok';
-  };
-
-  gsModalAc(`${menuAd} — ${seviyeAd}`,
-    `<div style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto">
-      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Bu seviyeye atamak istediğiniz ünvanları işaretleyin. Başka sütunda olan bir ünvanı işaretlerseniz oradan kalkar.</div>
-      ${unvanlar.map(u=>{
-        const mevcut = suankiSeviye(u);
-        const buradaMi = mevcut===seviye;
-        const baskaYerdeMi = mevcut!=='yok' && !buradaMi;
-        return `<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:var(--surface2);cursor:pointer">
-          <input type="checkbox" class="yetki-unvan-cb" data-unvan="${u.replace(/"/g,'&quot;')}" ${buradaMi?'checked':''}>
-          <span style="font-size:12px;flex:1">${u}</span>
-          ${baskaYerdeMi?`<span style="font-size:10px;color:var(--text2)">şu an: ${mevcut==='degistirebilir'?'Okuyabilir/Değiştirebilir':'Okuyabilir'}</span>`:''}
-        </label>`;
-      }).join('')}
-    </div>`,
-    async ()=>{
-      const cbs = document.querySelectorAll('.yetki-unvan-cb');
-      const hatalar = [];
-      for(const cb of cbs){
-        const unvan = cb.getAttribute('data-unvan');
-        const isaretli = cb.checked;
-        const mevcutSeviye = suankiSeviye(unvan);
-        if(isaretli && mevcutSeviye!==seviye){
-          /* Bu seviyeye ata (yok ise sil, değilse upsert) */
-          if(seviye==='yok'){
-            const {error} = await _supa.from('yetki_matrisi').delete().eq('menu_key',menuKey).eq('unvan',unvan);
-            if(error){ console.error('Yetki silme hatası:', error); hatalar.push(unvan+': '+error.message); }
-          } else {
-            const {error} = await _supa.from('yetki_matrisi').upsert([{menu_key:menuKey, unvan, seviye}], {onConflict:'menu_key,unvan'});
-            if(error){ console.error('Yetki kaydetme hatası:', error); hatalar.push(unvan+': '+error.message); }
-          }
-        } else if(!isaretli && mevcutSeviye===seviye && seviye!=='yok'){
-          /* İşaret kaldırıldı — bu seviyeden çıkar (yok'a düşer) */
-          const {error} = await _supa.from('yetki_matrisi').delete().eq('menu_key',menuKey).eq('unvan',unvan);
-          if(error){ console.error('Yetki kaldırma hatası:', error); hatalar.push(unvan+': '+error.message); }
-        }
-      }
-      if(hatalar.length){ alert('Bazı kayıtlar kaydedilemedi:\n'+hatalar.join('\n')); }
-      await supaYukleYetkiMatrisi();
-      gsModalKapat();
-      yetkiRender();
-    }
-  );
 };
 (function(){
 
@@ -9929,10 +9652,9 @@ function renderPrsList() {
       <td>${p.durum==='aktif'?'<span class="badge b-green">Aktif</span>':'<span class="badge b-amber">İzinde</span>'}</td>
       <td>${(ozlukYetkiVar() || kendiId()==p.id) ? `<button class="btn btn-sm" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation();prsTabAndSelect('ozluk',${p.id})"><i class="ti ti-folder"></i> Özlük</button>` : `<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;opacity:.35;cursor:not-allowed" disabled title="Yetki yok"><i class="ti ti-lock"></i> Özlük</button>`}</td>
       <td>${tikla ? `<button class="btn btn-sm" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation();prsOpenDetail(${p.id})"><i class="ti ti-eye"></i></button>` : `<button class="btn btn-sm" style="font-size:10px;padding:3px 7px;opacity:.35;cursor:not-allowed" disabled title="Görüntüleme yetkiniz yok"><i class="ti ti-lock"></i></button>`}
-      ${prsEklemeYetkiVar()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:3px 7px;color:var(--red);margin-left:3px" onclick="event.stopPropagation();prsSilModal(${p.id})" title="Personeli sil"><i class="ti ti-trash"></i></button>`:''}</td>
+      ${prsEklemeYetkiVar()?`<button class="btn btn-sm" style="font-size:10px;padding:3px 7px;color:var(--red);margin-left:3px" onclick="event.stopPropagation();prsSilModal(${p.id})" title="Personeli sil"><i class="ti ti-trash"></i></button>`:''}</td>
     </tr>`;
   }).join('');
-  yetkiButonlariUygula('personel-bilgi', 's-personel');
 }
 
 window.prsMetrikleriGuncelle = function(){
@@ -10070,12 +9792,12 @@ window.prsTabAndSelect = function(pane, id) {
 
 /* Personel ekleme yetkisi: GS, GS yardımcıları, IK/Kalite */
 const PRS_EKLE_YETKILILER = ['admin','feyyaz','umran','orhan','haver'];
-function prsEklemeYetkiVar(){ return window.digerYetkiVar('personel-bilgi', currentUser && PRS_EKLE_YETKILILER.includes(currentUser.kullanici)); }
+function prsEklemeYetkiVar(){ return currentUser && PRS_EKLE_YETKILILER.includes(currentUser.kullanici); }
 window.prsEklemeYetkiVar = prsEklemeYetkiVar;
 const OZLUK_YETKILILER = ['admin','feyyaz','umran','orhan','haver'];
 
 function ozlukYetkiVar() {
-  return window.digerYetkiVar('personel-bilgi', currentUser && OZLUK_YETKILILER.includes(currentUser.kullanici));
+  return currentUser && OZLUK_YETKILILER.includes(currentUser.kullanici);
 }
 
 function kendiId() {
@@ -10301,7 +10023,7 @@ window.egitimToggle = function(btn){
 
 /* Memnuniyet yetkisi — GS, GS Yardımcıları, İK/Kalite Sorumlusu */
 const ETK_PRS_MEM_YETKILI = ['admin','feyyaz','umran','orhan','haver'];
-function etkPrsMemYetkiMi(){ return window.digerYetkiVar('personel-egitim', currentUser && ETK_PRS_MEM_YETKILI.includes(currentUser.kullanici)); }
+function etkPrsMemYetkiMi(){ return currentUser && ETK_PRS_MEM_YETKILI.includes(currentUser.kullanici); }
 window.etkPrsMemYetkiMi = etkPrsMemYetkiMi;
 
 /* Veri deposu — window üzerinden tüm fonksiyonlara erişilebilir */
@@ -10419,7 +10141,7 @@ function etkPrsRender(){
   if(_etkPrsArama){
     etks=etks.filter(e=>(e.ad||'').toLowerCase().includes(_etkPrsArama)||(e.no||'').toLowerCase().includes(_etkPrsArama)||(e.egitimci||'').toLowerCase().includes(_etkPrsArama));
   }
-  if(!etks.length){ list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text2)"><i class="ti ti-school" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz personel eğitimi eklenmedi</div><button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="etkPrsYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button></div>`; return; }
+  if(!etks.length){ list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text2)"><i class="ti ti-school" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz personel eğitimi eklenmedi</div><button class="btn btn-p btn-sm" onclick="etkPrsYeniEkle()"><i class="ti ti-plus"></i> Etkinlik Ekle</button></div>`; return; }
   list.innerHTML=etks.map(etk=>{
     const kat=(etk.katilimcilar||[]).length;
     let mT=0,mS=0; (etk.anketler||[]).forEach(a=>Object.values(a.cevaplar||{}).forEach(b=>Object.values(b||{}).forEach(p=>{ if(p>0){mT+=p;mS++;} })));
@@ -10460,16 +10182,15 @@ function etkPrsRender(){
           </div>`).join('')}
         </div>`:''}
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkPrsOpenModal('${etk.id}')"><i class="ti ti-users"></i> Katılımcı & Memnuniyet</button>
-          <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkPrsDuzenle('${etk.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-          <button class="btn btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkPrsEvrakAc('${etk.id}')"><i class="ti ti-file-upload"></i> Evrak${(etk.evraklar||[]).length?' ('+(etk.evraklar||[]).length+')':''}</button>
-          ${etk.durum!=='tamamlandi'?`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="event.stopPropagation();etkPrsTamamla('${etk.id}')"><i class="ti ti-check"></i> Tamamlandı</button>`:'<span class="badge b-green" style="font-size:10px">✓ Tamamlandı</span>'}
-          <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red);margin-left:auto" onclick="event.stopPropagation();etkPrsSil('${etk.id}')"><i class="ti ti-trash"></i></button>
+          <button class="btn btn-sm" onclick="event.stopPropagation();etkPrsOpenModal('${etk.id}')"><i class="ti ti-users"></i> Katılımcı & Memnuniyet</button>
+          <button class="btn btn-sm" onclick="event.stopPropagation();etkPrsDuzenle('${etk.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+          <button class="btn btn-sm" onclick="event.stopPropagation();etkPrsEvrakAc('${etk.id}')"><i class="ti ti-file-upload"></i> Evrak${(etk.evraklar||[]).length?' ('+(etk.evraklar||[]).length+')':''}</button>
+          ${etk.durum!=='tamamlandi'?`<button class="btn btn-p btn-sm" onclick="event.stopPropagation();etkPrsTamamla('${etk.id}')"><i class="ti ti-check"></i> Tamamlandı</button>`:'<span class="badge b-green" style="font-size:10px">✓ Tamamlandı</span>'}
+          <button class="btn btn-sm" style="color:var(--red);margin-left:auto" onclick="event.stopPropagation();etkPrsSil('${etk.id}')"><i class="ti ti-trash"></i></button>
         </div>
       </div>`:''}
     </div>`;
   }).join('');
-  yetkiButonlariUygula('personel-egitim', 's-egitim-prs');
 }
 window.etkPrsRender=etkPrsRender;
 
@@ -10554,7 +10275,7 @@ window.etkPrsEvrakAc=function(etkId){
   window._etkPrsEvrakAktif = etkId;
   const existing=document.getElementById('etk-prs-evrak-overlay');
   if(existing) existing.remove();
-  const _etkYetki = window.digerYetkiVar('personel-egitim', currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici));
+  const _etkYetki = currentUser && ['admin','feyyaz','umran','orhan','haver'].includes(currentUser.kullanici);
   function _ikon(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(e==='pdf') return 'ti-file-type-pdf'; if(['doc','docx'].includes(e)) return 'ti-file-type-doc'; if(['xls','xlsx'].includes(e)) return 'ti-file-type-xls'; if(['ppt','pptx'].includes(e)) return 'ti-presentation'; return 'ti-file-description'; }
   function _renk(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(e==='pdf') return '#E24B4A'; if(['doc','docx'].includes(e)) return '#185FA5'; if(['xls','xlsx'].includes(e)) return '#1D9E75'; if(['ppt','pptx'].includes(e)) return '#EF9F27'; return 'var(--text2)'; }
   const ov=document.createElement('div');
@@ -11223,7 +10944,7 @@ window.sw = function(id, btn) {
 (function(){
 
 const YK_YONETICI = ['admin','feyyaz','umran','orhan'];
-function ykYoneticiMi(){ return window.digerYetkiVar('yk-yk', currentUser && YK_YONETICI.includes(currentUser.kullanici)); }
+function ykYoneticiMi(){ return currentUser && YK_YONETICI.includes(currentUser.kullanici); }
 
 /* ─── VERİ DEPOSU (boş başlar, yönetici doldurur) ─── */
 window.YK_DB = { toplantılar: [], gundemler: [] };
@@ -11287,7 +11008,7 @@ function ykRenderToplantıListesi(){
   const headerBtn = document.getElementById('yk-header-btn');
   if(!el) return;
   header.innerHTML = 'Toplantılar';
-  if(headerBtn) headerBtn.innerHTML = `<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="ykToplantıEkleModal()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
+  if(headerBtn) headerBtn.innerHTML = `<button class="btn btn-p btn-sm" onclick="ykToplantıEkleModal()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
 
   let liste = [...YK_DB.toplantılar];
   /* Tarih sıralaması — en eski en üstte */
@@ -11307,9 +11028,8 @@ function ykRenderToplantıListesi(){
       </div>
       <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px">Henüz toplantı eklenmedi</div>
       <div style="font-size:13px;margin-bottom:16px">Yönetim Kurulu toplantılarını ve gündem maddelerini buradan yönetin</div>
-      <button class="btn btn-p yetki-degistir-gerekli" onclick="ykToplantıEkleModal()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
+      <button class="btn btn-p" onclick="ykToplantıEkleModal()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
     </div>`;
-    yetkiButonlariUygula('yk-yk', 'yk-karar-list');
     return;
   }
 
@@ -11343,12 +11063,11 @@ function ykRenderToplantıListesi(){
         <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();ykAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay & Gündemler</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','yk','${t.ad.replace(/'/g,'\\&apos;')}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
-          ${ykYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();ykToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();ykToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
+          ${ykYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();ykToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();ykToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
       </div>`;
     }).join('') + '</div>';
-  yetkiButonlariUygula('yk-yk', 'yk-karar-list');
 }
 
 /* ── Toplantı detayı (gündemler) ── */
@@ -11371,11 +11090,11 @@ function ykRenderToplantıDetay(){
     </button>
     <span style="font-size:14px;font-weight:500">${t.ad}</span>
     <span style="font-size:12px;font-weight:400;color:var(--text2)">${t.tarih}</span>
-    <button class="btn btn-sm yetki-degistir-gerekli" onclick="katilimAc('${t.id}','yk')" style="margin-left:8px">
+    <button class="btn btn-sm" onclick="katilimAc('${t.id}','yk')" style="margin-left:8px">
       <i class="ti ti-clipboard-check"></i> Katılım Takibi
     </button>`;
 
-  if(headerBtn) headerBtn.innerHTML = `<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="ykGundemEkleModal('${t.id}')">
+  if(headerBtn) headerBtn.innerHTML = `<button class="btn btn-p btn-sm" onclick="ykGundemEkleModal('${t.id}')">
     <i class="ti ti-plus"></i> Gündem & Atama Ekle
   </button>`;
 
@@ -11388,7 +11107,6 @@ function ykRenderToplantıDetay(){
         </div>`
       : tGundemler.map((g,i) => ykGundemKartHtml(g, i+1, true)).join('')
     }`;
-  yetkiButonlariUygula('yk-yk', 'yk-karar-list');
 }
 
 window.ykGeriToplantıListesi = function(){
@@ -11415,7 +11133,7 @@ function ykGundemKartHtml(g, sira, yoneticiMod){
         <div style="width:6px;height:6px;border-radius:50%;background:${aDurum?'#1D9E75':pr.dot};flex-shrink:0"></div>
         <div style="flex:1;font-size:12px"><strong>${a.ad}</strong> — ${a.gorev}</div>
         <span style="font-size:10px;color:${aDurum?'var(--green)':pr.txt};font-weight:500">${aDurum?'✓ Tamamlandı':'Devam'}</span>
-        ${yoneticiMod && !aDurum ? `<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 7px" onclick="ykAtamaTamamla('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>` : ''}
+        ${yoneticiMod && !aDurum ? `<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="ykAtamaTamamla('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>` : ''}
       </div>
       ${notHtml}
     </div>`;
@@ -11436,9 +11154,9 @@ function ykGundemKartHtml(g, sira, yoneticiMod){
     <div style="font-size:11px;font-weight:500;color:var(--text2);margin-top:10px;margin-bottom:2px">Atamalar:</div>
     ${g.atananlar.length ? atananlarHtml : '<div style="font-size:12px;color:var(--text2);padding:6px 10px;background:var(--surface2);border-radius:7px;margin-top:6px">Henüz atama yapılmadı</div>'}
     ${yoneticiMod ? `<div style="margin-top:10px;display:flex;gap:7px">
-      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="ykGundemEkleModal('${g.toplantıId}', '${g.id}')"><i class="ti ti-user-plus"></i> Atama Ekle</button>
-      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="ykGundemDuzenle('${g.toplantıId}', '${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="ykGundemSil('${g.id}','${g.toplantıId}')"><i class="ti ti-trash"></i> Sil</button>
+      <button class="btn btn-sm" style="font-size:11px" onclick="ykGundemEkleModal('${g.toplantıId}', '${g.id}')"><i class="ti ti-user-plus"></i> Atama Ekle</button>
+      <button class="btn btn-sm" style="font-size:11px" onclick="ykGundemDuzenle('${g.toplantıId}', '${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+      <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="ykGundemSil('${g.id}','${g.toplantıId}')"><i class="ti ti-trash"></i> Sil</button>
       ${g.durum!=='tamamlandi' ? `<button class="btn btn-p btn-sm" style="font-size:11px" onclick="ykGundemTamamla('${g.id}')"><i class="ti ti-check"></i> Tümünü Tamamlandı İşaretle</button>` : ''}
     </div>` : ''}
   </div>`;
@@ -12013,11 +11731,6 @@ window.kararlarSec = function(tip, btn){
     window._kararYil=gorevYil;
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.gorevRender) window.gorevRender(); }, 30);
   }
-  /* Yetki kontrolü */
-  const _kararMenuKeyMap = { yk:'yk-yk', mk:'yk-mk', meclis:'yk-meclis' };
-  if(_kararMenuKeyMap[tip]){
-    setTimeout(()=>{ if(window.yetkiKontrolGoster) window.yetkiKontrolGoster(_kararMenuKeyMap[tip], 'kp-'+tip); }, 110);
-  }
 };
 
 /* ════════════════════════════
@@ -12027,100 +11740,40 @@ window.kararlarSec = function(tip, btn){
 const MK_DB = window.MK_DB = { toplantılar:[], gundemler:[] };
 let mkAktifToplantı = null;
 const MK_YONETICI = ['admin','feyyaz','umran','orhan'];
-function mkYoneticiMi(){ return window.digerYetkiVar('yk-mk', currentUser && MK_YONETICI.includes(currentUser.kullanici)); }
-function meclisYoneticiMi(){ return window.digerYetkiVar('yk-meclis', currentUser && MK_YONETICI.includes(currentUser.kullanici)); }
-window.meclisYoneticiMi = meclisYoneticiMi;
-
-window._mkSeciliKomiteNo = null; /* null = komite listesi görünümü, sayı = o komitenin içindeyiz */
+function mkYoneticiMi(){ return currentUser && MK_YONETICI.includes(currentUser.kullanici); }
 
 function mkRender(){
   const yonetici = mkYoneticiMi();
   document.getElementById('mk-yonetici-view').style.display = yonetici?'block':'none';
   document.getElementById('mk-personel-view').style.display  = yonetici?'none':'block';
   if(yonetici){
-    if(window._mkSeciliKomiteNo === null){
-      document.getElementById('mk-komite-liste').style.display = 'block';
-      document.getElementById('mk-komite-icerik').style.display = 'none';
-      const metEl = document.getElementById('mk-metrics'); if(metEl){ metEl.style.display='none'; metEl.innerHTML=''; }
-      mkKomiteListesiRender();
+    mkRenderMetrik();
+    /* Eğer bir toplantı detayı açıksa listeye dönme */
+    if(mkAktifToplantı && window._mkGundemEkraniAcik){
+      // Gündem ekranı açıksa orada kal — sadece metriği güncelle
+    } else if(mkAktifToplantı){
+      mkAcToplantı(mkAktifToplantı);
     } else {
-      document.getElementById('mk-komite-liste').style.display = 'none';
-      document.getElementById('mk-komite-icerik').style.display = 'block';
-      const metEl2 = document.getElementById('mk-metrics'); if(metEl2) metEl2.style.display='';
-      mkRenderMetrik();
-      /* Eğer bir toplantı detayı açıksa listeye dönme */
-      if(mkAktifToplantı && window._mkGundemEkraniAcik){
-        // Gündem ekranı açıksa orada kal — sadece metriği güncelle
-      } else if(mkAktifToplantı){
-        mkAcToplantı(mkAktifToplantı);
-      } else {
-        mkRenderListe();
-      }
+      mkRenderListe();
     }
   }
   else mkRenderPersonel();
   setTimeout(function(){ if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle(); }, 50);
 }
 
-/* Komite listesi (üst seviye görünüm) */
-function mkKomiteListesiRender(){
-  const el = document.getElementById('mk-komite-liste');
-  if(!el) return;
-
-  const komiteNolar = (window._mkTumKomiteNolar||[]).length
-    ? [...window._mkTumKomiteNolar]
-    : Array.from({length:14},(_,i)=>i+1);
-
-  el.innerHTML = `
-    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Bir meslek komitesi seçin — o komitenin toplantılarını ve evraklarını yönetin</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
-      ${komiteNolar.map(kNo=>{
-        const uyeSayisi = (window._mkKomiteUyeSayisi && window._mkKomiteUyeSayisi[kNo]!==undefined) ? window._mkKomiteUyeSayisi[kNo] : 0;
-        const toplantiSayisi = (MK_DB.toplantılar||[]).filter(t=>String(t.komite)===String(kNo)).length;
-        return `<div class="yk-card" style="cursor:pointer;transition:border-color .15s" onclick="mkKomiteSec(${kNo})" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:40px;height:40px;border-radius:10px;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <i class="ti ti-building-community" style="font-size:18px;color:var(--purple)"></i>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:700">${kNo}. Meslek Komitesi</div>
-              <div style="font-size:11px;color:var(--text2);margin-top:2px">${uyeSayisi} üye · ${toplantiSayisi} toplantı</div>
-            </div>
-            <i class="ti ti-chevron-right" style="font-size:16px;color:var(--text2)"></i>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-}
-
-window.mkKomiteSec = function(kNo){
-  window._mkSeciliKomiteNo = kNo;
-  mkAktifToplantı = null;
-  window._mkSekme = 'toplanti';
-  mkRender();
-};
-
-window.mkKomiteGeri = function(){
-  window._mkSeciliKomiteNo = null;
-  mkAktifToplantı = null;
-  mkRender();
-};
-
 function mkRenderMetrik(){
   const mkYF=window._mkYilFilter;
   const mkAy=(window._kararAy&&window._kararAy.mk)||0;
-  const kNo = window._mkSeciliKomiteNo;
   const mkYilOk=(t)=>{
     const tarih=t?.tarih||'';
-    if(kNo && String(t.komite)!==String(kNo)) return false;
     if(mkYF&&mkYF.size){const yil=parseInt(tarih.match(/\b(20\d{2})\b/)?.[1]);if(yil&&!mkYF.has(yil))return false;}
     if(mkAy&&window.kararAyOk) return window.kararAyOk(tarih,mkAy);
     return true;
   };
   const filtreliT=MK_DB.toplantılar.filter(x=>mkYilOk(x));
   const filtreliTIdler=new Set(filtreliT.map(x=>x.id));
-  /* Sadece gerçek kararlar sayılır — "Gündem" ekranından eklenen sade maddeler hariç */
-  const filtreliG=MK_DB.gundemler.filter(g=>filtreliTIdler.has(g.toplantıId) && g.kaynak!=='gundem');
+  // Sadece bir komiteye bağlı olan kararlar sayılır — genel/komitesiz gündem maddeleri hariç
+  const filtreliG=MK_DB.gundemler.filter(g=>filtreliTIdler.has(g.toplantıId) && g.komiteNo);
   const t=filtreliT.length, g=filtreliG.length;
   const tam=filtreliG.filter(g=>g.durum==='tamamlandi').length;
   document.getElementById('mk-metrics').innerHTML=`
@@ -12135,14 +11788,11 @@ function mkRenderListe(){
   const hd=document.getElementById('mk-karar-baslik');
   const hb=document.getElementById('mk-header-btn');
   if(!el) return;
-  const kNo = window._mkSeciliKomiteNo;
-  hd.innerHTML = `<button class="btn btn-sm" onclick="mkKomiteGeri()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Komiteler</button>
-    <span style="font-size:14px;font-weight:600;color:var(--purple)">${kNo}. Meslek Komitesi</span>`;
-  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="mkToplantıEkle()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
+  hd.innerHTML = 'Komite Toplantıları';
+  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm" onclick="mkToplantıEkle()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
   /* YD filtresi */
   const mkYF = window._mkYilFilter;
-  /* Sadece seçili komiteye ait toplantılar */
-  let filtreliT = MK_DB.toplantılar.filter(t=>String(t.komite)===String(kNo));
+  let filtreliT = [...MK_DB.toplantılar];
   /* Tarih sıralaması — en eski en üstte */
   filtreliT.sort((a,b)=>{ const da=new Date(a.tarihIso||a.tarih||0), db=new Date(b.tarihIso||b.tarih||0); return da-db; });
   // _mkYilFilter null veya boş ise tümünü göster; Set doluysa filtrele
@@ -12159,34 +11809,34 @@ function mkRenderListe(){
       <div style="width:52px;height:52px;border-radius:12px;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
         <i class="ti ti-building-community" style="font-size:24px;color:var(--purple)"></i>
       </div>
-      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${window._kararYil ? window._kararYil+' yılı için ':''}${kNo}. Meslek Komitesi'ne henüz toplantı girilmedi</div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="mkToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
+      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${window._kararYil ? window._kararYil+' yılı için komite' : 'Henüz meslek komitesi'} toplantısı girilmedi</div>
+      <button class="btn btn-p btn-sm" onclick="mkToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
     </div>`; return;
   }
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">`+
     filtreliT.map(t=>{
-      const tG=MK_DB.gundemler.filter(g=>g.toplantıId===t.id && g.kaynak!=='gundem');
+      const tG=MK_DB.gundemler.filter(g=>g.toplantıId===t.id);
       return `<div class="yk-card" style="cursor:pointer" onclick="mkAcToplantı('${t.id}')">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-          <div><div style="font-size:12px;color:var(--text2)">${t.tarih}${t.toplantiNo?` · No: ${t.toplantiNo}`:''}</div>
+          <div><div style="font-size:12px;color:var(--text2)">${t.tarih}</div>
             <div style="font-size:14px;font-weight:500;margin-top:2px">${t.ad}</div>
+            ${t.komite?`<div style="font-size:11px;color:var(--purple);margin-top:3px"><i class="ti ti-building-community" style="font-size:11px;margin-right:3px"></i>${t.komite}</div>`:''}
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <span class="badge ${t.toplantıTuru==='olaganustu'?'b-purple':'b-gray'}" style="font-size:10px">${t.toplantıTuru==='olaganustu'?'Olağanüstü':'Olağan'}</span>
             ${t.durum==='tamamlandi'?'<span class="badge b-green" style="font-size:10px">Tamamlandı</span>':'<span class="badge b-blue" style="font-size:10px">Planlandı</span>'}
-            ${tG.length?`<span class="badge b-gray" style="font-size:10px">${tG.length} karar</span>`:''}
+            ${tG.length?`<span class="badge b-gray" style="font-size:10px">${tG.length} gündem</span>`:''}
           </div>
         </div>
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
-          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();mkGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','mk','${t.ad.replace(/'/g,"\\'")}')"><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
-          ${mkYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();mkToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();mkToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
+          ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();mkToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();mkToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
       </div>`;
     }).join('')+'</div>';
-  yetkiButonlariUygula('yk-mk', 'mk-karar-list');
 }
 
 window.mkAcToplantı = function(id){
@@ -12194,84 +11844,106 @@ window.mkAcToplantı = function(id){
   const t=MK_DB.toplantılar.find(x=>x.id===id);
   const el=document.getElementById('mk-karar-list');
   const hd=document.getElementById('mk-karar-baslik');
-  const kNo = window._mkSeciliKomiteNo || parseInt(t?.komite) || 0;
 
   hd.innerHTML=`
     <button class="btn btn-sm" onclick="mkGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button>
     <span style="font-size:14px;font-weight:500">${t?.ad||''}</span>
-    <span style="font-size:12px;color:var(--text2)">${t?.tarih||''}</span>
-    <button class="btn btn-sm" style="margin-left:auto" onclick="mkGundemGoruntule('${id}')"><i class="ti ti-file-description"></i> Gündem Görüntüle</button>`;
+    <span style="font-size:12px;color:var(--text2)">${t?.tarih||''}</span>`;
 
-  const uyeSayisi = (window._mkKomiteUyeSayisi && window._mkKomiteUyeSayisi[kNo]!==undefined) ? window._mkKomiteUyeSayisi[kNo] : 0;
+  /* Komite kartları — mk_uyelik'ten gelen komite numaralarına göre dinamik,
+     SADECE bu toplantı tarihinde faaliyette olan (kuruluş tarihi geçmiş) komiteler gösterilir */
+  let komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+  if(!komiteNolar.length){ komiteNolar.push(...Array.from({length:14},(_,i)=>i+1)); }
+  const toplantiTarihiMk = t?.tarihIso;
+  if(toplantiTarihiMk && window._mkKomiteKurulusTarihi){
+    komiteNolar = komiteNolar.filter(kNo=>{
+      const kurulus = window._mkKomiteKurulusTarihi[kNo];
+      return !kurulus || kurulus <= toplantiTarihiMk; // kuruluş tarihi bilinmiyorsa (eski veri) göster
+    });
+  }
 
-  el.innerHTML = `<div class="yk-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--purple)">${kNo}. Meslek Komitesi</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">${uyeSayisi} üye</div>
-      </div>
-      <button class="btn btn-sm yetki-degistir-gerekli" onclick="mkKomiteKatilimAc('${id}',${kNo})" style="gap:4px">
-        <i class="ti ti-clipboard-check"></i> Katılım Takibi
-      </button>
-    </div>
-    <!-- Katılım özet satırı — doldurulacak -->
-    <div id="mk-katilim-ozet-${id}-${kNo}" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
-    <!-- Kararlar -->
-    <div style="border-top:0.5px solid var(--border);padding-top:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div style="font-size:11px;font-weight:600;color:var(--text2)">Kararlar</div>
-        ${mkYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 8px" onclick="mkKomiteKararEkle('${id}',${kNo})"><i class="ti ti-plus"></i> Karar Ekle</button>`:''}
-      </div>
-      <div id="mk-komite-kararlar-${id}-${kNo}">
-        ${MK_DB.gundemler.filter(g=>g.toplantıId===id && g.kaynak!=='gundem').length === 0
-          ? `<div style="font-size:11px;color:var(--text2);padding:6px 0">Henüz karar girilmedi</div>`
-          : MK_DB.gundemler.filter(g=>g.toplantıId===id && g.kaynak!=='gundem').map(g=>`
-              <div class="mk-karar-satir" style="padding:7px 10px;background:var(--surface2);border-radius:7px;margin-bottom:4px;font-size:12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="mkKomiteKararDetay('${g.id}','${id}',${kNo})">
-                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${g.konu}</span>
-                <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
-                  <span class="badge ${g.durum==='tamamlandi'?'b-green':'b-amber'}">${g.durum==='tamamlandi'?'Uygulandı':'Bekliyor'}</span>
-                  <button class="btn btn-sm yetki-degistir-gerekli" style="padding:2px 6px" onclick="event.stopPropagation();mkKomiteKararDuzenle('${g.id}','${id}',${kNo})" title="Düzenle"><i class="ti ti-edit" style="font-size:12px"></i></button>
-                  <button class="btn btn-sm yetki-degistir-gerekli" style="padding:2px 6px;color:var(--red)" onclick="event.stopPropagation();mkKomiteKararSil('${g.id}','${id}',${kNo})" title="Sil"><i class="ti ti-trash" style="font-size:12px"></i></button>
-                </span>
-              </div>`).join('')}
-      </div>
-    </div>
-  </div>`;
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">` +
+    komiteNolar.map(kNo=>{
+      const uyeSayisi = (window._mkKomiteUyeSayisi && window._mkKomiteUyeSayisi[kNo]!==undefined) ? window._mkKomiteUyeSayisi[kNo] : (window.MK_UYELER||[]).filter(u=>u.komite_no===kNo).length;
+      return `<div class="yk-card" id="mk-komite-kart-${kNo}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--purple)">${kNo}. Meslek Komitesi</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">${uyeSayisi} üye</div>
+          </div>
+          <button class="btn btn-sm" onclick="mkKomiteKatilimAc('${id}',${kNo})" style="gap:4px">
+            <i class="ti ti-clipboard-check"></i> Katılım Takibi
+          </button>
+        </div>
+        <!-- Katılım özet satırı — doldurulacak -->
+        <div id="mk-katilim-ozet-${id}-${kNo}" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
+        <!-- YK'ya intikal kararlar -->
+        <div style="border-top:0.5px solid var(--border);padding-top:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:600;color:var(--text2)">YK'ya İntikal Eden Kararlar</div>
+            ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="mkKomiteKararEkle('${id}',${kNo})"><i class="ti ti-plus"></i> Karar Ekle</button>`:''}
+          </div>
+          <div id="mk-komite-kararlar-${id}-${kNo}">
+            ${MK_DB.gundemler.filter(g=>g.toplantıId===id && parseInt(g.komiteNo||0)===kNo).length === 0
+              ? `<div style="font-size:11px;color:var(--text2);padding:6px 0">Henüz karar girilmedi</div>`
+              : MK_DB.gundemler.filter(g=>g.toplantıId===id && parseInt(g.komiteNo||0)===kNo).map(g=>`
+                  <div class="mk-karar-satir" style="padding:7px 10px;background:var(--surface2);border-radius:7px;margin-bottom:4px;font-size:12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="mkKomiteKararDetay('${g.id}','${id}',${kNo})">
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${g.konu}</span>
+                    <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
+                      <span class="badge ${g.durum==='tamamlandi'?'b-green':'b-amber'}">${g.durum==='tamamlandi'?'Uygulandı':'Bekliyor'}</span>
+                      <button class="btn btn-sm" style="padding:2px 6px" onclick="event.stopPropagation();mkKomiteKararDuzenle('${g.id}','${id}',${kNo})" title="Düzenle"><i class="ti ti-edit" style="font-size:12px"></i></button>
+                      <button class="btn btn-sm" style="padding:2px 6px;color:var(--red)" onclick="event.stopPropagation();mkKomiteKararSil('${g.id}','${id}',${kNo})" title="Sil"><i class="ti ti-trash" style="font-size:12px"></i></button>
+                    </span>
+                  </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
 
-  /* Katılım özetini async yükle */
+  /* Katılım özetlerini async yükle */
   mkKomiteKatilimOzetleriYukle(id);
-  yetkiButonlariUygula('yk-mk', 'mk-karar-list');
 };
 
-/* Bu toplantının (tek komiteye ait) katılım özetini göster */
+/* Her komitenin katılım özetini göster */
 async function mkKomiteKatilimOzetleriYukle(toplantıId){
   try{
-    const t = (window.MK_DB?.toplantılar||[]).find(x=>x.id===toplantıId);
-    const kNo = window._mkSeciliKomiteNo || parseInt(t?.komite) || 0;
-    if(!kNo) return;
-
     const { data } = await _supa.from('toplanti_katilim')
       .select('uye_id,katildi').eq('toplanti_id', toplantıId).eq('tur','mk');
     if(!data) return;
 
-    const toplantiTarihi = t?.tarihIso || null;
+    /* Toplantının tarihini bul */
+    let toplantiTarihi = null;
+    const tObj = (window.MK_DB?.toplantılar||[]).find(t=>t.id===toplantıId);
+    if(tObj) toplantiTarihi = tObj.tarihIso || null;
 
-    // O toplantı tarihinde görevde olan üyeler (mk_uyelik'ten)
-    const komiteUyeleri = await supaYukleKomiteUyelik(kNo, toplantiTarihi);
-    const komiteUyeIds = new Set(komiteUyeleri.map(u=>u.id));
-    const komiteKatilim = data.filter(k=>komiteUyeIds.has(k.uye_id));
-    const katildi = komiteKatilim.filter(k=>k.katildi===true).length;
-    const katilmadi = komiteKatilim.filter(k=>k.katildi===false).length;
-    const belirsiz = komiteUyeleri.length - komiteKatilim.length;
-    const el = document.getElementById(`mk-katilim-ozet-${toplantıId}-${kNo}`);
-    if(!el) return;
-    if(komiteKatilim.length === 0){
-      el.innerHTML = `<span style="font-size:11px;color:var(--text2)">Katılım henüz girilmedi</span>`;
-    } else {
-      el.innerHTML = `
-        <span class="badge b-green" style="font-size:11px"><i class="ti ti-check"></i> ${katildi} Katıldı</span>
-        ${katilmadi>0?`<span class="badge b-red" style="font-size:11px"><i class="ti ti-x"></i> ${katilmadi} Katılmadı</span>`:''}
-        ${belirsiz>0?`<span class="badge b-gray" style="font-size:11px">? ${belirsiz} Belirsiz</span>`:''}`;
+    /* Dinamik komite numaraları — sadece bu toplantı tarihinde faaliyette olanlar */
+    let komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
+    if(!komiteNolar.length) for(let i=1;i<=14;i++) komiteNolar.push(i);
+    if(toplantiTarihi && window._mkKomiteKurulusTarihi){
+      komiteNolar = komiteNolar.filter(kNo=>{
+        const kurulus = window._mkKomiteKurulusTarihi[kNo];
+        return !kurulus || kurulus <= toplantiTarihi;
+      });
+    }
+
+    for(const kNo of komiteNolar){
+      // O toplantı tarihinde görevde olan üyeler (mk_uyelik'ten)
+      const komiteUyeleri = await supaYukleKomiteUyelik(kNo, toplantiTarihi);
+      const komiteUyeIds = new Set(komiteUyeleri.map(u=>u.id));
+      const komiteKatilim = data.filter(k=>komiteUyeIds.has(k.uye_id));
+      const katildi = komiteKatilim.filter(k=>k.katildi===true).length;
+      const katilmadi = komiteKatilim.filter(k=>k.katildi===false).length;
+      const belirsiz = komiteUyeleri.length - komiteKatilim.length;
+      const el = document.getElementById(`mk-katilim-ozet-${toplantıId}-${kNo}`);
+      if(!el) continue;
+      if(komiteKatilim.length === 0){
+        el.innerHTML = `<span style="font-size:11px;color:var(--text2)">Katılım henüz girilmedi</span>`;
+      } else {
+        el.innerHTML = `
+          <span class="badge b-green" style="font-size:11px"><i class="ti ti-check"></i> ${katildi} Katıldı</span>
+          ${katilmadi>0?`<span class="badge b-red" style="font-size:11px"><i class="ti ti-x"></i> ${katilmadi} Katılmadı</span>`:''}
+          ${belirsiz>0?`<span class="badge b-gray" style="font-size:11px">? ${belirsiz} Belirsiz</span>`:''}`;
+      }
     }
   }catch(e){ console.warn('MK katılım özet yükleme hatası:', e); }
 }
@@ -12423,8 +12095,8 @@ window.mkGundemYonetAc = function(toplantıId){
 };
 
 function mkGundemEkraniRender(toplantıId, kararEl){
-  // Sadece "Gündem" ekranından eklenen sade maddeler — "Karar Ekle" ile eklenenler burada görünmez
-  const gundemler = MK_DB.gundemler.filter(g=>g.toplantıId===toplantıId && g.kaynak==='gundem');
+  // Sadece komiteye bağlı OLMAYAN (genel) gündem maddeleri — komite kararları burada görünmez
+  const gundemler = MK_DB.gundemler.filter(g=>g.toplantıId===toplantıId && !g.komiteNo);
   const sira = gundemler.length + 1;
 
   // Mevcut gündemler listesi + ilk boş input satırı
@@ -12451,7 +12123,7 @@ function mkGundemSatirHtml(g, sira, toplantıId){
   return `<div class="mk-gundem-satir" id="mk-gs-${g.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
     <div style="width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
     <input class="yk-inp" style="flex:1;margin:0" value="${konuE}" onblur="mkGundemSatirGuncelle('${idE}','${toplantıId}',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();mkGundemSatirGuncelle('${idE}','${toplantıId}',this.value);}">
-    <button class="btn btn-sm yetki-degistir-gerekli" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="mkGundemSil('${idE}','${toplantıId}')" title="Sil"><i class="ti ti-trash"></i></button>
+    <button class="btn btn-sm" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="mkGundemSil('${idE}','${toplantıId}')" title="Sil"><i class="ti ti-trash"></i></button>
   </div>`;
 }
 
@@ -12477,21 +12149,17 @@ window.mkGundemSatirKaydet = async function(toplantıId){
 
   try {
     const mkgId = genUUID();
-    /* Toplantının kendi komitesini bul (artık her toplantı tek komiteye ait) */
-    const tObj = MK_DB.toplantılar.find(x=>x.id===toplantıId);
-    const kNo = window._mkSeciliKomiteNo || parseInt(tObj?.komite) || tObj?.komiteNo || 0;
-
     const {error} = await _supa.from('karar_gundemler').insert([{
-      id: mkgId, toplanti_id: toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi', komite_no: kNo||null, kaynak:'gundem'
+      id: mkgId, toplanti_id: toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi'
     }]);
     if(error) throw error;
 
-    MK_DB.gundemler.push({ id:mkgId, toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi', atananlar:[], komiteNo:kNo, kaynak:'gundem' });
+    MK_DB.gundemler.push({ id:mkgId, toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi', atananlar:[], komiteNo:0 });
 
     // Yeni satırı dolu satıra çevir, altına yeni boş satır ekle
     const yeniSatirEl = document.getElementById('mk-yeni-satir');
     if(yeniSatirEl){
-      const sira = MK_DB.gundemler.filter(g=>g.toplantıId===toplantıId && g.kaynak==='gundem').length;
+      const sira = MK_DB.gundemler.filter(g=>g.toplantıId===toplantıId).length;
       const yeniDoluHtml = mkGundemSatirHtml(MK_DB.gundemler.find(g=>g.id===mkgId), sira, toplantıId);
       const yeniBoşHtml  = mkYeniSatirHtml(sira+1, toplantıId);
       yeniSatirEl.insertAdjacentHTML('beforebegin', yeniDoluHtml);
@@ -12591,16 +12259,11 @@ window.mkGundemYonetKapat = function(toplantıId){
 };
 
 window.mkToplantıEkle = function(){
-  const kNo = window._mkSeciliKomiteNo;
-  if(!kNo){ alert('Önce bir meslek komitesi seçin.'); return; }
-  document.getElementById('yk-modal-title').textContent=`${kNo}. Meslek Komitesi — Toplantı Ekle`;
+  document.getElementById('yk-modal-title').textContent='Meslek Komitesi Toplantısı Ekle';
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Toplantı Adı</label><input id="mk-f-ad" class="yk-inp" placeholder="Boş bırakılırsa otomatik oluşur"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="mk-f-tarih" type="date" class="yk-inp"></div>
-        <div><label class="yk-lbl">Toplantı No</label><input id="mk-f-no" class="yk-inp" placeholder="ör: 5"></div>
-      </div>
+      <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="mk-f-tarih" type="date" class="yk-inp"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Başlangıç Saati</label><input id="mk-f-saat" type="time" class="yk-inp"></div>
         <div><label class="yk-lbl">Bitiş Saati</label><input id="mk-f-bitis-saat" type="time" class="yk-inp"></div>
@@ -12608,12 +12271,15 @@ window.mkToplantıEkle = function(){
       <div><label class="yk-lbl">Tür</label>
         <select id="mk-f-tur" class="yk-inp"><option value="olagan">Olağan</option><option value="olaganustu">Olağanüstü</option></select>
       </div>
-      <div style="font-size:11px;color:var(--text2)"><i class="ti ti-info-circle"></i> Olağan ve olağanüstü toplantılar ayrı sayaçla numaralandırılır — numarayı kendiniz takip edip girin.</div>
       <div><label class="yk-lbl">Durum</label>
         <select id="mk-f-durum" class="yk-inp">
           <option value="planlandi" selected>Planlandı</option>
           <option value="tamamlandi">Tamamlandı</option>
         </select>
+      </div>
+      <div style="padding:10px;background:var(--blue-bg);border-radius:8px;font-size:12px;color:var(--text2)">
+        <i class="ti ti-info-circle" style="color:var(--blue)"></i>
+        Toplantı oluşturulunca 14 meslek komitesinin katılım takip kartları otomatik açılır.
       </div>
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick=()=>{
@@ -12622,17 +12288,16 @@ window.mkToplantıEkle = function(){
     const saat     = document.getElementById('mk-f-saat')?.value||'';
     const bitisSaat= document.getElementById('mk-f-bitis-saat')?.value||'';
     const adGiris  = document.getElementById('mk-f-ad').value.trim();
-    const toplantiNo = document.getElementById('mk-f-no')?.value.trim()||'';
     // Tarihi güvenli parse et (new Date('yyyy-MM-dd') timezone kaymasına neden olabilir)
     const [_yy,_mm,_dd] = tarihVal.split('-').map(Number);
     const _aylar=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
     const tarih    = (_dd && _mm && _yy) ? (_dd+' '+_aylar[_mm-1]+' '+_yy) : tarihVal;
     const durum   = document.getElementById('mk-f-durum')?.value||'planlandi';
     const toplantiTuru = document.getElementById('mk-f-tur')?.value||'olagan';
-    const ad       = adGiris || `${kNo}. Meslek Komitesi Toplantısı — ${tarih}`;
+    const ad       = adGiris || `Meslek Komitesi Toplantısı — ${tarih}`;
     const mkId     = genUUID();
-    MK_DB.toplantılar.push({id:mkId, ad, tarih, tarihIso:tarihVal, saat, bitisSaat, komite:String(kNo), komiteNo:kNo, durum, toplantıTuru:toplantiTuru, toplantiNo});
-    _supa.from('karar_toplantilari').insert([{id:mkId, tur:'mk', ad, tarih, tarih_iso:tarihVal, saat, bitis_saat:bitisSaat, durum, komite:String(kNo), toplanti_turu:toplantiTuru, toplanti_no:toplantiNo||null}])
+    MK_DB.toplantılar.push({id:mkId, ad, tarih, tarihIso:tarihVal, saat, bitisSaat, komite:'', komiteNo:0, durum, toplantıTuru:toplantiTuru});
+    _supa.from('karar_toplantilari').insert([{id:mkId, tur:'mk', ad, tarih, tarih_iso:tarihVal, saat, bitis_saat:bitisSaat, durum, toplanti_turu:toplantiTuru}])
       .then(({error})=>{if(error) console.error('MK toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); mkRender();
   };
@@ -12698,7 +12363,7 @@ window.mkGundemEkle = function(toplantıId, mevcutId, komiteNo){
       const ozet=document.getElementById('mk-f-ozet')?.value.trim()||'';
       const tarih=document.getElementById('mk-f-tarih')?.value||null;
       const oncelik=document.getElementById('mk-f-oncelik')?.value||'normal';
-      const {error:gErr}=await _supa.from('karar_gundemler').insert([{id:mkgId,toplanti_id:toplantıId,konu,ozet,son_tarih:tarih,oncelik,durum:'planlandi',komite_no:komiteNo||null,kaynak:'karar'}]);
+      const {error:gErr}=await _supa.from('karar_gundemler').insert([{id:mkgId,toplanti_id:toplantıId,konu,ozet,son_tarih:tarih,oncelik,durum:'planlandi',komite_no:komiteNo||null}]);
       if(gErr){ console.error('MK gündem kaydetme hatası:',gErr.message); alert('Kaydetme hatası: '+gErr.message); return; }
       for(const a of atananlar){
         const {error:aErr}=await _supa.from('karar_atamalar').insert([{gundem_id:mkgId,kullanici:a.kullanici,ad:a.ad,gorev:a.gorev,durum:'planlandi'}]);
@@ -12778,10 +12443,7 @@ window.mkToplantıDuzenle = function(id){
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Toplantı Adı</label><input id="mk-f-ad" class="yk-inp" value="${(t.ad||'').replace(/"/g,'&quot;')}" placeholder="Boş bırakılırsa otomatik oluşur"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="mk-f-tarih" type="date" class="yk-inp" value="${t.tarihIso||''}"></div>
-        <div><label class="yk-lbl">Toplantı No</label><input id="mk-f-no" class="yk-inp" value="${(t.toplantiNo||'').replace(/"/g,'&quot;')}" placeholder="ör: 5"></div>
-      </div>
+      <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="mk-f-tarih" type="date" class="yk-inp" value="${t.tarihIso||''}"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Başlangıç Saati</label><input id="mk-f-saat" type="time" class="yk-inp" value="${t.saat||''}"></div>
         <div><label class="yk-lbl">Bitiş Saati</label><input id="mk-f-bitis-saat" type="time" class="yk-inp" value="${t.bitisSaat||''}"></div>
@@ -12806,7 +12468,6 @@ window.mkToplantıDuzenle = function(id){
     const bitisSaat = document.getElementById('mk-f-bitis-saat').value||'';
     const adGiris   = document.getElementById('mk-f-ad').value.trim();
     const tur       = document.getElementById('mk-f-tur').value;
-    const toplantiNo = document.getElementById('mk-f-no')?.value.trim()||'';
     const [yy,mm,dd]= tarihVal.split('-').map(Number);
     const aylar     = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
     const tarihGoster = (dd&&mm&&yy) ? (dd+' '+aylar[mm-1]+' '+yy) : tarihVal;
@@ -12822,7 +12483,6 @@ window.mkToplantıDuzenle = function(id){
     t.bitisSaat    = bitisSaat;
     t.durum        = durum;
     t.toplantıTuru = tur; // 'olagan' / 'olaganustu' — tur:'mk' değişmez
-    t.toplantiNo   = toplantiNo;
 
     // Supabase'e kaydet (tur alanına dokunmuyoruz — 'mk' olarak kalır)
     const {error} = await _supa.from('karar_toplantilari').update({
@@ -12832,8 +12492,7 @@ window.mkToplantıDuzenle = function(id){
       saat      : t.saat,
       bitis_saat: t.bitisSaat,
       durum     : t.durum,
-      toplanti_turu: t.toplantıTuru,
-      toplanti_no: toplantiNo||null
+      toplanti_turu: t.toplantıTuru
     }).eq('id', id);
     if(error){ console.error('MK toplantı güncelleme hatası:', error.message); alert('Güncelleme hatası: '+error.message); return; }
 
@@ -12931,7 +12590,7 @@ const MECLIS_DB = window.MECLIS_DB = { toplantılar:[], gundemler:[] };
 let meclisAktifToplantı = null;
 
 function meclisRender(){
-  const yonetici = meclisYoneticiMi();
+  const yonetici = mkYoneticiMi();
   document.getElementById('meclis-yonetici-view').style.display = yonetici?'block':'none';
   document.getElementById('meclis-personel-view').style.display  = yonetici?'none':'block';
   if(yonetici){
@@ -13208,9 +12867,11 @@ function mkEvrakRender(){
   const el = document.getElementById('mk-evrak-sekme');
   if(!el) return;
   const {yil, ay} = mkEvrakAktifDonem();
-  const kNo = window._mkSeciliKomiteNo;
   el.innerHTML = `
-    <div style="margin-bottom:14px;font-size:12px;color:var(--text2)">${kNo}. Meslek Komitesi — ${AY_ADLARI[ay]} ${yil} evrakları — üstteki yıl/ay seçiciyle değiştirebilirsiniz</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:var(--text2)">${AY_ADLARI[ay]} ${yil} evrakları — üstteki yıl/ay seçiciyle değiştirebilirsiniz</div>
+      <button class="btn btn-sm" onclick="mkGundemGoruntule()"><i class="ti ti-file-description"></i> Gündem Görüntüle</button>
+    </div>
     <div id="mkev-kategoriler"></div>
   `;
   mkEvrakKategorileriYukle();
@@ -13220,12 +12881,11 @@ async function mkEvrakKategorileriYukle(){
   const cont = document.getElementById('mkev-kategoriler');
   if(!cont) return;
   const {yil, ay} = mkEvrakAktifDonem();
-  const kNo = window._mkSeciliKomiteNo;
   cont.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .8s linear infinite"></i></div>';
 
   let evraklar = [];
   try{
-    const { data } = await _supa.from('mk_evrak').select('*').eq('yil',yil).eq('ay',ay).eq('komite_no',kNo).order('created_at',{ascending:false});
+    const { data } = await _supa.from('mk_evrak').select('*').eq('yil',yil).eq('ay',ay).order('created_at',{ascending:false});
     evraklar = data||[];
   }catch(e){ console.warn('MK evrak yükleme:', e); }
 
@@ -13271,18 +12931,17 @@ window.mkEvrakYukle = async function(event, kategori){
   const file = event.target.files[0];
   if(!file) return;
   const {yil, ay} = mkEvrakAktifDonem();
-  const kNo = window._mkSeciliKomiteNo;
   const label = event.target.closest('label');
   const eskiHtml = label ? label.innerHTML : '';
   if(label) label.innerHTML = '<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i> Yükleniyor...';
   try{
     const temizAd = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-    const path = `${kNo}/${yil}/${ay}/${kategori}/${Date.now()}_${temizAd}`;
+    const path = `${yil}/${ay}/${kategori}/${Date.now()}_${temizAd}`;
     const { error: upErr } = await _supa.storage.from(MK_EVRAK_BUCKET).upload(path, file, {upsert:false});
     if(upErr) throw upErr;
     const { data: urlData } = _supa.storage.from(MK_EVRAK_BUCKET).getPublicUrl(path);
     await _supa.from('mk_evrak').insert([{
-      yil, ay, kategori, komite_no:kNo, baslik:file.name, dosya_url:urlData.publicUrl, dosya_adi:file.name
+      yil, ay, kategori, baslik:file.name, dosya_url:urlData.publicUrl, dosya_adi:file.name
     }]);
     await mkEvrakKategorileriYukle();
   }catch(e){
@@ -13304,33 +12963,20 @@ window.mkEvrakSil = async function(id, dosyaUrl){
   }catch(e){ alert('Silme hatası: '+(e.message||e)); }
 };
 
-/* Gündem Görüntüle — belirli bir toplantıId verilirse SADECE o toplantı gösterilir,
-   verilmezse seçili komitenin o ayki tüm toplantıları gösterilir */
-window.mkGundemGoruntule = function(tekToplantıId){
+/* Gündem Görüntüle — o ayki MK toplantı(lar)ının genel gündemini resmi belge görünümünde göster */
+window.mkGundemGoruntule = function(){
   const {yil, ay} = mkEvrakAktifDonem();
-  const kNo = window._mkSeciliKomiteNo;
-  let toplantilar;
-  if(tekToplantıId){
-    const t = (window.MK_DB?.toplantılar||[]).find(x=>x.id===tekToplantıId);
-    toplantilar = t ? [t] : [];
-  } else {
-    toplantilar = (window.MK_DB?.toplantılar||[]).filter(t=>{
-      if(!t.tarihIso) return false;
-      if(String(t.komite)!==String(kNo)) return false;
-      const d = new Date(t.tarihIso+'T00:00:00');
-      return d.getFullYear()===yil && (d.getMonth()+1)===ay;
-    });
-  }
+  const toplantilar = (window.MK_DB?.toplantılar||[]).filter(t=>{
+    if(!t.tarihIso) return false;
+    const d = new Date(t.tarihIso+'T00:00:00');
+    return d.getFullYear()===yil && (d.getMonth()+1)===ay;
+  });
 
-  const baslik = tekToplantıId
-    ? `${kNo}. Meslek Komitesi — ${toplantilar[0]?.tarih||''} — Gündem`
-    : `${kNo}. Meslek Komitesi — ${AY_ADLARI[ay]} ${yil} — Gündem`;
-
-  gsModalAc(baslik,
+  gsModalAc(`${AY_ADLARI[ay]} ${yil} — Gündem`,
     !toplantilar.length
-      ? `<div style="padding:24px;text-align:center;color:var(--text2)">${tekToplantıId?'Toplantı bulunamadı.':'Bu ayda toplantı bulunamadı.'}</div>`
+      ? `<div style="padding:24px;text-align:center;color:var(--text2)">Bu ayda toplantı bulunamadı.</div>`
       : toplantilar.map(t=>{
-          const gundemler = (window.MK_DB?.gundemler||[]).filter(g=>g.toplantıId===t.id && g.kaynak==='gundem');
+          const gundemler = (window.MK_DB?.gundemler||[]).filter(g=>g.toplantıId===t.id && !g.komiteNo);
           return `
           <div style="margin-bottom:24px;padding:22px;background:var(--surface2);border-radius:10px">
             <div style="text-align:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)">
@@ -13420,7 +13066,7 @@ function meclisRenderListe(){
   const hb=document.getElementById('meclis-header-btn');
   if(!el) return;
   hd.innerHTML='Meclis Toplantıları';
-  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisToplantıEkle()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
+  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()"><i class="ti ti-plus"></i> Toplantı Ekle</button>`;
   /* YD filtresi */
   const meclisYF = window._meclisYilFilter;
   let filtreliMeclis = [...MECLIS_DB.toplantılar];
@@ -13437,7 +13083,7 @@ function meclisRenderListe(){
         <i class="ti ti-users-group" style="font-size:24px;color:var(--blue)"></i>
       </div>
       <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${window._kararYil ? window._kararYil+' yılı için meclis' : 'Henüz meclis'} toplantısı girilmedi</div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
+      <button class="btn btn-p btn-sm" onclick="meclisToplantıEkle()"><i class="ti ti-plus"></i> İlk Toplantıyı Ekle</button>
     </div>`; return;
   }
   el.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+
@@ -13445,25 +13091,23 @@ function meclisRenderListe(){
       const tG=MECLIS_DB.gundemler.filter(g=>g.toplantıId===t.id);
       return `<div class="yk-card" style="cursor:pointer" onclick="meclisAcToplantı('${t.id}')">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-          <div><div style="font-size:12px;color:var(--text2)">${t.tarih}${t.toplantiNo?` · No: ${t.toplantiNo}`:''}</div>
+          <div><div style="font-size:12px;color:var(--text2)">${t.tarih}</div>
             <div style="font-size:14px;font-weight:500;margin-top:2px">${t.ad}</div>
           </div>
           <div style="display:flex;gap:6px;align-items:center">
-            <span class="badge ${t.tur==='olaganustu'?'b-purple':'b-gray'}" style="font-size:10px">${t.tur==='olaganustu'?'Olağanüstü':'Olağan'}</span>
             ${t.durum==='tamamlandi'?'<span class="badge b-green" style="font-size:10px">Tamamlandı</span>':'<span class="badge b-blue" style="font-size:10px">Planlandı</span>'}
             ${tG.length?`<span class="badge b-gray" style="font-size:10px">${tG.length} gündem</span>`:''}
           </div>
         </div>
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisAcToplantı('${t.id}')"><i class="ti ti-list-details"></i> Detay</button>
-          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();meclisGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
+          <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisGundemYonetAc('${t.id}')"><i class="ti ti-layout-list"></i> Gündem</button>
           <button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();evrakAc('${t.id}','meclis','${t.ad.replace(/'/g,"\\'")}')" ><i class="ti ti-paperclip"></i> Evrak <span data-evrak-badge="${t.id}" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px"></span></button>
-          ${meclisYoneticiMi()?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();meclisToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
+          ${mkYoneticiMi()?`<button class="btn btn-sm" style="font-size:11px" onclick="event.stopPropagation();meclisToplantıDuzenle('${t.id}')"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();meclisToplantıSil('${t.id}')"><i class="ti ti-trash"></i></button>`:''}
         </div>
       </div>`;
     }).join('')+'</div>';
-  yetkiButonlariUygula('yk-meclis', 'meclis-karar-list');
 }
 
 window.meclisAcToplantı = function(id){
@@ -13473,8 +13117,8 @@ window.meclisAcToplantı = function(id){
   const hd=document.getElementById('meclis-karar-baslik');
   const hb=document.getElementById('meclis-header-btn');
   const tG=MECLIS_DB.gundemler.filter(g=>g.toplantıId===id);
-  hd.innerHTML=`<button class="btn btn-sm" onclick="meclisGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span><button class="btn btn-sm yetki-degistir-gerekli" onclick="katilimAc('${id}','meclis')" style="margin-left:8px"><i class="ti ti-clipboard-check"></i> Katılım Takibi</button>`;
-  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisKararEkle('${id}')"><i class="ti ti-plus"></i> Karar Ekle</button>`;
+  hd.innerHTML=`<button class="btn btn-sm" onclick="meclisGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span><button class="btn btn-sm" onclick="katilimAc('${id}','meclis')" style="margin-left:8px"><i class="ti ti-clipboard-check"></i> Katılım Takibi</button>`;
+  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm" onclick="meclisKararEkle('${id}')"><i class="ti ti-plus"></i> Karar Ekle</button>`;
   el.innerHTML=tG.length===0?`<div style="text-align:center;padding:32px;color:var(--text2)"><i class="ti ti-clipboard-list" style="font-size:24px;display:block;margin-bottom:8px"></i>Karar eklenmedi</div>`:
     tG.map((g,i)=>`<div class="yk-card" style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
@@ -13487,19 +13131,15 @@ window.meclisAcToplantı = function(id){
         <div style="width:6px;height:6px;border-radius:50%;background:${a.durum==='tamamlandi'?'#1D9E75':'#EF9F27'}"></div>
         <div style="flex:1;font-size:12px"><strong>${a.ad}</strong>${a.gorev&&a.gorev!=='—'?' — '+a.gorev:''}</div>
         <span style="font-size:10px;color:${a.durum==='tamamlandi'?'var(--green)':'#854F0B'}">${a.durum==='tamamlandi'?'✓':'Devam'}</span>
-        ${meclisYoneticiMi()&&a.durum!=='tamamlandi'?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 6px" onclick="meclisAtamaTam('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>`:''}
+        ${mkYoneticiMi()&&a.durum!=='tamamlandi'?`<button class="btn btn-sm" style="font-size:10px;padding:2px 6px" onclick="meclisAtamaTam('${g.id}','${a.kullanici}')"><i class="ti ti-check"></i></button>`:''}
       </div>`).join('')||''}
-      ${meclisYoneticiMi()&&g.durum!=='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
-        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisKararEkle('${id}','${g.id}')"><i class="ti ti-user-plus"></i> Atama</button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisKararDuzenle('${id}','${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="meclisGundemSil('${g.id}','${id}')"><i class="ti ti-trash"></i> Sil</button>
-        <button class="btn btn-p btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisGundemTam('${g.id}')"><i class="ti ti-check"></i> Uygulandı</button>
-      </div>`:''}
-      ${meclisYoneticiMi()&&g.durum==='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
-        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="meclisGundemGeriAl('${g.id}')"><i class="ti ti-arrow-back-up"></i> Geri Al</button>
+      ${mkYoneticiMi()&&g.durum!=='tamamlandi'?`<div style="margin-top:8px;display:flex;gap:6px">
+        <button class="btn btn-sm" style="font-size:11px" onclick="meclisKararEkle('${id}','${g.id}')"><i class="ti ti-user-plus"></i> Atama</button>
+        <button class="btn btn-sm" style="font-size:11px" onclick="meclisKararDuzenle('${id}','${g.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+        <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="meclisGundemSil('${g.id}','${id}')"><i class="ti ti-trash"></i> Sil</button>
+        <button class="btn btn-p btn-sm" style="font-size:11px" onclick="meclisGundemTam('${g.id}')"><i class="ti ti-check"></i> Uygulandı</button>
       </div>`:''}
     </div>`).join('');
-  yetkiButonlariUygula('yk-meclis', 'meclis-karar-list');
 };
 
 /* ══════════════════════════════════════════════════════════
@@ -13640,10 +13280,7 @@ window.meclisToplantıEkle=function(){
   document.getElementById('yk-modal-body').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Toplantı Adı</label><input id="meclis-f-ad" class="yk-inp" placeholder="Meclis toplantısı adı..."></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="meclis-f-tarih" type="date" class="yk-inp"></div>
-        <div><label class="yk-lbl">Toplantı No</label><input id="meclis-f-no" class="yk-inp" placeholder="ör: 7"></div>
-      </div>
+      <div><label class="yk-lbl">Tarih <span style="color:var(--red)">*</span></label><input id="meclis-f-tarih" type="date" class="yk-inp"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Başlangıç Saati</label><input id="meclis-f-saat" type="time" class="yk-inp"></div>
         <div><label class="yk-lbl">Bitiş Saati</label><input id="meclis-f-bitis-saat" type="time" class="yk-inp"></div>
@@ -13662,14 +13299,12 @@ window.meclisToplantıEkle=function(){
           </select>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text2)"><i class="ti ti-info-circle"></i> Olağan ve olağanüstü toplantılar ayrı sayaçla numaralandırılır — numarayı kendiniz takip edip girin.</div>
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick=()=>{
     const ad=document.getElementById('meclis-f-ad').value.trim();
     const tarihVal=document.getElementById('meclis-f-tarih').value;
     const saat=document.getElementById('meclis-f-saat')?.value||'';
     const bitisSaat=document.getElementById('meclis-f-bitis-saat')?.value||'';
-    const toplantiNo=document.getElementById('meclis-f-no')?.value.trim()||'';
     if(!ad||!tarihVal){alert('Ad ve tarih zorunludur.');return;}
     const [_yy,_mm,_dd]=tarihVal.split('-').map(Number);
     const _aylar=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
@@ -13677,8 +13312,8 @@ window.meclisToplantıEkle=function(){
     const mtId = genUUID();
     const tur=document.getElementById('meclis-f-tur')?.value||'olagan';
     const durum=document.getElementById('meclis-f-durum')?.value||'planlandi';
-    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,tarihIso:tarihVal,saat,bitisSaat,donem:'',durum,tur,toplantiNo});
-    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,saat,bitis_saat:bitisSaat,durum,toplanti_turu:tur,toplanti_no:toplantiNo||null}])
+    MECLIS_DB.toplantılar.push({id:mtId,ad,tarih,tarihIso:tarihVal,saat,bitisSaat,donem:'',durum,tur});
+    _supa.from('karar_toplantilari').insert([{id:mtId,tur:'meclis',ad,tarih,tarih_iso:tarihVal,saat,bitis_saat:bitisSaat,durum}])
       .then(({error})=>{if(error) console.error('Meclis toplantı kaydetme hatası:',error.message);});
     ykModalKapat(); meclisRender();
   };
@@ -13797,7 +13432,7 @@ window.meclisAtamaTam=function(gId,kul){
   /* Supabase güncelle */
   _supa.from('karar_atamalar').update({durum:'tamamlandi'}).eq('gundem_id',gId).eq('kullanici',kul)
     .then(({error})=>{if(error)console.error('Meclis atama tamamlama hatası:',error.message);});
-  if(meclisYoneticiMi()) meclisAcToplantı(g.toplantıId);
+  if(mkYoneticiMi()) meclisAcToplantı(g.toplantıId);
   else meclisRender();
   if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 };
@@ -13843,20 +13478,6 @@ window.meclisGundemTam=function(gId){
   if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 };
 
-window.meclisGundemGeriAl=function(gId){
-  const g=MECLIS_DB.gundemler.find(x=>x.id===gId);
-  if(!g)return;
-  g.durum='planlandi';
-  if(g.atananlar) g.atananlar.forEach(a=>a.durum='planlandi');
-  /* Supabase güncelle */
-  _supa.from('karar_gundemler').update({durum:'planlandi'}).eq('id',gId)
-    .then(({error})=>{if(error)console.error('Meclis gündem geri alma hatası:',error.message);});
-  _supa.from('karar_atamalar').update({durum:'planlandi'}).eq('gundem_id',gId)
-    .then(({error})=>{if(error)console.error('Meclis atama geri alma hatası:',error.message);});
-  meclisAcToplantı(g.toplantıId);
-  if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
-};
-
 window.meclisToplantıDuzenle = function(id){
   const t=MECLIS_DB.toplantılar.find(x=>x.id===id);
   if(!t) return;
@@ -13870,19 +13491,18 @@ window.meclisToplantıDuzenle = function(id){
         <div><label class="yk-lbl">Bitiş Saati</label><input id="meclis-d-bitis-saat" type="time" class="yk-inp" value="${t.bitisSaat||''}"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="yk-lbl">Toplantı No</label><input id="meclis-d-no" class="yk-inp" value="${(t.toplantiNo||'').replace(/"/g,'&quot;')}" placeholder="ör: 7"></div>
         <div><label class="yk-lbl">Tür</label>
           <select id="meclis-d-tur" class="yk-inp">
             <option value="olagan" ${(t.toplantıTuru||t.tur||'olagan')==='olagan'?'selected':''}>Olağan</option>
             <option value="olaganustu" ${(t.toplantıTuru||t.tur||'')==='olaganustu'?'selected':''}>Olağanüstü</option>
           </select>
         </div>
-      </div>
-      <div><label class="yk-lbl">Durum</label>
-        <select id="meclis-d-durum" class="yk-inp">
-          <option value="planlandi" ${(t.durum||'planlandi')==='planlandi'?'selected':''}>Planlandı</option>
-          <option value="tamamlandi" ${t.durum==='tamamlandi'?'selected':''}>Tamamlandı</option>
-        </select>
+        <div><label class="yk-lbl">Durum</label>
+          <select id="meclis-d-durum" class="yk-inp">
+            <option value="planlandi" ${(t.durum||'planlandi')==='planlandi'?'selected':''}>Planlandı</option>
+            <option value="tamamlandi" ${t.durum==='tamamlandi'?'selected':''}>Tamamlandı</option>
+          </select>
+        </div>
       </div>
     </div>`;
   document.getElementById('yk-modal-kaydet').onclick=()=>{
@@ -13900,14 +13520,10 @@ window.meclisToplantıDuzenle = function(id){
     t.bitisSaat = document.getElementById('meclis-d-bitis-saat')?.value||t.bitisSaat||'';
     t.durum     = document.getElementById('meclis-d-durum').value;
     t.toplantıTuru = document.getElementById('meclis-d-tur')?.value||'olagan';
-    t.tur = t.toplantıTuru;
-    const toplantiNo = document.getElementById('meclis-d-no')?.value.trim()||'';
-    t.toplantiNo = toplantiNo;
     // Supabase'e kaydet (tur='meclis' korunur)
     _supa.from('karar_toplantilari').update({
       ad: t.ad, tarih: t.tarih, tarih_iso: t.tarihIso,
-      saat: t.saat, bitis_saat: t.bitisSaat, durum: t.durum,
-      toplanti_turu: t.toplantıTuru, toplanti_no: toplantiNo||null
+      saat: t.saat, bitis_saat: t.bitisSaat, durum: t.durum
     }).eq('id', id).then(({error})=>{ if(error) console.error('Meclis güncelleme hatası:', error.message); });
     ykModalKapat(); meclisRender();
   };
@@ -14028,7 +13644,7 @@ window.supaYukleGorevler = async function supaYukleGorevler() {
   } catch(e){ console.warn('Görev yükleme hatası:', e); }
 }
 const GOREV_YETKILI = ['admin','feyyaz','umran','orhan'];
-function gorevYetkiMi(){ return window.digerYetkiVar('yk-gorev', currentUser && GOREV_YETKILI.includes(currentUser.kullanici)); }
+function gorevYetkiMi(){ return currentUser && GOREV_YETKILI.includes(currentUser.kullanici); }
 
 function gorevBadgeGuncelle(){
   const badge = document.getElementById('gorev-badge');
@@ -14041,8 +13657,9 @@ function gorevBadgeGuncelle(){
 function gorevRender(){
   const el=document.getElementById('gorev-panel-icerik');
   if(!el||!currentUser)return;
-  /* Herkes (Genel Sekreterlik dahil) sadece kendi görevlerini görür — yetkilendirmeye tabi değil */
-  gorevRenderPersonel(el);
+  const yonetici=gorevYetkiMi();
+  if(yonetici) gorevRenderYonetici(el);
+  else gorevRenderPersonel(el);
   gorevBadgeGuncelle();
 }
 
@@ -14060,20 +13677,19 @@ function gorevRenderYonetici(el){
       <div class="mc"><div class="mc-lbl">Tamamlanan</div><div class="mc-val" style="color:var(--teal)">${tamam}</div><div class="mc-sub up">Kapatıldı</div></div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="gorevEkleModal()"><i class="ti ti-plus"></i> Görev Ata</button>
+      <button class="btn btn-p btn-sm" onclick="gorevEkleModal()"><i class="ti ti-plus"></i> Görev Ata</button>
     </div>
     ${filtreliGorevler.length===0?`<div style="text-align:center;padding:48px;color:var(--text2)">
       <i class="ti ti-clipboard-check" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4"></i>
       <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">${secYil} yılı için görev bulunamadı</div>
       <div style="font-size:12px;margin-bottom:16px">Personele doğrudan görev atamak için "Görev Ata" butonunu kullanın</div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="gorevEkleModal()"><i class="ti ti-plus"></i> Görev Ata</button>
+      <button class="btn btn-p btn-sm" onclick="gorevEkleModal()"><i class="ti ti-plus"></i> Görev Ata</button>
     </div>`:
     [...filtreliGorevler].sort((a,b)=>{
       const da=a.sonTarih?new Date(a.sonTarih):new Date('2099-12-31');
       const db2=b.sonTarih?new Date(b.sonTarih):new Date('2099-12-31');
       return da-db2;
     }).map(g=>gorevKart(g,true)).join('')}`;
-  yetkiButonlariUygula('yk-gorev', 'gorev-panel-icerik');
 }
 
 function gorevRenderPersonel(el){
@@ -14119,11 +13735,11 @@ function gorevKart(g, yoneticiMod){
       ${!tamam?`
         <button class="btn btn-sm" onclick="gorevNotEkle('${g.id}')"><i class="ti ti-notes"></i> Not Ekle</button>
         <button class="btn btn-p btn-sm" onclick="gorevTamamla('${g.id}')"><i class="ti ti-check"></i> Tamamlandı</button>
-        ${yoneticiMod?`<button class="btn btn-sm yetki-degistir-gerekli" onclick="gorevDuzenle('${g.id}')"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red)" onclick="gorevSil('${g.id}')"><i class="ti ti-trash"></i></button>`:''}
+        ${yoneticiMod?`<button class="btn btn-sm" onclick="gorevDuzenle('${g.id}')"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm" style="color:var(--red)" onclick="gorevSil('${g.id}')"><i class="ti ti-trash"></i></button>`:''}
       `:`
         <button class="btn btn-sm" onclick="gorevGeriAl('${g.id}')"><i class="ti ti-arrow-back-up"></i> Geri Al</button>
-        ${yoneticiMod?`<button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red)" onclick="gorevSil('${g.id}')"><i class="ti ti-trash"></i></button>`:''}
+        ${yoneticiMod?`<button class="btn btn-sm" style="color:var(--red)" onclick="gorevSil('${g.id}')"><i class="ti ti-trash"></i></button>`:''}
       `}
     </div>
   </div>`;
@@ -14487,6 +14103,7 @@ function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikI
       /* Mevcut atamanın durumunu koru, yeniyse planlandi */
       yeniAtananlar.push({kullanici:kul, ad, gorev:gorev||'—', durum, sonTarih, oncelik});
     });
+    if(!yeniAtananlar.length){ alert('En az bir atama gereklidir.'); return; }
     g.atananlar=yeniAtananlar;
 
     // Gündem Supabase güncellemesi
@@ -14725,11 +14342,11 @@ window.kararAySec = function(tip, ay){
   if(tip==='yk')     { if(window.ykRender) window.ykRender(); else ykRender(); }
   else if(tip==='mk')      {
     if(window.mkRender) window.mkRender();
-    if(window._mkSekme==='evrak' && typeof mkEvrakRender==='function') mkEvrakRender();
+    if(window._mkSekme==='evrak' && typeof mkEvrakKategorileriYukle==='function') mkEvrakKategorileriYukle();
   }
   else if(tip==='meclis')  {
     if(window.meclisRender) window.meclisRender();
-    if(window._meclisSekme==='evrak' && typeof meclisEvrakRender==='function') meclisEvrakRender();
+    if(window._meclisSekme==='evrak' && typeof meclisEvrakKategorileriYukle==='function') meclisEvrakKategorileriYukle();
   }
   else if(tip==='gorev')   { if(window.gorevRender) window.gorevRender(); }
   else if(tip==='ziyaret') { if(window.ziyRenderListe) window.ziyRenderListe(); }
@@ -14882,7 +14499,7 @@ function memPrsAnketListesiGuncelle(yil){
   const anketler=MEM_PRS_DB[yil]||[];
   if(badge) badge.textContent=yil+' · '+anketler.length+' anket';
   if(!el) return;
-  if(!anketler.length){ el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">${yil} yili için henüz anket yok</div>`; yetkiButonlariUygula('personel-memnuniyet','s-mem-prs'); return; }
+  if(!anketler.length){ el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">${yil} yili için henüz anket yok</div>`; return; }
   el.innerHTML=anketler.map((a,ai)=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--surface)">
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:500">${a.aciklama||(yil+' — Anket #'+(ai+1))}</div>
@@ -14892,11 +14509,10 @@ function memPrsAnketListesiGuncelle(yil){
       ${a.ortPuan?`<div style="font-size:13px;font-weight:700;color:var(--teal)">${a.ortPuan}/4</div><div style="font-size:10px;color:var(--text2)">%${a.ortPct||Math.round(a.ortPuan/4*100)}</div>`:'<span style="font-size:12px;color:var(--text2)">—</span>'}
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0">
-      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="memPrsEkleModal('${a.id}')"><i class="ti ti-edit"></i></button>
-      <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="memPrsAnketSil('${a.id}')"><i class="ti ti-trash"></i></button>
+      <button class="btn btn-sm" style="font-size:11px" onclick="memPrsEkleModal('${a.id}')"><i class="ti ti-edit"></i></button>
+      <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="memPrsAnketSil('${a.id}')"><i class="ti ti-trash"></i></button>
     </div>
   </div>`).join('');
-  yetkiButonlariUygula('personel-memnuniyet','s-mem-prs');
 }
 
 function memPrsKarsilastirmaGuncelle(){
@@ -15692,7 +15308,7 @@ window.updateTopbarUser = function(user){
     window._mkYilFilter = yillar;
     if(window.ykResetAktif_mk) window.ykResetAktif_mk(); /* MK aktif toplantıyı sıfırla */
     if(window.mkRenderGlobal) window.mkRenderGlobal();
-    if(window._mkSekme==='evrak' && typeof mkEvrakRender==='function') mkEvrakRender();
+    if(window._mkSekme==='evrak' && typeof mkEvrakKategorileriYukle==='function') mkEvrakKategorileriYukle();
   }
 
   /* MECLİS KARARLARI */
@@ -15700,7 +15316,7 @@ window.updateTopbarUser = function(user){
     window._meclisYilFilter = yillar;
     if(window.ykResetAktif_meclis) window.ykResetAktif_meclis();
     if(window.meclisRenderGlobal) window.meclisRenderGlobal();
-    if(window._meclisSekme==='evrak' && typeof meclisEvrakRender==='function') meclisEvrakRender();
+    if(window._meclisSekme==='evrak' && typeof meclisEvrakKategorileriYukle==='function') meclisEvrakKategorileriYukle();
   }
 
   /* ── INIT ── */
@@ -16431,7 +16047,6 @@ window.memAnketListesiGuncelle = function(yil){
   /* Accordion açık/kapalı durumunu koru */
   if(!anketSayi){
     el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">${yil} yılı için henüz anket kaydı yok</div>`;
-    yetkiButonlariUygula('crm-memnuniyet', 's-memnuniyet');
     return;
   }
   el.innerHTML=anketler.map(a=>{
@@ -16444,12 +16059,11 @@ window.memAnketListesiGuncelle = function(yil){
       </div>
       ${ortStr}
       <div style="display:flex;gap:6px;flex-shrink:0">
-        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="memEkleModal('${a.id}')"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="memAnketSil('${a.id}')"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm" style="font-size:11px" onclick="memEkleModal('${a.id}')"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="memAnketSil('${a.id}')"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
   }).join('');
-  yetkiButonlariUygula('crm-memnuniyet', 's-memnuniyet');
 };
 
 window.memKarsilastirmaGuncelle = function(){
@@ -16605,7 +16219,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 (function(){
 
 const IP_YETKI = ['admin','feyyaz','umran','orhan','haver'];
-function ipYetkiMi(){ return window.digerYetkiVar('isplani', currentUser && IP_YETKI.includes(currentUser.kullanici)); }
+function ipYetkiMi(){ return currentUser && IP_YETKI.includes(currentUser.kullanici); }
 
 /* Personelin kendi projesini düzenleyip düzenleyemeyeceği:
    - Tam yetkili (IP_YETKI): her şeyi yapabilir
@@ -16797,11 +16411,10 @@ function ipRenderPlan(){
   el.innerHTML=`
     <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
       <span style="font-size:13px;font-weight:600;color:var(--text)">${aktifYil} Yılı Stratejik Plan</span>
-      ${yetki?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="ipStratejiEkle()"><i class="ti ti-plus"></i> Strateji Ekle</button>`:''}
+      ${yetki?`<button class="btn btn-sm" style="font-size:11px" onclick="ipStratejiEkle()"><i class="ti ti-plus"></i> Strateji Ekle</button>`:''}
     </div>
     ${yilStr.length===0?'<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-clipboard-list" style="font-size:26px;display:block;margin-bottom:10px;opacity:.4"></i><div style="font-size:13px">Bu yıl için henüz strateji eklenmedi</div></div>':''}
     ${yilStr.map((str,si)=>renderStrateji(str,si,yetki)).join('')}`;
-  yetkiButonlariUygula('isplani', 'ip-yil-icerik');
 }
 
 function renderStrateji(str, si, yetki){
@@ -16820,7 +16433,7 @@ function renderStrateji(str, si, yetki){
       </div>
       <div class="pb" style="width:80px;flex-shrink:0"><div class="pf" style="width:${ort}%;background:${ort>=70?'var(--teal)':ort>=40?'var(--amber)':'var(--red)'}"></div></div>
       <span style="font-size:12px;font-weight:600;color:${ort>=70?'var(--teal)':ort>=40?'var(--amber)':'var(--red)'};margin-left:6px;flex-shrink:0">%${ort}</span>
-      ${yetki?`<div class="yetki-degistir-gerekli" style="display:flex;gap:4px;flex-shrink:0">
+      ${yetki?`<div style="display:flex;gap:4px;flex-shrink:0">
         <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" title="Yukarı taşı" onclick="event.stopPropagation();ipStratejiTasi('${str.id}',-1)"><i class="ti ti-arrow-up"></i></button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 6px" title="Aşağı taşı" onclick="event.stopPropagation();ipStratejiTasi('${str.id}',1)"><i class="ti ti-arrow-down"></i></button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();ipStratejiDuzenle('${str.id}')"><i class="ti ti-edit"></i></button>
@@ -16850,7 +16463,7 @@ function renderHedef(strId, h, hi, yetki){
         <div style="font-size:11px;color:var(--text2)">${h.projeler.length} proje · ${tamam} tamamlandı</div>
       </div>
       <div class="pb" style="width:60px;flex-shrink:0"><div class="pf" style="width:${ort}%;background:var(--teal)"></div></div>
-      ${yetki?`<div class="yetki-degistir-gerekli" style="display:flex;gap:4px;flex-shrink:0">
+      ${yetki?`<div style="display:flex;gap:4px;flex-shrink:0">
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();ipHedefDuzenle('${strId}','${h.id}')"><i class="ti ti-edit"></i></button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();ipProjeEkle('${strId}','${h.id}')"><i class="ti ti-plus"></i> Proje</button>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px;color:var(--red)" onclick="event.stopPropagation();ipHedefSil('${strId}','${h.id}')"><i class="ti ti-trash"></i></button>
@@ -19191,9 +18804,9 @@ async function gsRenderKurulAsync(tur){
       <td style="padding:10px 14px;color:var(--text2);font-size:12px">${gsFmtTarih(r.baslangic)}</td>
       <td style="padding:10px 14px;text-align:right;white-space:nowrap">
         <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsKurulUyelikDuzenle('${r.id}','${tur}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsKurulUnvanDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Ünvan Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsKurulUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsKurulUnvanDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Ünvan Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsKurulUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`).join('');
 
@@ -19205,9 +18818,9 @@ async function gsRenderKurulAsync(tur){
       <td style="padding:8px 14px;font-size:11px;color:var(--text2)">${gsFmtTarih(r.baslangic)} → ${gsFmtTarih(r.bitis)}</td>
       <td style="padding:8px 14px"><span class="badge b-red" style="font-size:10px">${nedenAd[r.ayrilma_nedeni]||r.ayrilma_nedeni||'Ayrıldı'}</span></td>
       <td style="padding:8px 14px;text-align:right;white-space:nowrap">
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px" onclick="gsKurulGecmisDuzenle('${r.id}','${tur}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsKurulDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsKurulGecmisDuzenle('${r.id}','${tur}')" title="Düzenle"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsKurulDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsKurulUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}','${tur}')" title="Sil"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`).join('');
 
@@ -19224,7 +18837,7 @@ async function gsRenderKurulAsync(tur){
       <div style="font-size:13px;font-weight:600;color:var(--blue)">${organAd}
         <span style="color:var(--text2);font-weight:400;font-size:12px">— ${aktifler.length} aktif üye</span>
       </div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="gsKurulUyeEkle('${tur}')"><i class="ti ti-plus"></i> Üye Ekle</button>
+      <button class="btn btn-p btn-sm" onclick="gsKurulUyeEkle('${tur}')"><i class="ti ti-plus"></i> Üye Ekle</button>
     </div>
 
     <div class="card" style="overflow:hidden;margin-bottom:18px">
@@ -19255,7 +18868,6 @@ async function gsRenderKurulAsync(tur){
         </table>
       </div>` : ''}
   `;
-  yetkiButonlariUygula('gs', 's-gs');
 }
 
 window.gsKurulDonemSec = function(donemId, tur){ window._gsKurulSeciliDonem[tur]=donemId; gsRenderKurul(tur); };
@@ -19350,7 +18962,7 @@ async function gsRenderMKAsync(){
   // Komite sekmeleri
   const komiteTabs = komiteNolar.map(kNo=>`
     <button onclick="gsMkKomiteSec(${kNo})" style="padding:5px 12px;border-radius:20px;border:1px solid ${kNo===_gsMkSeciliKomite?'var(--purple)':'var(--border)'};background:${kNo===_gsMkSeciliKomite?'var(--purple)':'transparent'};color:${kNo===_gsMkSeciliKomite?'#fff':'var(--text2)'};cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)">${kNo}. Komite</button>`).join('')
-    + `<button class="yetki-degistir-gerekli" onclick="gsMkYeniKomite()" style="padding:5px 12px;border-radius:20px;border:1px dashed var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)"><i class="ti ti-plus" style="font-size:11px"></i> Yeni Komite</button>`;
+    + `<button onclick="gsMkYeniKomite()" style="padding:5px 12px;border-radius:20px;border:1px dashed var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)"><i class="ti ti-plus" style="font-size:11px"></i> Yeni Komite</button>`;
 
   // Aktif üye satırları
   const aktifSatirlar = aktifler.map(r=>{
@@ -19365,9 +18977,9 @@ async function gsRenderMKAsync(){
       <td style="padding:10px 14px;color:var(--text2);font-size:12px">${gsFmtTarih(r.baslangic)}</td>
       <td style="padding:10px 14px;text-align:right;white-space:nowrap">
         <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMkUyelikDuzenle('${r.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsMkRolDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Rol Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsMkUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Sil"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--blue)" onclick="gsMkRolDegistir('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Rol Değiştir (tarihli)"><i class="ti ti-arrows-exchange"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--amber)" onclick="gsMkUyeDusur('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}',${_gsMkSeciliKomite})" title="Üyelikten Düşür"><i class="ti ti-user-x"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Sil"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`;
   }).join('');
@@ -19381,9 +18993,9 @@ async function gsRenderMKAsync(){
       <td style="padding:8px 14px;font-size:11px;color:var(--text2)">${gsFmtTarih(r.baslangic)} → ${gsFmtTarih(r.bitis)}</td>
       <td style="padding:8px 14px"><span class="badge b-red" style="font-size:10px">${nedenAd[r.ayrilma_nedeni]||r.ayrilma_nedeni||'Ayrıldı'}</span></td>
       <td style="padding:8px 14px;text-align:right;white-space:nowrap">
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px" onclick="gsMkGecmisDuzenle('${r.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsMkDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Kaydı Sil"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px" onclick="gsMkGecmisDuzenle('${r.id}')" title="Düzenle"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;margin-right:4px;color:var(--teal)" onclick="gsMkDusmeGeriAl('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Düşmeyi Geri Al"><i class="ti ti-arrow-back-up"></i></button>
+        <button class="btn btn-sm" style="padding:3px 8px;color:var(--red)" onclick="gsMkUyelikSil('${r.id}','${(r.ad_soyad||'').replace(/'/g,"\\'")}')" title="Kaydı Sil"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`).join('');
 
@@ -19394,9 +19006,9 @@ async function gsRenderMKAsync(){
       <select id="gs-mk-donem" class="yk-inp" style="height:32px;font-size:12px;width:auto;min-width:200px" onchange="gsMkDonemSec(this.value)">
         ${donemSec || '<option>Dönem yok</option>'}
       </select>
-      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsMkDonemEkle()" style="font-size:11px"><i class="ti ti-plus"></i> Yeni Dönem</button>
-      ${donemId ? `<button class="btn btn-sm yetki-degistir-gerekli" onclick="gsMkDonemDuzenle('${donemId}')" style="font-size:11px" title="Dönemi Düzenle"><i class="ti ti-edit"></i></button>
-      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsMkDonemSil('${donemId}')" style="font-size:11px;color:var(--red)" title="Dönemi Sil"><i class="ti ti-trash"></i></button>` : ''}
+      <button class="btn btn-sm" onclick="gsMkDonemEkle()" style="font-size:11px"><i class="ti ti-plus"></i> Yeni Dönem</button>
+      ${donemId ? `<button class="btn btn-sm" onclick="gsMkDonemDuzenle('${donemId}')" style="font-size:11px" title="Dönemi Düzenle"><i class="ti ti-edit"></i></button>
+      <button class="btn btn-sm" onclick="gsMkDonemSil('${donemId}')" style="font-size:11px;color:var(--red)" title="Dönemi Sil"><i class="ti ti-trash"></i></button>` : ''}
       ${seciliDonem ? `<span style="font-size:11px;color:var(--text2)">${gsFmtTarih(seciliDonem.baslangic)} — ${seciliDonem.bitis?gsFmtTarih(seciliDonem.bitis):'devam ediyor'}</span>` : ''}
     </div>
 
@@ -19410,10 +19022,7 @@ async function gsRenderMKAsync(){
       <div style="font-size:13px;font-weight:600;color:var(--purple)">${_gsMkSeciliKomite}. Meslek Komitesi
         <span style="color:var(--text2);font-weight:400;font-size:12px">— ${aktifAsil} asıl, ${aktifYedek} yedek</span>
       </div>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red)" onclick="gsMkKomiteSilYeni(${_gsMkSeciliKomite})"><i class="ti ti-trash"></i> Komiteyi Sil</button>
-        <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="gsMkUyelikEkle(${_gsMkSeciliKomite})"><i class="ti ti-plus"></i> Üye Ekle</button>
-      </div>
+      <button class="btn btn-p btn-sm" onclick="gsMkUyelikEkle(${_gsMkSeciliKomite})"><i class="ti ti-plus"></i> Üye Ekle</button>
     </div>
 
     <!-- Aktif üyeler -->
@@ -19446,7 +19055,6 @@ async function gsRenderMKAsync(){
         </table>
       </div>` : ''}
   `;
-  yetkiButonlariUygula('gs', 's-gs');
 }
 
 function gsFmtTarih(d){
@@ -19496,40 +19104,6 @@ window.gsMkYeniKomite = function(){
   );
 };
 window.gsMkDonemSec = function(donemId){ window._gsMkSeciliDonem=donemId; gsRenderMK(); };
-
-/* Komiteyi tamamen sil — tüm mk_uyelik kayıtlarını (aktif + geçmiş) kaldırır.
-   Not: Bu komiteye ait toplantı/karar/evrak kayıtları veritabanında kalır (silinmez),
-   ama komite üye listesi olmadığı için "Meslek Komitesi Kararları" menüsündeki
-   komite listesinde artık görünmez. */
-window.gsMkKomiteSilYeni = async function(kNo){
-  const donemId = window._gsMkSeciliDonem;
-  let toplamKayit = 0;
-  try{
-    const { count } = await _supa.from('mk_uyelik').select('id',{count:'exact',head:true}).eq('komite_no',kNo);
-    toplamKayit = count||0;
-  }catch(_){}
-
-  if(!confirm(`${kNo}. Meslek Komitesi silinecek.\n\nBu komiteye ait ${toplamKayit} üyelik kaydı (aktif + geçmiş) kalıcı olarak silinecek.\n\nKomiteye ait toplantı/karar/evrak kayıtları veritabanında kalır ama "Meslek Komitesi Kararları" menüsünde artık görünmeyecektir.\n\nBu işlem GERİ ALINAMAZ. Devam etmek istiyor musunuz?`)) return;
-
-  const dogrulama = prompt(`Emin olduğunuzu onaylamak için komite numarasını yazın: ${kNo}`);
-  if(String(dogrulama).trim() !== String(kNo)){
-    alert('Numara eşleşmedi, işlem iptal edildi.');
-    return;
-  }
-
-  try{
-    const { error } = await _supa.from('mk_uyelik').delete().eq('komite_no', kNo);
-    if(error) throw error;
-    await supaYukleKatilimUyeler();
-    _gsMkSeciliKomite = null;
-    // Kalan komitelerden birine geç
-    if((window._mkTumKomiteNolar||[]).length) _gsMkSeciliKomite = window._mkTumKomiteNolar[0];
-    // Eğer MK Kararları menüsünde bu komitedeyseniz, komite listesine dön
-    if(window._mkSeciliKomiteNo === kNo){ window._mkSeciliKomiteNo = null; }
-    gsRenderMK();
-    alert(`✓ ${kNo}. Meslek Komitesi silindi.`);
-  }catch(e){ alert('Silme hatası: '+(e.message||e)); }
-};
 
 /* ── GENEL: ÜYE SİL ── */
 window.gsUyeSil = async function(tablo, id, tur){
@@ -20442,7 +20016,7 @@ async function supaYukleKatilimKayitlar(toplantıId){
   try{
     const { data } = await _supa.from('toplanti_katilim').select('*').eq('toplanti_id', toplantıId);
     _katilimMevcut = {};
-    (data||[]).forEach(k=>{ _katilimMevcut[k.uye_id] = { katildi:k.katildi, durum:k.durum||null, mazeret:k.mazeret||'', db_id:k.id }; });
+    (data||[]).forEach(k=>{ _katilimMevcut[k.uye_id] = { katildi:k.katildi, mazeret:k.mazeret||'', db_id:k.id }; });
   }catch(e){ console.warn('Katılım kayıt yükleme hatası:', e); }
 }
 
@@ -20501,7 +20075,7 @@ window.katilimAc = async function(toplantıId, tur, komiteNo){
   /* _katilimUyeler'e mevcut durumları uygula */
   _katilimUyeler.forEach(u=>{
     const mevcut = _katilimMevcut[u.id];
-    u.katildi = mevcut ? (mevcut.durum==='gorevli' ? 'gorevli' : mevcut.katildi) : null;
+    u.katildi = mevcut ? mevcut.katildi : null;
     u.mazeret = mevcut ? mevcut.mazeret : '';
   });
 
@@ -20515,14 +20089,13 @@ function katilimListeRender(){
 
   const katildiSayisi = _katilimUyeler.filter(u=>u.katildi===true).length;
   const katilmadiSayisi = _katilimUyeler.filter(u=>u.katildi===false).length;
-  const gorevliSayisi = _katilimUyeler.filter(u=>u.katildi==='gorevli').length;
   const belirsizSayisi = _katilimUyeler.filter(u=>u.katildi===null).length;
   const ozet = document.getElementById('katilim-ozet');
-  if(ozet) ozet.innerHTML = `<span style="color:var(--teal)">✓ ${katildiSayisi}</span> &nbsp; <span style="color:var(--red)">✗ ${katilmadiSayisi}</span> &nbsp; <span style="color:var(--amber)">G ${gorevliSayisi}</span> &nbsp; <span style="color:var(--text2)">? ${belirsizSayisi}</span>`;
+  if(ozet) ozet.innerHTML = `<span style="color:var(--teal)">✓ ${katildiSayisi}</span> &nbsp; <span style="color:var(--red)">✗ ${katilmadiSayisi}</span> &nbsp; <span style="color:var(--text2)">? ${belirsizSayisi}</span>`;
 
   liste.innerHTML = _katilimUyeler.map((u,idx)=>{
-    const durumRenk = u.katildi===true ? 'var(--teal)' : u.katildi===false ? 'var(--red)' : u.katildi==='gorevli' ? 'var(--amber)' : 'var(--border2)';
-    const durumBg = u.katildi===true ? 'var(--green-bg)' : u.katildi===false ? 'var(--red-bg)' : u.katildi==='gorevli' ? 'var(--amber-bg)' : 'var(--surface2)';
+    const durumRenk = u.katildi===true ? 'var(--teal)' : u.katildi===false ? 'var(--red)' : 'var(--border2)';
+    const durumBg = u.katildi===true ? 'var(--green-bg)' : u.katildi===false ? 'var(--red-bg)' : 'var(--surface2)';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:${durumBg};transition:background .15s">
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">${u.ad_soyad}</div>
@@ -20535,8 +20108,7 @@ function katilimListeRender(){
         <button onclick="katilimSec(${idx},false)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid ${u.katildi===false?'var(--red)':'var(--border2)'};background:${u.katildi===false?'var(--red)':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s" title="Katılmadı">
           <i class="ti ti-x" style="font-size:15px;color:${u.katildi===false?'#fff':'var(--text2)'}"></i>
         </button>
-        <button onclick="katilimSec(${idx},'gorevli')" style="width:32px;height:32px;border-radius:8px;border:1.5px solid ${u.katildi==='gorevli'?'var(--amber)':'var(--border2)'};background:${u.katildi==='gorevli'?'var(--amber)':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;font-size:13px;font-weight:700;color:${u.katildi==='gorevli'?'#fff':'var(--text2)'}" title="Görevli (o hafta görevliydi, katılım sayılmaz)">G</button>
-        ${(u.katildi===false || u.katildi==='gorevli')?`<input placeholder="Mazeret..." value="${u.mazeret||''}" onchange="katilimMazeret(${idx},this.value)" style="height:32px;padding:0 8px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text);font-size:11px;font-family:var(--font);width:110px">`:''}
+        ${u.katildi===false?`<input placeholder="Mazeret..." value="${u.mazeret||''}" onchange="katilimMazeret(${idx},this.value)" style="height:32px;padding:0 8px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text);font-size:11px;font-family:var(--font);width:110px">`:''}
       </div>
     </div>`;
   }).join('');
@@ -20573,22 +20145,17 @@ window.katilimKaydet = async function(){
       const mevcut = _katilimMevcut[u.id];
       if(u.katildi === null && !mevcut) continue; /* değişmemiş, boş kayıt */
 
-      /* katildi sütunu boolean — 'gorevli' durumunda null yazılır, gerçek durum 'durum' sütununda tutulur */
-      const katildiBool = (u.katildi===true || u.katildi===false) ? u.katildi : null;
-      const durumDeger = u.katildi==='gorevli' ? 'gorevli' : (u.katildi===true ? 'katildi' : (u.katildi===false ? 'katilmadi' : null));
-
       const kayit = {
         toplanti_id: _katilimToplantıId,
         tur: _katilimTur,
         uye_id: String(u.id),
-        katildi: katildiBool,
-        durum: durumDeger,
+        katildi: u.katildi,
         mazeret: u.mazeret || null
       };
 
       if(mevcut){
         /* Güncelle */
-        await _supa.from('toplanti_katilim').update({katildi:katildiBool, durum:durumDeger, mazeret:u.mazeret||null}).eq('id', mevcut.db_id);
+        await _supa.from('toplanti_katilim').update({katildi:u.katildi, mazeret:u.mazeret||null}).eq('id', mevcut.db_id);
       } else if(u.katildi !== null){
         /* Ekle */
         await _supa.from('toplanti_katilim').insert([kayit]);
@@ -20614,15 +20181,9 @@ let _ozetMod = null; /* 'aylik'|'yillik' */
 window.katilimOzetAc = function(tur, mod){
   _ozetTur = tur;
   _ozetMod = mod;
+  const turAd = {yk:'Yönetim Kurulu', mk:'Meslek Komitesi', meclis:'Meclis'}[tur]||'';
   const modAd = {aylik:'Aylık Görünüm', yillik:'Yıllık Görünüm', '6aylik':'Son 6 Aylık Görünüm'}[mod]||'';
-
-  if(tur==='mk'){
-    const kNo = window._mkSeciliKomiteNo;
-    document.getElementById('katilim-ozet-baslik').textContent = kNo ? `${kNo}. Meslek Komitesi — Katılım Özeti` : 'Meslek Komitesi — Katılım Özeti';
-  } else {
-    const turAd = {yk:'Yönetim Kurulu', meclis:'Meclis'}[tur]||'';
-    document.getElementById('katilim-ozet-baslik').textContent = turAd + ' — Katılım Özeti';
-  }
+  document.getElementById('katilim-ozet-baslik').textContent = turAd + ' — Katılım Özeti';
   document.getElementById('katilim-ozet-alt').textContent = modAd;
 
   const yilSel = document.getElementById('katilim-ozet-yil');
@@ -20637,12 +20198,11 @@ window.katilimOzetAc = function(tur, mod){
   const komiteSel = document.getElementById('katilim-ozet-komite');
   komiteSel.style.display = tur==='mk' ? '' : 'none';
   if(tur==='mk'){
+    const mevcutDeger = komiteSel.value;
     const komiteNolar = (window._mkTumKomiteNolar||[]).length ? [...window._mkTumKomiteNolar] : [...new Set((window.MK_UYELER||[]).map(u=>u.komite_no))].sort((a,b)=>a-b);
     komiteSel.innerHTML = '<option value="">Tüm komiteler</option>' +
       komiteNolar.map(k=>`<option value="${k}">${k}. Meslek Komitesi</option>`).join('');
-    /* İçinde bulunulan komite varsa onu varsayılan seç */
-    const baglamKomite = window._mkSeciliKomiteNo;
-    komiteSel.value = baglamKomite && komiteNolar.includes(baglamKomite) ? String(baglamKomite) : String(komiteNolar[0]||1);
+    komiteSel.value = mevcutDeger && komiteNolar.includes(parseInt(mevcutDeger)) ? mevcutDeger : String(komiteNolar[0]||1);
   }
 
   document.getElementById('katilim-ozet-modal').style.display='flex';
@@ -20655,13 +20215,6 @@ window.katilimOzetYenile = async function(){
   const yil = parseInt(document.getElementById('katilim-ozet-yil')?.value || new Date().getFullYear());
   const ay  = parseInt(document.getElementById('katilim-ozet-ay')?.value || 0);
   const komiteNo = tur==='mk' ? parseInt(document.getElementById('katilim-ozet-komite')?.value||0) : 0;
-
-  /* Başlığı seçili komiteye göre canlı güncelle */
-  if(tur==='mk'){
-    const baslikEl = document.getElementById('katilim-ozet-baslik');
-    if(baslikEl) baslikEl.textContent = komiteNo ? `${komiteNo}. Meslek Komitesi — Katılım Özeti` : 'Tüm Komiteler — Katılım Özeti';
-  }
-
   const icerik = document.getElementById('katilim-ozet-icerik');
   if(!icerik) return;
   icerik.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite;font-size:20px"></i><div style="margin-top:8px;font-size:12px">Yükleniyor...</div></div>';
@@ -20702,24 +20255,14 @@ window.katilimOzetYenile = async function(){
       return;
     }
 
-    /* MK için: belirli bir komite seçiliyse, SADECE o komitenin kendi toplantıları
-       sütun olarak gösterilsin (her toplantı artık tek bir komiteye ait) */
-    if(tur==='mk' && komiteNo){
-      filtrelenmis = filtrelenmis.filter(t=>String(t.komite||t.komiteNo||'')===String(komiteNo));
-      if(!filtrelenmis.length){
-        icerik.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2)">${komiteNo}. Meslek Komitesi'nin bu dönemde toplantı kaydı bulunmuyor.</div>`;
-        return;
-      }
-    }
-
     const toplantıIds = filtrelenmis.map(t=>t.id);
     const { data: katilimlar } = await _supa.from('toplanti_katilim')
-      .select('uye_id,katildi,durum,toplanti_id').in('toplanti_id', toplantıIds).eq('tur', tur);
+      .select('uye_id,katildi,toplanti_id').in('toplanti_id', toplantıIds).eq('tur', tur);
 
     const katilimMap = {};
     (katilimlar||[]).forEach(k=>{
       if(!katilimMap[k.uye_id]) katilimMap[k.uye_id]={};
-      katilimMap[k.uye_id][k.toplanti_id] = k.durum==='gorevli' ? 'gorevli' : k.katildi;
+      katilimMap[k.uye_id][k.toplanti_id] = k.katildi;
     });
 
     let uyeler = [];
@@ -20772,6 +20315,7 @@ window.katilimOzetYenile = async function(){
       for(const kNo of komiteListesi){
         // Bu komitenin tüm üyelik kayıtlarını çek
         const { data: kayitlar } = await _supa.from('mk_uyelik').select('*').eq('komite_no', kNo);
+        const komiteTopl = filtrelenmis.filter(t=>komiteNo ? true : parseInt(t.komiteNo||0)===kNo || !t.komiteNo);
         // Aralıktaki her toplantı tarihinde görevde olanları işaretle
         (kayitlar||[]).forEach(r=>{
           const aktifBirToplantida = filtrelenmis.some(t=>{
@@ -20836,15 +20380,7 @@ function katilimTabloOlustur(uyeler, toplantılar, katilimMap){
 
   const basliklar = siraliT.map(t=>{
     const d = t.tarihIso ? new Date(t.tarihIso+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'}) : t.tarih;
-    /* Bu toplantıya özel katılım yüzdesi — G katılmamış sayılır, işaretlenmemiş üyeler de paydaya girer */
-    const katildiSayisiT = uyeler.filter(u=>katilimMap[u.id]?.[t.id]===true).length;
-    const toplamUyeSayisiT = uyeler.length;
-    const oranT = toplamUyeSayisiT>0 ? Math.round(katildiSayisiT/toplamUyeSayisiT*100) : null;
-    const oranRenk = oranT===null ? 'var(--text2)' : oranT>=80 ? 'var(--teal)' : oranT>=50 ? 'var(--amber)' : 'var(--red)';
-    return `<th style="font-size:10px;font-weight:600;color:var(--text2);padding:6px 8px;text-align:center;white-space:nowrap;border-bottom:2px solid var(--border)">
-      ${oranT!==null?`<div style="font-size:11px;font-weight:700;color:${oranRenk};margin-bottom:2px">%${oranT}</div>`:''}
-      <div>${d}</div>
-    </th>`;
+    return `<th style="font-size:10px;font-weight:600;color:var(--text2);padding:6px 8px;text-align:center;white-space:nowrap;border-bottom:2px solid var(--border)">${d}</th>`;
   }).join('');
 
   const satirlar = uyeler.map(u=>{
@@ -20852,15 +20388,10 @@ function katilimTabloOlustur(uyeler, toplantılar, katilimMap){
       const katildi = katilimMap[u.id]?.[t.id];
       if(katildi===true)  return `<td style="text-align:center;padding:6px 8px"><span style="color:var(--teal);font-size:15px">✓</span></td>`;
       if(katildi===false) return `<td style="text-align:center;padding:6px 8px"><span style="color:var(--red);font-size:13px">✗</span></td>`;
-      if(katildi==='gorevli') return `<td style="text-align:center;padding:6px 8px"><span style="color:var(--amber);font-size:12px;font-weight:700">G</span></td>`;
       return `<td style="text-align:center;padding:6px 8px"><span style="color:var(--border2);font-size:13px">—</span></td>`;
     }).join('');
     const katildiSayisi = siraliT.filter(t=>katilimMap[u.id]?.[t.id]===true).length;
-    /* Oran hesabına 'gorevli' (G) dahil edilmez — ne katılım ne devamsızlık sayılır */
-    const topSayisi = siraliT.filter(t=>{
-      const d = katilimMap[u.id]?.[t.id];
-      return d!==undefined && d!=='gorevli';
-    }).length;
+    const topSayisi = siraliT.filter(t=>katilimMap[u.id]?.[t.id]!==undefined).length;
     const oran = topSayisi>0 ? Math.round(katildiSayisi/topSayisi*100) : null;
     const oranBadge = oran!==null ? `<span class="badge ${oran>=80?'b-green':oran>=50?'b-amber':'b-red'}" style="font-size:9px">${oran}%</span>` : '';
     return `<tr style="border-bottom:0.5px solid var(--border)">
@@ -21814,7 +21345,6 @@ window.ziyRenderListe = function(){
     liste.innerHTML = `<div style="text-align:center;padding:48px 20px;color:var(--text2)">
       <i class="ti ti-car" style="font-size:28px;display:block;margin-bottom:10px"></i>
       <div style="font-size:13px">${secYil} yılı için kayıtlı ziyaret bulunmuyor</div></div>`;
-    yetkiButonlariUygula('crm-ziyaret', 's-uye-ziyaret');
     return;
   }
 
@@ -21838,12 +21368,11 @@ window.ziyRenderListe = function(){
         ${z.memnuniyet_skoru?`<span><i class="ti ti-star" style="font-size:13px;vertical-align:-1px;color:var(--amber)"></i> ${z.memnuniyet_skoru}/5</span>`:''}
       </div>
       <div style="display:flex;gap:6px;margin-top:10px" onclick="event.stopPropagation()">
-        <button class="btn btn-sm yetki-degistir-gerekli" onclick="ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>
-        <button class="btn btn-sm yetki-degistir-gerekli" style="color:var(--red)" onclick="ziyaretSil('${z.id}')"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-sm" onclick="ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>
+        <button class="btn btn-sm" style="color:var(--red)" onclick="ziyaretSil('${z.id}')"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
   }).join('');
-  yetkiButonlariUygula('crm-ziyaret', 's-uye-ziyaret');
 };
 
 /* ───────────────── FİRMA ARAMA ───────────────── */
@@ -22389,7 +21918,7 @@ window.ziyDetayAc = function(id, sadeceGoruntule){
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-sm" onclick="ziyPdfOlustur('once','${z.id}')"><i class="ti ti-file-text"></i> Brief (PDF)</button>
         <button class="btn btn-sm" onclick="ziyPdfOlustur('sonra','${z.id}')"><i class="ti ti-file-check"></i> Tamamlandı Raporu (PDF)</button>
-        ${sadeceGoruntule ? '' : `<button class="btn btn-sm yetki-degistir-gerekli" onclick="document.getElementById('ziy-detay-overlay').style.display='none';ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>`}
+        ${sadeceGoruntule ? '' : `<button class="btn btn-sm" onclick="document.getElementById('ziy-detay-overlay').style.display='none';ziyaretYeniModal('${z.id}')"><i class="ti ti-edit"></i> Düzenle/Tamamla</button>`}
       </div>
     </div>
 
@@ -22442,7 +21971,6 @@ window.ziyDetayAc = function(id, sadeceGoruntule){
     ${blok('Kayıt Bilgisi', `<div style="font-size:11px;color:var(--text2)">Giren: ${z.giren_ad||z.giren_kul||'—'}</div>`)}
   `;
   document.getElementById('ziy-detay-overlay').style.display='flex';
-  yetkiButonlariUygula('crm-ziyaret', 'ziy-detay-overlay');
 };
 function ziyDosyaIkonGlobal(ad){ const e=(ad||'').split('.').pop().toLowerCase(); if(['jpg','jpeg','png','gif','webp'].includes(e)) return 'ti-photo'; if(e==='pdf') return 'ti-file-type-pdf'; return 'ti-file'; }
 
@@ -22819,7 +22347,7 @@ window.AKR_ST = AKR_ST;
 
 /* ─── Yetki ─── */
 const AKR_ADMIN = ['admin','feyyaz','umran','orhan','haver'];
-function akrYoneticiMi(){ return window.digerYetkiVar('akreditasyon', currentUser && AKR_ADMIN.includes(currentUser.kullanici)); }
+function akrYoneticiMi(){ return currentUser && AKR_ADMIN.includes(currentUser.kullanici); }
 function akrSorumluMu(maddeId){
   const s = (AKR_ST.sorumlu[AKR_ST.yil]||{})[maddeId];
   return currentUser && s === currentUser.kullanici;
@@ -22854,7 +22382,6 @@ function akrRender(){
   const el=document.getElementById('akr-icerik');
   if(!el) return;
   el.innerHTML=AKR_YAPI.map(b=>renderBaslik(b)).join('');
-  yetkiButonlariUygula('akreditasyon', 'akr-icerik');
 }
 
 function renderBaslik(b){
@@ -22906,7 +22433,7 @@ function renderBolum(bl, renk){
             <span style="font-size:12px;font-weight:600;color:var(--amber)">PERFORMANS GÖSTERGELERİ — ${bl.id}</span>
           </div>
           <div style="display:flex;gap:6px;align-items:center">
-            ${perfDuzenleyebilir?`<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();akrPerfDuzenle('${bl.id}')"><i class="ti ti-edit"></i> Düzenle</button>`:''}
+            ${perfDuzenleyebilir?`<button class="btn btn-sm" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();akrPerfDuzenle('${bl.id}')"><i class="ti ti-edit"></i> Düzenle</button>`:''}
             <i class="ti ti-chevron-right ip-chevron" id="chev-perf-${bl.id}"></i>
           </div>
         </div>
@@ -22939,7 +22466,7 @@ function renderMadde(m, showPerfBtn){
         <div style="font-size:12px;line-height:1.6;color:var(--text);margin-bottom:8px">${m.metin}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <!-- Sorumlu personel -->
-          ${yonetici?`<div class="yetki-degistir-gerekli" style="display:flex;align-items:center;gap:5px">
+          ${yonetici?`<div style="display:flex;align-items:center;gap:5px">
             <i class="ti ti-user-check" style="font-size:12px;color:var(--text2)"></i>
             <select class="yk-inp" style="padding:3px 8px;font-size:11px;min-width:170px"
               onchange="akrSorumluAta('${m.id}',this.value)">
@@ -23207,15 +22734,6 @@ window.sw=function(id,btn){
     if(window.initYilPickers) window.initYilPickers();
     akrRenderYilTabs(); akrRender();
   },30);
-  /* Yetki kontrolü — doğrudan sw() ile açılan menüler için, modül render'ından SONRA çalışsın diye geciktirilmiş */
-  if(window.YETKI_MENULER && window.YETKI_MENULER.some(m=>m.key===id)){
-    setTimeout(()=>{
-      if(window.yetkiKontrolGoster){
-        const bloklandi = window.yetkiKontrolGoster(id, 's-'+id);
-        if(!bloklandi && window.yetkiButonlariUygula) window.yetkiButonlariUygula(id, 's-'+id);
-      }
-    }, 100);
-  }
 };
 
 /* ─── Login hook ─── */
@@ -24210,7 +23728,7 @@ async function sanayiRenderListe(root){
       <div style="font-size:15px;font-weight:500">Kayıtlı Firmalar</div>
       <div style="font-size:12px;color:var(--text2)">Kapasite raporu kayıtlı firmalar</div>
     </div>
-    <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="window.sanayiSecKapasite()" style="gap:5px"><i class="ti ti-plus"></i> Rapor Ekle</button>
+    <button class="btn btn-p btn-sm" onclick="window.sanayiSecKapasite()" style="gap:5px"><i class="ti ti-plus"></i> Rapor Ekle</button>
   </div>
   <div id="sl-yil-bar" style="margin-bottom:16px"></div>
   <div id="sl-liste" style="text-align:center;padding:40px;color:var(--text2)">
@@ -24288,9 +23806,8 @@ function slRenderKartlar(){
         '</div>' +
         '<div style="font-size:14px;font-weight:500">Henüz kapasite raporu yüklenmemiş</div>' +
         '<div style="font-size:13px;margin-top:6px">Kapasite Raporu Ekle seçeneğiyle başlayın</div>' +
-        '<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="window.sanayiSecKapasite()" style="margin-top:16px"><i class="ti ti-plus"></i> Rapor Ekle</button>' +
+        '<button class="btn btn-p btn-sm" onclick="window.sanayiSecKapasite()" style="margin-top:16px"><i class="ti ti-plus"></i> Rapor Ekle</button>' +
       '</div>';
-    yetkiButonlariUygula('crm-sanayi', 's-sanayi-main');
     return;
   }
   if(!items.length){
@@ -24353,8 +23870,8 @@ function slRenderKartlar(){
             '<i class="ti ti-chevron-right" id="sl-chev-'+idx+'" style="font-size:16px;color:var(--text2);transition:transform .2s;margin-left:2px"></i>' +
           '</div>' +
           '<div style="display:flex;gap:6px">' +
-            '<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;gap:4px" onclick="event.stopPropagation();slDuzenle(\''+uidE+'\',\''+adE+'\');" title="Düzenle"><i class="ti ti-edit"></i> Düzenle</button>' +
-            '<button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();slFirmaSil(\''+uidE+'\');" title="Sil"><i class="ti ti-trash"></i></button>' +
+            '<button class="btn btn-sm" style="font-size:11px;gap:4px" onclick="event.stopPropagation();slDuzenle(\''+uidE+'\',\''+adE+'\');" title="Düzenle"><i class="ti ti-edit"></i> Düzenle</button>' +
+            '<button class="btn btn-sm" style="font-size:11px;color:var(--red)" onclick="event.stopPropagation();slFirmaSil(\''+uidE+'\');" title="Sil"><i class="ti ti-trash"></i></button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -24367,7 +23884,6 @@ function slRenderKartlar(){
     wrapper.appendChild(detay);
     kartlarEl.appendChild(wrapper);
   });
-  yetkiButonlariUygula('crm-sanayi', 's-sanayi-main');
 }
 
 window.slKartToggle = async function(uid, idx, v){
@@ -24588,7 +24104,7 @@ window.crmSanayiPaneYukle = async function(uyeId){
       <i class="ti ti-file-off" style="font-size:32px;display:block;margin-bottom:10px;opacity:.4"></i>
       <div style="font-size:14px;font-weight:500;margin-bottom:6px">Kapasite raporu bulunamadı</div>
       <div style="font-size:12px">Bu firmaya henüz rapor eklenmemiş.</div>
-      <button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="crmNavSec('sanayi',document.getElementById('nav-crm-sanayi'))" style="margin-top:14px"><i class="ti ti-plus"></i> Rapor Ekle</button>
+      <button class="btn btn-p btn-sm" onclick="crmNavSec('sanayi',document.getElementById('nav-crm-sanayi'))" style="margin-top:14px"><i class="ti ti-plus"></i> Rapor Ekle</button>
     </div>`;
     return;
   }
