@@ -4278,12 +4278,18 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
 
     <!-- ══ PERSONEL İZİNLERİ PANEİ ══ -->
     <div id="prs-pane-izin" class="prs-pane">
+
+      <!-- Bugün izinde olanlar şeridi -->
+      <div id="izin-bugun-serit" style="margin-bottom:20px"></div>
+
+      <!-- Yıllık izin bakiyesi -->
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Yıllık İzin Bakiyesi</div>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
         <select class="flt-select" id="prs-izin-sec" onchange="izinPersonelSec(this.value)" style="flex:1;max-width:280px">
           <option value="">Personel seçin...</option>
         </select>
         <button class="btn btn-p btn-sm" id="prs-izin-ekle-btn" onclick="izinEkleModal()" style="display:none">
-          <i class="ti ti-plus"></i> İzin Ekle
+          <i class="ti ti-plus"></i> Yıllık Hak Ekle
         </button>
       </div>
 
@@ -4292,6 +4298,111 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         <div style="text-align:center;padding:40px;color:var(--text2)">
           <i class="ti ti-beach" style="font-size:28px;display:block;margin-bottom:8px"></i>
           Personel seçin
+        </div>
+      </div>
+
+      <!-- İzin Kayıtları (tarihli) -->
+      <div style="border-top:1px solid var(--border);margin-top:28px;padding-top:22px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">İzin Kayıtları</div>
+          <button class="btn btn-p btn-sm yetki-degistir-gerekli" id="izin-kayit-ekle-btn" onclick="izinKayitEkleModal()">
+            <i class="ti ti-calendar-plus"></i> İzin Kaydı Ekle
+          </button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <select class="flt-select" id="izin-kayit-f-personel" onchange="izinKayitListeRender()" style="max-width:220px">
+            <option value="">Tüm personel</option>
+          </select>
+          <select class="flt-select" id="izin-kayit-f-yil" onchange="izinKayitListeRender()" style="max-width:130px">
+            <option value="">Tüm yıllar</option>
+          </select>
+          <select class="flt-select" id="izin-kayit-f-tur" onchange="izinKayitListeRender()" style="max-width:170px">
+            <option value="">Tüm türler</option>
+            <option value="yillik">Yıllık İzin</option>
+            <option value="mazeret">Mazeret İzni</option>
+            <option value="rapor">Rapor (Sağlık)</option>
+            <option value="ucretsiz">Ücretsiz İzin</option>
+          </select>
+        </div>
+        <div id="izin-kayit-liste">
+          <div style="text-align:center;padding:30px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Yıllık İzin Hakkı Ekle/Düzenle Modalı -->
+    <div id="izin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center">
+      <div class="card" style="width:100%;max-width:400px;margin:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div id="izin-modal-title" style="font-size:15px;font-weight:700">İzin Ekle</div>
+          <i class="ti ti-x" style="cursor:pointer;font-size:18px;color:var(--text2)" onclick="izinModalKapat()"></i>
+        </div>
+        <input type="hidden" id="izin-f-id">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label class="yk-lbl">Yıl</label>
+            <input type="number" class="yk-inp" id="izin-f-yil" placeholder="2026">
+          </div>
+          <div>
+            <label class="yk-lbl">Hak Edilen Gün</label>
+            <input type="number" class="yk-inp" id="izin-f-hak" placeholder="14">
+          </div>
+          <input type="hidden" id="izin-f-kullanilan" value="0">
+          <div>
+            <label class="yk-lbl">Not (isteğe bağlı)</label>
+            <textarea class="yk-inp" id="izin-f-aciklama" rows="2"></textarea>
+          </div>
+          <div style="font-size:11px;color:var(--text2)">Kullanılan gün sayısı, aşağıdaki "İzin Kayıtları" bölümüne eklenen Yıllık İzin kayıtlarından otomatik hesaplanır.</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:18px">
+          <button class="btn btn-sm" style="flex:1" onclick="izinModalKapat()">Vazgeç</button>
+          <button class="btn btn-p btn-sm" style="flex:1" id="izin-kaydet-btn" onclick="izinKaydet()">Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- İzin Kaydı Ekle/Düzenle Modalı -->
+    <div id="izin-kayit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center">
+      <div class="card" style="width:100%;max-width:440px;margin:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div id="izin-kayit-modal-title" style="font-size:15px;font-weight:700">İzin Kaydı Ekle</div>
+          <i class="ti ti-x" style="cursor:pointer;font-size:18px;color:var(--text2)" onclick="izinKayitModalKapat()"></i>
+        </div>
+        <input type="hidden" id="izin-kayit-f-id">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label class="yk-lbl">Personel</label>
+            <select class="yk-inp" id="izin-kayit-f-personel-sec">
+              <option value="">Personel seçin...</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label class="yk-lbl">Başlangıç Tarihi</label><input type="date" class="yk-inp" id="izin-kayit-f-baslangic"></div>
+            <div><label class="yk-lbl">Bitiş Tarihi</label><input type="date" class="yk-inp" id="izin-kayit-f-bitis"></div>
+          </div>
+          <div>
+            <label class="yk-lbl">Kullanılacak Gün Sayısı</label>
+            <input type="number" min="1" class="yk-inp" id="izin-kayit-f-gun" placeholder="Örn. 5">
+            <div id="izin-kayit-gun-bilgi" style="font-size:11px;color:var(--text2);margin-top:4px"></div>
+          </div>
+          <div>
+            <label class="yk-lbl">İzin Türü</label>
+            <select class="yk-inp" id="izin-kayit-f-tur">
+              <option value="yillik">Yıllık İzin</option>
+              <option value="mazeret">Mazeret İzni</option>
+              <option value="rapor">Rapor (Sağlık)</option>
+              <option value="ucretsiz">Ücretsiz İzin</option>
+            </select>
+          </div>
+          <div>
+            <label class="yk-lbl">Not (isteğe bağlı)</label>
+            <textarea class="yk-inp" id="izin-kayit-f-aciklama" rows="2"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:18px">
+          <button class="btn btn-sm" style="flex:1" onclick="izinKayitModalKapat()">Vazgeç</button>
+          <button class="btn btn-p btn-sm" style="flex:1" id="izin-kayit-kaydet-btn" onclick="izinKayitKaydet()">Kaydet</button>
         </div>
       </div>
     </div>
@@ -8913,28 +9024,254 @@ window.kurulAcildi = function(){
 /* ══ PERSONEL İZİN MODÜLÜ ══ */
 (function(){
 
-let _izinSecilenPrs = null; // personel id
-window.IZIN_DATA = {}; // { personel_id: [{id, yil, hak, kullanilan, not}] }
+let _izinSecilenPrs = null; // personel id (yıllık bakiye paneli için)
+window.IZIN_DATA = {}; // { personel_id: [{id, yil, hak_edilen, aciklama}] }  — yıllık haklar
+window.IZIN_KAYIT_DATA = []; // [{id, personel_id, baslangic_tarih, bitis_tarih, gun_sayisi, tur, aciklama}] — tarihli izin kayıtları
+let _izinKayitYuklendi = false;
 
-/* Personel dropdown doldur */
+const IZIN_TUR_BILGI = {
+  yillik:   { label:'Yıllık İzin',     badge:'b-blue',  accent:'var(--blue)' },
+  mazeret:  { label:'Mazeret İzni',    badge:'b-amber', accent:'#EF9F27' },
+  rapor:    { label:'Rapor (Sağlık)',  badge:'b-red',   accent:'#E24B4A' },
+  ucretsiz: { label:'Ücretsiz İzin',   badge:'b-gray',  accent:'var(--text3)' },
+};
+
+const izinGS = () => ['admin','feyyaz','umran','orhan','haver'];
+const izinIsGS = () => izinGS().includes(currentUser?.kullanici||'');
+
+/* Bir personelin belirli bir yıldaki YILLIK İZİN kullanımını, tarihli kayıtlardan topla */
+function izinKullanilanHesapla(personelId, yil){
+  return window.IZIN_KAYIT_DATA
+    .filter(k => String(k.personel_id)===String(personelId) && k.tur==='yillik' && new Date(k.baslangic_tarih).getFullYear()===Number(yil))
+    .reduce((t,k)=>t+(k.gun_sayisi||0), 0);
+}
+
+/* Personel dropdown doldur (yıllık bakiye seçici) */
 window.izinDropdownDoldur = function(){
   const sel = document.getElementById('prs-izin-sec');
   if(!sel||!window.PERSONEL) return;
-  const GS = ['admin','feyyaz','umran','orhan','haver'];
-  const isGS = GS.includes(currentUser?.kullanici||'');
+  const isGS = izinIsGS();
   let liste = window.PERSONEL;
   if(!isGS) liste = liste.filter(p=>p.kullanici===currentUser?.kullanici);
   sel.innerHTML = '<option value="">Personel seçin...</option>' +
     liste.map(p=>`<option value="${p.id}">${p.ad} ${p.soyad}</option>`).join('');
+  izinKayitPersonelDoldur();
+  if(!_izinKayitYuklendi) izinKayitlariYukle();
 };
 
-/* Personel seçilince izinlerini yükle */
+/* İzin kayıtları modülünün personel seçicilerini (modal + filtre) doldur */
+function izinKayitPersonelDoldur(){
+  if(!window.PERSONEL) return;
+  const isGS = izinIsGS();
+  let liste = window.PERSONEL;
+  if(!isGS) liste = liste.filter(p=>p.kullanici===currentUser?.kullanici);
+  const opts = liste.map(p=>`<option value="${p.id}">${p.ad} ${p.soyad}</option>`).join('');
+  const modalSec = document.getElementById('izin-kayit-f-personel-sec');
+  if(modalSec) modalSec.innerHTML = '<option value="">Personel seçin...</option>' + opts;
+  const filtreSec = document.getElementById('izin-kayit-f-personel');
+  if(filtreSec) filtreSec.innerHTML = '<option value="">Tüm personel</option>' + opts;
+  const ekleBtn = document.getElementById('izin-kayit-ekle-btn');
+  if(ekleBtn) ekleBtn.style.display = ''; // yetkiButonlariUygula ile ayrıca kontrol edilecek
+}
+
+/* Tüm izin kayıtlarını yükle (tarihli) */
+window.izinKayitlariYukle = async function(){
+  _izinKayitYuklendi = true;
+  const isGS = izinIsGS();
+  try{
+    let q = _supa.from('personel_izin_kayitlari').select('*').order('baslangic_tarih', {ascending:false});
+    if(!isGS){
+      const kendi = (window.PERSONEL||[]).find(p=>p.kullanici===currentUser?.kullanici);
+      if(kendi) q = q.eq('personel_id', kendi.id);
+    }
+    const { data, error } = await q;
+    if(error) throw error;
+    window.IZIN_KAYIT_DATA = data||[];
+  }catch(e){
+    console.error('İzin kayıtları yükleme hatası:', e.message);
+    window.IZIN_KAYIT_DATA = [];
+  }
+  izinKayitYilFiltreDoldur();
+  izinBugunSeridiRender();
+  izinKayitListeRender();
+  /* Yıllık bakiye görünüyorsa Kullanılan sütununu tazele */
+  if(_izinSecilenPrs) izinRender(_izinSecilenPrs);
+};
+
+/* Yıl filtresi seçeneklerini kayıtlardan türet */
+function izinKayitYilFiltreDoldur(){
+  const sel = document.getElementById('izin-kayit-f-yil');
+  if(!sel) return;
+  const mevcut = sel.value;
+  const yillar = [...new Set(window.IZIN_KAYIT_DATA.map(k=>new Date(k.baslangic_tarih).getFullYear()))].sort((a,b)=>b-a);
+  sel.innerHTML = '<option value="">Tüm yıllar</option>' + yillar.map(y=>`<option value="${y}">${y}</option>`).join('');
+  if(yillar.includes(Number(mevcut))) sel.value = mevcut;
+}
+
+/* Bugün izinde olanlar şeridi */
+window.izinBugunSeridiRender = function(){
+  const el = document.getElementById('izin-bugun-serit');
+  if(!el) return;
+  const bugun = new Date(); bugun.setHours(0,0,0,0);
+  const bugunIzinliler = window.IZIN_KAYIT_DATA.filter(k=>{
+    const b = new Date(k.baslangic_tarih+'T00:00:00'), bt = new Date(k.bitis_tarih+'T00:00:00');
+    return b<=bugun && bugun<=bt;
+  });
+  if(!bugunIzinliler.length){
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:11px 16px;background:var(--surface2);border-radius:var(--radius-lg);font-size:12px;color:var(--text2)"><i class="ti ti-sun"></i>Bugün izinli personel yok</div>`;
+    return;
+  }
+  const chips = bugunIzinliler.map(k=>{
+    const p = (window.PERSONEL||[]).find(x=>String(x.id)===String(k.personel_id));
+    const tur = IZIN_TUR_BILGI[k.tur]||IZIN_TUR_BILGI.yillik;
+    const donus = new Date(k.bitis_tarih+'T00:00:00'); donus.setDate(donus.getDate()+1);
+    return `<div style="display:flex;align-items:center;gap:7px;padding:8px 13px;background:var(--surface);border:1px solid var(--border);border-left:3px solid ${tur.accent};border-radius:9px">
+      <span style="font-size:12.5px;font-weight:600;color:var(--text)">${p?p.ad+' '+p.soyad:'—'}</span>
+      <span class="badge ${tur.badge}" style="font-size:10px">${tur.label}</span>
+      <span style="font-size:11px;color:var(--text2)">${donus.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} dönüyor</span>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Bugün İzinde Olanlar (${bugunIzinliler.length})</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${chips}</div>`;
+};
+
+/* İzin kayıtları listesi (filtrelenebilir) */
+window.izinKayitListeRender = function(){
+  const el = document.getElementById('izin-kayit-liste');
+  if(!el) return;
+  const fP = document.getElementById('izin-kayit-f-personel')?.value||'';
+  const fY = document.getElementById('izin-kayit-f-yil')?.value||'';
+  const fT = document.getElementById('izin-kayit-f-tur')?.value||'';
+  const isGS = izinIsGS();
+
+  let liste = [...window.IZIN_KAYIT_DATA];
+  if(fP) liste = liste.filter(k=>String(k.personel_id)===String(fP));
+  if(fY) liste = liste.filter(k=>new Date(k.baslangic_tarih).getFullYear()===Number(fY));
+  if(fT) liste = liste.filter(k=>k.tur===fT);
+
+  if(!liste.length){
+    el.innerHTML = `<div style="text-align:center;padding:36px 20px;color:var(--text3)"><i class="ti ti-calendar-off" style="font-size:26px;display:block;margin-bottom:8px;opacity:.6"></i>Kayıt bulunamadı</div>`;
+    return;
+  }
+
+  el.innerHTML = liste.map(k=>{
+    const p = (window.PERSONEL||[]).find(x=>String(x.id)===String(k.personel_id));
+    const tur = IZIN_TUR_BILGI[k.tur]||IZIN_TUR_BILGI.yillik;
+    const b = new Date(k.baslangic_tarih+'T00:00:00'), bt = new Date(k.bitis_tarih+'T00:00:00');
+    const tarihStr = `${b.toLocaleDateString('tr-TR',{day:'numeric',month:'long'})} – ${bt.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}`;
+    return `<div class="kkart-card" style="--accent:${tur.accent}">
+      <div class="kkart-top">
+        <div style="min-width:0">
+          <div class="kkart-title">${p?p.ad+' '+p.soyad:'—'}</div>
+          <div class="kkart-meta" style="margin-top:6px"><i class="ti ti-calendar"></i>${tarihStr} · ${k.gun_sayisi} gün</div>
+        </div>
+        <span class="badge ${tur.badge}">${tur.label}</span>
+      </div>
+      ${k.aciklama?`<div class="kkart-ozet">${k.aciklama}</div>`:''}
+      <div class="kkart-actions yetki-degistir-gerekli">
+        <button class="kkart-act" onclick="izinKayitEkleModal('${k.id}')"><i class="ti ti-edit"></i> Düzenle</button>
+        <button class="kkart-act dngr" onclick="izinKayitSil('${k.id}')"><i class="ti ti-trash"></i> Sil</button>
+      </div>
+    </div>`;
+  }).join('');
+  yetkiButonlariUygula('personel-bilgi', 'izin-kayit-liste');
+};
+
+/* Gün sayısı canlı önizleme */
+function izinKayitGunGuncelle(){
+  const b = document.getElementById('izin-kayit-f-baslangic')?.value;
+  const bt = document.getElementById('izin-kayit-f-bitis')?.value;
+  const el = document.getElementById('izin-kayit-gun-bilgi');
+  const gunInput = document.getElementById('izin-kayit-f-gun');
+  if(!el) return;
+  if(!b||!bt){ el.textContent=''; return; }
+  const takvimGun = Math.round((new Date(bt)-new Date(b))/86400000)+1;
+  if(takvimGun>0){
+    el.innerHTML = `Takvim günü: <strong>${takvimGun}</strong> (hafta sonu/tatil dahil) — hafta sonu varsa yukarıdaki sayıyı elle düzeltin`;
+    el.style.color = 'var(--text2)';
+    /* Sadece alan boşsa öneri olarak doldur, kullanıcının elle girdiğine dokunma */
+    if(gunInput && !gunInput.value) gunInput.value = takvimGun;
+  } else {
+    el.textContent = 'Bitiş tarihi başlangıçtan önce olamaz';
+    el.style.color = 'var(--red)';
+  }
+}
+
+/* Modal aç — ekle / düzenle ortak */
+window.izinKayitEkleModal = function(kayitId){
+  izinKayitPersonelDoldur();
+  const idEl = document.getElementById('izin-kayit-f-id');
+  const kayit = kayitId ? window.IZIN_KAYIT_DATA.find(k=>String(k.id)===String(kayitId)) : null;
+  idEl.value = kayitId||'';
+  document.getElementById('izin-kayit-f-personel-sec').value = kayit ? kayit.personel_id : (_izinSecilenPrs||'');
+  document.getElementById('izin-kayit-f-baslangic').value = kayit ? kayit.baslangic_tarih : '';
+  document.getElementById('izin-kayit-f-bitis').value = kayit ? kayit.bitis_tarih : '';
+  document.getElementById('izin-kayit-f-gun').value = kayit ? kayit.gun_sayisi : '';
+  document.getElementById('izin-kayit-f-tur').value = kayit ? kayit.tur : 'yillik';
+  document.getElementById('izin-kayit-f-aciklama').value = kayit ? (kayit.aciklama||'') : '';
+  document.getElementById('izin-kayit-modal-title').textContent = kayit ? 'İzin Kaydı Düzenle' : 'İzin Kaydı Ekle';
+  izinKayitGunGuncelle();
+  document.getElementById('izin-kayit-f-baslangic').oninput = izinKayitGunGuncelle;
+  document.getElementById('izin-kayit-f-bitis').oninput = izinKayitGunGuncelle;
+  document.getElementById('izin-kayit-modal').style.display='flex';
+};
+
+window.izinKayitModalKapat = function(){ document.getElementById('izin-kayit-modal').style.display='none'; };
+
+/* Kaydet (ekle veya düzenle) */
+window.izinKayitKaydet = async function(){
+  const id = document.getElementById('izin-kayit-f-id').value;
+  const personelId = document.getElementById('izin-kayit-f-personel-sec').value;
+  const baslangic = document.getElementById('izin-kayit-f-baslangic').value;
+  const bitis = document.getElementById('izin-kayit-f-bitis').value;
+  const tur = document.getElementById('izin-kayit-f-tur').value;
+  const not_ = document.getElementById('izin-kayit-f-aciklama').value.trim();
+
+  const gun = parseInt(document.getElementById('izin-kayit-f-gun')?.value);
+
+  if(!personelId){ alert('Personel seçimi zorunludur.'); return; }
+  if(!baslangic||!bitis){ alert('Başlangıç ve bitiş tarihi zorunludur.'); return; }
+  if(new Date(bitis) < new Date(baslangic)){ alert('Bitiş tarihi başlangıç tarihinden önce olamaz.'); return; }
+  if(!gun || gun<=0){ alert('Kullanılacak gün sayısı zorunludur ve 0\'dan büyük olmalıdır.'); return; }
+
+  const payload = { personel_id:personelId, baslangic_tarih:baslangic, bitis_tarih:bitis, gun_sayisi:gun, tur, aciklama:not_||null };
+
+  if(id){
+    const { error } = await _supa.from('personel_izin_kayitlari').update(payload).eq('id', id);
+    if(error){ alert('Güncelleme hatası: '+error.message); return; }
+    const idx = window.IZIN_KAYIT_DATA.findIndex(k=>String(k.id)===String(id));
+    if(idx>-1) window.IZIN_KAYIT_DATA[idx] = {...window.IZIN_KAYIT_DATA[idx], ...payload};
+  } else {
+    const { data, error } = await _supa.from('personel_izin_kayitlari').insert([payload]).select().single();
+    if(error){ alert('Kaydetme hatası: '+error.message); return; }
+    window.IZIN_KAYIT_DATA.unshift(data);
+  }
+  window.IZIN_KAYIT_DATA.sort((a,b)=> b.baslangic_tarih.localeCompare(a.baslangic_tarih));
+
+  izinKayitModalKapat();
+  izinKayitYilFiltreDoldur();
+  izinBugunSeridiRender();
+  izinKayitListeRender();
+  if(_izinSecilenPrs) izinRender(_izinSecilenPrs);
+};
+
+/* Sil */
+window.izinKayitSil = async function(kayitId){
+  if(!confirm('Bu izin kaydını silmek istiyor musunuz?')) return;
+  const { error } = await _supa.from('personel_izin_kayitlari').delete().eq('id', kayitId);
+  if(error){ alert('Silme hatası: '+error.message); return; }
+  window.IZIN_KAYIT_DATA = window.IZIN_KAYIT_DATA.filter(k=>String(k.id)!==String(kayitId));
+  izinBugunSeridiRender();
+  izinKayitListeRender();
+  if(_izinSecilenPrs) izinRender(_izinSecilenPrs);
+};
+
+/* Personel seçilince yıllık bakiyesini yükle */
 window.izinPersonelSec = async function(prsId){
   _izinSecilenPrs = prsId || null;
   const ekleBtn = document.getElementById('prs-izin-ekle-btn');
   const content = document.getElementById('prs-izin-content');
-  const GS = ['admin','feyyaz','umran','orhan','haver'];
-  const isGS = GS.includes(currentUser?.kullanici||'');
+  const isGS = izinIsGS();
 
   if(!prsId){
     if(ekleBtn) ekleBtn.style.display='none';
@@ -8956,25 +9293,25 @@ window.izinPersonelSec = async function(prsId){
   }
 };
 
-/* Render */
+/* Render — Kullanılan artık tarihli kayıtlardan otomatik hesaplanır */
 window.izinRender = function(prsId){
   const content = document.getElementById('prs-izin-content');
   if(!content) return;
   const prs = (window.PERSONEL||[]).find(p=>String(p.id)===String(prsId));
   const liste = window.IZIN_DATA[prsId]||[];
-  const GS = ['admin','feyyaz','umran','orhan','haver'];
-  const isGS = GS.includes(currentUser?.kullanici||'');
+  const isGS = izinIsGS();
 
   if(!liste.length){
-    content.innerHTML=`<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-calendar-off" style="font-size:28px;display:block;margin-bottom:8px"></i><div style="font-size:13px">${prs?prs.ad+' '+prs.soyad+' için':'Bu personel için'} izin kaydı yok</div>${isGS?'<div style="font-size:11px;margin-top:6px">Yukarıdaki "İzin Ekle" butonuyla kayıt ekleyebilirsiniz.</div>':''}</div>`;
+    content.innerHTML=`<div style="text-align:center;padding:40px;color:var(--text2)"><i class="ti ti-calendar-off" style="font-size:28px;display:block;margin-bottom:8px"></i><div style="font-size:13px">${prs?prs.ad+' '+prs.soyad+' için':'Bu personel için'} izin kaydı yok</div>${isGS?'<div style="font-size:11px;margin-top:6px">Yukarıdaki "Yıllık Hak Ekle" butonuyla kayıt ekleyebilirsiniz.</div>':''}</div>`;
     return;
   }
 
-  const toplamKalan = liste.reduce((t,i)=>t+(i.hak_edilen-i.kullanilan),0);
-  const toplamHak = liste.reduce((t,i)=>t+i.hak_edilen,0);
-  const toplamKull = liste.reduce((t,i)=>t+i.kullanilan,0);
+  const zenginlestirilmis = liste.map(izin => ({...izin, kullanilan: izinKullanilanHesapla(prsId, izin.yil)}));
+  const toplamKalan = zenginlestirilmis.reduce((t,i)=>t+(i.hak_edilen-i.kullanilan),0);
+  const toplamHak = zenginlestirilmis.reduce((t,i)=>t+i.hak_edilen,0);
+  const toplamKull = zenginlestirilmis.reduce((t,i)=>t+i.kullanilan,0);
 
-  const satirlar = liste.map(izin=>{
+  const satirlar = zenginlestirilmis.map(izin=>{
     const kalan = izin.hak_edilen - izin.kullanilan;
     const pct = izin.hak_edilen > 0 ? Math.round(izin.kullanilan/izin.hak_edilen*100) : 0;
     const kalanRenk = kalan <= 0 ? 'var(--red)' : kalan <= 3 ? 'var(--amber)' : 'var(--teal)';
@@ -9031,32 +9368,29 @@ window.izinRender = function(prsId){
     </div>`;
 };
 
-/* Modal Aç - Ekle */
+/* Modal Aç - Yıllık Hak Ekle */
 window.izinEkleModal = function(){
   document.getElementById('izin-f-id').value='';
   document.getElementById('izin-f-yil').value=new Date().getFullYear();
   document.getElementById('izin-f-hak').value='';
-  document.getElementById('izin-f-kullanilan').value='0';
   document.getElementById('izin-f-aciklama').value='';
-  document.getElementById('izin-modal-title').textContent='İzin Ekle';
+  document.getElementById('izin-modal-title').textContent='Yıllık Hak Ekle';
   document.getElementById('izin-kaydet-btn').setAttribute('onclick','izinKaydet()');
   document.getElementById('izin-modal').style.display='flex';
 };
 
 window.izinModalKapat = function(){ document.getElementById('izin-modal').style.display='none'; };
 
-/* Kaydet */
+/* Kaydet — yıllık hak (kullanılan artık gönderilmiyor, otomatik hesaplanıyor) */
 window.izinKaydet = async function(){
   const yil = parseInt(document.getElementById('izin-f-yil')?.value);
   const hak = parseInt(document.getElementById('izin-f-hak')?.value);
-  const kull = parseInt(document.getElementById('izin-f-kullanilan')?.value||'0');
   const not_ = document.getElementById('izin-f-aciklama')?.value.trim()||'';
   if(!yil||!hak){ alert('Yıl ve hak edilen izin zorunludur.'); return; }
-  if(kull>hak){ alert('Kullanılan izin, hak edilen izinden fazla olamaz.'); return; }
   if(!_izinSecilenPrs){ alert('Personel seçili değil.'); return; }
 
   const { data, error } = await _supa.from('personel_izinler').insert([{
-    personel_id: _izinSecilenPrs, yil, hak_edilen: hak, kullanilan: kull, aciklama: not_||null
+    personel_id: _izinSecilenPrs, yil, hak_edilen: hak, kullanilan: 0, aciklama: not_||null
   }]).select().single();
   if(error){ alert('Kaydetme hatası: '+error.message); return; }
 
@@ -9066,40 +9400,37 @@ window.izinKaydet = async function(){
   izinModalKapat(); izinRender(_izinSecilenPrs);
 };
 
-/* Düzenle */
+/* Düzenle — yıllık hak */
 window.izinDuzenle = function(prsId, izinId){
   const izin = (window.IZIN_DATA[prsId]||[]).find(x=>String(x.id)===String(izinId));
   if(!izin) return;
   document.getElementById('izin-f-id').value=izinId;
   document.getElementById('izin-f-yil').value=izin.yil;
   document.getElementById('izin-f-hak').value=izin.hak_edilen;
-  document.getElementById('izin-f-kullanilan').value=izin.kullanilan;
   document.getElementById('izin-f-aciklama').value=izin.aciklama||'';
-  document.getElementById('izin-modal-title').textContent='İzin Düzenle';
+  document.getElementById('izin-modal-title').textContent='Yıllık Hak Düzenle';
   document.getElementById('izin-kaydet-btn').setAttribute('onclick',`izinGuncelle('${prsId}','${izinId}')`);
   document.getElementById('izin-modal').style.display='flex';
 };
 
-/* Güncelle */
+/* Güncelle — yıllık hak */
 window.izinGuncelle = async function(prsId, izinId){
   const yil = parseInt(document.getElementById('izin-f-yil')?.value);
   const hak = parseInt(document.getElementById('izin-f-hak')?.value);
-  const kull = parseInt(document.getElementById('izin-f-kullanilan')?.value||'0');
   const not_ = document.getElementById('izin-f-aciklama')?.value.trim()||'';
   if(!yil||!hak){ alert('Yıl ve hak edilen izin zorunludur.'); return; }
-  if(kull>hak){ alert('Kullanılan izin, hak edilen izinden fazla olamaz.'); return; }
 
   const { error } = await _supa.from('personel_izinler')
-    .update({ yil, hak_edilen:hak, kullanilan:kull, aciklama:not_||null }).eq('id',izinId);
+    .update({ yil, hak_edilen:hak, aciklama:not_||null }).eq('id',izinId);
   if(error){ alert('Güncelleme hatası: '+error.message); return; }
 
   const idx = (window.IZIN_DATA[prsId]||[]).findIndex(x=>String(x.id)===String(izinId));
-  if(idx>-1) window.IZIN_DATA[prsId][idx] = {...window.IZIN_DATA[prsId][idx], yil, hak_edilen:hak, kullanilan:kull, aciklama:not_||null};
+  if(idx>-1) window.IZIN_DATA[prsId][idx] = {...window.IZIN_DATA[prsId][idx], yil, hak_edilen:hak, aciklama:not_||null};
   window.IZIN_DATA[prsId].sort((a,b)=>b.yil-a.yil);
   izinModalKapat(); izinRender(prsId);
 };
 
-/* Sil */
+/* Sil — yıllık hak */
 window.izinSil = async function(prsId, izinId){
   if(!confirm('Bu izin kaydını silmek istiyor musunuz?')) return;
   const { error } = await _supa.from('personel_izinler').delete().eq('id',izinId);
@@ -9108,7 +9439,14 @@ window.izinSil = async function(prsId, izinId){
   izinRender(prsId);
 };
 
+/* Realtime tetiklendiğinde her iki veri setini de tazele */
+window.izinListeYukle = function(){
+  if(_izinSecilenPrs) izinPersonelSec(_izinSecilenPrs);
+  izinKayitlariYukle();
+};
+
 })();
+
 
 /* ══ PERSONEL ÖNERİ MODÜLÜ ══ */
 (function(){
