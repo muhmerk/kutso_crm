@@ -9050,11 +9050,21 @@ const IZIN_TUR_BILGI = {
 const izinGS = () => ['admin','feyyaz','umran','orhan','haver'];
 const izinIsGS = () => izinGS().includes(currentUser?.kullanici||'');
 
-/* Bir personelin belirli bir yıldaki YILLIK İZİN kullanımını, tarihli kayıtlardan topla */
-function izinKullanilanHesapla(personelId, yil){
-  return window.IZIN_KAYIT_DATA
-    .filter(k => String(k.personel_id)===String(personelId) && k.tur==='yillik' && new Date(k.baslangic_tarih).getFullYear()===Number(yil))
+/* Bir personelin TÜM yıllardaki YILLIK İZİN kullanımını, en eski hak edilen yıldan başlayarak sırayla düş (FIFO).
+   Örn: 2022-2026 arası hakları var, 10 gün izin kullanıldı → önce 2022'nin kalanı biter, sonra 2023'e geçer, vs.
+   Dönüş: { yil: o_yila_ait_kullanilan_gun } */
+function izinYillikBakiyeHesapla(personelId){
+  const yillikHaklar = (window.IZIN_DATA[personelId]||[]).slice().sort((a,b)=>a.yil-b.yil);
+  let kalanKullanim = window.IZIN_KAYIT_DATA
+    .filter(k => String(k.personel_id)===String(personelId) && k.tur==='yillik')
     .reduce((t,k)=>t+(k.gun_sayisi||0), 0);
+  const bakiye = {};
+  for(const izin of yillikHaklar){
+    const buYilKullanim = Math.min(izin.hak_edilen, kalanKullanim);
+    bakiye[izin.yil] = buYilKullanim;
+    kalanKullanim -= buYilKullanim;
+  }
+  return bakiye;
 }
 
 /* Personel dropdown doldur (yıllık bakiye seçici) */
@@ -9316,7 +9326,8 @@ window.izinRender = function(prsId){
     return;
   }
 
-  const zenginlestirilmis = liste.map(izin => ({...izin, kullanilan: izinKullanilanHesapla(prsId, izin.yil)}));
+  const _bakiye = izinYillikBakiyeHesapla(prsId);
+  const zenginlestirilmis = liste.map(izin => ({...izin, kullanilan: _bakiye[izin.yil]||0}));
   const toplamKalan = zenginlestirilmis.reduce((t,i)=>t+(i.hak_edilen-i.kullanilan),0);
   const toplamHak = zenginlestirilmis.reduce((t,i)=>t+i.hak_edilen,0);
   const toplamKull = zenginlestirilmis.reduce((t,i)=>t+i.kullanilan,0);
