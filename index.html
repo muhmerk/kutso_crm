@@ -40,7 +40,7 @@ async function supaYukleYK() {
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
     const mappedT = toplantılar.map(t=>({ id:t.id, no:t.no||'', ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', yil:t.tarih_iso?new Date(t.tarih_iso).getFullYear():0, durum:t.durum||'planlandi', aciklama:t.aciklama||'' }));
-    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi', not:a.notu||'' })) }));
+    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.YK_DB) {
         window.YK_DB.toplantılar = mappedT;
@@ -68,7 +68,7 @@ async function supaYukleMK() {
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
     const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', komite:t.komite||'', komiteNo:parseInt(t.komite)||0, durum:t.durum||'planlandi', toplantıTuru:t.toplanti_turu||'olagan', toplantiNo:t.toplanti_no||'' }));
-    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', komiteNo:g.komite_no||0, kaynak:g.kaynak||'karar', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi', not:a.notu||'' })) }));
+    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', komiteNo:g.komite_no||0, kaynak:g.kaynak||'karar', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MK_DB) {
         window.MK_DB.toplantılar = mappedT;
@@ -94,7 +94,7 @@ async function supaYukleMeclis() {
       ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
       : { data: [] };
     const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', durum:t.durum||'planlandi', toplantiNo:t.toplanti_no||'' }));
-    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', dosyaUrl:g.dosya_url||null, dosyaAdi:g.dosya_adi||null, atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi', not:a.notu||'' })) }));
+    const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', dosyaUrl:g.dosya_url||null, dosyaAdi:g.dosya_adi||null, atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi' })) }));
     const trySet = () => {
       if(window.MECLIS_DB) {
         window.MECLIS_DB.toplantılar = mappedT;
@@ -9659,15 +9659,6 @@ window.digerYetkiVar = function(menuKey, eskiListedeVarMi){
   return window.kullaniciMenuYetkisi(menuKey) === 'degistirebilir';
 };
 
-/* İÇERİĞİ GÖRÜNTÜLEYEBİLİR Mİ — 'okuyabilir' VEYA 'degistirebilir' VEYA eski listede ise true.
-   Bu, "yönetici görünümü / personel görünümü" gibi TÜM İÇERİĞİ gösterip göstermeme kararı için
-   kullanılır — düzenleme butonları için değil (o hâlâ digerYetkiVar/mkYoneticiMi ile kontrol edilir). */
-window.digerGorebilirMi = function(menuKey, eskiListedeVarMi){
-  if(eskiListedeVarMi) return true;
-  const seviye = window.kullaniciMenuYetkisi(menuKey);
-  return seviye === 'okuyabilir' || seviye === 'degistirebilir';
-};
-
 /* Bir menü için "değiştirebilir" yetkisi yoksa, o konteynerdeki
    .yetki-degistir-gerekli class'lı tüm elemanları gizler (ekle/düzenle/sil butonları vb.) */
 window.yetkiButonlariUygula = function(menuKey, containerId){
@@ -11233,7 +11224,6 @@ window.sw = function(id, btn) {
 
 const YK_YONETICI = ['admin','feyyaz','umran','orhan'];
 function ykYoneticiMi(){ return window.digerYetkiVar('yk-yk', currentUser && YK_YONETICI.includes(currentUser.kullanici)); }
-function ykGorebilirMi(){ return window.digerGorebilirMi('yk-yk', currentUser && YK_YONETICI.includes(currentUser.kullanici)); }
 
 /* ─── VERİ DEPOSU (boş başlar, yönetici doldurur) ─── */
 window.YK_DB = { toplantılar: [], gundemler: [] };
@@ -11256,10 +11246,10 @@ window.ykBadgeGuncelle = function ykBadgeGuncelle(){
 /* ─── ANA RENDER ─── */
 function ykRender(){
   if(!currentUser) return;
-  const gorebilir = ykGorebilirMi();
-  document.getElementById('yk-yonetici-view').style.display = gorebilir ? 'block' : 'none';
-  document.getElementById('yk-personel-view').style.display  = gorebilir ? 'none'  : 'block';
-  gorebilir ? ykRenderYonetici() : ykRenderPersonel();
+  const yonetici = ykYoneticiMi();
+  document.getElementById('yk-yonetici-view').style.display = yonetici ? 'block' : 'none';
+  document.getElementById('yk-personel-view').style.display  = yonetici ? 'none'  : 'block';
+  yonetici ? ykRenderYonetici() : ykRenderPersonel();
   ykBadgeGuncelle();
   /* Dashboard metriklerini güncelle */
   if(window.dashboardGuncelle) window.dashboardGuncelle();
@@ -11639,13 +11629,7 @@ window.ykGeriAl = function(gundemId, kullanici){
   if(a){ a.durum='devam'; }
   /* Gündem de tamamlandıysa geri al */
   if(g.durum==='tamamlandi') g.durum='devam';
-  /* Supabase güncelle */
-  _supa.from('karar_atamalar').update({durum:'planlandi'}).eq('gundem_id',gundemId).eq('kullanici',kullanici)
-    .then(({error})=>{if(error)console.error('YK atama geri alma hatası:',error.message);});
-  _supa.from('karar_gundemler').update({durum:'planlandi'}).eq('id',gundemId)
-    .then(({error})=>{if(error)console.error('YK gündem geri alma hatası:',error.message);});
   ykRender();
-  if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
 };
 
 window.ykNotEkle = function(gundemId, kullanici){
@@ -11657,8 +11641,6 @@ window.ykNotEkle = function(gundemId, kullanici){
   const yeniNot = prompt('Görev notunuzu girin:', mevcutNot);
   if(yeniNot === null) return; /* iptal */
   a.not = yeniNot.trim();
-  _supa.from('karar_atamalar').update({notu:a.not}).eq('gundem_id',gundemId).eq('kullanici',kullanici)
-    .then(({error})=>{if(error)console.error('YK not kaydetme hatası:',error.message);});
   ykRender();
 };
 
@@ -11676,10 +11658,6 @@ window.ykToplantıEkleModal = function(){
       <div>
         <label class="yk-lbl">Tarih</label>
         <input id="yf-toplanti-tarih" type="date" class="yk-inp">
-      </div>
-      <div>
-        <label class="yk-lbl">Toplantı No (isteğe bağlı)</label>
-        <input id="yf-toplanti-no" class="yk-inp" placeholder="Boş bırakılırsa otomatik numara verilir">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="yk-lbl">Başlangıç Saati</label><input id="yf-toplanti-saat" type="time" class="yk-inp"></div>
@@ -11714,12 +11692,11 @@ function ykToplantıKaydet(){
   const tarihStr=(_dd2&&_mm2&&_yy2)?(_dd2+' '+_aylar2[_mm2-1]+' '+_yy2):tarihVal;
   const yil=_yy2||new Date(tarihVal).getFullYear();
   const olagan = YK_DB.toplantılar.filter(t=>!t.ad.includes('Olağanüstü')).length;
-  const noInput = (document.getElementById('yf-toplanti-no')?.value||'').trim();
-  const no = noInput || (tur==='olaganustu' ? 'OÜ' : String(olagan+1));
+  const no = tur==='olaganustu' ? 'OÜ' : olagan+1;
   const id = genUUID();
   YK_DB.toplantılar.push({ id, no, ad, tarih:tarihStr, tarihIso:tarihVal, saat, bitisSaat, yil, durum:'planlandi', aciklama });
   /* Supabase'e kaydet */
-  _supa.from('karar_toplantilari').insert([{ id, tur:'yk', no:String(no), ad, tarih:tarihStr, tarih_iso:tarihVal, saat, bitis_saat:bitisSaat, durum:'planlandi', aciklama }])
+  _supa.from('karar_toplantilari').insert([{ id, tur:'yk', ad, tarih:tarihStr, tarih_iso:tarihVal, saat, bitis_saat:bitisSaat, durum:'planlandi' }])
     .then(({error})=>{ if(error) console.error('YK toplantı kaydetme hatası:',error.message); });
   ykModalKapat();
   ykRender();
@@ -11733,8 +11710,6 @@ window.ykToplantıDuzenle = function(id){
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Toplantı Adı</label>
         <input id="yf-toplanti-ad" class="yk-inp" value="${t.ad||''}"></div>
-      <div><label class="yk-lbl">Toplantı No</label>
-        <input id="yf-toplanti-no" class="yk-inp" value="${(String(t.no||'')).replace(/"/g,'&quot;')}"></div>
       <div><label class="yk-lbl">Tarih</label>
         <input id="yf-toplanti-tarih" type="date" class="yk-inp" value="${t.tarihIso||''}"></div>
       <div><label class="yk-lbl">Durum</label>
@@ -11757,10 +11732,9 @@ window.ykToplantıDuzenle = function(id){
     }
     t.durum=document.getElementById('yf-toplanti-durum').value||t.durum;
     t.aciklama=document.getElementById('yf-toplanti-aciklama').value.trim();
-    t.no=(document.getElementById('yf-toplanti-no')?.value||'').trim()||t.no;
     // Supabase'e kaydet
     _supa.from('karar_toplantilari').update({
-      ad: t.ad, no: String(t.no||''), tarih: t.tarih, tarih_iso: t.tarihIso, durum: t.durum, aciklama: t.aciklama
+      ad: t.ad, tarih: t.tarih, tarih_iso: t.tarihIso, durum: t.durum
     }).eq('id', id).then(({error})=>{ if(error) console.error('YK toplantı güncelleme hatası:', error.message); });
     ykModalKapat(); ykRender();
   };
@@ -12017,10 +11991,6 @@ window.kararlarSec = function(tip, btn){
     setTimeout(()=>{ if(window.initYilPickers) window.initYilPickers(); if(window.ykRender) window.ykRender(); }, 30);
   }
   else if(tip==='mk'){
-    /* Menüye her girişte komite listesine dön (önceki komite/toplantıda kalma) */
-    window._mkSeciliKomiteNo = null;
-    mkAktifToplantı = null;
-    window._mkGundemEkraniAcik = false;
     // Filtreyi sıfırlama — mevcut seçimi koru ya da tüm yılları göster
     // İlk girişte mevcut yıl seçili, sonraki girişlerde mevcut filtre korunur
     if(window._mkYilFilter === null && !window._mkYilFilterBaslatildi){
@@ -12059,14 +12029,12 @@ let mkAktifToplantı = null;
 const MK_YONETICI = ['admin','feyyaz','umran','orhan'];
 function mkYoneticiMi(){ return window.digerYetkiVar('yk-mk', currentUser && MK_YONETICI.includes(currentUser.kullanici)); }
 function meclisYoneticiMi(){ return window.digerYetkiVar('yk-meclis', currentUser && MK_YONETICI.includes(currentUser.kullanici)); }
-function mkGorebilirMi(){ return window.digerGorebilirMi('yk-mk', currentUser && MK_YONETICI.includes(currentUser.kullanici)); }
-function meclisGorebilirMi(){ return window.digerGorebilirMi('yk-meclis', currentUser && MK_YONETICI.includes(currentUser.kullanici)); }
 window.meclisYoneticiMi = meclisYoneticiMi;
 
 window._mkSeciliKomiteNo = null; /* null = komite listesi görünümü, sayı = o komitenin içindeyiz */
 
 function mkRender(){
-  const yonetici = mkGorebilirMi();
+  const yonetici = mkYoneticiMi();
   document.getElementById('mk-yonetici-view').style.display = yonetici?'block':'none';
   document.getElementById('mk-personel-view').style.display  = yonetici?'none':'block';
   if(yonetici){
@@ -12407,10 +12375,9 @@ window.mkKomiteKararDuzenle = function(gundemId, toplantıId, kNo){
     if(error){ alert('Güncelleme hatası: '+error.message); return; }
 
     // Atamaları sıfırla ve yeniden yaz (basit ve tutarlı yaklaşım)
-    const _mkNotHar={}; ((g.atananlar)||[]).forEach(x=>{ if(x.not) _mkNotHar[x.kullanici]=x.not; });
     await _supa.from('karar_atamalar').delete().eq('gundem_id', gundemId);
     for(const a of atananlar){
-      await _supa.from('karar_atamalar').insert([{gundem_id:gundemId, kullanici:a.kullanici, ad:a.ad, gorev:a.gorev, durum:a.durum, notu:_mkNotHar[a.kullanici]||null}]);
+      await _supa.from('karar_atamalar').insert([{gundem_id:gundemId, kullanici:a.kullanici, ad:a.ad, gorev:a.gorev, durum:a.durum}]);
     }
 
     ykModalKapat();
@@ -12784,8 +12751,6 @@ window.mkAtamaNot=function(gId,kul){
   const not=prompt('Notunuzu girin:',a.not||'');
   if(not===null)return;
   a.not=not.trim();
-  _supa.from('karar_atamalar').update({notu:a.not}).eq('gundem_id',gId).eq('kullanici',kul)
-    .then(({error})=>{if(error)console.error('MK not kaydetme hatası:',error.message);});
   mkRender();
 };
 
@@ -12966,7 +12931,7 @@ const MECLIS_DB = window.MECLIS_DB = { toplantılar:[], gundemler:[] };
 let meclisAktifToplantı = null;
 
 function meclisRender(){
-  const yonetici = meclisGorebilirMi();
+  const yonetici = meclisYoneticiMi();
   document.getElementById('meclis-yonetici-view').style.display = yonetici?'block':'none';
   document.getElementById('meclis-personel-view').style.display  = yonetici?'none':'block';
   if(yonetici){
@@ -13845,8 +13810,6 @@ window.meclisAtamaNot=function(gId,kul){
   const not=prompt('Notunuzu girin:',a.not||'');
   if(not===null)return;
   a.not=not.trim();
-  _supa.from('karar_atamalar').update({notu:a.not}).eq('gundem_id',gId).eq('kullanici',kul)
-    .then(({error})=>{if(error)console.error('Meclis not kaydetme hatası:',error.message);});
   meclisRender();
 };
 
@@ -14524,8 +14487,6 @@ function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikI
       /* Mevcut atamanın durumunu koru, yeniyse planlandi */
       yeniAtananlar.push({kullanici:kul, ad, gorev:gorev||'—', durum, sonTarih, oncelik});
     });
-    const _gdNotHar={}; ((g.atananlar)||[]).forEach(x=>{ if(x.not) _gdNotHar[x.kullanici]=x.not; });
-    yeniAtananlar.forEach(a=>{ if(_gdNotHar[a.kullanici]) a.not=_gdNotHar[a.kullanici]; });
     g.atananlar=yeniAtananlar;
 
     // Gündem Supabase güncellemesi
@@ -14539,7 +14500,7 @@ function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikI
       await _supa.from('karar_atamalar').delete().eq('gundem_id', g.id);
       for(const a of yeniAtananlar){
         await _supa.from('karar_atamalar').insert([{
-          gundem_id: g.id, kullanici: a.kullanici, ad: a.ad, gorev: a.gorev, durum: a.durum, notu: (a.not||null)
+          gundem_id: g.id, kullanici: a.kullanici, ad: a.ad, gorev: a.gorev, durum: a.durum
         }]);
       }
     })().catch(e=>console.error('Atama güncelleme hatası:', e));
@@ -14591,12 +14552,6 @@ window.ykGundemDuzenle = function(toplantıId, gundemId){
             <option value="dusuk" ${(ilkA?.oncelik||g.oncelik)==='dusuk'?'selected':''}>Düşük</option>
           </select>
         </div>
-      </div>
-      <div>
-        <label class="yk-lbl">Durum</label>
-        <select id="yf-g-durum" class="yk-inp">
-          ${['planlandi','devam','tamamlandi'].map(d=>`<option value="${d}" ${((g.durum)||'planlandi')===d?'selected':''}>${d==='planlandi'?'Planlandı':d==='devam'?'Devam Ediyor':'Tamamlandı'}</option>`).join('')}
-        </select>
       </div>
       <div style="border-top:0.5px solid var(--border);padding-top:12px">
         <label class="yk-lbl" style="margin-bottom:8px;display:block">Atanacak Personel</label>
@@ -14663,23 +14618,18 @@ async function ykGundemDuzenleKaydet(toplantıId, gundemId){
 
   if(!yeniAtananlar.length){ alert('En az bir personel ataması gereklidir.'); return; }
 
-  const durum = document.getElementById('yf-g-durum')?.value || g.durum || 'planlandi';
-  if(durum==='tamamlandi') yeniAtananlar.forEach(a=>a.durum='tamamlandi');
-
-  const _ykNotHar={}; (g.atananlar||[]).forEach(x=>{ if(x.not) _ykNotHar[x.kullanici]=x.not; });
-  yeniAtananlar.forEach(a=>{ if(_ykNotHar[a.kullanici]) a.not=_ykNotHar[a.kullanici]; });
-  g.no=no; g.konu=konu; g.ozet=ozet; g.sonTarih=tarih; g.oncelik=oncelik; g.durum=durum;
+  g.no=no; g.konu=konu; g.ozet=ozet; g.sonTarih=tarih; g.oncelik=oncelik;
   g.atananlar = yeniAtananlar;
 
   const {error} = await _supa.from('karar_gundemler').update({
-    no, konu, ozet, son_tarih: tarih||null, oncelik, durum
+    no, konu, ozet, son_tarih: tarih||null, oncelik
   }).eq('id', gundemId);
   if(error){ alert('Güncelleme hatası: '+error.message); return; }
 
   await _supa.from('karar_atamalar').delete().eq('gundem_id', gundemId);
   for(const a of yeniAtananlar){
     await _supa.from('karar_atamalar').insert([{
-      gundem_id: gundemId, kullanici: a.kullanici, ad: a.ad, gorev: a.gorev, durum: a.durum, notu: (a.not||null)
+      gundem_id: gundemId, kullanici: a.kullanici, ad: a.ad, gorev: a.gorev, durum: a.durum
     }]);
   }
 
@@ -25874,11 +25824,6 @@ window.sikayetSilById = async function(id, btn){
         </div>
       </div>
     </div>
-<div id="app-surum-etiketi" style="position:fixed;right:10px;bottom:10px;z-index:99999;
-  background:rgba(124,58,237,0.92);color:#fff;font:600 11px/1.2 system-ui,-apple-system,sans-serif;
-  padding:5px 10px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35);
-  cursor:pointer;user-select:none;letter-spacing:.2px" title="Bu etiketi görüyorsanız en güncel dosya yüklenmiştir. Kapatmak için tıklayın."
-  onclick="this.style.display='none'">sürüm 3 · 5 Tem 2026</div>
 </body>
 </html>
 
