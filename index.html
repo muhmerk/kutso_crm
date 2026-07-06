@@ -15992,8 +15992,10 @@ window.dashboardGuncelle = function(){
   if(sikAcik){
     let acik = 0, kritik = 0;
     document.querySelectorAll('#s-sikayet .sk').forEach(k=>{
-      const badge = k.querySelector('.badge')?.textContent?.trim()||'';
-      if(badge !== 'Çözüldü' && badge !== 'Tamamlandı'){ acik++; if(badge==='Kritik') kritik++; }
+      /* Durum bilgisini dataset'ten oku (güvenilir) — DOM'daki ilk .badge öncelik rozetidir, durum değil */
+      const durum = k.dataset.durum || '';
+      const oncelikBadge = k.querySelector('.badge')?.textContent?.trim()||'';
+      if(durum !== 'Çözüldü' && durum !== 'Tamamlandı'){ acik++; if(oncelikBadge==='Kritik') kritik++; }
     });
     sikAcik.textContent = acik;
     if(sikSub) sikSub.textContent = kritik > 0 ? kritik + ' kritik' : acik === 0 ? 'şikayet yok' : 'incelemede';
