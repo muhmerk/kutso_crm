@@ -29,16 +29,29 @@ function genUUID() {
 
 /* ══ SUPABASE VERİ YÜKLEME — TÜM MODÜLLER ══ */
 
+/* Büyük .in() listelerini URL uzunluğu sınırına takılmadan parçalar halinde sorgula */
+async function _supaInBatched(table, column, ids, chunkSize=150){
+  if(!ids || !ids.length) return [];
+  const chunks = [];
+  for(let i=0; i<ids.length; i+=chunkSize) chunks.push(ids.slice(i, i+chunkSize));
+  const sonuclar = await Promise.all(chunks.map(chunk => _supa.from(table).select('*').in(column, chunk)));
+  let birlesmis = [];
+  for(const r of sonuclar){
+    if(r.error){ console.error(`${table} toplu sorgu hatası:`, r.error.message); continue; }
+    birlesmis = birlesmis.concat(r.data||[]);
+  }
+  return birlesmis;
+}
+
 async function supaYukleYK() {
   try {
     const { data: toplantılar } = await _supa.from('karar_toplantilari').select('*').eq('tur','yk').order('tarih_iso', {ascending:false});
     if(!toplantılar || toplantılar.length===0) { if(window.YK_DB){ window.YK_DB.toplantılar=[]; window.YK_DB.gundemler=[]; if(window.ykRender) window.ykRender(); } return; }
     const toplantıIdler = toplantılar.map(t=>t.id);
-    const { data: gundemler } = await _supa.from('karar_gundemler').select('*').in('toplanti_id', toplantıIdler).order('created_at', {ascending:true});
+    const gundemler = await _supaInBatched('karar_gundemler', 'toplanti_id', toplantıIdler);
+    gundemler.sort((a,b)=> new Date(a.created_at) - new Date(b.created_at));
     const gundemIdler = (gundemler||[]).map(g=>g.id);
-    const { data: atamalar } = gundemIdler.length > 0
-      ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
-      : { data: [] };
+    const atamalar = await _supaInBatched('karar_atamalar', 'gundem_id', gundemIdler);
     const mappedT = toplantılar.map(t=>({ id:t.id, no:t.no||'', ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', yil:t.tarih_iso?new Date(t.tarih_iso).getFullYear():0, durum:t.durum||'planlandi', aciklama:t.aciklama||'' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi', not:a.notu||'' })) }));
     const trySet = () => {
@@ -62,11 +75,10 @@ async function supaYukleMK() {
     const { data: toplantılar } = await _supa.from('karar_toplantilari').select('*').eq('tur','mk').order('tarih_iso', {ascending:false});
     if(!toplantılar || toplantılar.length===0) { if(window.MK_DB){ window.MK_DB.toplantılar=[]; window.MK_DB.gundemler=[]; if(window.mkRender) window.mkRender(); } return; }
     const toplantıIdler = toplantılar.map(t=>t.id);
-    const { data: gundemler } = await _supa.from('karar_gundemler').select('*').in('toplanti_id', toplantıIdler).order('created_at', {ascending:true});
+    const gundemler = await _supaInBatched('karar_gundemler', 'toplanti_id', toplantıIdler);
+    gundemler.sort((a,b)=> new Date(a.created_at) - new Date(b.created_at));
     const gundemIdler = (gundemler||[]).map(g=>g.id);
-    const { data: atamalar } = gundemIdler.length > 0
-      ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
-      : { data: [] };
+    const atamalar = await _supaInBatched('karar_atamalar', 'gundem_id', gundemIdler);
     const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', komite:t.komite||'', komiteNo:parseInt(t.komite)||0, durum:t.durum||'planlandi', toplantıTuru:t.toplanti_turu||'olagan', toplantiNo:t.toplanti_no||'' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', komiteNo:g.komite_no||0, kaynak:g.kaynak||'karar', atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi', not:a.notu||'' })) }));
     const trySet = () => {
@@ -88,11 +100,10 @@ async function supaYukleMeclis() {
     const { data: toplantılar } = await _supa.from('karar_toplantilari').select('*').eq('tur','meclis').order('tarih_iso', {ascending:false});
     if(!toplantılar || toplantılar.length===0) { if(window.MECLIS_DB){ window.MECLIS_DB.toplantılar=[]; window.MECLIS_DB.gundemler=[]; if(window.meclisRender) window.meclisRender(); } return; }
     const toplantıIdler = toplantılar.map(t=>t.id);
-    const { data: gundemler } = await _supa.from('karar_gundemler').select('*').in('toplanti_id', toplantıIdler).order('created_at', {ascending:true});
+    const gundemler = await _supaInBatched('karar_gundemler', 'toplanti_id', toplantıIdler);
+    gundemler.sort((a,b)=> new Date(a.created_at) - new Date(b.created_at));
     const gundemIdler = (gundemler||[]).map(g=>g.id);
-    const { data: atamalar } = gundemIdler.length > 0
-      ? await _supa.from('karar_atamalar').select('*').in('gundem_id', gundemIdler)
-      : { data: [] };
+    const atamalar = await _supaInBatched('karar_atamalar', 'gundem_id', gundemIdler);
     const mappedT = toplantılar.map(t=>({ id:t.id, ad:t.ad, tarih:t.tarih, tarihIso:t.tarih_iso, saat:t.saat||'', bitisSaat:t.bitis_saat||'', durum:t.durum||'planlandi', toplantiNo:t.toplanti_no||'' }));
     const mappedG = (gundemler||[]).map(g=>({ id:g.id, toplantıId:g.toplanti_id, no:g.no||'', konu:g.konu, ozet:g.ozet||'', sonTarih:g.son_tarih||'', oncelik:g.oncelik||'normal', durum:g.durum||'planlandi', dosyaUrl:g.dosya_url||null, dosyaAdi:g.dosya_adi||null, atananlar:(atamalar||[]).filter(a=>a.gundem_id===g.id).map(a=>({ kullanici:a.kullanici, ad:a.ad, gorev:a.gorev||'—', durum:a.durum||'planlandi', not:a.notu||'' })) }));
     const trySet = () => {
