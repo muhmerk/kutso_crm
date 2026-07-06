@@ -11450,6 +11450,8 @@ const oncelikRenk = {
 };
 
 function ykGundemKartHtml(g, sira, yoneticiMod){
+  const oncelikBilgi = oncelikRenk[g.oncelik||'normal'];
+  const durumBilgi = { planlandi:{badge:'b-blue',label:'Planlandı'}, devam:{badge:'b-amber',label:'Devam Ediyor'}, tamamlandi:{badge:'b-green',label:'Tamamlandı'} }[g.durum||'planlandi'];
   const pr = oncelikRenk[g.durum==='tamamlandi'?'tamamlandi':g.oncelik||'normal'];
   const tarihStr = g.sonTarih ? new Date(g.sonTarih).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) : '—';
   const tamam = g.durum==='tamamlandi';
@@ -11478,7 +11480,10 @@ function ykGundemKartHtml(g, sira, yoneticiMod){
         <div class="kkart-eyebrow">Gündem ${String(sira).padStart(2,'0')}${g.no ? ' · ' + g.no : ''}</div>
         <div class="kkart-title">${g.konu}</div>
       </div>
-      <span class="badge ${pr.badge}">${pr.label}</span>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <span class="badge ${oncelikBilgi.badge}">${oncelikBilgi.label}</span>
+        <span class="badge ${durumBilgi.badge}">${durumBilgi.label}</span>
+      </div>
     </div>
     ${g.ozet ? `<div class="kkart-ozet">${g.ozet}</div>` : ''}
     <div class="kkart-meta"><i class="ti ti-calendar"></i>Son tarih: ${tarihStr}</div>
