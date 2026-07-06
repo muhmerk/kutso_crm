@@ -4334,6 +4334,13 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
             <option value="rapor">Rapor (Sağlık)</option>
             <option value="ucretsiz">Ücretsiz İzin</option>
           </select>
+          <select class="flt-select" id="izin-kayit-f-ay" onchange="izinKayitListeRender()" style="max-width:150px">
+            <option value="">Tüm aylar</option>
+            <option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option>
+            <option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option>
+            <option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option>
+            <option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option>
+          </select>
         </div>
         <div id="izin-kayit-liste">
           <div style="text-align:center;padding:30px;color:var(--text2)"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i></div>
@@ -9094,7 +9101,7 @@ function izinKayitPersonelDoldur(){
 window.izinKayitlariYukle = async function(){
   _izinKayitYuklendi = true;
   try{
-    const { data, error } = await _supa.from('personel_izin_kayitlari').select('*').order('baslangic_tarih', {ascending:false});
+    const { data, error } = await _supa.from('personel_izin_kayitlari').select('*').order('baslangic_tarih', {ascending:true});
     if(error) throw error;
     window.IZIN_KAYIT_DATA = data||[];
   }catch(e){
@@ -9146,18 +9153,33 @@ window.izinBugunSeridiRender = function(){
 };
 
 /* İzin kayıtları listesi (filtrelenebilir) */
+/* Bir izin kaydının tarih aralığı, seçilen ay(+yıl varsa) ile kesişiyor mu? */
+function izinKayitAyOrtusuyorMu(baslangic, bitis, hedefAy, hedefYil){
+  const b = new Date(baslangic+'T00:00:00'), e = new Date(bitis+'T00:00:00');
+  const bIdx = b.getFullYear()*12 + b.getMonth();
+  const eIdx = e.getFullYear()*12 + e.getMonth();
+  if(hedefYil){
+    const hedefIdx = Number(hedefYil)*12 + (hedefAy-1);
+    return bIdx<=hedefIdx && hedefIdx<=eIdx;
+  }
+  for(let idx=bIdx; idx<=eIdx; idx++){ if(((idx%12)+12)%12 === (hedefAy-1)) return true; }
+  return false;
+}
+
 window.izinKayitListeRender = function(){
   const el = document.getElementById('izin-kayit-liste');
   if(!el) return;
   const fP = document.getElementById('izin-kayit-f-personel')?.value||'';
   const fY = document.getElementById('izin-kayit-f-yil')?.value||'';
   const fT = document.getElementById('izin-kayit-f-tur')?.value||'';
+  const fA = document.getElementById('izin-kayit-f-ay')?.value||'';
   const isGS = izinIsGS();
 
   let liste = [...window.IZIN_KAYIT_DATA];
   if(fP) liste = liste.filter(k=>String(k.personel_id)===String(fP));
   if(fY) liste = liste.filter(k=>new Date(k.baslangic_tarih).getFullYear()===Number(fY));
   if(fT) liste = liste.filter(k=>k.tur===fT);
+  if(fA) liste = liste.filter(k=>izinKayitAyOrtusuyorMu(k.baslangic_tarih, k.bitis_tarih, Number(fA), fY?Number(fY):null));
 
   if(!liste.length){
     el.innerHTML = `<div style="text-align:center;padding:36px 20px;color:var(--text3)"><i class="ti ti-calendar-off" style="font-size:26px;display:block;margin-bottom:8px;opacity:.6"></i>Kayıt bulunamadı</div>`;
@@ -9263,7 +9285,7 @@ window.izinKayitKaydet = async function(){
     if(error){ alert('Kaydetme hatası: '+error.message); return; }
     window.IZIN_KAYIT_DATA.unshift(data);
   }
-  window.IZIN_KAYIT_DATA.sort((a,b)=> b.baslangic_tarih.localeCompare(a.baslangic_tarih));
+  window.IZIN_KAYIT_DATA.sort((a,b)=> a.baslangic_tarih.localeCompare(b.baslangic_tarih));
 
   izinKayitModalKapat();
   izinKayitYilFiltreDoldur();
