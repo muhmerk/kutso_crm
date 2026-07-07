@@ -13970,7 +13970,7 @@ window.meclisAcToplantı = function(id){
   const hb=document.getElementById('meclis-header-btn');
   const tG=MECLIS_DB.gundemler.filter(g=>g.toplantıId===id).sort((a,b)=>(a.sira??9999)-(b.sira??9999));
   hd.innerHTML=`<button class="btn btn-sm" onclick="meclisGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span><button class="btn btn-sm yetki-degistir-gerekli" onclick="katilimAc('${id}','meclis')" style="margin-left:8px"><i class="ti ti-clipboard-check"></i> Katılım Takibi</button>`;
-  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisGundemEkleAc('${id}')"><i class="ti ti-plus"></i> Gündem Ekle</button>`;
+  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisKararEkle('${id}')"><i class="ti ti-plus"></i> Karar Ekle</button>`;
   const y = meclisYoneticiMi();
   el.innerHTML = tG.length===0
     ? `<div style="text-align:center;padding:44px 20px;color:var(--text3)"><i class="ti ti-clipboard-list" style="font-size:30px;display:block;margin-bottom:10px;opacity:.6"></i>Bu toplantıya henüz gündem eklenmedi</div>`
@@ -13991,18 +13991,11 @@ window.meclisAcToplantı = function(id){
           const gorev = (a.gorev && a.gorev!=='—') ? ` — ${a.gorev}` : '';
           return `<div class="kkart-ata"><span class="kkart-dot" style="background:${dot}"></span><span class="kkart-ata-txt"><strong>${a.ad}</strong><span class="kkart-ata-gorev">${gorev}</span></span>${tag}${mini}</div>${not}`;
         }).join('');
-        const siraOklar = y ? `<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
-            <button class="kkart-mini" style="width:20px;height:20px" title="Yukarı taşı" ${i===0?'disabled style="opacity:.3;cursor:not-allowed;width:20px;height:20px"':''} onclick="meclisGundemSiraDegistir('${id}','${g.id}','yukari')"><i class="ti ti-chevron-up" style="font-size:12px"></i></button>
-            <button class="kkart-mini" style="width:20px;height:20px" title="Aşağı taşı" ${i===tG.length-1?'disabled style="opacity:.3;cursor:not-allowed;width:20px;height:20px"':''} onclick="meclisGundemSiraDegistir('${id}','${g.id}','asagi')"><i class="ti ti-chevron-down" style="font-size:12px"></i></button>
-          </div>` : '';
         return `<div class="kkart-card${tamam?' kkart-done':''}" style="--accent:${accent}">
           <div class="kkart-top">
-            <div style="display:flex;gap:10px;min-width:0;flex:1">
-              ${siraOklar}
-              <div style="min-width:0">
-                <div class="kkart-eyebrow">${kararVar ? (g.no||('Gündem '+(i+1))) : ('Gündem '+(i+1))}</div>
-                <div class="kkart-title">${g.konu}</div>
-              </div>
+            <div style="min-width:0">
+              <div class="kkart-eyebrow">${kararVar ? (g.no||('Gündem '+(i+1))) : ('Gündem '+(i+1))}</div>
+              <div class="kkart-title">${g.konu}</div>
             </div>
             <span class="badge ${!kararVar?'b-gray':tamam?'b-green':'b-blue'}">${!kararVar?'Karar Yok':tamam?'Uygulandı':'Bekliyor'}</span>
           </div>
@@ -14074,61 +14067,12 @@ window.meclisGundemSiraDegistir = async function(toplantıId, gundemId, yon){
     _supa.from('karar_gundemler').update({sira:a.sira}).eq('id', a.id),
     _supa.from('karar_gundemler').update({sira:b.sira}).eq('id', b.id),
   ]);
-  meclisAcToplantı(toplantıId);
+  /* Sıralama sadece Gündem yönetim ekranından yapılabilir; oradan çağrıldığı için o ekranı yenile */
+  const el = document.getElementById('meclis-karar-list');
+  if(el) meclisGundemEkraniRender(toplantıId, el);
 };
 
-/* Yeni gündem maddesi ekle — önce sadece konu + "kararı olacak mı?" sorusu */
-let _mgdKararVarSecim = null;
-window._mgdKararSec = function(val){
-  _mgdKararVarSecim = val;
-  const evetBtn = document.getElementById('mgd-karar-evet');
-  const hayirBtn = document.getElementById('mgd-karar-hayir');
-  if(evetBtn && hayirBtn){
-    evetBtn.className = 'btn btn-sm' + (val===true ? ' btn-p' : '');
-    hayirBtn.className = 'btn btn-sm' + (val===false ? ' btn-p' : '');
-  }
-};
-window.meclisGundemEkleAc = function(toplantıId){
-  _mgdKararVarSecim = null;
-  document.getElementById('yk-modal-title').textContent = 'Gündem Ekle';
-  document.getElementById('yk-modal-body').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div><label class="yk-lbl">Gündem Konusu</label><input id="mgd-konu" class="yk-inp" placeholder="Gündem maddesinin konusu..."></div>
-      <div>
-        <label class="yk-lbl" style="margin-bottom:8px;display:block">Bu gündem maddesinin kararı olacak mı?</label>
-        <div style="display:flex;gap:8px">
-          <button type="button" id="mgd-karar-evet" class="btn btn-sm" onclick="_mgdKararSec(true)" style="flex:1">Evet, karar alınacak</button>
-          <button type="button" id="mgd-karar-hayir" class="btn btn-sm" onclick="_mgdKararSec(false)" style="flex:1">Hayır, sadece bilgi</button>
-        </div>
-        <div style="font-size:11px;color:var(--text2);margin-top:6px">"Evet" derseniz karar içeriğini hemen dolduracağınız ekran açılır. "Hayır" derseniz gündem maddesi olarak kalır, dilediğiniz zaman sonradan karar ekleyebilirsiniz.</div>
-      </div>
-    </div>`;
-  document.getElementById('yk-modal-kaydet').onclick = async ()=>{
-    const konu = document.getElementById('mgd-konu').value.trim();
-    if(!konu){ alert('Gündem konusu zorunludur.'); return; }
-    if(_mgdKararVarSecim===null){ alert('Lütfen "kararı olacak mı" sorusunu yanıtlayın.'); return; }
-    const yeniId = genUUID();
-    const mevcutSayi = MECLIS_DB.gundemler.filter(g=>g.toplantıId===toplantıId).length;
-    const yeniSira = mevcutSayi + 1;
-    const {error} = await _supa.from('karar_gundemler').insert([{
-      id:yeniId, toplanti_id:toplantıId, konu, ozet:'', no:'', durum:'planlandi', sira:yeniSira, karar_var:_mgdKararVarSecim
-    }]);
-    if(error){ alert('Kaydetme hatası: '+error.message); return; }
-    MECLIS_DB.gundemler.push({
-      id:yeniId, toplantıId, no:'', konu, ozet:'', sonTarih:'', oncelik:'normal', durum:'planlandi',
-      dosyaUrl:null, dosyaAdi:null, sira:yeniSira, kararVar:_mgdKararVarSecim, atananlar:[]
-    });
-    ykModalKapat();
-    if(_mgdKararVarSecim){
-      meclisKararDuzenle(toplantıId, yeniId);
-    } else {
-      meclisAcToplantı(toplantıId);
-    }
-    if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
-  };
-  document.getElementById('yk-modal-overlay').classList.remove('yk-modal-hidden');
-  document.getElementById('yk-modal-overlay').classList.add('yk-modal-visible');
-};;
+;
 
 /* ══════════════════════════════════════════════════════════
    MECLİS GÜNDEM YÖNETİM EKRANI (MK ile aynı sistem)
@@ -14153,42 +14097,69 @@ window.meclisGundemYonetAc = function(toplantıId){
 };
 
 function meclisGundemEkraniRender(toplantıId, el){
-  const gundemler = MECLIS_DB.gundemler.filter(g=>g.toplantıId===toplantıId);
+  const gundemler = MECLIS_DB.gundemler.filter(g=>g.toplantıId===toplantıId).sort((a,b)=>(a.sira??9999)-(b.sira??9999));
   const sira = gundemler.length + 1;
 
   el.innerHTML = `
     <div style="max-width:700px;margin:0 auto">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Ok tuşlarıyla gündemlerin sırasını değiştirebilirsiniz. Yeni gündem eklerken kararı olup olmayacağı sorulur.</div>
       <div style="display:flex;flex-direction:column;gap:0" id="meclis-gundem-satirlar">
-        ${gundemler.map((g,i) => meclisGundemSatirHtml(g, i+1, toplantıId)).join('')}
+        ${gundemler.map((g,i) => meclisGundemSatirHtml(g, i+1, toplantıId, i===0, i===gundemler.length-1)).join('')}
         ${meclisYeniSatirHtml(sira, toplantıId)}
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
         <button class="btn btn-sm" onclick="meclisGundemYonetKapat()"><i class="ti ti-x"></i> Kapat</button>
-        <button class="btn btn-p btn-sm" id="meclis-gundem-kaydet-btn" onclick="meclisGundemSatirKaydet('${toplantıId}')">
-          <i class="ti ti-device-floppy"></i> Kaydet
-        </button>
       </div>
     </div>`;
 }
 
-function meclisGundemSatirHtml(g, sira, toplantıId){
+function meclisGundemSatirHtml(g, sira, toplantıId, ilkMi, sonMi){
   const idE = g.id.replace(/'/g,"\'");
   const konuE = (g.konu||'').replace(/"/g,'&quot;');
-  return `<div class="mk-gundem-satir" id="meclis-gs-${g.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+  const kararVar = g.kararVar!==false;
+  const kararRozet = kararVar
+    ? `<span class="badge b-blue" style="font-size:9px;flex-shrink:0">Karar Var</span>`
+    : `<span class="badge b-gray" style="font-size:9px;flex-shrink:0">Karar Yok</span>`;
+  return `<div class="mk-gundem-satir" id="meclis-gs-${g.id}" style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+    <div style="display:flex;flex-direction:column;gap:1px;flex-shrink:0">
+      <button class="kkart-mini" style="width:19px;height:19px" title="Yukarı taşı" ${ilkMi?'disabled':''} onclick="meclisGundemSiraDegistir('${toplantıId}','${idE}','yukari')" ${ilkMi?'style="width:19px;height:19px;opacity:.3;cursor:not-allowed"':''}><i class="ti ti-chevron-up" style="font-size:11px"></i></button>
+      <button class="kkart-mini" style="width:19px;height:19px" title="Aşağı taşı" ${sonMi?'disabled':''} onclick="meclisGundemSiraDegistir('${toplantıId}','${idE}','asagi')" ${sonMi?'style="width:19px;height:19px;opacity:.3;cursor:not-allowed"':''}><i class="ti ti-chevron-down" style="font-size:11px"></i></button>
+    </div>
     <div style="width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
     <input class="yk-inp" style="flex:1;margin:0" value="${konuE}"
       onblur="meclisGundemSatirGuncelle('${idE}','${toplantıId}',this.value)"
       onkeydown="if(event.key==='Enter'){event.preventDefault();meclisGundemSatirGuncelle('${idE}','${toplantıId}',this.value);}">
+    ${kararRozet}
+    ${!kararVar?`<button class="kkart-mini" style="color:var(--purple)" title="Karar ekle" onclick="meclisKararSonradanEkle('${toplantıId}','${idE}')"><i class="ti ti-gavel"></i></button>`:''}
     <button class="btn btn-sm" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="meclisGundemSatirSil('${idE}','${toplantıId}')" title="Sil"><i class="ti ti-trash"></i></button>
   </div>`;
 }
 
+let _mgSatirKararVar = null;
+window._mgSatirKararSec = function(val){
+  _mgSatirKararVar = val;
+  const evetBtn = document.getElementById('meclis-gf-karar-evet');
+  const hayirBtn = document.getElementById('meclis-gf-karar-hayir');
+  if(evetBtn && hayirBtn){
+    evetBtn.className = 'btn btn-sm' + (val===true ? ' btn-p' : '');
+    hayirBtn.className = 'btn btn-sm' + (val===false ? ' btn-p' : '');
+  }
+};
 function meclisYeniSatirHtml(sira, toplantıId){
-  return `<div id="meclis-yeni-satir" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
-    <div style="width:24px;height:24px;border-radius:50%;background:var(--border);color:var(--text2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
-    <input id="meclis-gf-konu" class="yk-inp" style="flex:1;margin:0" placeholder="Gündem yazın..."
-      onkeydown="if(event.key==='Enter'){event.preventDefault();meclisGundemSatirKaydet('${toplantıId}');}">
-    <div style="width:32px;flex-shrink:0"></div>
+  _mgSatirKararVar = null;
+  return `<div id="meclis-yeni-satir" style="display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:0.5px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--border);color:var(--text2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sira}</div>
+      <input id="meclis-gf-konu" class="yk-inp" style="flex:1;margin:0" placeholder="Gündem yazın...">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:34px">
+      <span style="font-size:11px;color:var(--text2)">Kararı olacak mı?</span>
+      <button type="button" id="meclis-gf-karar-evet" class="btn btn-sm" onclick="_mgSatirKararSec(true)">Evet</button>
+      <button type="button" id="meclis-gf-karar-hayir" class="btn btn-sm" onclick="_mgSatirKararSec(false)">Hayır</button>
+      <button class="btn btn-p btn-sm" style="margin-left:auto" id="meclis-gundem-kaydet-btn" onclick="meclisGundemSatirKaydet('${toplantıId}')">
+        <i class="ti ti-plus"></i> Ekle
+      </button>
+    </div>
   </div>`;
 }
 
@@ -14197,34 +14168,45 @@ window.meclisGundemSatirKaydet = async function(toplantıId){
   if(!inp) return;
   const konu = inp.value.trim();
   if(!konu){ inp.focus(); return; }
+  if(_mgSatirKararVar===null){
+    alert('Lütfen "Kararı olacak mı?" sorusuna Evet ya da Hayır seçin.');
+    return;
+  }
+  const kararVarSecim = _mgSatirKararVar;
 
   const btn = document.getElementById('meclis-gundem-kaydet-btn');
   if(btn){ btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin .8s linear infinite"></i>'; }
 
   try {
     const mgId = genUUID();
+    const mevcutSayi = MECLIS_DB.gundemler.filter(g=>g.toplantıId===toplantıId).length;
+    const yeniSira = mevcutSayi + 1;
     const {error} = await _supa.from('karar_gundemler').insert([{
-      id: mgId, toplanti_id: toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi'
+      id: mgId, toplanti_id: toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi', sira:yeniSira, karar_var:kararVarSecim
     }]);
     if(error) throw error;
 
-    MECLIS_DB.gundemler.push({ id:mgId, toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi', atananlar:[], komiteNo:0 });
+    MECLIS_DB.gundemler.push({ id:mgId, toplantıId, konu, ozet:'', oncelik:'normal', durum:'planlandi', atananlar:[], komiteNo:0, sira:yeniSira, kararVar:kararVarSecim });
 
-    const yeniSatirEl = document.getElementById('meclis-yeni-satir');
-    if(yeniSatirEl){
-      const sira = MECLIS_DB.gundemler.filter(g=>g.toplantıId===toplantıId).length;
-      const yeniDoluHtml = meclisGundemSatirHtml(MECLIS_DB.gundemler.find(g=>g.id===mgId), sira, toplantıId);
-      const yeniBoşHtml  = meclisYeniSatirHtml(sira+1, toplantıId);
-      yeniSatirEl.insertAdjacentHTML('beforebegin', yeniDoluHtml);
-      yeniSatirEl.outerHTML = yeniBoşHtml;
-    }
-    setTimeout(()=>{ const ni=document.getElementById('meclis-gf-konu'); if(ni) ni.focus(); }, 30);
     if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
+
+    if(kararVarSecim){
+      /* Kararı olacak dendiyse, karar ekleme (Detay) sayfasına geçip o gündemin karar formunu hemen aç */
+      window._meclisGundemEkraniAcik = false;
+      meclisAcToplantı(toplantıId);
+      meclisKararDuzenle(toplantıId, mgId);
+      return;
+    }
+
+    /* Kararı olmayacak dendiyse, hızlıca yeni satır eklemeye devam et — listeyi baştan çiz (sıra/ok durumları doğru kalsın) */
+    const el = document.getElementById('meclis-karar-list');
+    if(el) meclisGundemEkraniRender(toplantıId, el);
+    setTimeout(()=>{ const ni=document.getElementById('meclis-gf-konu'); if(ni) ni.focus(); }, 30);
   } catch(e){
     alert('Kayıt hatası: '+e.message);
   }
   const b2 = document.getElementById('meclis-gundem-kaydet-btn');
-  if(b2){ b2.disabled=false; b2.innerHTML='<i class="ti ti-device-floppy"></i> Kaydet'; }
+  if(b2){ b2.disabled=false; b2.innerHTML='<i class="ti ti-plus"></i> Ekle'; }
 };
 
 window.meclisGundemSatirGuncelle = async function(gId, toplantıId, konu){
@@ -14244,15 +14226,9 @@ window.meclisGundemSatirSil = async function(gId, toplantıId){
     if(error) throw error;
     MECLIS_DB.gundemler = MECLIS_DB.gundemler.filter(x=>x.id!==gId);
     if(window.kararlarBadgeGuncelle) window.kararlarBadgeGuncelle();
-    const satir = document.getElementById('meclis-gs-'+gId);
-    if(satir) satir.remove();
-    const satirlar = document.querySelectorAll('#meclis-gundem-satirlar .mk-gundem-satir');
-    satirlar.forEach((s,i)=>{
-      const numEl = s.querySelector('div[style*="border-radius:50%"]');
-      if(numEl) numEl.textContent = i+1;
-    });
-    const yeniNum = document.querySelector('#meclis-yeni-satir div[style*="border-radius:50%"]');
-    if(yeniNum) yeniNum.textContent = satirlar.length + 1;
+    /* Sıra numaraları ve ilk/son ok durumları değiştiği için listeyi baştan çiz */
+    const el = document.getElementById('meclis-karar-list');
+    if(el) meclisGundemEkraniRender(toplantıId, el);
   } catch(e){ alert('Silme hatası: '+e.message); }
 };
 
