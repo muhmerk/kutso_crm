@@ -13900,7 +13900,7 @@ function meclisRenderMetrik(){
   const mYilOk=(t)=>{ const tarih=t?.tarih||''; if(mYF&&mYF.size){const yil=parseInt(tarih.match(/\b(20\d{2})\b/)?.[1]);if(yil&&!mYF.has(yil))return false;} if(mAyM&&window.kararAyOk)return window.kararAyOk(tarih,mAyM); return true; };
   const filtreliT=MECLIS_DB.toplantılar.filter(x=>mYilOk(x));
   const filtreliTIdler=new Set(filtreliT.map(x=>x.id));
-  const filtreliG=MECLIS_DB.gundemler.filter(g=>filtreliTIdler.has(g.toplantıId));
+  const filtreliG=MECLIS_DB.gundemler.filter(g=>filtreliTIdler.has(g.toplantıId) && g.kararVar!==false);
   const t=filtreliT.length,g=filtreliG.length;
   const tam=filtreliG.filter(x=>x.durum==='tamamlandi').length;
   document.getElementById('meclis-metrics').innerHTML=`
@@ -13970,7 +13970,7 @@ window.meclisAcToplantı = function(id){
   const hb=document.getElementById('meclis-header-btn');
   const tG=MECLIS_DB.gundemler.filter(g=>g.toplantıId===id).sort((a,b)=>(a.sira??9999)-(b.sira??9999));
   hd.innerHTML=`<button class="btn btn-sm" onclick="meclisGeriListe()" style="padding:5px 10px"><i class="ti ti-arrow-left"></i> Geri</button><span style="font-size:14px;font-weight:500">${t?.ad||''}</span><button class="btn btn-sm yetki-degistir-gerekli" onclick="katilimAc('${id}','meclis')" style="margin-left:8px"><i class="ti ti-clipboard-check"></i> Katılım Takibi</button>`;
-  if(hb) hb.innerHTML=`<button class="btn btn-p btn-sm yetki-degistir-gerekli" onclick="meclisKararEkle('${id}')"><i class="ti ti-plus"></i> Karar Ekle</button>`;
+  if(hb) hb.innerHTML='';
   const y = meclisYoneticiMi();
   el.innerHTML = tG.length===0
     ? `<div style="text-align:center;padding:44px 20px;color:var(--text3)"><i class="ti ti-clipboard-list" style="font-size:30px;display:block;margin-bottom:10px;opacity:.6"></i>Bu toplantıya henüz gündem eklenmedi</div>`
@@ -14981,7 +14981,8 @@ function kararYilFiltrele(toplantılar){
 
 /* ── Kararlar Düzenle fonksiyonları ── */
 /* ── Ortak düzenleme modal yardımcısı ── */
-function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikId, atamaContId, ekleId, g, onKaydet }){
+function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikId, atamaContId, ekleId, g, onKaydet, konuLabel }){
+  konuLabel = konuLabel || 'Konu';
   const pOpts=(window.PERSONEL||[]).map(p=>`<option value="${p.kullanici}">${p.ad} ${p.soyad} — ${p.unvan}</option>`).join('');
   const ilkA=g.atananlar?.[0];
 
@@ -15016,7 +15017,7 @@ function _gundemDuzenleModalAc({ baslik, noId, konuId, ozetId, tarihId, oncelikI
   document.getElementById('yk-modal-title').textContent=baslik;
   document.getElementById('yk-modal-body').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px">
     <div><label class="yk-lbl">No</label><input id="${noId}" class="yk-inp" value="${g.no||''}"></div>
-    <div><label class="yk-lbl">Konu</label><input id="${konuId}" class="yk-inp" value="${(g.konu||'').replace(/"/g,'&quot;')}"></div>
+    <div><label class="yk-lbl">${konuLabel}</label><input id="${konuId}" class="yk-inp" value="${(g.konu||'').replace(/"/g,'&quot;')}"></div>
     <div><label class="yk-lbl">Özet</label><textarea id="${ozetId}" class="yk-inp" style="min-height:60px;resize:vertical">${g.ozet||''}</textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label class="yk-lbl">Son Tarih</label><input id="${tarihId}" type="date" class="yk-inp" value="${ilkA?.sonTarih||g.sonTarih||''}"></div>
@@ -15261,6 +15262,7 @@ window.meclisKararDuzenle = function(toplantıId, kararId){
     baslik:'Meclis Karar Düzenle',
     noId:'med-no', konuId:'med-konu', ozetId:'med-ozet', tarihId:'med-tarih', oncelikId:'med-oncelik',
     atamaContId:'med-atama-cont', ekleId:'med-atama-ekle',
+    konuLabel:'Gündem Maddesi',
     g,
     onKaydet(){ ykModalKapat(); if(typeof meclisAcToplantı==='function') meclisAcToplantı(toplantıId); else if(typeof meclisRender==='function') meclisRender(); }
   });
