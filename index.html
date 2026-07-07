@@ -19836,6 +19836,9 @@ async function gsRenderKurulAsync(tur){
       <select class="yk-inp" style="height:32px;font-size:12px;width:auto;min-width:200px" onchange="gsKurulDonemSec(this.value,'${tur}')">
         ${donemSec || '<option>Dönem yok</option>'}
       </select>
+      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsDonemEkle('${tur}')" style="font-size:11px"><i class="ti ti-plus"></i> Yeni Dönem</button>
+      ${donemId ? `<button class="btn btn-sm yetki-degistir-gerekli" onclick="gsDonemDuzenle('${donemId}','${tur}')" style="font-size:11px" title="Dönemi Düzenle"><i class="ti ti-edit"></i></button>
+      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsDonemSil('${donemId}','${tur}')" style="font-size:11px;color:var(--red)" title="Dönemi Sil"><i class="ti ti-trash"></i></button>` : ''}
       ${seciliDonem ? `<span style="font-size:11px;color:var(--text2)">${gsFmtTarih(seciliDonem.baslangic)} — ${seciliDonem.bitis?gsFmtTarih(seciliDonem.bitis):'devam ediyor'}</span>` : ''}
     </div>
 
@@ -20013,9 +20016,9 @@ async function gsRenderMKAsync(){
       <select id="gs-mk-donem" class="yk-inp" style="height:32px;font-size:12px;width:auto;min-width:200px" onchange="gsMkDonemSec(this.value)">
         ${donemSec || '<option>Dönem yok</option>'}
       </select>
-      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsMkDonemEkle()" style="font-size:11px"><i class="ti ti-plus"></i> Yeni Dönem</button>
-      ${donemId ? `<button class="btn btn-sm yetki-degistir-gerekli" onclick="gsMkDonemDuzenle('${donemId}')" style="font-size:11px" title="Dönemi Düzenle"><i class="ti ti-edit"></i></button>
-      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsMkDonemSil('${donemId}')" style="font-size:11px;color:var(--red)" title="Dönemi Sil"><i class="ti ti-trash"></i></button>` : ''}
+      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsDonemEkle('mk')" style="font-size:11px"><i class="ti ti-plus"></i> Yeni Dönem</button>
+      ${donemId ? `<button class="btn btn-sm yetki-degistir-gerekli" onclick="gsDonemDuzenle('${donemId}','mk')" style="font-size:11px" title="Dönemi Düzenle"><i class="ti ti-edit"></i></button>
+      <button class="btn btn-sm yetki-degistir-gerekli" onclick="gsDonemSil('${donemId}','mk')" style="font-size:11px;color:var(--red)" title="Dönemi Sil"><i class="ti ti-trash"></i></button>` : ''}
       ${seciliDonem ? `<span style="font-size:11px;color:var(--text2)">${gsFmtTarih(seciliDonem.baslangic)} — ${seciliDonem.bitis?gsFmtTarih(seciliDonem.bitis):'devam ediyor'}</span>` : ''}
     </div>
 
@@ -20604,7 +20607,20 @@ window.gsMkUyelikSil = async function(uyelikId, adSoyad){
 };
 
 /* Yeni dönem oluştur */
-window.gsMkDonemEkle = function(){
+/* Dönem seçili-durum değişkenini oku/yaz — tur'a göre doğru yere gider (mk kendi, yk/meclis ortak nesne) */
+function _gsDonemSeciliAl(tur){
+  return tur==='mk' ? window._gsMkSeciliDonem : (window._gsKurulSeciliDonem||{})[tur];
+}
+function _gsDonemSeciliAyarla(tur, donemId){
+  if(tur==='mk') window._gsMkSeciliDonem = donemId;
+  else { window._gsKurulSeciliDonem = window._gsKurulSeciliDonem||{}; window._gsKurulSeciliDonem[tur] = donemId; }
+}
+function _gsDonemYenile(tur){
+  if(tur==='mk') gsRenderMK(); else gsRenderKurul(tur);
+}
+
+/* Yeni dönem oluştur — MK/YK/Meclis ortak (dönemler tablosu tüm organlar arasında paylaşılır) */
+window.gsDonemEkle = function(tur){
   gsModalAc('Yeni Dönem Oluştur',
     `<div style="display:flex;flex-direction:column;gap:12px">
       <div><label class="yk-lbl">Dönem Adı *</label><input id="gs-f-donem-ad" class="yk-inp" placeholder="ör: 2026–2030 Dönemi"></div>
@@ -20618,14 +20634,14 @@ window.gsMkDonemEkle = function(){
       if(!ad || !bas){ alert('Dönem adı ve başlangıç tarihi zorunludur.'); return; }
       const { data } = await _supa.from('donemler').insert([{ad, baslangic:bas, bitis:bit}]).select();
       await gsYukleDonemler();
-      if(data && data[0]) window._gsMkSeciliDonem = data[0].id;
-      gsModalKapat(); gsRenderMK();
+      if(data && data[0]) _gsDonemSeciliAyarla(tur, data[0].id);
+      gsModalKapat(); _gsDonemYenile(tur);
     }
   );
 };
 
 /* Dönem düzenle */
-window.gsMkDonemDuzenle = async function(donemId){
+window.gsDonemDuzenle = async function(donemId, tur){
   const d = (window.MK_DONEMLER||[]).find(x=>x.id===donemId);
   if(!d){ alert('Dönem bulunamadı.'); return; }
   const eskiBaslangic = (d.baslangic||'').slice(0,10);
@@ -20646,18 +20662,18 @@ window.gsMkDonemDuzenle = async function(donemId){
 
       await _supa.from('donemler').update({ad, baslangic:bas, bitis:bit}).eq('id',donemId);
 
-      // Başlangıç değiştiyse: dönem-başı üyelerin baslangic'ini de güncelle
+      // Başlangıç değiştiyse: dönem-başı üyelerin baslangic'ini de güncelle (organ tablosuna göre)
       if(bas !== eskiBaslangic){
-        // Sadece baslangic'i eski dönem başlangıcına eşit olan kayıtlar (yani dönem başından beri görevde olanlar)
-        await _supa.from('mk_uyelik')
-          .update({baslangic:bas})
-          .eq('donem_id',donemId)
-          .eq('baslangic',eskiBaslangic);
+        if(tur==='mk'){
+          await _supa.from('mk_uyelik').update({baslangic:bas}).eq('donem_id',donemId).eq('baslangic',eskiBaslangic);
+        } else {
+          await _supa.from('kurul_uyelik').update({baslangic:bas}).eq('donem_id',donemId).eq('tur',tur).eq('baslangic',eskiBaslangic);
+        }
       }
 
       await gsYukleDonemler();
-      await supaYukleKatilimUyeler();
-      gsModalKapat(); gsRenderMK();
+      if(tur==='mk') await supaYukleKatilimUyeler();
+      gsModalKapat(); _gsDonemYenile(tur);
       if(bas !== eskiBaslangic){
         alert('✓ Dönem güncellendi. Dönem başından beri görevde olan üyelerin başlangıç tarihi de değiştirildi.');
       }
@@ -20666,14 +20682,19 @@ window.gsMkDonemDuzenle = async function(donemId){
 };
 
 /* Dönem sil — içinde üyelik kaydı varsa uyar */
-window.gsMkDonemSil = async function(donemId){
+window.gsDonemSil = async function(donemId, tur){
   const d = (window.MK_DONEMLER||[]).find(x=>x.id===donemId);
   if(!d){ alert('Dönem bulunamadı.'); return; }
-  // Bu döneme bağlı üyelik sayısını kontrol et
+  // Bu döneme bağlı üyelik sayısını kontrol et (organ tablosuna göre)
   let uyelikSayisi = 0;
   try{
-    const { count } = await _supa.from('mk_uyelik').select('id',{count:'exact',head:true}).eq('donem_id',donemId);
-    uyelikSayisi = count||0;
+    if(tur==='mk'){
+      const { count } = await _supa.from('mk_uyelik').select('id',{count:'exact',head:true}).eq('donem_id',donemId);
+      uyelikSayisi = count||0;
+    } else {
+      const { count } = await _supa.from('kurul_uyelik').select('id',{count:'exact',head:true}).eq('donem_id',donemId).eq('tur',tur);
+      uyelikSayisi = count||0;
+    }
   }catch(_){}
   if(uyelikSayisi>0){
     if(!confirm(`"${d.ad}" dönemine bağlı ${uyelikSayisi} üyelik kaydı var. Dönem silinirse bu kayıtlar dönemsiz kalır (silinmez ama hangi döneme ait olduğu kaybolur). Yine de silmek istiyor musunuz?`)) return;
@@ -20682,9 +20703,9 @@ window.gsMkDonemSil = async function(donemId){
   }
   try{
     await _supa.from('donemler').delete().eq('id',donemId);
-    window._gsMkSeciliDonem = null;
+    _gsDonemSeciliAyarla(tur, null);
     await gsYukleDonemler();
-    gsRenderMK();
+    _gsDonemYenile(tur);
     alert('✓ Dönem silindi.');
   }catch(e){
     alert('Dönem silinemedi: '+(e.message||e)+'\n\nMuhtemelen bu döneme bağlı üyelik kayıtları var. Önce o kayıtları başka döneme taşıyın veya silin.');
