@@ -16901,7 +16901,8 @@ window.memKaydet = function(){
   const aktifId = window._memAktifAnketId || null;
 
   const firma   = (document.getElementById('mem-f-firma')?.value||'').trim();
-  const firmaId = parseInt(document.getElementById('mem-f-firma-id')?.value||'0')||null;
+  /* Üye ID'si oda sicil numarasıdır (örn. "DUMLUPINAR/349") — sayı olmak zorunda değil, parseInt kullanılmaz */
+  const firmaId = (document.getElementById('mem-f-firma-id')?.value||'').trim() || null;
   if(!firma){ alert('Firma / üye bilgisi zorunludur.'); return; }
 
   const tarihVal = document.getElementById('mem-f-tarih')?.value || new Date().toISOString().slice(0,10);
@@ -18697,14 +18698,23 @@ window.memFirmaAra = function(q){
   const ql = q.toLowerCase();
   const hits = kaynak.filter(f => f.firma.toLowerCase().includes(ql) || String(f.no).includes(ql)).slice(0,8);
   if(!hits.length){ box.style.display='none'; return; }
+  /* Firma verisini onclick'e string olarak gömmek yerine geçici bir diziye alıp indeksle eşleştiriyoruz.
+     Böylece firma adında tırnak, apostrof gibi karakterler olsa bile seçim bozulmaz. */
+  window._memFirmaAramaSonuclari = hits;
   box.style.display='block';
-  box.innerHTML = hits.map(f=>`
-    <div onclick="memFirmaaSec(${f.id},'${f.firma.replace(/'/g,"\\'")}','${f.no}')"
+  box.innerHTML = hits.map((f,i)=>`
+    <div onclick="memFirmaaSecIdx(${i})"
       style="padding:8px 14px;cursor:pointer;border-bottom:0.5px solid var(--border);font-size:13px;display:flex;justify-content:space-between;align-items:center"
       onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
       <div><div style="font-weight:500">${f.firma}</div><div style="font-size:11px;color:var(--text2)">Üye No: ${f.no}</div></div>
       <span class="badge ${f.odendi?'b-green':'b-amber'}" style="font-size:10px">${f.odendi?'Aktif':'Borçlu'}</span>
     </div>`).join('');
+}
+
+window.memFirmaaSecIdx = function(i){
+  const f = (window._memFirmaAramaSonuclari||[])[i];
+  if(!f) return;
+  memFirmaaSec(f.id, f.firma, f.no);
 };
 window.memFirmaaSec = function(id, ad, no){
   const inp = document.getElementById('mem-f-firma'); if(inp) inp.value = ad+' ('+no+')';
@@ -19062,7 +19072,7 @@ window.sikayetKaydet = async function(){
   const duzenleId = window._sikDuzenleId;
 
   const guncellemeObj = {
-    uye_id: parseInt(firmaId)||null, firma_adi: firma,
+    uye_id: (firmaId||'').toString().trim() || null, firma_adi: firma,
     konu, aciklama: detay, oncelik: oncelikTxt,
     tarih, tarih_iso: tarihVal||new Date().toISOString().slice(0,10), yil, saat,
     sikayetci_ad: sikayetciAd||null,
