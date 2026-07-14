@@ -7592,7 +7592,7 @@ window.etkPrsYilKarToggle=function(){
           firma: u.unvan || '',
           yetkili: '—',
           sektor: u.meslek_grubu_adi || '—',
-          meslek: u.meslek_grubu_adi || '—',
+          meslek: u.meslek_grubu_no ? (u.meslek_grubu_no + ' Meslek Grubu') : (u.meslek_grubu_adi || '—'),
           meslekGrubuNo: u.meslek_grubu_no || '',
           nace: u.nace_kod || '—',
           ilce: '—',
