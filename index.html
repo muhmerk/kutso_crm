@@ -917,12 +917,17 @@ function supaRealtimeBaslat() {
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlikler dinleniyor'); });
 
   /* Üye listeleri (YK/Meclis/MK) — Genel Sekreterlik değişikliklerini diğer kullanıcılara anlık yansıt */
+  /* Toplu ekleme/silme işlemlerinde (yüzlerce satır) her satır için ayrı bildirim gelebilir.
+     Debounce ile, art arda gelen bildirimlerin hepsini tek bir yenilemeye indiriyoruz —
+     yoksa yüzlerce art arda tam liste yeniden yükleme isteği tarayıcıyı/bağlantıyı kilitleyebilir. */
+  let _uyelerYenileZamanlayici = null;
   _supa.channel('db-uyeler-ana')
-    .on('postgres_changes', { event:'*', schema:'public', table:'uyeler' }, async ()=>{
-      /* Üye tablosu SQL Editor'den ya da başka bir yerden değiştiğinde, CRM arama kutularının
-         kullandığı bellek içi listeyi (window.DA) baştan yükle — bayat veri kalmasın */
-      if(window.supaUyeleriYukle) await window.supaUyeleriYukle();
-      console.log('🔄 Realtime: uyeler tablosu güncellendi, liste tazelendi');
+    .on('postgres_changes', { event:'*', schema:'public', table:'uyeler' }, ()=>{
+      clearTimeout(_uyelerYenileZamanlayici);
+      _uyelerYenileZamanlayici = setTimeout(async ()=>{
+        if(window.supaUyeleriYukle) await window.supaUyeleriYukle();
+        console.log('🔄 Realtime: uyeler tablosu güncellendi, liste tazelendi (debounce sonrası)');
+      }, 2000);
     })
     .subscribe();
 
