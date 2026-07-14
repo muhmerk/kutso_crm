@@ -17105,19 +17105,33 @@ window.memMeslekGrubuToggle = function(){
 function memFiltreKutulariDoldur(){
   const naceSec = document.getElementById('mem-filtre-nace');
   const mgSec = document.getElementById('mem-filtre-meslekgrubu');
-  if(naceSec && naceSec.options.length<=1){
+  /* Her çağrıda mevcut seçenekleri kontrol edip SADECE eksik olanları ekliyoruz —
+     böylece yeni eklenen bir anketteki yeni NACE kodu / meslek grubu da sonradan görünür,
+     dropdown bir kere doldu diye bir daha güncellenmeden kalmaz. Kullanıcının o an
+     seçili olan değeri de korunuyor. */
+  if(naceSec){
+    const mevcutSecim = naceSec.value;
+    const mevcutOpsiyonlar = new Set([...naceSec.options].map(o=>o.value));
     const naceKodlari = new Set();
     Object.values(MEM_ANKET_DB||{}).forEach(liste=>liste.forEach(a=>{ if(a.nace) naceKodlari.add(a.nace); }));
     [...naceKodlari].sort().forEach(kod=>{
-      const o=document.createElement('option'); o.value=kod; o.textContent=kod; naceSec.appendChild(o);
+      if(!mevcutOpsiyonlar.has(kod)){
+        const o=document.createElement('option'); o.value=kod; o.textContent=kod; naceSec.appendChild(o);
+      }
     });
+    naceSec.value = mevcutSecim;
   }
-  if(mgSec && mgSec.options.length<=1){
+  if(mgSec){
+    const mevcutSecimMg = mgSec.value;
+    const mevcutOpsiyonlarMg = new Set([...mgSec.options].map(o=>o.value));
     const gruplar = new Set();
     [...(window.DA||[]), ...(window.DS||[]), ...(window.DT||[])].forEach(u=>{ if(u.meslekGrubuNo) gruplar.add(u.meslekGrubuNo); });
     [...gruplar].sort().forEach(kod=>{
-      const o=document.createElement('option'); o.value=kod; o.textContent=kod+' Meslek Grubu'; mgSec.appendChild(o);
+      if(!mevcutOpsiyonlarMg.has(kod)){
+        const o=document.createElement('option'); o.value=kod; o.textContent=kod+' Meslek Grubu'; mgSec.appendChild(o);
+      }
     });
+    mgSec.value = mevcutSecimMg;
   }
 }
 
