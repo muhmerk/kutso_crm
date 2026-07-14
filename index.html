@@ -3179,6 +3179,40 @@ textarea.yk-inp { resize:vertical; min-height:64px; }
         <div class="tw" id="mem-karsilastirma-tablo"><div style="font-size:12px;color:var(--text2);text-align:center;padding:12px">Tablo yükleniyor...</div></div>
       </div>
     </div>
+    <!-- Detaylı Filtrele & Kırılım -->
+    <div class="card">
+      <div class="ch" onclick="memMeslekGrubuToggle()" style="cursor:pointer;user-select:none">
+        <div style="display:flex;align-items:center;gap:8px">
+          <i class="ti ti-chevron-right" id="mem-mg-chev" style="font-size:14px;color:var(--text2);transition:transform .2s"></i>
+          <span class="ct">Detaylı Filtrele</span>
+        </div>
+        <span style="font-size:12px;color:var(--text2)">İşletme tipi · NACE · Meslek grubu · İhracat</span>
+      </div>
+      <div id="mem-meslekgrubu-wrap" style="display:none">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+          <select id="mem-filtre-isletme" class="flt-select" onchange="memMeslekGrubuGuncelle()">
+            <option value="">Tüm İşletme Tipleri</option>
+            <option value="Sanayi İşletme">Sanayi İşletme</option>
+            <option value="Ticaret İşletme">Ticaret İşletme</option>
+            <option value="Kadın Girişimci İşletme">Kadın Girişimci İşletme</option>
+          </select>
+          <select id="mem-filtre-nace" class="flt-select" onchange="memMeslekGrubuGuncelle()">
+            <option value="">Tüm NACE Kodları</option>
+          </select>
+          <select id="mem-filtre-meslekgrubu" class="flt-select" onchange="memMeslekGrubuGuncelle()">
+            <option value="">Tüm Meslek Grupları</option>
+          </select>
+          <select id="mem-filtre-ihracat" class="flt-select" onchange="memMeslekGrubuGuncelle()">
+            <option value="">İhracat: Tümü</option>
+            <option value="evet">İhracat: Evet</option>
+            <option value="hayır">İhracat: Hayır</option>
+          </select>
+        </div>
+        <div id="mem-filtre-ozet" style="margin-bottom:14px"></div>
+        <div class="tw" id="mem-meslekgrubu-tablo" style="margin-bottom:14px"><div style="font-size:12px;color:var(--text2);text-align:center;padding:12px">Tablo yükleniyor...</div></div>
+        <div id="mem-filtre-liste"></div>
+      </div>
+    </div>
     <!-- Yıl bazlı ortalama sıralaması — JS ile doldurulur -->
     <div class="card" id="mem-yil-siralama-card">
       <div class="ch" onclick="memYilSiralamaToggle()" style="cursor:pointer;user-select:none">
@@ -7559,6 +7593,7 @@ window.etkPrsYilKarToggle=function(){
           yetkili: '—',
           sektor: u.meslek_grubu_adi || '—',
           meslek: u.meslek_grubu_adi || '—',
+          meslekGrubuNo: u.meslek_grubu_no || '',
           nace: u.nace_kod || '—',
           ilce: '—',
           calisan: u.calisan_sayisi || '—',
@@ -16247,6 +16282,7 @@ window.updateTopbarUser = function(user){
     if(window.memAnketListesiGuncelle) window.memAnketListesiGuncelle(secilenYil);
     if(window.memKarsilastirmaGuncelle) window.memKarsilastirmaGuncelle();
     if(window.memYilSiralamaGuncelle) window.memYilSiralamaGuncelle();
+    if(window.memMeslekGrubuGuncelle) window.memMeslekGrubuGuncelle();
   }
 
   /* ŞİKAYET */
@@ -17045,6 +17081,130 @@ window.memKarsilastirmaToggle = function(){
   body.style.display=open?'none':'block';
   if(chev) chev.style.transform=open?'rotate(0deg)':'rotate(90deg)';
   if(!open && window.memKarsilastirmaGuncelle) window.memKarsilastirmaGuncelle();
+};
+
+/* Bir firma kimliğinden (firmaId — sicil no ya da iç kimlik) meslek grubu KODUNU bul */
+function memMeslekGrubuBul(firmaId){
+  if(!firmaId) return null;
+  const tumu = [...(window.DA||[]), ...(window.DS||[]), ...(window.DT||[])];
+  const u = tumu.find(x => String(x.id)===String(firmaId));
+  return (u && u.meslekGrubuNo) ? u.meslekGrubuNo : null;
+}
+
+window.memMeslekGrubuToggle = function(){
+  const body=document.getElementById('mem-meslekgrubu-wrap');
+  const chev=document.getElementById('mem-mg-chev');
+  if(!body) return;
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  if(chev) chev.style.transform=open?'rotate(0deg)':'rotate(90deg)';
+  if(!open && window.memMeslekGrubuGuncelle) window.memMeslekGrubuGuncelle();
+};
+
+/* Filtre kutularını gerçek verilerden doldur (NACE ve Meslek Grubu seçenekleri) */
+function memFiltreKutulariDoldur(){
+  const naceSec = document.getElementById('mem-filtre-nace');
+  const mgSec = document.getElementById('mem-filtre-meslekgrubu');
+  if(naceSec && naceSec.options.length<=1){
+    const naceKodlari = new Set();
+    Object.values(MEM_ANKET_DB||{}).forEach(liste=>liste.forEach(a=>{ if(a.nace) naceKodlari.add(a.nace); }));
+    [...naceKodlari].sort().forEach(kod=>{
+      const o=document.createElement('option'); o.value=kod; o.textContent=kod; naceSec.appendChild(o);
+    });
+  }
+  if(mgSec && mgSec.options.length<=1){
+    const gruplar = new Set();
+    [...(window.DA||[]), ...(window.DS||[]), ...(window.DT||[])].forEach(u=>{ if(u.meslekGrubuNo) gruplar.add(u.meslekGrubuNo); });
+    [...gruplar].sort().forEach(kod=>{
+      const o=document.createElement('option'); o.value=kod; o.textContent=kod+' Meslek Grubu'; mgSec.appendChild(o);
+    });
+  }
+}
+
+window.memMeslekGrubuGuncelle = function(){
+  const tabloEl = document.getElementById('mem-meslekgrubu-tablo');
+  const ozetEl = document.getElementById('mem-filtre-ozet');
+  const listeEl = document.getElementById('mem-filtre-liste');
+  if(!tabloEl) return;
+
+  memFiltreKutulariDoldur();
+
+  const fIsletme = document.getElementById('mem-filtre-isletme')?.value || '';
+  const fNace = document.getElementById('mem-filtre-nace')?.value || '';
+  const fMeslekGrubu = document.getElementById('mem-filtre-meslekgrubu')?.value || '';
+  const fIhracat = document.getElementById('mem-filtre-ihracat')?.value || '';
+
+  /* Sadece sayfanın üstündeki yıl seçiciyle seçili olan yıla ait anketleri kullan */
+  const _secilenYilIcin = window._memSecilenYil || new Date().getFullYear();
+  let tumAnketler = (MEM_ANKET_DB[_secilenYilIcin]||[]).map(a=>({...a, _yil:_secilenYilIcin}));
+
+  const filtreli = tumAnketler.filter(a=>{
+    if(fIsletme && !(a.isletmeTipi||[]).includes(fIsletme)) return false;
+    if(fNace && a.nace!==fNace) return false;
+    if(fMeslekGrubu && memMeslekGrubuBul(a.firmaId)!==fMeslekGrubu) return false;
+    if(fIhracat && (a.ihracat||'').toLowerCase()!==fIhracat) return false;
+    return true;
+  });
+
+  /* ── Özet ── */
+  const puanlar = filtreli.map(a=>a.ortPuan).filter(v=>v>0);
+  const genelOrt = puanlar.length ? Math.round(puanlar.reduce((s,v)=>s+v,0)/puanlar.length*10)/10 : null;
+  ozetEl.innerHTML = `<div style="display:flex;align-items:center;gap:16px;padding:12px 16px;background:var(--surface2);border-radius:var(--radius-lg)">
+    <div>
+      <div style="font-size:22px;font-weight:700;color:${genelOrt?(genelOrt>=3.5?'var(--teal)':genelOrt>=2.5?'#185FA5':'var(--amber)'):'var(--text2)'}">${genelOrt ?? '—'}${genelOrt?'<span style="font-size:12px;font-weight:400;color:var(--text2)"> /4</span>':''}</div>
+      <div style="font-size:11px;color:var(--text2)">Filtreye uyan ortalama puan</div>
+    </div>
+    <div style="width:1px;height:32px;background:var(--border)"></div>
+    <div>
+      <div style="font-size:22px;font-weight:700">${filtreli.length}</div>
+      <div style="font-size:11px;color:var(--text2)">Filtreye uyan anket</div>
+    </div>
+  </div>`;
+
+  /* ── Tablo: kategori x yıl (filtrelenmiş veri üzerinden) ── */
+  const yillar = [...new Set(filtreli.map(a=>a._yil))].sort();
+  if(!filtreli.length || !yillar.length){
+    tabloEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text2);font-size:12px">Bu filtrelere uyan anket bulunamadı</div>`;
+    listeEl.innerHTML = '';
+    return;
+  }
+  const secilenYil = window._memSecilenYil || new Date().getFullYear();
+  const getVal = (y, kat) => {
+    const vals = filtreli.filter(a=>a._yil===y).map(a=>a.katOrt?.[kat]).filter(v=>v>0);
+    return vals.length ? Math.round(vals.reduce((s,v)=>s+v,0)/vals.length*10)/10 : null;
+  };
+  tabloEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="border-bottom:1.5px solid var(--border)">
+      <th style="text-align:left;padding:6px 8px;color:var(--text2)">Anket Başlığı</th>
+      ${yillar.map(y=>`<th style="text-align:center;padding:6px 4px;color:${y===secilenYil?'var(--blue)':'var(--text2)'};font-weight:${y===secilenYil?600:400}">${y}</th>`).join('')}
+    </tr></thead>
+    <tbody>${MEM_KATEGORILER.map(kat=>`<tr style="border-bottom:0.5px solid var(--border)44">
+      <td style="padding:6px 8px;font-size:12px">${kat}</td>
+      ${yillar.map(y=>{
+        const val=getVal(y,kat);
+        if(!val) return `<td style="text-align:center;color:var(--text2);font-size:12px;padding:6px 4px">—</td>`;
+        const isLast=y===secilenYil;
+        const renk=val>=3.5?'var(--teal)':val>=2.5?'#185FA5':'var(--amber)';
+        return `<td style="text-align:center;padding:6px 4px;font-weight:${isLast?500:400};color:${isLast?renk:'var(--text2)'};font-size:12px">${val}</td>`;
+      }).join('')}
+    </tr>`).join('')}</tbody>
+  </table>`;
+
+  /* ── Liste: filtreye uyan tüm anketler ── */
+  listeEl.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px">Filtreye Uyan Anketler (${filtreli.length})</div>` +
+    filtreli.sort((a,b)=>b._yil-a._yil).map(a=>{
+      const ortStr=a.ortPuan?`<span style="font-size:13px;font-weight:600;color:var(--teal)">${a.ortPuan}/4</span>`:'<span style="font-size:12px;color:var(--text2)">—</span>';
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--surface)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500">${a.firma} <span style="font-size:11px;color:var(--text2);font-weight:400">· ${a._yil}</span></div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${a.tarih}${a.yetkili?' · '+a.yetkili:''}${a.nace?' · NACE '+a.nace:''}</div>
+        </div>
+        ${ortStr}
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-sm yetki-degistir-gerekli" style="font-size:11px" onclick="memEkleModal('${a.id}')"><i class="ti ti-edit"></i></button>
+        </div>
+      </div>`;
+    }).join('');
 };
 
 window.memAnketListesiToggle = function(){
