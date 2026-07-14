@@ -917,6 +917,15 @@ function supaRealtimeBaslat() {
     .subscribe((status)=>{ if(status==='SUBSCRIBED') console.log('✓ Realtime: Etkinlikler dinleniyor'); });
 
   /* Üye listeleri (YK/Meclis/MK) — Genel Sekreterlik değişikliklerini diğer kullanıcılara anlık yansıt */
+  _supa.channel('db-uyeler-ana')
+    .on('postgres_changes', { event:'*', schema:'public', table:'uyeler' }, async ()=>{
+      /* Üye tablosu SQL Editor'den ya da başka bir yerden değiştiğinde, CRM arama kutularının
+         kullandığı bellek içi listeyi (window.DA) baştan yükle — bayat veri kalmasın */
+      if(window.supaUyeleriYukle) await window.supaUyeleriYukle();
+      console.log('🔄 Realtime: uyeler tablosu güncellendi, liste tazelendi');
+    })
+    .subscribe();
+
   _supa.channel('db-uye-listeleri')
     .on('postgres_changes', { event:'*', schema:'public', table:'yk_uyeler' }, async ()=>{
       await supaYukleKatilimUyeler();
@@ -7592,6 +7601,7 @@ window.etkPrsYilKarToggle=function(){
       console.log('✓ Üyeler yüklendi — Faal:', DA.length, 'Askıda:', DS.length, 'Terk:', DT.length);
     } catch(e) { console.warn('Üye yükleme hatası:', e); }
   }
+  window.supaUyeleriYukle = supaUyeleriYukle;
 
   function umMetrikleriGuncelle(aktif, askida, terk, tumData) {
     const setEl = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
