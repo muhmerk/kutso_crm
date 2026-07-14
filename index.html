@@ -7537,7 +7537,7 @@ window.etkPrsYilKarToggle=function(){
       let from = 0;
       const pageSize = 1000;
       while(true) {
-        const { data: chunk, error } = await _supa.from('uyeler').select('*').order('uye_oda_sicil_no').range(from, from+pageSize-1);
+        const { data: chunk, error } = await _supa.from('uyeler').select('*').order('uye_oda_sicil_no').order('id').range(from, from+pageSize-1);
         if(error) { console.warn('Üye yükleme hatası:', error); break; }
         if(!chunk || chunk.length===0) break;
         data = data.concat(chunk);
